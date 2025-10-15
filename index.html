@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>研究生组会文件共享系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        // 配置Tailwind自定义颜色
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#10b981',
+                        accent: '#6366f1',
+                        neutral: '#f3f4f6',
+                        'neutral-dark': '#4b5563',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .sidebar-icon {
+                @apply flex items-center gap-3 p-3 rounded-lg transition-all duration-200 cursor-pointer;
+            }
+            .sidebar-icon.active {
+                @apply bg-primary/10 text-primary font-medium;
+            }
+            .file-card {
+                @apply bg-white rounded-xl shadow-sm border border-gray-100 p-4 transition-all duration-200 hover:shadow-md;
+            }
+            .meeting-card {
+                @apply bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <!-- 左侧Logo和标题 -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <i class="fa fa-flask text-primary text-2xl"></i>
+                        <span class="text-xl font-semibold text-gray-800">智能计算实验室</span>
+                    </div>
+                </div>
+                
+                <!-- 右侧用户信息和操作 -->
+                <div class="flex items-center gap-4">
+                    <!-- 搜索框 -->
+                    <div class="relative hidden md:block">
+                        <input type="text" placeholder="搜索文献、汇报材料..." 
+                               class="py-2 pl-10 pr-4 rounded-lg bg-gray-100 border-0 focus:ring-2 focus:ring-primary/30 focus:bg-white w-64 transition-all">
+                        <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    
+                    <!-- 通知 -->
+                    <div class="relative cursor-pointer p-2 rounded-full hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-bell-o text-gray-600"></i>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </div>
+                    
+                    <!-- 用户头像和下拉菜单 -->
+                    <div class="relative group">
+                        <div class="flex items-center gap-2 cursor-pointer">
+                            <img src="https://picsum.photos/id/1005/200/200" alt="导师头像" class="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm">
+                            <span class="hidden md:inline-block font-medium">王教授</span>
+                            <i class="fa fa-chevron-down text-xs text-gray-500"></i>
+                        </div>
+                        
+                        <!-- 下拉菜单 -->
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right scale-95 group-hover:scale-100">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p class="font-medium">王教授</p>
+                                <p class="text-xs text-gray-500">导师</p>
+                            </div>
+                            <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-100">
+                                <i class="fa fa-user-o mr-2 text-gray-500"></i>个人资料
+                            </a>
+                            <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-100">
+                                <i class="fa fa-cog mr-2 text-gray-500"></i>设置
+                            </a>
+                            <a href="#" class="block px-4 py-2 text-sm text-red-500 hover:bg-gray-100">
+                                <i class="fa fa-sign-out mr-2"></i>退出登录
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="flex-1 flex">
+        <!-- 侧边栏 -->
+        <aside class="w-64 bg-white border-r border-gray-200 h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto transition-all duration-300">
+            <div class="p-4">
+                <!-- 角色标识 -->
+                <div class="bg-primary/10 text-primary rounded-lg p-3 mb-6">
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium">当前角色</span>
+                        <span class="text-sm bg-primary text-white px-2 py-1 rounded-full">导师</span>
+                    </div>
+                </div>
+                
+                <!-- 导航菜单 -->
+                <nav>
+                    <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3">组会管理</p>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="#" class="sidebar-icon active">
+                                <i class="fa fa-dashboard w-5 text-center"></i>
+                                <span>工作台</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-calendar w-5 text-center"></i>
+                                <span>组会安排</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-file-text-o w-5 text-center"></i>
+                                <span>汇报材料</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-comments-o w-5 text-center"></i>
+                                <span>组会记录</span>
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6">资源管理</p>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-book w-5 text-center"></i>
+                                <span>文献库</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-folder-open-o w-5 text-center"></i>
+                                <span>共享文件</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-tasks w-5 text-center"></i>
+                                <span>研究任务</span>
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6">团队管理</p>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-users w-5 text-center"></i>
+                                <span>成员管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-line-chart w-5 text-center"></i>
+                                <span>研究进展</span>
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <!-- 管理员特有菜单 -->
+                    <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6 hidden">系统管理</p>
+                    <ul class="space-y-1 hidden">
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-cog w-5 text-center"></i>
+                                <span>系统设置</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-database w-5 text-center"></i>
+                                <span>存储管理</span>
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <!-- 存储信息 -->
+                    <div class="mt-8 p-4 bg-gray-50 rounded-lg">
+                        <p class="text-sm font-medium mb-2">存储空间</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                            <div class="bg-primary h-2 rounded-full" style="width: 65%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500">已使用 6.5GB / 10GB</p>
+                    </div>
+                </nav>
+            </div>
+        </aside>
+        
+        <!-- 内容区域 -->
+        <div class="flex-1 p-6 overflow-y-auto">
+            <!-- 页面标题 -->
+            <div class="mb-6">
+                <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gray-800">导师工作台</h1>
+                <p class="text-gray-500">欢迎回来，王教授！这里是您的组会和研究管理中心</p>
+            </div>
+            
+            <!-- 即将到来的组会 -->
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">即将到来的组会</h2>
+                    <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2">
+                        <i class="fa fa-plus"></i>
+                        <span>安排新组会</span>
+                    </button>
+                </div>
+                
+                <div class="meeting-card">
+                    <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-primary/5 to-primary/10">
+                        <div class="flex flex-wrap justify-between gap-4">
+                            <div>
+                                <span class="inline-block px-3 py-1 bg-primary text-white text-sm rounded-full mb-3">本周组会</span>
+                                <h3 class="text-xl font-bold">第12周组会 - 论文研读与进展汇报</h3>
+                                <p class="text-gray-600 mt-1">主题：最新神经网络模型在自然语言处理中的应用</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-gray-500 text-sm">日期时间</p>
+                                <p class="font-medium flex items-center justify-end gap-1 mt-1">
+                                    <i class="fa fa-calendar text-primary"></i> 2023-11-15（周三）14:00
+                                </p>
+                                <p class="font-medium flex items-center justify-end gap-1 mt-2">
+                                    <i class="fa fa-map-marker text-primary"></i> 计算中心302会议室
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <h4 class="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                                    <i class="fa fa-user-circle-o text-primary"></i> 汇报人
+                                </h4>
+                                <div class="flex flex-wrap gap-2">
+                                    <div class="flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full text-sm">
+                                        <img src="https://picsum.photos/id/1012/200/200" alt="张明" class="w-5 h-5 rounded-full">
+                                        张明（博士2年级）
+                                    </div>
+                                    <div class="flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full text-sm">
+                                        <img src="https://picsum.photos/id/1027/200/200" alt="李华" class="w-5 h-5 rounded-full">
+                                        李华（硕士3年级）
+                                    </div>
+                                    <div class="flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full text-sm">
+                                        <img src="https://picsum.photos/id/1025/200/200" alt="王芳" class="w-5 h-5 rounded-full">
+                                        王芳（硕士2年级）
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                                    <i class="fa fa-file-text-o text-primary"></i> 已提交材料
+                                </h4>
+                                <ul class="space-y-2">
+                                    <li class="flex items-center gap-2 text-sm">
+                                        <i class="fa fa-file-pdf-o text-red-500"></i>
+                                        <span>张明 - 论文综述.pdf</span>
+                                        <span class="ml-auto text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">已提交</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 text-sm">
+                                        <i class="fa fa-file-powerpoint-o text-orange-500"></i>
+                                        <span>李华 - 研究进展汇报.pptx</span>
+                                        <span class="ml-auto text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">已提交</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 text-sm">
+                                        <i class="fa fa-file-powerpoint-o text-orange-500"></i>
+                                        <span>王芳 - 实验设计汇报.pptx</span>
+                                        <span class="ml-auto text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">未提交</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                                    <i class="fa fa-tasks text-primary"></i> 组会准备
+                                </h4>
+                                <ul class="space-y-2">
+                                    <li class="flex items-center gap-2 text-sm">
+                                        <i class="fa fa-check-circle text-green-500"></i>
+                                        <span>确定组会主题和时间</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 text-sm">
+                                        <i class="fa fa-check-circle text-green-500"></i>
+                                        <span>分配汇报任务</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 text-sm">
+                                        <i class="fa fa-check-circle text-green-500"></i>
+                                        <span>共享参考资料</span>
+                                    </li>
+                                    <li class="flex items-center gap-2 text-sm">
+                                        <i class="fa fa-circle-o text-gray-300"></i>
+                                        <span>准备反馈意见</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 flex justify-end gap-3">
+                            <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                <i class="fa fa-envelope-o mr-1"></i> 提醒未提交者
+                            </button>
+                            <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                                <i class="fa fa-eye mr-1"></i> 查看详情
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 统计卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">本月组会次数</p>
+                            <h3 class="text-2xl font-bold mt-1">4</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <i class="fa fa-calendar-check-o text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-sm">
+                        <span class="text-green-500 flex items-center">
+                            <i class="fa fa-arrow-up mr-1"></i> 较上月增加1次
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">待审阅材料</p>
+                            <h3 class="text-2xl font-bold mt-1">7</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
+                            <i class="fa fa-file-text-o text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-sm">
+                        <a href="#" class="text-primary hover:underline">立即审阅 <i class="fa fa-arrow-right ml-1 text-xs"></i></a>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">团队成员</p>
+                            <h3 class="text-2xl font-bold mt-1">18</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center text-accent">
+                            <i class="fa fa-users text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-sm">
+                        <span class="text-gray-500">博士生6人，硕士生12人</span>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">共享文献</p>
+                            <h3 class="text-2xl font-bold mt-1">326</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-500">
+                            <i class="fa fa-book text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-sm">
+                        <span class="text-green-500 flex items-center">
+                            <i class="fa fa-arrow-up mr-1"></i> 本月新增24篇
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 最近提交的材料和文献库 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- 最近提交的材料 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                        <h2 class="font-bold text-lg">最近提交的材料</h2>
+                        <a href="#" class="text-primary text-sm hover:underline">查看全部</a>
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        <div class="p-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded bg-orange-100 flex items-center justify-center text-orange-500 flex-shrink-0 mt-1">
+                                    <i class="fa fa-file-powerpoint-o text-xl"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex flex-wrap justify-between gap-2">
+                                        <h3 class="font-medium">基于注意力机制的图像分割研究进展</h3>
+                                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">张明</span>
+                                    </div>
+                                    <p class="text-sm text-gray-500 mt-1">用于11月15日组会汇报 · 2023-11-12 09:34</p>
+                                    <div class="mt-3 flex items-center gap-3">
+                                        <button class="text-sm text-primary hover:underline flex items-center gap-1">
+                                            <i class="fa fa-eye"></i> 查看
+                                        </button>
+                                        <button class="text-sm text-primary hover:underline flex items-center gap-1">
+                                            <i class="fa fa-comment-o"></i> 批注
+                                        </button>
+                                        <button class="text-sm text-primary hover:underline flex items-center gap-1">
+                                            <i class="fa fa-download"></i> 下载
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded bg-red-100 flex items-center justify-center text-red-500 flex-shrink-0 mt-1">
+                                    <i class="fa fa-file-pdf-o text-xl"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex flex-wrap justify-between gap-2">
+                                        <h3 class="font-medium">2023年神经符号AI研究综述</h3>
+                                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">李华</span>
+                                    </div>
+                                    <p class="text-sm text-gray-500 mt-1">用于11月15日组会汇报 · 2023-11-11 16:45</p>
+                                    <div class="mt-3 flex items-center gap-3">
+                                        <button class="text-sm text-primary hover:underline flex items-center gap-1">
+                                            <i class="fa fa-eye"></i> 查看
+                                        </button>
+                                        <button class="text-sm text-primary hover:underline flex items-center gap-1">
+                                            <i class="fa fa-comment-o"></i> 批注
+                                        </button>
+                                        <button class="text-sm text-primary hover:underline flex items-center gap-1">
+                                            <i class="fa fa-download"></i> 下载
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded bg-green-100 flex items-center justify-center text-green-500 flex-shrink-0 mt-1">
+                                    <i class="fa fa-file-excel-o text-xl"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex flex-wrap justify-between gap-2">
+                                        <h3 class="font-medium">实验数据统计与分析 v2.3</h3>
+                                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">王芳</span>
+                                    </div>
+                                    <p class="text-sm text-gray-500 mt-1">月度研究进展数据 · 2023-11-10 14:22</p>
+                                    <div class="mt-3 flex items-center gap-3">
+                                        <button class="text-sm text-primary hover:underline flex items-center gap-1">
+                                            <i class="fa fa-eye"></i> 查看
+                                        </button>
+                                        <button class="text-sm text-primary hover:underline flex items-center gap-1">
+                                            <i class="fa fa-comment-o"></i> 批注
+                                        </button>
+                                        <button class="text-sm text-primary hover:underline flex items-center gap-1">
+                                            <i class="fa fa-download"></i> 下载
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 文献库 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                        <h2 class="font-bold text-lg">团队文献库</h2>
+                        <button class="bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-colors text-sm flex items-center gap-1">
+                            <i class="fa fa-plus"></i> 添加文献
+                        </button>
+                    </div>
+                    <div class="p-4">
+                        <!-- 文献分类 -->
+                        <div class="mb-4 flex flex-wrap gap-2">
+                            <button class="px-3 py-1 rounded-full bg-primary text-white text-sm">全部文献</button>
+                            <button class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm hover:bg-gray-200">最新添加</button>
+                            <button class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm hover:bg-gray-200">神经网络</button>
+                            <button class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm hover:bg-gray-200">自然语言处理</button>
+                            <button class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm hover:bg-gray-200">计算机视觉</button>
+                            <button class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm hover:bg-gray-200">强化学习</button>
+                        </div>
+                        
+                        <!-- 文献列表 -->
+                        <div class="space-y-4">
+                            <div class="border border-gray-100 rounded-lg p-3 hover:shadow-sm transition-shadow">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="font-medium text-primary hover:underline cursor-pointer">Attention Is All You Need</h3>
+                                    <span class="text-xs bg-gray-100 px-2 py-0.5 rounded">2017</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1">Vaswani, A., et al.</p>
+                                <p class="text-xs text-gray-500 mt-1 line-clamp-2">这篇论文提出了Transformer模型，完全基于注意力机制，摒弃了传统的RNN和CNN，在机器翻译任务上取得了突破性成果...</p>
+                                <div class="mt-2 flex flex-wrap items-center gap-2">
+                                    <span class="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">Transformer</span>
+                                    <span class="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">注意力机制</span>
+                                    <div class="ml-auto flex items-center gap-2">
+                                        <button class="text-gray-500 hover:text-primary text-xs">
+                                            <i class="fa fa-download"></i>
+                                        </button>
+                                        <button class="text-gray-500 hover:text-primary text-xs">
+                                            <i class="fa fa-bookmark-o"></i>
+                                        </button>
+                                        <button class="text-gray-500 hover:text-primary text-xs">
+                                            <i class="fa fa-share-alt"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-gray-100 rounded-lg p-3 hover:shadow-sm transition-shadow">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="font-medium text-primary hover:underline cursor-pointer">BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding</h3>
+                                    <span class="text-xs bg-gray-100 px-2 py-0.5 rounded">2018</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1">Devlin, J., et al.</p>
+                                <p class="text-xs text-gray-500 mt-1 line-clamp-2">BERT模型通过双向Transformer实现了预训练，在11个NLP任务上取得了SOTA结果，开创了预训练+微调的NLP研究范式...</p>
+                                <div class="mt-2 flex flex-wrap items-center gap-2">
+                                    <span class="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">BERT</span>
+                                    <span class="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">自然语言处理</span>
+                                    <div class="ml-auto flex items-center gap-2">
+                                        <button class="text-gray-500 hover:text-primary text-xs">
+                                            <i class="fa fa-download"></i>
+                                        </button>
+                                        <button class="text-gray-500 hover:text-primary text-xs">
+                                            <i class="fa fa-bookmark-o"></i>
+                                        </button>
+                                        <button class="text-gray-500 hover:text-primary text-xs">
+                                            <i class="fa fa-share-alt"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-gray-100 rounded-lg p-3 hover:shadow-sm transition-shadow">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="font-medium text-primary hover:underline cursor-pointer">Gradient-based learning applied to document recognition</h3>
+                                    <span class="text-xs bg-gray-100 px-2 py-0.5 rounded">1998</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1">LeCun, Y., et al.</p>
+                                <p class="text-xs text-gray-500 mt-1 line-clamp-2">这篇经典论文介绍了LeNet-5卷积神经网络架构，为现代CNN的发展奠定了基础，特别适用于手写数字识别任务...</p>
+                                <div class="mt-2 flex flex-wrap items-center gap-2">
+                                    <span class="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">CNN</span>
+                                    <span class="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">计算机视觉</span>
+                                    <div class="ml-auto flex items-center gap-2">
+                                        <button class="text-gray-500 hover:text-primary text-xs">
+                                            <i class="fa fa-download"></i>
+                                        </button>
+                                        <button class="text-gray-500 hover:text-primary text-xs">
+                                            <i class="fa fa-bookmark-o"></i>
+                                        </button>
+                                        <button class="text-gray-500 hover:text-primary text-xs">
+                                            <i class="fa fa-share-alt"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 text-center">
+                            <a href="#" class="text-primary text-sm hover:underline">浏览更多文献</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 研究进展跟踪 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+                <div class="p-6 border-b border-gray-100">
+                    <h2 class="font-bold text-lg">学生研究进展</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">学生</th>
+                                <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">研究方向</th>
+                                <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">最近进展</th>
+                                <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">下次目标</th>
+                                <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">最后更新</th>
+                                <th class="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <img src="https://picsum.photos/id/1012/200/200" alt="张明头像" class="w-8 h-8 rounded-full mr-3">
+                                        <div>
+                                            <p class="font-medium text-sm">张明</p>
+                                            <p class="text-xs text-gray-500">博士2年级</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="text-sm">多模态学习与生成模型</p>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="text-sm line-clamp-2">完成了跨模态注意力机制设计，初步实验结果显示较基线模型提升3.2%</p>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="text-sm line-clamp-2">准备数据集扩展和 ablation study，计划下周完成</p>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    2023-11-12
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                    <button class="text-primary hover:text-primary/80 mr-3">详情</button>
+                                    <button class="bg-primary/10 text-primary px-3 py-1 rounded hover:bg-primary/20">沟通</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <img src="https://picsum.photos/id/1027/200/200" alt="李华头像" class="w-8 h-8 rounded-full mr-3">
+                                        <div>
+                                            <p class="font-medium text-sm">李华</p>
+                                            <p class="text-xs text-gray-500">硕士3年级</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="text-sm">低资源场景下的文本分类</p>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="text-sm line-clamp-2">完成了基于对比学习的预训练模型微调，在多个低资源数据集上进行了验证</p>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="text-sm line-clamp-2">撰写研究论文，计划月底前完成初稿</p>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    2023-11-10
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                    <button class="text-primary hover:text-primary/80 mr-3">详情</button>
+                                    <button class="bg-primary/10 text-primary px-3 py-1 rounded hover:bg-primary/20">沟通</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <img src="https://picsum.photos/id/1025/200/200" alt="王芳头像" class="w-8 h-8 rounded-full mr-3">
+                                        <div>
+                                            <p class="font-medium text-sm">王芳</p>
+                                            <p class="text-xs text-gray-500">硕士2年级</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="text-sm">可解释性AI与模型可信度</p>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="text-sm line-clamp-2">设计了基于注意力权重的模型解释方法，正在进行有效性验证实验</p>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="text-sm line-clamp-2">完成用户研究实验设计，招募受试者进行评估</p>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    2023-11-08
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                    <button class="text-primary hover:text-primary/80 mr-3">详情</button>
+                                    <button class="bg-primary/10 text-primary px-3 py-1 rounded hover:bg-primary/20">沟通</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-4 border-t border-gray-100 text-center">
+                    <a href="#" class="text-primary text-sm hover:underline">查看所有学生进展</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 py-4">
+        <div class="container mx-auto px-4 text-center text-sm text-gray-500">
+            <p>© 2023 智能计算实验室 - 研究生组会文件共享系统</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 简单的交互功能示例
+        document.addEventListener('DOMContentLoaded', function() {
+            // 侧边栏菜单切换
+            const sidebarItems = document.querySelectorAll('.sidebar-icon');
+            sidebarItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    sidebarItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // 模拟按钮点击事件
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const actionText = this.textContent.trim();
+                    if (actionText.includes('安排新组会')) {
+                        alert('组会安排表单将在这里打开');
+                        e.preventDefault();
+                    } else if (actionText.includes('添加文献')) {
+                        alert('文献添加表单将在这里打开');
+                        e.preventDefault();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+    

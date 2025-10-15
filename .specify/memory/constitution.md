@@ -1,50 +1,105 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+同步影响报告 (Sync Impact Report):
+- 版本变更: 0.0.0 → 1.0.0 (初始章程制定)
+- 修改的原则: 无 (新创建)
+- 新增章节: 所有7个核心原则、技术约束、开发工作流
+- 删除章节: 无
+- 需要更新的模板:
+  ✅ .specify/templates/plan-template.md - 已检查Constitution Check部分
+  ✅ .specify/templates/spec-template.md - 已检查需求对齐
+  ✅ .specify/templates/tasks-template.md - 已检查任务分类
+  ⚠ .claude/commands/*.md - 可能需要更新原则引用
+- 待办事项: 无
+-->
 
-## Core Principles
+# 研究生组会文件共享系统项目章程
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+## 核心原则
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### 一、简单性优先
+能单文件不拆模块，能内存不连库。选择最简单可行的技术方案，避免过度架构和复杂设计。每一行代码都必须有明确的业务价值。
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### 二、YAGNI原则
+没有第二周内明确需求，就不写扩展点。不预先实现抽象层、插件系统或未来可能需要的功能。严格按照当前已知需求进行开发。
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### 三、先跑通再优化
+第一次实现禁止缓存、并发、微服务。优先保证功能正确性，性能优化在功能验证后进行。避免过早优化的陷阱。
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### 四、可读性优先
+变量名优于缩写，行内注释优于设计文档。代码应当自解释，命名清晰直观。他人能够快速理解代码意图和实现逻辑。
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+### 五、实用测试覆盖
+测试覆盖主路径即可，禁止为100%覆盖率而制造mock地狱。重点测试核心业务逻辑和用户关键路径，避免过度工程化测试。
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### 六、技术选择审慎
+新技术必须回答"不用就解决不了"才允许引入。优先使用团队熟悉的技术栈，避免为了技术而技术的选择。每一项技术决策都要有明确的业务驱动力。
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+### 七、中文文档优先
+用中文构建所有markdown文档和代码注解。确保团队所有成员都能无障碍理解项目文档和代码说明。
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+## 技术约束
 
-## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+### 技术栈限制
+- 前端：纯HTML5 + 嵌入式JavaScript + Tailwind CSS (CDN)
+- 样式：Tailwind CSS工具类 + 自定义配色
+- 数据存储：优先内存存储，避免数据库依赖
+- 构建工具：禁止使用构建工具，直接运行静态文件
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+### 架构约束
+- 单文件优先：功能尽可能在单个HTML文件中实现
+- 无后端：当前阶段不实现服务器端功能
+- 无打包：禁止使用webpack、vite等构建工具
+- 无依赖：外部资源仅通过CDN加载
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+### 开发约束
+- 禁止缓存：首次实现不考虑缓存机制
+- 禁止并发：避免复杂的异步处理和多线程
+- 禁止微服务：采用单体架构，避免服务拆分
+
+## 开发工作流
+
+### 功能实现流程
+1. 需求明确：确保第二周内有明确使用需求
+2. 最简实现：选择最简单的技术方案
+3. 功能验证：确保核心功能正常工作
+4. 代码审查：检查可读性和中文注释
+5. 测试覆盖：覆盖主要用户路径
+6. 优化考虑：仅在性能问题时进行优化
+
+### 代码质量标准
+- 变量命名：使用完整中文或英文单词，禁止缩写
+- 代码注释：关键逻辑必须有中文行内注释
+- 文档更新：功能变更必须同步更新中文文档
+- 测试要求：覆盖核心业务流程，无需追求覆盖率
+
+### 技术决策流程
+- 问题识别：明确需要解决的具体问题
+- 方案比较：评估不同技术方案的复杂度
+- 最简选择：选择能够解决问题的最简单方案
+- 审慎引入：新技术必须有明确"非用不可"的理由
+
+## 治理
+
+### 章程地位
+本章程高于所有其他开发规范和实践。任何开发决策都必须符合章程原则。章程解释权归项目团队所有。
+
+### 修订程序
+- 提案：任何团队成员可以提出修订建议
+- 讨论：团队讨论修订的必要性和影响
+- 批准：多数同意通过修订
+- 更新：更新版本号并记录修订内容
+- 同步：更新所有相关模板和文档
+
+### 合规检查
+- 设计审查：确保符合简单性原则
+- 代码审查：检查可读性和中文注释
+- 技术审查：验证技术选择的必要性
+- 文档审查：确保中文文档完整性
+
+### 版本管理
+采用语义版本控制：
+- MAJOR：治理原则的重大变更或向后不兼容修改
+- MINOR：新增原则或重要指导内容
+- PATCH：澄清、文字修正、非语义改进
+
+**版本**: 1.0.0 | **制定**: 2025-10-15 | **最后修订**: 2025-10-15

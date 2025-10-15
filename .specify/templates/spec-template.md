@@ -80,6 +80,10 @@
 <!--
   ACTION REQUIRED: The content in this section represents placeholders.
   Fill them out with the right functional requirements.
+
+  根据章程YAGNI原则：只包含第二周内有明确需求的功能。
+  根据章程简单性优先原则：优先选择最简单的实现方案。
+  根据章程技术选择审慎原则：每个技术选择都必须有明确的业务驱动力。
 -->
 
 ### Functional Requirements
