@@ -1,0 +1,36 @@
+{
+  "4srQCk-QmVXFL6Wz8CjWa9tLRjdtd6h-zA90CAC3roA": {
+    "user_id": 1,
+    "username": "admin",
+    "role": "admin",
+    "created_at": "2025-10-15T18:19:05.721080",
+    "expires_at": "2025-10-16T18:19:05.721080",
+    "last_accessed": "2025-10-15T18:19:05.721080"
+  },
+  "0xn_CuWURs2iTAD6Fr2346m5Pf5UjI3xSO6KcrKjMZc": {
+    "user_id": 2,
+    "username": "test_student_001",
+    "role": "student",
+    "created_at": "2025-10-15T18:47:36.580742",
+    "expires_at": "2025-10-16T18:47:36.580742",
+    "last_accessed": "2025-10-15T18:47:36.583233"
+  },
+  "a0_4Ewk-hjlxZZW6UJB706SiK03fc2zqmLnEdZ12k8I": {
+    "user_id": 3,
+    "username": "timeout_test_user",
+    "role": "student",
+    "created_at": "2025-10-15T18:55:52.311650",
+    "expires_at": "2025-10-16T18:55:52.311650",
+    "last_accessed": "2025-10-15T18:55:52.311650"
+  },
+  "0ae1vC-U4Qckji5VaL5Td7h5LlAVRfdEFpr1gQgj8Ao": {
+    "user_id": 1,
+    "username": "admin",
+    "role": "admin",
+    "created_at": "2025-10-15T19:05:22.503166",
+    "expires_at": "2025-10-16T19:05:22.503166",
+    "last_accessed": "2025-10-15T19:05:22.503166",
+    "remember_me": false,
+    "timeout_hours": 24
+  }
+}

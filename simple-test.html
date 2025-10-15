@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单连接测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 前后端连接测试</h1>
+
+        <div>
+            <button onclick="testBackendConnection()">测试后端连接</button>
+            <button onclick="testLoginAPI()">测试登录API</button>
+            <button onclick="clearResults()">清除结果</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testBackendConnection() {
+            showResult('开始测试后端连接...', 'info');
+
+            try {
+                // 检测API URL
+                const API_BASE_URL = window.location.hostname === 'localhost' && (window.location.port === '3000' || window.location.port === '3001')
+                    ? 'http://localhost:8082'
+                    : '';
+
+                showResult(`API基础URL: ${API_BASE_URL}`, 'info');
+
+                // 测试健康检查
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+
+                showResult(`✅ 后端连接成功!`, 'success');
+                showResult(`响应状态: ${response.status}`, 'success');
+                showResult(`响应数据: ${JSON.stringify(data, null, 2)}`, 'success');
+
+            } catch (error) {
+                showResult(`❌ 后端连接失败: ${error.message}`, 'error');
+                showResult(`请检查后端服务器是否在 http://localhost:8082 运行`, 'error');
+            }
+        }
+
+        async function testLoginAPI() {
+            showResult('开始测试登录API...', 'info');
+
+            try {
+                // 检测API URL
+                const API_BASE_URL = window.location.hostname === 'localhost' && (window.location.port === '3000' || window.location.port === '3001')
+                    ? 'http://localhost:8082'
+                    : '';
+
+                showResult(`发送登录请求到: ${API_BASE_URL}/api/auth/login`, 'info');
+
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin',
+                        captcha: 'test',
+                        remember_me: false
+                    })
+                });
+
+                const data = await response.json();
+
+                showResult(`登录API响应状态: ${response.status}`, 'info');
+                showResult(`登录API响应数据: ${JSON.stringify(data, null, 2)}`, 'info');
+
+                if (data.success) {
+                    showResult('🎉 登录API测试成功!', 'success');
+
+                    // 测试会话
+                    if (data.data.session_token) {
+                        showResult('测试会话验证...', 'info');
+                        const meResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
+                            headers: {
+                                'Authorization': `Bearer ${data.data.session_token}`
+                            }
+                        });
+                        const meData = await meResponse.json();
+                        showResult(`会话验证响应: ${JSON.stringify(meData, null, 2)}`, meData.success ? 'success' : 'error');
+                    }
+                } else {
+                    showResult('登录API测试失败', 'error');
+                }
+
+            } catch (error) {
+                showResult(`❌ 登录API测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 页面加载时自动测试
+        window.addEventListener('load', function() {
+            showResult('页面加载完成，开始自动测试...', 'info');
+            setTimeout(testBackendConnection, 1000);
+        });
+    </script>
+</body>
+</html>

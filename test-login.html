@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录测试页面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl p-8 shadow-lg w-full max-w-md">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">登录测试</h2>
+
+        <form id="loginForm">
+            <div class="mb-4">
+                <label for="username" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                <input type="text" id="username" name="username" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="输入 admin">
+            </div>
+
+            <div class="mb-4">
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                <input type="password" id="password" name="password" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="输入 admin">
+            </div>
+
+            <div class="mb-4">
+                <label for="captcha" class="block text-sm font-medium text-gray-700 mb-1">验证码</label>
+                <input type="text" id="captcha" name="captcha" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="输入任意验证码">
+            </div>
+
+            <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600">
+                登录测试
+            </button>
+        </form>
+
+        <div id="debug-info" class="mt-6 p-4 bg-gray-100 rounded-lg text-sm">
+            <h3 class="font-bold mb-2">调试信息：</h3>
+            <div id="debug-content">等待登录...</div>
+        </div>
+
+        <div id="result" class="mt-4 p-4 rounded-lg text-sm" style="display: none;">
+            <h3 class="font-bold mb-2">结果：</h3>
+            <div id="result-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // 调试信息显示函数
+        function showDebug(message) {
+            const debugContent = document.getElementById('debug-content');
+            debugContent.innerHTML += '<br>' + new Date().toLocaleTimeString() + ': ' + message;
+        }
+
+        // 显示结果
+        function showResult(success, message, data = null) {
+            const result = document.getElementById('result');
+            const resultContent = document.getElementById('result-content');
+
+            result.style.display = 'block';
+            result.className = 'mt-4 p-4 rounded-lg text-sm ' + (success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800');
+
+            resultContent.innerHTML = '<strong>' + (success ? '成功' : '失败') + ':</strong> ' + message;
+
+            if (data) {
+                resultContent.innerHTML += '<br><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            }
+        }
+
+        // 表单提交处理
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            showDebug('表单提交事件触发');
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const captcha = document.getElementById('captcha').value.trim();
+
+            showDebug('用户名: ' + username);
+            showDebug('密码: ' + (password ? '***' : '(空)'));
+            showDebug('验证码: ' + captcha);
+
+            if (!username || !password || !captcha) {
+                showResult(false, '请填写所有字段');
+                return;
+            }
+
+            // 检测API URL
+            const API_BASE_URL = window.location.hostname === 'localhost' && (window.location.port === '3000' || window.location.port === '3001')
+                ? 'http://localhost:8082'
+                : '';
+
+            showDebug('API基础URL: ' + API_BASE_URL);
+            showDebug('完整API URL: ' + API_BASE_URL + '/api/auth/login');
+
+            try {
+                showDebug('开始发送API请求...');
+
+                const response = await fetch(API_BASE_URL + '/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        captcha: captcha,
+                        remember_me: false
+                    })
+                });
+
+                showDebug('收到响应，状态码: ' + response.status);
+
+                const result = await response.json();
+                showDebug('响应内容: ' + JSON.stringify(result));
+
+                if (result.success) {
+                    showResult(true, '登录成功！', result.data);
+
+                    // 存储会话令牌
+                    if (result.data.session_token) {
+                        localStorage.setItem('session_token', result.data.session_token);
+                        showDebug('会话令牌已保存到localStorage');
+                    }
+
+                    // 测试会话是否有效
+                    showDebug('测试会话有效性...');
+                    const meResponse = await fetch(API_BASE_URL + '/api/auth/me', {
+                        headers: {
+                            'Authorization': 'Bearer ' + result.data.session_token
+                        }
+                    });
+
+                    const meResult = await meResponse.json();
+                    showDebug('用户信息API响应: ' + JSON.stringify(meResult));
+
+                } else {
+                    showResult(false, result.message || '登录失败', result);
+                }
+
+            } catch (error) {
+                showDebug('发生错误: ' + error.message);
+                showResult(false, '网络错误: ' + error.message);
+            }
+        });
+
+        // 页面加载时的调试信息
+        showDebug('页面加载完成');
+        showDebug('当前URL: ' + window.location.href);
+        showDebug('主机名: ' + window.location.hostname);
+        showDebug('端口: ' + window.location.port);
+
+        // 检查是否有已存在的会话
+        const existingToken = localStorage.getItem('session_token');
+        if (existingToken) {
+            showDebug('发现已存在的会话令牌');
+        } else {
+            showDebug('没有找到已存在的会话令牌');
+        }
+    </script>
+</body>
+</html>

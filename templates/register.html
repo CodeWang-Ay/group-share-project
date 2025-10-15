@@ -38,7 +38,13 @@
                 @apply border-success focus:ring-success/30;
             }
             .btn-primary {
-                @apply w-full bg-primary text-white rounded-lg py-3 font-medium hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50;
+                @apply w-full bg-primary text-white rounded-lg py-3 font-medium hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 relative;
+            }
+            .btn-loading {
+                @apply bg-primary/80 cursor-not-allowed;
+            }
+            .loading-spinner {
+                @apply inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin;
             }
             .card-shadow {
                 @apply shadow-lg shadow-gray-200/50;
@@ -111,43 +117,30 @@
             </div>
             
             <form class="flex-1">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-                    <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">姓名 <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fa fa-user text-gray-400"></i>
-                            </div>
-                            <input type="text" id="name" class="form-input pl-10" placeholder="请输入您的姓名">
+                <div class="mb-5">
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-1">用户名 <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa fa-user text-gray-400"></i>
                         </div>
+                        <input type="text" id="username" class="form-input pl-10" placeholder="请输入用户名（3-50个字符，字母、数字、下划线）">
                     </div>
-                    
-                    <div>
-                        <label for="role" class="block text-sm font-medium text-gray-700 mb-1">身份角色 <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fa fa-id-card-o text-gray-400"></i>
-                            </div>
-                            <select id="role" class="form-input pl-10 appearance-none bg-gray-50">
-                                <option value="">请选择您的身份</option>
-                                <option value="teacher">老师</option>
-                                <option value="student">学生</option>
-                            </select>
-                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                <i class="fa fa-chevron-down text-gray-400 text-xs"></i>
-                            </div>
+                </div>
+
+                <div class="mb-5">
+                    <label for="role" class="block text-sm font-medium text-gray-700 mb-1">身份角色 <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa fa-id-card-o text-gray-400"></i>
                         </div>
-                    </div>
-                    
-                    <div>
-                        <label for="id-number" class="block text-sm font-medium text-gray-700 mb-1">工号/学号 <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fa fa-key text-gray-400"></i>
-                            </div>
-                            <input type="text" id="id-number" class="form-input pl-10" placeholder="请输入工号或学号">
+                        <select id="role" class="form-input pl-10 appearance-none bg-gray-50">
+                            <option value="">请选择您的身份</option>
+                            <option value="teacher">老师</option>
+                            <option value="student">学生</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <i class="fa fa-chevron-down text-gray-400 text-xs"></i>
                         </div>
-                        <p class="form-hint">请使用学校统一分配的号码</p>
                     </div>
                 </div>
                 
@@ -200,8 +193,9 @@
                     </label>
                 </div>
                 
-                <button type="submit" class="btn-primary mb-4">
-                    注册账号
+                <button type="submit" class="btn-primary mb-4" id="register-btn">
+                    <span id="register-text">注册账号</span>
+                    <span id="register-spinner" class="loading-spinner hidden ml-2"></span>
                 </button>
                 
                 <div class="text-center text-sm text-gray-500">
@@ -241,18 +235,192 @@
     </div>
 
     <script>
+        // API基础URL - 根据当前环境自动检测
+        const API_BASE_URL = window.location.hostname === 'localhost' && (window.location.port === '3000' || window.location.port === '3001')
+            ? 'http://localhost:8082'
+            : '';
+
         // 表单提交处理
-        document.querySelector('form').addEventListener('submit', function(e) {
+        document.querySelector('form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const successAlert = document.getElementById('register-success');
-            successAlert.classList.remove('translate-x-full');
-            
+
+            // 添加调试信息
+            console.log('🔥 注册表单提交事件触发');
+            console.log('📍 API_BASE_URL:', API_BASE_URL);
+            console.log('📍 当前页面URL:', window.location.href);
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const confirmPassword = document.getElementById('confirm-password').value.trim();
+            const role = document.getElementById('role').value.trim();
+
+            console.log('📝 表单数据:', {
+                username,
+                password: password ? '***' : '',
+                confirmPassword: confirmPassword ? '***' : '',
+                role
+            });
+
+            // 简单的前端验证
+            if (!username || !password || !confirmPassword || !role) {
+                showAlert('请填写完整的注册信息', 'error');
+                return;
+            }
+
+            if (username.length < 3 || username.length > 50) {
+                showAlert('用户名长度必须在3-50个字符之间', 'error');
+                return;
+            }
+
+            if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                showAlert('用户名只能包含字母、数字和下划线', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showAlert('密码长度至少为6位', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showAlert('两次输入的密码不一致', 'error');
+                return;
+            }
+
+            // 显示加载状态
+            const registerBtn = document.getElementById('register-btn');
+            const registerText = document.getElementById('register-text');
+            const registerSpinner = document.getElementById('register-spinner');
+
+            registerBtn.disabled = true;
+            registerBtn.classList.add('btn-loading');
+            registerText.textContent = '注册中';
+            registerSpinner.classList.remove('hidden');
+
+            try {
+                console.log('🚀 开始发送注册API请求...');
+                const apiUrl = `${API_BASE_URL}/api/auth/register`;
+                console.log('🌐 请求URL:', apiUrl);
+
+                const requestData = {
+                    username: username,
+                    password: password,
+                    role: role
+                };
+                console.log('📤 请求数据:', requestData);
+
+                // 调用注册API
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                console.log('📥 收到响应，状态码:', response.status);
+
+                const result = await response.json();
+                console.log('📋 响应数据:', result);
+
+                if (result.success) {
+                    // 注册成功
+                    showAlert('注册成功！请等待管理员审核后登录使用', 'success');
+
+                    // 延迟跳转到登录页面
+                    setTimeout(() => {
+                        window.location.href = API_BASE_URL ? `${API_BASE_URL}/login` : '/login.html';
+                    }, 3000);
+                } else {
+                    // 注册失败
+                    console.log('❌ 注册失败:', result);
+                    const errorMessage = result.message || '注册失败，请重试';
+                    const errorDetail = result.error || 'UNKNOWN_ERROR';
+
+                    // 显示详细的错误信息
+                    showAlert(`${errorMessage} (错误代码: ${errorDetail})`, 'error');
+
+                    // 根据具体错误提供用户友好的提示
+                    if (result.error === 'USERNAME_EXISTS') {
+                        showAlert('用户名已存在，请选择其他用户名', 'error');
+                    } else if (result.error === 'VALIDATION_ERROR') {
+                        if (errorMessage.includes('用户名格式')) {
+                            showAlert('用户名格式不正确：3-50个字符，只能包含字母、数字、下划线', 'error');
+                        } else if (errorMessage.includes('密码长度')) {
+                            showAlert('密码长度至少为6位', 'error');
+                        } else if (errorMessage.includes('注册角色无效')) {
+                            showAlert('请选择有效的用户角色', 'error');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('注册错误:', error);
+                showAlert('网络错误，请检查网络连接后重试', 'error');
+            } finally {
+                // 恢复注册按钮
+                registerBtn.disabled = false;
+                registerBtn.classList.remove('btn-loading');
+                registerText.textContent = '注册账号';
+                registerSpinner.classList.add('hidden');
+            }
+        });
+
+        // 显示提示信息
+        function showAlert(message, type = 'error') {
+            // 如果是成功消息，使用现有的成功提示框
+            if (type === 'success') {
+                const successAlert = document.getElementById('register-success');
+                const messageEl = successAlert.querySelector('p');
+                messageEl.textContent = message;
+                successAlert.classList.remove('translate-x-full');
+
+                // 5秒后自动隐藏提示
+                setTimeout(() => {
+                    successAlert.classList.add('translate-x-full');
+                }, 5000);
+                return;
+            }
+
+            // 对于错误消息，创建或更新错误提示框
+            let errorAlert = document.getElementById('register-error');
+            if (!errorAlert) {
+                // 创建错误提示框
+                errorAlert = document.createElement('div');
+                errorAlert.id = 'register-error';
+                errorAlert.className = 'fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 max-w-xs transform translate-x-full transition-transform duration-300 z-50 border-l-4 border-red-500';
+                errorAlert.innerHTML = `
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fa fa-exclamation-circle text-red-500"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-gray-800">注册失败</h3>
+                            <div class="mt-2 text-sm text-gray-600">
+                                <p id="error-message">${message}</p>
+                            </div>
+                            <div class="mt-3">
+                                <button onclick="document.getElementById('register-error').classList.add('translate-x-full')" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                    知道了
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(errorAlert);
+            } else {
+                // 更新错误消息
+                document.getElementById('error-message').textContent = message;
+            }
+
+            // 显示错误提示
+            errorAlert.classList.remove('translate-x-full');
+
             // 5秒后自动隐藏提示
             setTimeout(() => {
-                successAlert.classList.add('translate-x-full');
+                errorAlert.classList.add('translate-x-full');
             }, 5000);
-        });
-        
+        }
+
         // 关闭提示框
         document.getElementById('close-success').addEventListener('click', function() {
             document.getElementById('register-success').classList.add('translate-x-full');
