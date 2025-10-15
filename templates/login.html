@@ -136,7 +136,7 @@
                 });
             }
 
-            // 获取DOM元素
+            // 获取DOM元素  跳转到/api/auth/login 按钮
             const loginBtn = document.querySelector('.login-btn');
             const registerBtn = document.querySelector('.register-btn');
             const usernameInput = document.getElementById('username');
@@ -202,7 +202,7 @@
 
             // 注册按钮点击事件
             registerBtn.addEventListener('click', function() {
-                window.location.href = '/register.html';
+                window.location.href = 'http://localhost:8081/register';
             });
 
             // 回车键登录
