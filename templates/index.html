@@ -102,7 +102,7 @@
                         <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                     </div>
 
-                    <!-- 用户头像和下拉菜单 -->
+                    <!-- 用户信息 -->
                     <div class="relative group">
                         <div class="flex items-center gap-2 cursor-pointer">
                             <img src="https://picsum.photos/id/{{ user.id }}/200/200" alt="{{ user.username }}头像" class="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm">
@@ -126,11 +126,19 @@
                             <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-100">
                                 <i class="fa fa-cog mr-2 text-gray-500"></i>设置
                             </a>
-                            <a href="#" id="logout-link" class="block px-4 py-2 text-sm text-red-500 hover:bg-gray-100">
-                                <i class="fa fa-sign-out mr-2"></i>退出登录
-                            </a>
                         </div>
                     </div>
+
+                    <!-- 退出登录按钮 -->
+                    <button id="logout-btn" class="hidden sm:flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                        <i class="fa fa-sign-out"></i>
+                        <span>退出登录</span>
+                    </button>
+
+                    <!-- 移动端退出登录按钮 -->
+                    <button id="logout-btn-mobile" class="sm:hidden p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors">
+                        <i class="fa fa-sign-out"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -827,44 +835,68 @@
             initMobileSidebar();
 
             // 登出功能
+            const logoutBtn = document.getElementById('logout-btn');
+            const logoutBtnMobile = document.getElementById('logout-btn-mobile');
+
+            // 退出登录函数
+            async function performLogout() {
+                try {
+                    console.log('🔥 开始登出操作');
+
+                    // 调用登出API
+                    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('session_token')}`
+                        }
+                    });
+
+                    const result = await response.json();
+                    console.log('📋 登出API响应:', result);
+
+                    // 清除本地存储的会话信息
+                    localStorage.removeItem('session_token');
+                    localStorage.removeItem('user_info');
+                    localStorage.removeItem('remember_me');
+
+                    console.log('✅ 登出成功，跳转到登录页面');
+
+                    // 跳转到登录页面
+                    window.location.href = 'http://localhost:8081/login';
+
+                } catch (error) {
+                    console.error('❌ 登出过程中发生错误:', error);
+                    // 即使API调用失败，也清除本地存储并跳转
+                    localStorage.removeItem('session_token');
+                    localStorage.removeItem('user_info');
+                    localStorage.removeItem('remember_me');
+                    window.location.href = 'http://localhost:8081/login';
+                }
+            }
+
+            // 桌面端退出登录按钮事件
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    await performLogout();
+                });
+            }
+
+            // 移动端退出登录按钮事件
+            if (logoutBtnMobile) {
+                logoutBtnMobile.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    await performLogout();
+                });
+            }
+
+            // 保留原有的下拉菜单登出功能（如果还存在）
             const logoutLink = document.getElementById('logout-link');
             if (logoutLink) {
                 logoutLink.addEventListener('click', async function(e) {
                     e.preventDefault();
-
-                    try {
-                        console.log('🔥 开始登出操作');
-
-                        // 调用登出API
-                        const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${localStorage.getItem('session_token')}`
-                            }
-                        });
-
-                        const result = await response.json();
-                        console.log('📋 登出API响应:', result);
-
-                        // 清除本地存储的会话信息
-                        localStorage.removeItem('session_token');
-                        localStorage.removeItem('user_info');
-                        localStorage.removeItem('remember_me');
-
-                        console.log('✅ 登出成功，跳转到登录页面');
-
-                        // 跳转到登录页面
-                        window.location.href = API_BASE_URL ? `${API_BASE_URL}/login` : '/login.html';
-
-                    } catch (error) {
-                        console.error('❌ 登出过程中发生错误:', error);
-                        // 即使API调用失败，也清除本地存储并跳转
-                        localStorage.removeItem('session_token');
-                        localStorage.removeItem('user_info');
-                        localStorage.removeItem('remember_me');
-                        window.location.href = API_BASE_URL ? `${API_BASE_URL}/login` : '/login.html';
-                    }
+                    await performLogout();
                 });
             }
 
