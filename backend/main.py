@@ -105,9 +105,9 @@ async def global_exception_handler(request: Request, exc: Exception):
 async def get_current_user(request: Request) -> Optional[User]:
     """
     获取当前登录用户
-    从请求头中获取会话令牌并验证
+    从请求头、cookie或URL参数中获取会话令牌并验证
     """
-    # 从请求头或cookie中获取会话令牌
+    # 从请求头中获取会话令牌
     session_token = request.headers.get("Authorization")
     if session_token and session_token.startswith("Bearer "):
         session_token = session_token[7:]  # 移除 "Bearer " 前缀
@@ -115,6 +115,12 @@ async def get_current_user(request: Request) -> Optional[User]:
     # 如果请求头中没有，尝试从cookie中获取
     if not session_token:
         session_token = request.cookies.get("session_token")
+
+    # 如果cookie中也没有，尝试从URL参数中获取（仅用于跨域场景，一次性使用）
+    if not session_token:
+        session_token = request.query_params.get("session_token")
+        # 如果是从URL参数获取的token，验证后需要重定向到干净的URL
+        url_token_used = bool(session_token)
 
     if not session_token:
         return None
@@ -464,16 +470,40 @@ async def metrics():
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     """
-    主页面路由 - 需要登录才能访问
+    主页面路由 - 根据登录状态显示不同页面
     """
+    # 检查是否通过URL参数传递了token
+    url_token = request.query_params.get("session_token")
+
     # 检查用户是否已登录
+    print(f"🔍 检查用户登录状态...")
+    print(f"   - Cookie session_token: {request.cookies.get('session_token')}")
+    print(f"   - Authorization header: {request.headers.get('Authorization')}")
+    print(f"   - URL token: {url_token}")
+
     current_user = await get_current_user(request)
+    print(f"   - Current user: {current_user}")
+
     if not current_user:
-        # 未登录，重定向到登录页面
+        # 未登录，直接显示登录页面
+        print("🚪 用户未登录，显示登录页面")
+        return templates.TemplateResponse("login.html", {"request": request})
+
+    # 如果是通过URL参数认证成功，设置cookie并重定向到干净的URL
+    if url_token:
         from fastapi.responses import RedirectResponse
-        return RedirectResponse(url="/login", status_code=302)
+        response = RedirectResponse(url="/", status_code=302)
+        response.set_cookie(
+            key="session_token",
+            value=url_token,
+            max_age=86400,  # 24小时
+            httponly=True,
+            samesite="lax"
+        )
+        return response
 
     # 已登录，提供主页面模板，并传递用户信息
+    print(f"✅ 用户已登录: {current_user.username}，显示主页面")
     return templates.TemplateResponse("index.html", {
         "request": request,
         "user": current_user
@@ -486,6 +516,7 @@ async def login_page(request: Request):
     """
     登录页面路由
     """
+    print(request)
     return templates.TemplateResponse("login.html", {"request": request})
 
 
@@ -505,6 +536,7 @@ async def login(request: Request):
     用户登录API端点
 
     接收JSON格式的登录数据并验证用户凭据
+    登录成功后直接重定向到主页
     """
     print("🔥 登录API被调用")
 
@@ -553,19 +585,20 @@ async def login(request: Request):
 
         print(f"✅ 登录成功: user={user.username}, role={user.role}, session_token={session_token[:20]}...")
 
-        # 登录成功，返回用户信息、会话令牌和跳转URL
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={
-                "success": True,
-                "message": "登录成功",
-                "data": {
-                    "user": user.to_dict(),
-                    "session_token": session_token,
-                    "redirect_url": "/"
-                }
-            }
+        # 登录成功，直接重定向到主页，在URL中传递session_token
+        from fastapi.responses import RedirectResponse
+        response = RedirectResponse(url=f"/?session_token={session_token}", status_code=302)
+
+        # 同时设置cookie，以便后续请求使用
+        response.set_cookie(
+            key="session_token",
+            value=session_token,
+            max_age=86400 if not remember_me else 604800,  # 24小时或7天
+            httponly=True,
+            samesite="lax"
         )
+
+        return response
 
     except Exception as e:
         return JSONResponse(
@@ -915,6 +948,34 @@ async def startup_event():
     print("✅ 启动任务完成")
 
 
+# API端点：清空所有会话（开发调试用）
+@app.delete("/api/admin/clear-sessions")
+async def clear_all_sessions():
+    """
+    清空所有会话（仅用于开发调试）
+    """
+    # 检查是否为开发环境
+    if os.getenv("DEBUG", "false").lower() == "true":
+        cleared_count = session_manager.clear_all_sessions()
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": f"已清空所有会话",
+                "cleared_count": cleared_count
+            }
+        )
+    else:
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={
+                "success": False,
+                "message": "此功能仅在开发环境可用",
+                "error": "FORBIDDEN"
+            }
+        )
+
+
 # 启动命令
 if __name__ == "__main__":
     import uvicorn
@@ -924,6 +985,7 @@ if __name__ == "__main__":
     print(f"   - 服务地址: http://localhost:8081")
     print(f"   - API文档: http://localhost:8081/docs")
     print(f"   - 数据库: {DATABASE_PATH}")
+    print(f"   - Session存储: {'文件持久化' if session_manager.use_file_storage else '内存（重启清空）'}")
     print()
 
     uvicorn.run(

@@ -32,5 +32,81 @@
     "last_accessed": "2025-10-15T19:05:22.503166",
     "remember_me": false,
     "timeout_hours": 24
+  },
+  "9TE8C8sHNaGUsVbCnOlAM03dFIELux-s4GHbusFCEKA": {
+    "user_id": 1,
+    "username": "admin",
+    "role": "admin",
+    "created_at": "2025-10-15T19:45:12.380972",
+    "expires_at": "2025-10-16T19:45:12.380972",
+    "last_accessed": "2025-10-15T19:45:12.380972",
+    "remember_me": false,
+    "timeout_hours": 24
+  },
+  "Joq_VXrPNfLT9__at34PIs02duApUI2SqyDht92rs4o": {
+    "user_id": 1,
+    "username": "admin",
+    "role": "admin",
+    "created_at": "2025-10-15T19:47:00.387384",
+    "expires_at": "2025-10-16T19:47:00.387384",
+    "last_accessed": "2025-10-15T19:47:03.326373",
+    "remember_me": false,
+    "timeout_hours": 24,
+    "is_near_expiry": false,
+    "time_remaining_seconds": 86397
+  },
+  "FCejTFTkjZmM5QTWyTVF-_bbrcDAvIYbDNHeE74RPjo": {
+    "user_id": 1,
+    "username": "admin",
+    "role": "admin",
+    "created_at": "2025-10-15T19:54:52.138544",
+    "expires_at": "2025-10-16T19:54:52.138544",
+    "last_accessed": "2025-10-15T19:54:52.138544",
+    "remember_me": false,
+    "timeout_hours": 24
+  },
+  "GeId8xeMmKJ1ZxHrP214sEwE-nSFI3uZJiUs2sZPoQ4": {
+    "user_id": 1,
+    "username": "admin",
+    "role": "admin",
+    "created_at": "2025-10-15T23:59:31.113404",
+    "expires_at": "2025-10-16T23:59:31.113404",
+    "last_accessed": "2025-10-15T23:59:31.113404",
+    "remember_me": false,
+    "timeout_hours": 24
+  },
+  "MrTND-UsWaOHke24vA28rGUqtI7LsDm02aBiMI-E9V0": {
+    "user_id": 1,
+    "username": "admin",
+    "role": "admin",
+    "created_at": "2025-10-16T00:02:19.332154",
+    "expires_at": "2025-10-17T00:02:19.332154",
+    "last_accessed": "2025-10-16T00:23:15.616655",
+    "remember_me": false,
+    "timeout_hours": 24,
+    "is_near_expiry": false,
+    "time_remaining_seconds": 85178
+  },
+  "OtoOoT0n75I5km9Djm1biC_qSJDMDTCY73ZO-ojR9x8": {
+    "user_id": 1,
+    "username": "admin",
+    "role": "admin",
+    "created_at": "2025-10-16T00:09:44.244367",
+    "expires_at": "2025-10-17T00:09:44.244367",
+    "last_accessed": "2025-10-16T00:09:48.569068",
+    "remember_me": false,
+    "timeout_hours": 24
+  },
+  "ri4k6ewcrWyDpB0jQhqdvVJz8gf6Cglbl1Cdc2Hw6QY": {
+    "user_id": 1,
+    "username": "admin",
+    "role": "admin",
+    "created_at": "2025-10-16T00:22:25.208251",
+    "expires_at": "2025-10-17T00:22:25.208251",
+    "last_accessed": "2025-10-16T00:22:57.523155",
+    "remember_me": false,
+    "timeout_hours": 24,
+    "is_near_expiry": false,
+    "time_remaining_seconds": 86399
   }
 }

@@ -759,9 +759,14 @@
     <!-- JavaScript -->
     <script>
         // API基础URL - 根据当前环境自动检测
-        const API_BASE_URL = window.location.hostname === 'localhost' && (window.location.port === '3000' || window.location.port === '3001')
-            ? 'http://localhost:8082'
-            : '';
+        let API_BASE_URL = '';
+        if (window.location.hostname === 'localhost') {
+            if (window.location.port === '8082' || window.location.port === '8000') {
+                API_BASE_URL = `http://localhost:${window.location.port}`;
+            } else if (window.location.port === '3000' || window.location.port === '3001') {
+                API_BASE_URL = 'http://localhost:8082';
+            }
+        }
 
         // 移动端侧边栏功能
         function initMobileSidebar() {

@@ -20,11 +20,23 @@ class SessionManager:
     负责用户会话的创建、存储、验证和销毁
     """
 
-    def __init__(self):
-        """初始化会话管理器"""
+    def __init__(self, use_file_storage=False):
+        """
+        初始化会话管理器
+
+        Args:
+            use_file_storage: 是否使用文件存储（生产环境为True，开发环境为False）
+        """
+        self.use_file_storage = use_file_storage
         self.session_file = Path(__file__).parent.parent / "data" / "sessions.json"
         self.session_file.parent.mkdir(parents=True, exist_ok=True)
-        self.sessions = self._load_sessions()
+
+        if self.use_file_storage:
+            self.sessions = self._load_sessions()
+        else:
+            # 开发环境使用内存存储，服务重启后清空session
+            self.sessions = {}
+            print("🔧 开发模式：Session使用内存存储，服务重启后将清空所有会话")
 
     def _load_sessions(self) -> Dict[str, Dict[str, Any]]:
         """
@@ -47,6 +59,10 @@ class SessionManager:
 
     def _save_sessions(self) -> None:
         """保存会话数据到文件"""
+        if not self.use_file_storage:
+            # 内存模式不需要保存到文件
+            return
+
         try:
             with open(self.session_file, 'w', encoding='utf-8') as f:
                 json.dump(self.sessions, f, ensure_ascii=False, indent=2)
@@ -284,6 +300,24 @@ class SessionManager:
 
         return len(tokens_to_remove)
 
+    def clear_all_sessions(self) -> int:
+        """
+        清空所有会话（开发环境调试用）
+
+        Returns:
+            int: 清理的会话数量
+        """
+        count = len(self.sessions)
+        self.sessions = {}
+        if self.use_file_storage:
+            self._save_sessions()
+        logger.info(f"已清空所有会话: {count} 个会话被清除")
+        return count
+
 
 # 全局会话管理器实例
-session_manager = SessionManager()
+# 开发环境使用内存存储（服务重启后清空session）
+# 生产环境可以通过环境变量SESSION_USE_FILE_STORAGE=true启用文件存储
+import os
+USE_FILE_STORAGE = os.getenv("SESSION_USE_FILE_STORAGE", "false").lower() == "true"
+session_manager = SessionManager(use_file_storage=USE_FILE_STORAGE)

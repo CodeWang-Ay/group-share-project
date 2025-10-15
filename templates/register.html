@@ -236,9 +236,14 @@
 
     <script>
         // API基础URL - 根据当前环境自动检测
-        const API_BASE_URL = window.location.hostname === 'localhost' && (window.location.port === '3000' || window.location.port === '3001')
-            ? 'http://localhost:8082'
-            : '';
+        let API_BASE_URL = '';
+        if (window.location.hostname === 'localhost') {
+            if (window.location.port === '8082' || window.location.port === '8000') {
+                API_BASE_URL = `http://localhost:${window.location.port}`;
+            } else if (window.location.port === '3000' || window.location.port === '3001') {
+                API_BASE_URL = 'http://localhost:8082';
+            }
+        }
 
         // 表单提交处理
         document.querySelector('form').addEventListener('submit', async function(e) {
