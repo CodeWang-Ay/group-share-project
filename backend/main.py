@@ -16,9 +16,12 @@ from typing import Optional
 
 # 导入内部模块
 from models.user import User
+from models.file import File
 from database.connection import get_db, DATABASE_PATH
 from services.auth import AuthService
 from services.session import session_manager
+from services.file_service import FileService
+from loguru import logger
 
 # 创建FastAPI应用实例
 app = FastAPI(
@@ -529,6 +532,27 @@ async def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
 
+# 共享文件页面路由
+@app.get("/share-file", response_class=HTMLResponse)
+async def share_file_page(request: Request):
+    """
+    共享文件页面路由
+    需要用户登录才能访问
+    """
+    # 检查用户是否已登录
+    current_user = await get_current_user(request)
+    if not current_user:
+        # 未登录，重定向到登录页面
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/login", status_code=302)
+
+    # 已登录，显示共享文件页面
+    return templates.TemplateResponse("share-file.html", {
+        "request": request,
+        "user": current_user
+    })
+
+
 # API端点：用户登录
 @app.post("/api/auth/login")
 async def login(request: Request):
@@ -930,6 +954,520 @@ async def check_session_status(request: Request):
             "data": response_data
         }
     )
+
+
+# 文件相关API端点
+
+# API端点：上传文件
+@app.post("/api/files/upload")
+async def upload_file(request: Request):
+    """
+    文件上传API端点
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        # 获取表单数据
+        form = await request.form()
+        file = form.get("file")
+        description = form.get("description", "")
+        tags = form.get("tags", "")
+        is_public = form.get("is_public", "false").lower() == "true"
+
+        if not file:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "请选择要上传的文件",
+                    "error": "NO_FILE"
+                }
+            )
+
+        # 检查文件大小
+        file_data = await file.read()
+        if len(file_data) > FileService.MAX_FILE_SIZE:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": f"文件大小超过限制（最大 {FileService.MAX_FILE_SIZE // (1024*1024)} MB）",
+                    "error": "FILE_TOO_LARGE"
+                }
+            )
+
+        # 检查文件类型
+        if not FileService.is_allowed_file(file.filename):
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "不支持的文件类型",
+                    "error": "UNSUPPORTED_FILE_TYPE"
+                }
+            )
+
+        # 上传文件
+        uploaded_file, error_message = FileService.upload_file(
+            file_data=file_data,
+            original_filename=file.filename,
+            uploader_id=current_user.id,
+            description=description if description else None,
+            tags=tags if tags else None,
+            is_public=is_public
+        )
+
+        if uploaded_file:
+            return JSONResponse(
+                status_code=status.HTTP_201_CREATED,
+                content={
+                    "success": True,
+                    "message": "文件上传成功",
+                    "data": uploaded_file.to_dict()
+                }
+            )
+        else:
+            # 根据错误类型返回不同的状态码和消息
+            if "已存在" in error_message:
+                status_code = status.HTTP_409_CONFLICT  # Conflict
+            elif "超过限制" in error_message:
+                status_code = status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+            elif "不支持" in error_message:
+                status_code = status.HTTP_415_UNSUPPORTED_MEDIA_TYPE
+            else:
+                status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+            return JSONResponse(
+                status_code=status_code,
+                content={
+                    "success": False,
+                    "message": error_message or "文件上传失败",
+                    "error": "UPLOAD_FAILED"
+                }
+            )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "文件上传过程中发生错误",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
+# API端点：获取文件列表
+@app.get("/api/files")
+async def get_files(request: Request):
+    """
+    获取文件列表API端点
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        # 获取查询参数
+        user_id = request.query_params.get("user_id")
+        scope = request.query_params.get("scope", "my")  # my, public, all
+        limit = int(request.query_params.get("limit", 50))
+        offset = int(request.query_params.get("offset", 0))
+        keyword = request.query_params.get("keyword", "")
+
+        # 验证参数
+        if limit > 100:
+            limit = 100
+
+        files = []
+
+        if scope == "my":
+            # 获取用户的文件
+            files = FileService.get_files_by_user(current_user.id, limit, offset)
+        elif scope == "public":
+            # 获取公开文件
+            files = FileService.get_public_files(limit, offset)
+        elif scope == "all" and current_user.role == "admin":
+            # 管理员获取所有文件
+            if user_id:
+                files = FileService.get_files_by_user(int(user_id), limit, offset)
+            else:
+                files = FileService.get_files_by_user(current_user.id, limit, offset)
+                files.extend(FileService.get_public_files(limit, offset))
+
+        # 如果有搜索关键词，进行搜索
+        if keyword:
+            if scope == "my":
+                files = FileService.search_files(keyword, current_user.id, limit, offset)
+            elif scope == "public":
+                files = FileService.search_files(keyword, None, limit, offset)
+            elif scope == "all" and current_user.role == "admin":
+                files = FileService.search_files(keyword, int(user_id) if user_id else None, limit, offset)
+        try:
+            reponse_content = {
+                "success": True,
+                "data": {
+                    "files": [file.to_dict() for file in files],
+                    "total": len(files)
+                }
+            }
+        except Exception as e:
+            logger.error(e)
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={
+                    "success": False,
+                    "message": "获取文件列表失败",
+                    "error": "INTERNAL_ERROR"
+                }
+            )
+        
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=reponse_content
+        )
+
+    except ValueError:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "success": False,
+                "message": "参数错误",
+                "error": "INVALID_PARAMETERS"
+            }
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "获取文件列表失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
+# API端点：获取文件详情
+@app.get("/api/files/{file_id}")
+async def get_file_details(file_id: int, request: Request):
+    """
+    获取文件详情API端点
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        file_obj = FileService.get_file_by_id(file_id)
+        if not file_obj:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={
+                    "success": False,
+                    "message": "文件不存在",
+                    "error": "FILE_NOT_FOUND"
+                }
+            )
+
+        # 检查访问权限
+        if not file_obj.is_accessible_by_user(current_user.id, current_user.role):
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": "没有权限访问此文件",
+                    "error": "ACCESS_DENIED"
+                }
+            )
+
+        # 更新访问时间
+        FileService.increment_download_count(file_id)
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "data": file_obj.to_dict()
+            }
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "获取文件详情失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
+# API端点：删除文件
+@app.delete("/api/files/{file_id}")
+async def delete_file(file_id: int, request: Request):
+    """
+    删除文件API端点
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        success = FileService.delete_file(file_id, current_user.id, current_user.role)
+        if success:
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content={
+                    "success": True,
+                    "message": "文件删除成功"
+                }
+            )
+        else:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "文件删除失败，可能没有权限或文件不存在",
+                    "error": "DELETE_FAILED"
+                }
+            )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "删除文件失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
+# API端点：更新文件信息
+@app.put("/api/files/{file_id}")
+async def update_file_info(file_id: int, request: Request):
+    """
+    更新文件信息API端点
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        data = await request.json()
+        description = data.get("description")
+        tags = data.get("tags")
+        is_public = data.get("is_public")
+
+        success = FileService.update_file_info(
+            file_id, current_user.id, current_user.role,
+            description, tags, is_public
+        )
+
+        if success:
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content={
+                    "success": True,
+                    "message": "文件信息更新成功"
+                }
+            )
+        else:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "文件信息更新失败，可能没有权限或文件不存在",
+                    "error": "UPDATE_FAILED"
+                }
+            )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "更新文件信息失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
+# API端点：获取文件统计信息
+@app.get("/api/files/stats")
+async def get_file_stats(request: Request):
+    """
+    获取文件统计信息API端点
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        # 获取查询参数
+        user_id = request.query_params.get("user_id")
+        scope = request.query_params.get("scope", "my")  # my, all
+
+        # 确定统计范围
+        target_user_id = None
+        if scope == "my":
+            target_user_id = current_user.id
+        elif scope == "all" and current_user.role == "admin":
+            target_user_id = int(user_id) if user_id else None
+
+        stats = FileService.get_file_stats(target_user_id)
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "data": stats
+            }
+        )
+
+    except ValueError:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "success": False,
+                "message": "参数错误",
+                "error": "INVALID_PARAMETERS"
+            }
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "获取文件统计信息失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
+# API端点：下载文件
+@app.get("/api/files/{file_id}/download")
+async def download_file(file_id: int, request: Request):
+    """
+    文件下载API端点
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        file_obj = FileService.get_file_by_id(file_id)
+        if not file_obj:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={
+                    "success": False,
+                    "message": "文件不存在",
+                    "error": "FILE_NOT_FOUND"
+                }
+            )
+
+        # 检查访问权限
+        if not file_obj.is_accessible_by_user(current_user.id, current_user.role):
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": "没有权限访问此文件",
+                    "error": "ACCESS_DENIED"
+                }
+            )
+
+        # 检查文件是否存在
+        import os
+        if not os.path.exists(file_obj.file_path):
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={
+                    "success": False,
+                    "message": "文件已丢失",
+                    "error": "FILE_LOST"
+                }
+            )
+
+        # 增加下载次数
+        FileService.increment_download_count(file_id)
+
+        # 返回文件
+        from fastapi.responses import FileResponse
+        return FileResponse(
+            path=file_obj.file_path,
+            filename=file_obj.filename,
+            media_type=file_obj.file_type
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "文件下载失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
 
 
 # 启动时清理过期会话

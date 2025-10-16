@@ -48,11 +48,12 @@ def get_db_cursor() -> Generator[sqlite3.Cursor, None, None]:
 
 def init_db() -> None:
     """
-    初始化数据库，创建用户表和预设管理员账号
+    初始化数据库，创建用户表、文件表和预设管理员账号
 
     该函数会：
     1. 创建users表
-    2. 创建预设管理员用户admin/admin
+    2. 创建files表
+    3. 创建预设管理员用户admin/admin
     """
     # 确保数据库目录存在
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -72,6 +73,35 @@ def init_db() -> None:
 
         # 创建username字段的唯一索引
         cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_username ON users(username)")
+
+        # 创建文件表
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS files (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                filename VARCHAR(255) NOT NULL,
+                file_path VARCHAR(500) NOT NULL,
+                file_size INTEGER NOT NULL,
+                file_type VARCHAR(100) NOT NULL,
+                file_hash VARCHAR(64) UNIQUE,
+                uploader_id INTEGER NOT NULL,
+                upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                description TEXT,
+                tags TEXT,
+                is_public BOOLEAN DEFAULT 0,
+                download_count INTEGER DEFAULT 0,
+                last_accessed TIMESTAMP,
+                status VARCHAR(20) DEFAULT 'active',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (uploader_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        # 创建文件表的索引
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_files_uploader ON files(uploader_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_files_hash ON files(file_hash)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_files_status ON files(status)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_files_upload_time ON files(upload_time)")
 
         # 检查是否已存在admin用户
         cursor.execute("SELECT id FROM users WHERE username = 'admin'")

@@ -48,6 +48,7 @@
         .input-group {
             margin-bottom: 20px;
             text-align: left;
+            position: relative;
         }
         label {
             display: block;
@@ -61,6 +62,25 @@
             border: 1px solid #ddd;
             border-radius: 5px;
             font-size: 14px;
+        }
+        .password-input-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            cursor: pointer;
+            color: #666;
+            user-select: none;
+            padding: 5px;
+        }
+        .password-toggle:hover {
+            color: #6a76f0;
+        }
+        .password-toggle i {
+            font-size: 16px;
         }
         .button-group {
             display: flex;
@@ -98,7 +118,12 @@
         </div>
         <div class="input-group">
             <label for="password">密码</label>
-            <input type="password" id="password" placeholder="请输入密码">
+            <div class="password-input-container">
+                <input type="password" id="password" placeholder="请输入密码" style="padding-right: 40px;">
+                <span class="password-toggle" id="passwordToggle">
+                    <i class="eye-icon">👁️</i>
+                </span>
+            </div>
         </div>
         <div class="button-group">
             <button class="login-btn">登录</button>
@@ -141,6 +166,8 @@
             const registerBtn = document.querySelector('.register-btn');
             const usernameInput = document.getElementById('username');
             const passwordInput = document.getElementById('password');
+            const passwordToggle = document.getElementById('passwordToggle');
+            const eyeIcon = passwordToggle.querySelector('.eye-icon');
 
             // 登录按钮点击事件
             loginBtn.addEventListener('click', async function() {
@@ -197,6 +224,19 @@
                     // 恢复登录按钮状态
                     loginBtn.disabled = false;
                     loginBtn.textContent = '登录';
+                }
+            });
+
+            // 密码显示/隐藏切换功能
+            passwordToggle.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+
+                // 切换图标
+                if (type === 'text') {
+                    eyeIcon.textContent = '🙈'; // 隐藏密码图标
+                } else {
+                    eyeIcon.textContent = '👁️'; // 显示密码图标
                 }
             });
 
