@@ -1262,9 +1262,26 @@
             }
 
             updateFileStats() {
-                // 这里可以更新页面上的文件统计信息
-                // 由于统计信息是静态的，这里暂时不做处理
-                console.log('文件统计已更新');
+                // 更新页面上的文件统计信息
+                try {
+                    // 更新总文件数
+                    const totalFilesElement = document.querySelector('.text-2xl.font-bold.mt-1');
+                    if (totalFilesElement && window.fileManager && window.fileManager.currentFiles) {
+                        totalFilesElement.textContent = window.fileManager.currentFiles.length;
+                    }
+
+                    // 更新总大小
+                    const totalSizeElement = document.querySelectorAll('.text-2xl.font-bold.mt-1')[1];
+                    if (totalSizeElement && window.fileManager && window.fileManager.currentFiles) {
+                        const totalSize = window.fileManager.currentFiles.reduce((sum, file) => sum + file.file_size, 0);
+                        totalSizeElement.textContent = this.formatFileSize(totalSize);
+                    }
+
+                    // 这里可以进一步更新其他统计信息
+                    console.log('文件统计已更新');
+                } catch (error) {
+                    console.error('更新文件统计失败:', error);
+                }
             }
 
             // 文件操作方法
@@ -1375,6 +1392,9 @@
                 }
 
                 try {
+                    // 显示删除中的提示
+                    this.showDeletingMessage(`正在删除文件 "${filename}"...`);
+
                     // 调用后端API删除文件
                     const response = await fetch(`${API_BASE_URL}/api/files/${fileId}`, getAuthFetchOptions({
                         method: 'DELETE'
@@ -1383,6 +1403,9 @@
                     const result = await response.json();
 
                     if (response.ok && result.success) {
+                        // 隐藏删除中提示
+                        this.hideDeletingMessage();
+
                         // 从页面中移除文件
                         window.fileManager.removeFile(fileId);
 
@@ -1391,11 +1414,14 @@
 
                         // 更新文件统计
                         this.updateFileStats();
+
                     } else {
                         throw new Error(result.message || '删除失败');
                     }
                 } catch (error) {
                     console.error('删除文件失败:', error);
+                    this.hideDeletingMessage();
+
                     if (error.message && error.message.includes('401')) {
                         alert('登录已过期，请重新登录');
                         setTimeout(() => {
@@ -1404,6 +1430,37 @@
                     } else {
                         alert(`删除失败: ${error.message}`);
                     }
+                }
+            }
+
+            showDeletingMessage(message) {
+                // 创建删除中提示
+                const deletingDiv = document.createElement('div');
+                deletingDiv.id = 'deleting-message';
+                deletingDiv.className = 'fixed top-4 right-4 bg-orange-500 text-white px-4 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+                deletingDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fa fa-spinner fa-spin mr-2"></i>
+                        <span>${message}</span>
+                    </div>
+                `;
+                document.body.appendChild(deletingDiv);
+
+                // 显示动画
+                setTimeout(() => {
+                    deletingDiv.classList.remove('translate-x-full');
+                }, 100);
+            }
+
+            hideDeletingMessage() {
+                const deletingDiv = document.getElementById('deleting-message');
+                if (deletingDiv) {
+                    deletingDiv.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        if (document.body.contains(deletingDiv)) {
+                            document.body.removeChild(deletingDiv);
+                        }
+                    }, 300);
                 }
             }
 
@@ -1941,20 +1998,44 @@
                 // 从列表中移除文件
                 this.currentFiles = this.currentFiles.filter(file => file.id !== fileId);
 
-                // 移除两个视图中的元素
-                const listElement = document.querySelector('#files-container [data-file-id="${fileId}"]');
-                const gridElement = document.querySelector('#files-grid-container [data-file-id="${fileId}"]');
+                // 移除两个视图中的元素 - 修复选择器
+                const listElement = document.querySelector(`#files-container [data-file-id="${fileId}"]`);
+                const gridElement = document.querySelector(`#files-grid-container [data-file-id="${fileId}"]`);
 
+                // 添加删除动画
                 if (listElement) {
-                    listElement.remove();
+                    listElement.style.transition = 'all 0.3s ease';
+                    listElement.style.opacity = '0';
+                    listElement.style.transform = 'translateX(-20px)';
+
+                    setTimeout(() => {
+                        listElement.remove();
+                        // 检查是否需要显示空状态
+                        if (this.currentFiles.length === 0) {
+                            this.showEmptyState();
+                        }
+                    }, 300);
                 }
+
                 if (gridElement) {
-                    gridElement.remove();
+                    gridElement.style.transition = 'all 0.3s ease';
+                    gridElement.style.opacity = '0';
+                    gridElement.style.transform = 'translateY(20px)';
+
+                    setTimeout(() => {
+                        gridElement.remove();
+                        // 检查是否需要显示空状态
+                        if (this.currentFiles.length === 0) {
+                            this.showEmptyState();
+                        }
+                    }, 300);
                 }
 
                 // 如果没有文件了，显示空状态
                 if (this.currentFiles.length === 0) {
-                    this.showEmptyState();
+                    setTimeout(() => {
+                        this.showEmptyState();
+                    }, 100);
                 }
             }
         }
