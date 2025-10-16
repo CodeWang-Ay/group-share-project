@@ -557,6 +557,62 @@
         </div>
     </div>
 
+    <!-- 文件预览模态框 -->
+    <div id="preview-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+                <!-- 模态框头部 -->
+                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div id="preview-file-icon" class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                            <i class="fa fa-file-o text-gray-500 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 id="preview-file-name" class="text-lg font-semibold text-gray-800 truncate">文件预览</h3>
+                            <p id="preview-file-info" class="text-sm text-gray-500">加载中...</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                          <button id="close-preview-modal" class="text-gray-400 hover:text-gray-600 transition-colors p-2">
+                            <i class="fa fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 模态框内容 -->
+                <div class="flex-1 overflow-hidden">
+                    <div id="preview-content" class="w-full h-[70vh] flex items-center justify-center">
+                        <!-- 预览内容将动态加载到这里 -->
+                        <div class="text-center">
+                            <i class="fa fa-spinner fa-spin text-4xl text-primary mb-4"></i>
+                            <p class="text-gray-500">正在加载文件预览...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 模态框底部（可选，用于显示额外信息） -->
+                <div id="preview-footer" class="px-6 py-4 bg-gray-50 border-t border-gray-200 hidden">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-gray-600">
+                            <span id="preview-file-meta"></span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="preview-zoom-in" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                                <i class="fa fa-search-plus"></i> 放大
+                            </button>
+                            <button id="preview-zoom-out" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                                <i class="fa fa-search-minus"></i> 缩小
+                            </button>
+                            <button id="preview-reset-zoom" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                                <i class="fa fa-compress"></i> 重置
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 页脚 -->
     <footer class="bg-white border-t border-gray-200 py-4">
         <div class="container mx-auto px-4 text-center text-sm text-gray-500">
@@ -1118,6 +1174,9 @@
                                 <button class="text-gray-400 hover:text-primary transition-colors p-2" onclick="fileUploadManager.downloadFile(${fileData.id}, '${fileData.filename}')" title="下载">
                                     <i class="fa fa-download"></i>
                                 </button>
+                                <button class="text-gray-400 hover:text-secondary transition-colors p-2" onclick="fileUploadManager.previewFile(${fileData.id}, '${fileData.filename}', '${fileData.file_type}')" title="预览">
+                                    <i class="fa fa-eye"></i>
+                                </button>
                                 <button class="text-gray-400 hover:text-red-500 transition-colors p-2" onclick="fileUploadManager.deleteFile(${fileData.id}, '${fileData.filename}')" title="删除">
                                     <i class="fa fa-trash-o"></i>
                                 </button>
@@ -1179,6 +1238,9 @@
                         <div class="flex items-center gap-2">
                             <button class="hover:text-primary transition-colors" onclick="fileUploadManager.downloadFile(${fileData.id}, '${fileData.filename}')" title="下载">
                                 <i class="fa fa-download"></i>
+                            </button>
+                            <button class="hover:text-secondary transition-colors" onclick="fileUploadManager.previewFile(${fileData.id}, '${fileData.filename}', '${fileData.file_type}')" title="预览">
+                                <i class="fa fa-eye"></i>
                             </button>
                             <button class="hover:text-red-500 transition-colors" onclick="fileUploadManager.deleteFile(${fileData.id}, '${fileData.filename}')" title="删除">
                                 <i class="fa fa-trash-o"></i>
@@ -1511,6 +1573,27 @@
                         document.body.removeChild(errorDiv);
                     }, 300);
                 }, 3000);
+            }
+
+            // 文件预览功能
+            previewFile(fileId, filename, fileType) {
+                // 直接在新页面中打开预览
+                const previewUrl = `/api/files/${fileId}/view`;
+
+                // 在新标签页中打开文件预览
+                window.open(previewUrl, '_blank');
+            }
+
+            
+            
+            
+            
+            
+            
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
             }
         }
 

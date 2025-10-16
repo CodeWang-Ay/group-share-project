@@ -49,6 +49,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 挂载静态文件目录 - 用于文件预览
+uploads_dir = Path(__file__).parent.parent / "uploads"
+if uploads_dir.exists():
+    app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
+else:
+    # 如果uploads目录不存在，创建它
+    uploads_dir.mkdir(exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
+
 
 # 错误处理中间件
 @app.middleware("http")
@@ -1468,6 +1477,103 @@ async def download_file(file_id: int, request: Request):
             content={
                 "success": False,
                 "message": "文件下载失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
+
+# API端点：直接文件预览 - 用于PDF等文件的浏览器内预览
+@app.get("/api/files/{file_id}/view")
+async def view_file(file_id: int, request: Request):
+    """
+    直接文件预览API端点
+    类似于Flask的send_file功能，直接返回文件内容供浏览器预览
+    特别适用于PDF文件的浏览器内预览
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        file_obj = FileService.get_file_by_id(file_id)
+        if not file_obj:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={
+                    "success": False,
+                    "message": "文件不存在",
+                    "error": "FILE_NOT_FOUND"
+                }
+            )
+
+        # 检查访问权限
+        if not file_obj.is_accessible_by_user(current_user.id, current_user.role):
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": "没有权限访问此文件",
+                    "error": "ACCESS_DENIED"
+                }
+            )
+
+        # 检查文件是否存在
+        import os
+        if not os.path.exists(file_obj.file_path):
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={
+                    "success": False,
+                    "message": "文件已丢失",
+                    "error": "FILE_LOST"
+                }
+            )
+
+        # 增加访问次数
+        FileService.increment_download_count(file_id)
+
+        # 使用FastAPI的FileResponse返回文件
+        # 类似于Flask的send_file(as_attachment=False)
+        from fastapi.responses import FileResponse
+
+        # 根据文件类型设置合适的MIME类型
+        media_type = file_obj.file_type
+        if file_obj.file_type == 'application/pdf':
+            media_type = 'application/pdf'  # 确保PDF使用正确的MIME类型
+        elif file_obj.file_type.startswith('image/'):
+            media_type = file_obj.file_type
+        elif file_obj.file_type.startswith('text/'):
+            media_type = 'text/plain'
+        elif file_obj.file_type.startswith('video/'):
+            media_type = file_obj.file_type
+        elif file_obj.file_type.startswith('audio/'):
+            media_type = file_obj.file_type
+
+        return FileResponse(
+            path=file_obj.file_path,
+            filename=file_obj.filename,
+            media_type=media_type,
+            # 不设置as_attachment=True，这样浏览器会尝试直接显示而不是下载
+            headers={
+                "Content-Disposition": f"inline; filename=\"{file_obj.filename}\""
+            }
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "文件预览失败",
                 "error": "INTERNAL_ERROR"
             }
         )
