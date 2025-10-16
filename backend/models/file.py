@@ -100,15 +100,15 @@ class File:
             'file_type': self.file_type,
             'file_hash': self.file_hash,
             'uploader_id': self.uploader_id,
-            'upload_time': self.upload_time if self.upload_time else None,
+            'upload_time': str(self.upload_time),
             'description': self.description,
             'tags': self.tags,
             'is_public': self.is_public,
             'download_count': self.download_count,
-            'last_accessed': self.last_accessed if self.last_accessed else None,
+            'last_accessed': str(self.last_accessed),
             'status': self.status,
-            'created_at': self.created_at if self.created_at else None,
-            'updated_at': self.updated_at if self.updated_at else None
+            'created_at': str(self.created_at),
+            'updated_at': str(self.updated_at)
         }
 
     @staticmethod

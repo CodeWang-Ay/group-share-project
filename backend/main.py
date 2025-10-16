@@ -1057,6 +1057,7 @@ async def upload_file(request: Request):
             )
 
     except Exception as e:
+        logger.error(e)
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
