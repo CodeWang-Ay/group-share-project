@@ -199,6 +199,7 @@
     <!-- 主内容区 -->
     <main class="flex-1 flex">
         <!-- 侧边栏 -->
+        <!-- 侧边栏 -->
         <aside id="sidebar" class="fixed lg:sticky top-16 lg:top-16 left-0 z-40 w-64 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto">
             <!-- 移动端关闭按钮 -->
             <div class="lg:hidden sticky top-0 bg-white border-b border-gray-200 p-4 z-10">
@@ -211,28 +212,32 @@
             </div>
 
             <div class="p-4 overflow-y-auto h-full">
-                <!-- 返回主页按钮 -->
-                <div class="mb-6">
-                    <a href="/" class="sidebar-icon hover:bg-gray-100">
-                        <i class="fa fa-arrow-left w-5 text-center"></i>
-                        <span>返回主页</span>
-                    </a>
+                <!-- 角色标识 -->
+                <div class="bg-primary/10 text-primary rounded-lg p-3 mb-6">
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium">当前角色</span>
+                        <span class="text-sm bg-primary text-white px-2 py-1 rounded-full">
+                            {% if user.role == 'admin' %}管理员
+                            {% elif user.role == 'teacher' %}导师
+                            {% else %}学生{% endif %}
+                        </span>
+                    </div>
                 </div>
-
+                
                 <!-- 导航菜单 -->
                 <nav>
-                    <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3">文件管理</p>
+                    <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3">组会管理</p>
                     <ul class="space-y-1">
                         <li>
-                            <a href="#" class="sidebar-icon active">
-                                <i class="fa fa-folder-open-o w-5 text-center"></i>
-                                <span>共享文件</span>
+                            <a href="/" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-dashboard w-5 text-center"></i>
+                                <span>工作台</span>
                             </a>
                         </li>
                         <li>
                             <a href="#" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-book w-5 text-center"></i>
-                                <span>文献库</span>
+                                <i class="fa fa-calendar w-5 text-center"></i>
+                                <span>组会安排</span>
                             </a>
                         </li>
                         <li>
@@ -243,44 +248,81 @@
                         </li>
                         <li>
                             <a href="#" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-archive w-5 text-center"></i>
-                                <span>归档文件</span>
+                                <i class="fa fa-comments-o w-5 text-center"></i>
+                                <span>组会记录</span>
                             </a>
                         </li>
                     </ul>
-
-                    <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6">快速操作</p>
+                    
+                    <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6">资源管理</p>
                     <ul class="space-y-1">
                         <li>
                             <a href="#" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-upload w-5 text-center"></i>
-                                <span>上传文件</span>
+                                <i class="fa fa-book w-5 text-center"></i>
+                                <span>文献库</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/share-file" class="sidebar-icon active">
+                                <i class="fa fa-folder-open-o w-5 text-center"></i>
+                                <span>共享文件</span>
                             </a>
                         </li>
                         <li>
                             <a href="#" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-download w-5 text-center"></i>
-                                <span>下载中心</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-star w-5 text-center"></i>
-                                <span>收藏文件</span>
+                                <i class="fa fa-tasks w-5 text-center"></i>
+                                <span>研究任务</span>
                             </a>
                         </li>
                     </ul>
+                    
+                    <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6">团队管理</p>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-users w-5 text-center"></i>
+                                <span>成员管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-line-chart w-5 text-center"></i>
+                                <span>研究进展</span>
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <!-- 管理员特有菜单 -->
+                    <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6 hidden">系统管理</p>
+                    <ul class="space-y-1 hidden">
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-cog w-5 text-center"></i>
+                                <span>系统设置</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-database w-5 text-center"></i>
+                                <span>存储管理</span>
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <!-- 存储信息 -->
+                    <div class="mt-8 p-4 bg-gray-50 rounded-lg">
+                        <p class="text-sm font-medium mb-2">存储空间</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                            <div class="bg-primary h-2 rounded-full" style="width: 65%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500">已使用 6.5GB / 10GB</p>
+                    </div>
                 </nav>
             </div>
         </aside>
 
         <!-- 内容区域 -->
         <div class="flex-1 p-4 lg:p-6 overflow-y-auto">
-            <!-- 页面标题 -->
-            <div class="mb-6">
-                <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gray-800">共享文件</h1>
-                <p class="text-gray-500">团队成员共享的研究资料、文档和资源</p>
-            </div>
 
             <!-- 操作栏 -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
