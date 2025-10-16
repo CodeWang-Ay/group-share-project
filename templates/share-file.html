@@ -437,12 +437,78 @@
                     <div class="divide-y divide-gray-100" id="files-container">
                         <!-- 文件内容将通过JavaScript动态加载 -->
                     </div>
+
+                    <!-- 分页控件 -->
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200" id="pagination-container">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <!-- 每页显示数量选择器 -->
+                                <div class="flex items-center gap-2">
+                                    <label for="per-page-select" class="text-sm text-gray-600">每页显示</label>
+                                    <select id="per-page-select" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                        <option value="5">5条</option>
+                                        <option value="10">10条</option>
+                                        <option value="20">20条</option>
+                                        <option value="100">100条</option>
+                                    </select>
+                                </div>
+                                <!-- 显示统计信息 -->
+                                <div class="text-sm text-gray-600" id="pagination-info">
+                                    显示第 1-5 条，共 0 条
+                                </div>
+                            </div>
+
+                            <!-- 分页按钮 -->
+                            <div class="flex items-center gap-2">
+                                <button id="prev-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <i class="fa fa-chevron-left mr-1"></i>上一页
+                                </button>
+                                <span class="px-3 py-1 text-sm text-gray-600" id="current-page-info">第 1 页</span>
+                                <button id="next-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    下一页<i class="fa fa-chevron-right ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 网格视图（卡片布局） -->
                 <div id="grid-view" class="hidden">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="files-grid-container">
                         <!-- 卡片内容将通过JavaScript动态加载 -->
+                    </div>
+
+                    <!-- 分页控件 -->
+                    <div class="mt-6 px-4 py-3 bg-white rounded-lg border border-gray-200" id="grid-pagination-container">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <!-- 每页显示数量选择器 -->
+                                <div class="flex items-center gap-2">
+                                    <label for="grid-per-page-select" class="text-sm text-gray-600">每页显示</label>
+                                    <select id="grid-per-page-select" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                        <option value="5">5条</option>
+                                        <option value="10">10条</option>
+                                        <option value="20">20条</option>
+                                        <option value="100">100条</option>
+                                    </select>
+                                </div>
+                                <!-- 显示统计信息 -->
+                                <div class="text-sm text-gray-600" id="grid-pagination-info">
+                                    显示第 1-5 条，共 0 条
+                                </div>
+                            </div>
+
+                            <!-- 分页按钮 -->
+                            <div class="flex items-center gap-2">
+                                <button id="grid-prev-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <i class="fa fa-chevron-left mr-1"></i>上一页
+                                </button>
+                                <span class="px-3 py-1 text-sm text-gray-600" id="grid-current-page-info">第 1 页</span>
+                                <button id="grid-next-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    下一页<i class="fa fa-chevron-right ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1891,13 +1957,89 @@
         class FileManager {
             constructor() {
                 this.currentFiles = [];
+                this.pagination = {
+                    current_page: 1,
+                    per_page: 5,
+                    total: 0,
+                    total_pages: 0,
+                    has_next: false,
+                    has_prev: false
+                };
                 this.layoutManager = null;
                 this.init();
             }
 
             init() {
                 this.layoutManager = new LayoutManager();
+                this.initPaginationControls();
                 this.loadFiles();
+            }
+
+            initPaginationControls() {
+                // 列表视图分页控件
+                const perPageSelect = document.getElementById('per-page-select');
+                const prevPageBtn = document.getElementById('prev-page-btn');
+                const nextPageBtn = document.getElementById('next-page-btn');
+
+                // 网格视图分页控件
+                const gridPerPageSelect = document.getElementById('grid-per-page-select');
+                const gridPrevPageBtn = document.getElementById('grid-prev-page-btn');
+                const gridNextPageBtn = document.getElementById('grid-next-page-btn');
+
+                // 绑定事件
+                if (perPageSelect) {
+                    perPageSelect.value = this.pagination.per_page.toString();
+                    perPageSelect.addEventListener('change', (e) => {
+                        this.pagination.per_page = parseInt(e.target.value);
+                        this.pagination.current_page = 1; // 重置到第一页
+                        this.loadFiles();
+                    });
+                }
+
+                if (gridPerPageSelect) {
+                    gridPerPageSelect.value = this.pagination.per_page.toString();
+                    gridPerPageSelect.addEventListener('change', (e) => {
+                        this.pagination.per_page = parseInt(e.target.value);
+                        this.pagination.current_page = 1; // 重置到第一页
+                        this.loadFiles();
+                    });
+                }
+
+                if (prevPageBtn) {
+                    prevPageBtn.addEventListener('click', () => {
+                        if (this.pagination.has_prev) {
+                            this.pagination.current_page--;
+                            this.loadFiles();
+                        }
+                    });
+                }
+
+                if (nextPageBtn) {
+                    nextPageBtn.addEventListener('click', () => {
+                        if (this.pagination.has_next) {
+                            this.pagination.current_page++;
+                            this.loadFiles();
+                        }
+                    });
+                }
+
+                if (gridPrevPageBtn) {
+                    gridPrevPageBtn.addEventListener('click', () => {
+                        if (this.pagination.has_prev) {
+                            this.pagination.current_page--;
+                            this.loadFiles();
+                        }
+                    });
+                }
+
+                if (gridNextPageBtn) {
+                    gridNextPageBtn.addEventListener('click', () => {
+                        if (this.pagination.has_next) {
+                            this.pagination.current_page++;
+                            this.loadFiles();
+                        }
+                    });
+                }
             }
 
             async loadFiles() {
@@ -1905,7 +2047,13 @@
                     // 显示加载状态
                     this.showLoadingState();
 
-                    const response = await fetch(`${API_BASE_URL}/api/files?scope=my&limit=50`, getAuthFetchOptions({
+                    const params = new URLSearchParams({
+                        scope: 'my',
+                        limit: this.pagination.per_page.toString(),
+                        page: this.pagination.current_page.toString()
+                    });
+
+                    const response = await fetch(`${API_BASE_URL}/api/files?${params}`, getAuthFetchOptions({
                         method: 'GET'
                     }));
 
@@ -1913,7 +2061,9 @@
 
                     if (response.ok && result.success) {
                         this.currentFiles = result.data.files;
+                        this.pagination = result.data.pagination;
                         this.renderFiles();
+                        this.updatePaginationUI();
                     } else {
                         console.error('加载文件列表失败:', result.message);
 
@@ -1932,6 +2082,54 @@
                     this.showErrorState('网络错误，请检查连接');
                 } finally {
                     this.hideLoadingState();
+                }
+            }
+
+            updatePaginationUI() {
+                // 更新列表视图分页控件
+                const perPageSelect = document.getElementById('per-page-select');
+                const prevPageBtn = document.getElementById('prev-page-btn');
+                const nextPageBtn = document.getElementById('next-page-btn');
+                const paginationInfo = document.getElementById('pagination-info');
+                const currentPageInfo = document.getElementById('current-page-info');
+
+                // 更新网格视图分页控件
+                const gridPerPageSelect = document.getElementById('grid-per-page-select');
+                const gridPrevPageBtn = document.getElementById('grid-prev-page-btn');
+                const gridNextPageBtn = document.getElementById('grid-next-page-btn');
+                const gridPaginationInfo = document.getElementById('grid-pagination-info');
+                const gridCurrentPageInfo = document.getElementById('grid-current-page-info');
+
+                // 同步两个视图的每页显示数量选择器
+                if (perPageSelect) perPageSelect.value = this.pagination.per_page.toString();
+                if (gridPerPageSelect) gridPerPageSelect.value = this.pagination.per_page.toString();
+
+                // 计算当前显示的文件范围
+                const startItem = (this.pagination.current_page - 1) * this.pagination.per_page + 1;
+                const endItem = Math.min(this.pagination.current_page * this.pagination.per_page, this.pagination.total);
+
+                // 更新统计信息
+                const infoText = `显示第 ${startItem}-${endItem} 条，共 ${this.pagination.total} 条`;
+                if (paginationInfo) paginationInfo.textContent = infoText;
+                if (gridPaginationInfo) gridPaginationInfo.textContent = infoText;
+
+                // 更新当前页信息
+                const pageText = `第 ${this.pagination.current_page} 页，共 ${this.pagination.total_pages} 页`;
+                if (currentPageInfo) currentPageInfo.textContent = pageText;
+                if (gridCurrentPageInfo) gridCurrentPageInfo.textContent = pageText;
+
+                // 更新按钮状态
+                if (prevPageBtn) {
+                    prevPageBtn.disabled = !this.pagination.has_prev;
+                }
+                if (nextPageBtn) {
+                    nextPageBtn.disabled = !this.pagination.has_next;
+                }
+                if (gridPrevPageBtn) {
+                    gridPrevPageBtn.disabled = !this.pagination.has_prev;
+                }
+                if (gridNextPageBtn) {
+                    gridNextPageBtn.disabled = !this.pagination.has_next;
                 }
             }
 
@@ -2050,76 +2248,14 @@
             }
 
             addFile(fileData) {
-                // 添加新文件到列表顶部
-                this.currentFiles.unshift(fileData);
-                const currentLayout = this.layoutManager.getCurrentLayout();
-
-                if (currentLayout === 'grid') {
-                    const filesGridContainer = document.getElementById('files-grid-container');
-
-                    // 如果当前是空状态，先清空
-                    if (this.currentFiles.length === 1) {
-                        filesGridContainer.innerHTML = '';
-                    }
-
-                    const fileCard = fileUploadManager.createFileCard(fileData, 'grid');
-                    filesGridContainer.insertBefore(fileCard, filesGridContainer.firstChild);
-                } else {
-                    const filesContainer = document.getElementById('files-container');
-
-                    // 如果当前是空状态，先清空
-                    if (this.currentFiles.length === 1) {
-                        filesContainer.innerHTML = '';
-                    }
-
-                    const fileCard = fileUploadManager.createFileCard(fileData, 'list');
-                    filesContainer.insertBefore(fileCard, filesContainer.firstChild);
-                }
+                // 添加新文件后重新加载数据以确保分页信息正确
+                this.pagination.current_page = 1; // 回到第一页查看新添加的文件
+                this.loadFiles();
             }
 
             removeFile(fileId) {
-                // 从列表中移除文件
-                this.currentFiles = this.currentFiles.filter(file => file.id !== fileId);
-
-                // 移除两个视图中的元素 - 修复选择器
-                const listElement = document.querySelector(`#files-container [data-file-id="${fileId}"]`);
-                const gridElement = document.querySelector(`#files-grid-container [data-file-id="${fileId}"]`);
-
-                // 添加删除动画
-                if (listElement) {
-                    listElement.style.transition = 'all 0.3s ease';
-                    listElement.style.opacity = '0';
-                    listElement.style.transform = 'translateX(-20px)';
-
-                    setTimeout(() => {
-                        listElement.remove();
-                        // 检查是否需要显示空状态
-                        if (this.currentFiles.length === 0) {
-                            this.showEmptyState();
-                        }
-                    }, 300);
-                }
-
-                if (gridElement) {
-                    gridElement.style.transition = 'all 0.3s ease';
-                    gridElement.style.opacity = '0';
-                    gridElement.style.transform = 'translateY(20px)';
-
-                    setTimeout(() => {
-                        gridElement.remove();
-                        // 检查是否需要显示空状态
-                        if (this.currentFiles.length === 0) {
-                            this.showEmptyState();
-                        }
-                    }, 300);
-                }
-
-                // 如果没有文件了，显示空状态
-                if (this.currentFiles.length === 0) {
-                    setTimeout(() => {
-                        this.showEmptyState();
-                    }, 100);
-                }
+                // 删除文件后重新加载数据以确保分页信息正确
+                this.loadFiles();
             }
         }
 

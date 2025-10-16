@@ -36,7 +36,7 @@ class SessionManager:
         else:
             # 开发环境使用内存存储，服务重启后清空session
             self.sessions = {}
-            print("🔧 开发模式：Session使用内存存储，服务重启后将清空所有会话")
+            print("开发模式：Session使用内存存储，服务重启后将清空所有会话")
 
     def _load_sessions(self) -> Dict[str, Dict[str, Any]]:
         """

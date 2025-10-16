@@ -488,7 +488,7 @@ async def index(request: Request):
     url_token = request.query_params.get("session_token")
 
     # 检查用户是否已登录
-    print(f"🔍 检查用户登录状态...")
+    print(f"检查用户登录状态...")
     print(f"   - Cookie session_token: {request.cookies.get('session_token')}")
     print(f"   - Authorization header: {request.headers.get('Authorization')}")
     print(f"   - URL token: {url_token}")
@@ -498,7 +498,7 @@ async def index(request: Request):
 
     if not current_user:
         # 未登录，直接显示登录页面
-        print("🚪 用户未登录，显示登录页面")
+        print("用户未登录，显示登录页面")
         return templates.TemplateResponse("login.html", {"request": request})
 
     # 如果是通过URL参数认证成功，设置cookie并重定向到干净的URL
@@ -515,7 +515,7 @@ async def index(request: Request):
         return response
 
     # 已登录，提供主页面模板，并传递用户信息
-    print(f"✅ 用户已登录: {current_user.username}，显示主页面")
+    print(f"用户已登录: {current_user.username}，显示主页面")
     return templates.TemplateResponse("index.html", {
         "request": request,
         "user": current_user
@@ -571,7 +571,7 @@ async def login(request: Request):
     接收JSON格式的登录数据并验证用户凭据
     登录成功后直接重定向到主页
     """
-    print("🔥 登录API被调用")
+    print("登录API被调用")
 
     try:
         # 获取请求体数据
@@ -581,7 +581,7 @@ async def login(request: Request):
         captcha = data.get("captcha", "")
         remember_me = data.get("remember_me", False)
 
-        print(f"📝 接收到登录数据: username={username}, password={'***' if password else 'None'}, captcha={captcha}, remember_me={remember_me}")
+        print(f"接收到登录数据: username={username}, password={'***' if password else 'None'}, captcha={captcha}, remember_me={remember_me}")
 
         # 验证输入
         if not username or not password:
@@ -598,7 +598,7 @@ async def login(request: Request):
         user = AuthService.authenticate_user(username, password)
 
         if not user:
-            print(f"❌ 登录失败: 用户名或密码错误 (username={username})")
+            print(f"登录失败: 用户名或密码错误 (username={username})")
             return JSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 content={
@@ -616,7 +616,7 @@ async def login(request: Request):
             remember_me=remember_me
         )
 
-        print(f"✅ 登录成功: user={user.username}, role={user.role}, session_token={session_token[:20]}...")
+        print(f"登录成功: user={user.username}, role={user.role}, session_token={session_token[:20]}...")
 
         # 登录成功，直接重定向到主页，在URL中传递session_token
         from fastapi.responses import RedirectResponse
@@ -652,7 +652,7 @@ async def register(request: Request):
 
     接收JSON格式的注册数据并创建新用户
     """
-    print("🔥 注册API被调用")
+    print("注册API被调用")
 
     try:
         # 获取请求体数据
@@ -661,7 +661,7 @@ async def register(request: Request):
         password = data.get("password")
         role = data.get("role")
 
-        print(f"📝 接收到注册数据: username={username}, password={'***' if password else 'None'}, role={role}")
+        print(f"接收到注册数据: username={username}, password={'***' if password else 'None'}, role={role}")
 
         # 验证输入
         if not username or not password or not role:
@@ -740,7 +740,7 @@ async def register(request: Request):
             cursor.execute("SELECT last_insert_rowid()")
             new_user.id = cursor.fetchone()[0]
 
-        print(f"✅ 注册成功: user={new_user.username}, role={new_user.role}")
+        print(f"注册成功: user={new_user.username}, role={new_user.role}")
 
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
@@ -1099,44 +1099,73 @@ async def get_files(request: Request):
         # 获取查询参数
         user_id = request.query_params.get("user_id")
         scope = request.query_params.get("scope", "my")  # my, public, all
-        limit = int(request.query_params.get("limit", 50))
+        limit = int(request.query_params.get("limit", 5))  # 默认每页5条
         offset = int(request.query_params.get("offset", 0))
+        page = int(request.query_params.get("page", 1))  # 页码，从1开始
         keyword = request.query_params.get("keyword", "")
 
         # 验证参数
-        if limit > 100:
-            limit = 100
+        if limit not in [5, 10, 20, 100]:
+            limit = 5  # 默认每页5条
+
+        # 计算偏移量
+        if page > 1:
+            offset = (page - 1) * limit
+        else:
+            offset = 0
 
         files = []
+        total = 0  # 总记录数
 
         if scope == "my":
             # 获取用户的文件
             files = FileService.get_files_by_user(current_user.id, limit, offset)
+            total = FileService.get_files_count_by_user(current_user.id)
         elif scope == "public":
             # 获取公开文件
             files = FileService.get_public_files(limit, offset)
+            total = FileService.get_public_files_count()
         elif scope == "all" and current_user.role == "admin":
             # 管理员获取所有文件
             if user_id:
                 files = FileService.get_files_by_user(int(user_id), limit, offset)
+                total = FileService.get_files_count_by_user(int(user_id))
             else:
                 files = FileService.get_files_by_user(current_user.id, limit, offset)
                 files.extend(FileService.get_public_files(limit, offset))
+                total = FileService.get_files_count_by_user(current_user.id) + FileService.get_public_files_count()
 
         # 如果有搜索关键词，进行搜索
         if keyword:
             if scope == "my":
                 files = FileService.search_files(keyword, current_user.id, limit, offset)
+                total = FileService.get_search_files_count(keyword, current_user.id)
             elif scope == "public":
                 files = FileService.search_files(keyword, None, limit, offset)
+                total = FileService.get_search_files_count(keyword, None)
             elif scope == "all" and current_user.role == "admin":
                 files = FileService.search_files(keyword, int(user_id) if user_id else None, limit, offset)
+                total = FileService.get_search_files_count(keyword, int(user_id) if user_id else None)
         try:
+            # 计算分页信息
+            total_pages = (total + limit - 1) // limit if total > 0 else 1
+            has_next = page < total_pages
+            has_prev = page > 1
+
             reponse_content = {
                 "success": True,
                 "data": {
                     "files": [file.to_dict() for file in files],
-                    "total": len(files)
+                    "pagination": {
+                        "current_page": page,
+                        "per_page": limit,
+                        "total": total,
+                        "total_pages": total_pages,
+                        "has_next": has_next,
+                        "has_prev": has_prev,
+                        "next_page": page + 1 if has_next else None,
+                        "prev_page": page - 1 if has_prev else None
+                    }
                 }
             }
             for file in files:
@@ -1585,14 +1614,14 @@ async def startup_event():
     """
     应用启动时执行的任务
     """
-    print("🔧 执行启动任务...")
+    print("执行启动任务...")
 
     # 清理过期会话
     cleaned_count = session_manager.cleanup_expired_sessions()
     if cleaned_count > 0:
-        print(f"🧹 启动时清理了 {cleaned_count} 个过期会话")
+        print(f"启动时清理了 {cleaned_count} 个过期会话")
 
-    print("✅ 启动任务完成")
+    print("启动任务完成")
 
 
 # API端点：清空所有会话（开发调试用）
@@ -1627,8 +1656,8 @@ async def clear_all_sessions():
 if __name__ == "__main__":
     import uvicorn
 
-    print("🚀 启动基础用户认证系统...")
-    print(f"📋 服务信息:")
+    print("启动基础用户认证系统...")
+    print(f"服务信息:")
     print(f"   - 服务地址: http://localhost:8081")
     print(f"   - API文档: http://localhost:8081/docs")
     print(f"   - 数据库: {DATABASE_PATH}")

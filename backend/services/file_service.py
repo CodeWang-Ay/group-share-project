@@ -282,6 +282,30 @@ class FileService:
             return []
 
     @classmethod
+    def get_files_count_by_user(cls, user_id: int) -> int:
+        """
+        获取用户文件总数
+
+        Args:
+            user_id: 用户ID
+
+        Returns:
+            int: 文件总数
+        """
+        try:
+            with get_db() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT COUNT(*) FROM files
+                    WHERE uploader_id = ? AND status = 'active'
+                """, (user_id,))
+                result = cursor.fetchone()
+                return result[0] if result else 0
+        except Exception as e:
+            print(f"获取用户文件总数失败: {str(e)}")
+            return 0
+
+    @classmethod
     def get_public_files(cls, limit: int = 50, offset: int = 0) -> List[File]:
         """
         获取公开文件列表
@@ -307,6 +331,27 @@ class FileService:
         except Exception as e:
             print(f"获取公开文件列表失败: {str(e)}")
             return []
+
+    @classmethod
+    def get_public_files_count(cls) -> int:
+        """
+        获取公开文件总数
+
+        Returns:
+            int: 公开文件总数
+        """
+        try:
+            with get_db() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT COUNT(*) FROM files
+                    WHERE is_public = 1 AND status = 'active'
+                """)
+                result = cursor.fetchone()
+                return result[0] if result else 0
+        except Exception as e:
+            print(f"获取公开文件总数失败: {str(e)}")
+            return 0
 
     @classmethod
     def search_files(cls, keyword: str, user_id: Optional[int] = None,
@@ -351,6 +396,44 @@ class FileService:
         except Exception as e:
             print(f"搜索文件失败: {str(e)}")
             return []
+
+    @classmethod
+    def get_search_files_count(cls, keyword: str, user_id: Optional[int] = None) -> int:
+        """
+        获取搜索结果总数
+
+        Args:
+            keyword: 搜索关键词
+            user_id: 用户ID（可选，用于限制搜索范围）
+
+        Returns:
+            int: 搜索结果总数
+        """
+        try:
+            with get_db() as conn:
+                cursor = conn.cursor()
+
+                if user_id:
+                    # 搜索用户的文件和公开文件数量
+                    cursor.execute("""
+                        SELECT COUNT(*) FROM files
+                        WHERE status = 'active'
+                        AND (uploader_id = ? OR is_public = 1)
+                        AND (filename LIKE ? OR description LIKE ? OR tags LIKE ?)
+                    """, (user_id, f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"))
+                else:
+                    # 只搜索公开文件数量
+                    cursor.execute("""
+                        SELECT COUNT(*) FROM files
+                        WHERE status = 'active' AND is_public = 1
+                        AND (filename LIKE ? OR description LIKE ? OR tags LIKE ?)
+                    """, (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"))
+
+                result = cursor.fetchone()
+                return result[0] if result else 0
+        except Exception as e:
+            print(f"获取搜索结果总数失败: {str(e)}")
+            return 0
 
     @classmethod
     def delete_file(cls, file_id: int, user_id: int, user_role: str) -> bool:
