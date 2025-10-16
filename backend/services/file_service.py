@@ -46,6 +46,27 @@ class FileService:
         cls.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
     @classmethod
+    def get_user_by_id(cls, user_id: int) -> Optional[str]:
+        """
+        根据用户ID获取用户名
+
+        Args:
+            user_id: 用户ID
+
+        Returns:
+            str: 用户名，不存在时返回None
+        """
+        try:
+            with get_db() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT username FROM users WHERE id = ?", (user_id,))
+                result = cursor.fetchone()
+                return result[0] if result else None
+        except Exception as e:
+            print(f"获取用户名失败: {str(e)}")
+            return None
+
+    @classmethod
     def is_allowed_file(cls, filename: str) -> bool:
         """
         检查文件类型是否允许上传
@@ -123,12 +144,18 @@ class FileService:
                 if existing_file:
                     return None, f"文件名 '{original_filename}' 已存在，请重命名后再次上传"
 
-            # 初始化上传目录
-            cls.init_upload_directory()
+            # 获取用户名
+            username = cls.get_user_by_id(uploader_id)
+            if not username:
+                return None, "用户不存在"
+
+            # 创建用户专属的上传目录
+            user_upload_dir = cls.UPLOAD_DIR / username
+            user_upload_dir.mkdir(parents=True, exist_ok=True)
 
             # 生成唯一文件名
             unique_filename = cls.generate_unique_filename(original_filename)
-            file_path = cls.UPLOAD_DIR / unique_filename
+            file_path = user_upload_dir / original_filename
 
             # 保存文件到磁盘
             with open(file_path, 'wb') as f:
@@ -195,9 +222,9 @@ class FileService:
 
         except Exception as e:
             # 如果上传失败，删除已创建的文件
+            print(f"文件上传失败: {str(e)}")
             if 'file_path' in locals() and os.path.exists(file_path):
                 os.remove(file_path)
-            print(f"文件上传失败: {str(e)}")
             return None, f"文件上传失败: {str(e)}"
 
     @classmethod
@@ -328,7 +355,7 @@ class FileService:
     @classmethod
     def delete_file(cls, file_id: int, user_id: int, user_role: str) -> bool:
         """
-        删除文件（软删除）
+        删除文件（硬删除）
 
         Args:
             file_id: 文件ID
@@ -351,14 +378,15 @@ class FileService:
             if file_obj.uploader_id != user_id and user_role != "admin":
                 return False
 
-            # 软删除
+            # 删除物理文件
+            if os.path.exists(file_obj.file_path):
+                os.remove(file_obj.file_path)
+                print(f"已删除物理文件: {file_obj.file_path}")
+
+            # 从数据库中删除记录
             with get_db() as conn:
                 cursor = conn.cursor()
-                cursor.execute("""
-                    UPDATE files
-                    SET status = 'deleted', updated_at = ?
-                    WHERE id = ?
-                """, (datetime.now(), file_id))
+                cursor.execute("DELETE FROM files WHERE id = ?", (file_id,))
 
                 return cursor.rowcount > 0
 
@@ -366,6 +394,7 @@ class FileService:
             print(f"删除文件失败: {str(e)}")
             return False
 
+    
     @classmethod
     def update_file_info(cls, file_id: int, user_id: int, user_role: str,
                         description: Optional[str] = None, tags: Optional[str] = None,
