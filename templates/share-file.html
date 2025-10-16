@@ -1115,14 +1115,8 @@
                         <!-- 操作按钮 -->
                         <div class="col-span-2 text-center">
                             <div class="flex items-center justify-center gap-2">
-                                <button class="text-gray-400 hover:text-yellow-500 transition-colors p-2" onclick="fileUploadManager.toggleStar(this, ${fileData.id})" title="收藏">
-                                    <i class="fa fa-star-o"></i>
-                                </button>
                                 <button class="text-gray-400 hover:text-primary transition-colors p-2" onclick="fileUploadManager.downloadFile(${fileData.id}, '${fileData.filename}')" title="下载">
                                     <i class="fa fa-download"></i>
-                                </button>
-                                <button class="text-gray-400 hover:text-primary transition-colors p-2" onclick="fileUploadManager.shareFile(${fileData.id})" title="分享">
-                                    <i class="fa fa-share-alt"></i>
                                 </button>
                                 <button class="text-gray-400 hover:text-primary transition-colors p-2" onclick="fileUploadManager.showFileOptions(${fileData.id})" title="更多">
                                     <i class="fa fa-ellipsis-v"></i>
@@ -1169,9 +1163,6 @@
                             <i class="fa ${fileIcon} text-xl"></i>
                         </div>
                         <div class="flex items-center gap-1">
-                            <button class="text-gray-400 hover:text-primary transition-colors" onclick="fileUploadManager.toggleStar(this, ${fileData.id})">
-                                <i class="fa fa-star-o"></i>
-                            </button>
                             <button class="text-gray-400 hover:text-primary transition-colors" onclick="fileUploadManager.showFileOptions(${fileData.id})">
                                 <i class="fa fa-ellipsis-v"></i>
                             </button>
@@ -1185,9 +1176,6 @@
                         <div class="flex items-center gap-2">
                             <button class="hover:text-primary transition-colors" onclick="fileUploadManager.downloadFile(${fileData.id}, '${fileData.filename}')" title="下载">
                                 <i class="fa fa-download"></i>
-                            </button>
-                            <button class="hover:text-primary transition-colors" onclick="fileUploadManager.shareFile(${fileData.id})" title="分享">
-                                <i class="fa fa-share-alt"></i>
                             </button>
                         </div>
                     </div>
