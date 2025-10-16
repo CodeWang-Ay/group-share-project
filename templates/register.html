@@ -120,10 +120,11 @@
                 
                 <button type="submit" class="btn-primary mb-4" id="register-btn">
                     <span id="register-text">注册账号</span>
+                    <i id="register-spinner" class="fa fa-spinner fa-spin ml-2 hidden"></i>
                 </button>
                 
                 <div class="text-center text-sm text-gray-500">
-                    <p>已有账号? <a href="login.html" class="text-primary hover:text-primary/80 font-medium">立即登录</a></p>
+                    <p>已有账号? <a href="login" class="text-primary hover:text-primary/80 font-medium">立即登录</a></p>
                 </div>
             </form>
             
@@ -263,7 +264,7 @@
 
         // 前往登录按钮
         document.getElementById('goto-login').addEventListener('click', function() {
-            window.location.href = `${API_BASE_URL}/login`;
+            window.location.href = 'login';
         });
 
         // 显示消息提示
