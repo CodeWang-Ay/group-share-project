@@ -141,16 +141,18 @@ class FileService:
 
             # 检查是否已存在相同文件内容的文件（通过哈希值）
             if file_hash:
-                cursor.execute("""
-                    SELECT id, filename FROM files
-                    WHERE file_hash = ? AND uploader_id = ? AND status = 'active'
-                """, (file_hash, uploader_id))
+                with get_db() as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        SELECT id, filename FROM files
+                        WHERE file_hash = ? AND uploader_id = ? AND status = 'active'
+                    """, (file_hash, uploader_id))
 
-                duplicate_content = cursor.fetchone()
-                if duplicate_content:
-                    # 删除刚创建的文件，因为内容重复
-                    os.remove(file_path)
-                    return None, f"文件内容与已存在的文件 '{duplicate_content[1]}' 重复"
+                    duplicate_content = cursor.fetchone()
+                    if duplicate_content:
+                        # 删除刚创建的文件，因为内容重复
+                        os.remove(file_path)
+                        return None, f"文件内容与已存在的文件 '{duplicate_content[1]}' 重复"
 
             # 创建文件对象
             file_obj = File(
@@ -165,27 +167,29 @@ class FileService:
                 is_public=is_public
             )
 
-            # 保存到数据库
-            cursor.execute("""
-                INSERT INTO files (
-                    filename, file_path, file_size, file_type, file_hash,
-                    uploader_id, description, tags, is_public
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                file_obj.filename,
-                file_obj.file_path,
-                file_obj.file_size,
-                file_obj.file_type,
-                file_obj.file_hash,
-                file_obj.uploader_id,
-                file_obj.description,
-                file_obj.tags,
-                file_obj.is_public
-            ))
+            # 保存到数据库 - 使用新的数据库连接
+            with get_db() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO files (
+                        filename, file_path, file_size, file_type, file_hash,
+                        uploader_id, description, tags, is_public
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    file_obj.filename,
+                    file_obj.file_path,
+                    file_obj.file_size,
+                    file_obj.file_type,
+                    file_obj.file_hash,
+                    file_obj.uploader_id,
+                    file_obj.description,
+                    file_obj.tags,
+                    file_obj.is_public
+                ))
 
-            # 获取新插入的文件ID
-            cursor.execute("SELECT last_insert_rowid()")
-            file_obj.id = cursor.fetchone()[0]
+                # 获取新插入的文件ID
+                cursor.execute("SELECT last_insert_rowid()")
+                file_obj.id = cursor.fetchone()[0]
 
             return file_obj, None
 

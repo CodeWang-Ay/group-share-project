@@ -1130,6 +1130,8 @@ async def get_files(request: Request):
                     "total": len(files)
                 }
             }
+            for file in files:
+                logger.info(file.filename)
         except Exception as e:
             logger.error(e)
             return JSONResponse(
