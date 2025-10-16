@@ -39,6 +39,12 @@
             .file-card {
                 @apply bg-white rounded-xl shadow-sm border border-gray-100 p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-1;
             }
+            .file-row {
+                @apply transition-all duration-200;
+            }
+            .file-row:hover {
+                @apply bg-gray-50;
+            }
             .file-type-pdf {
                 @apply text-red-500 bg-red-50;
             }
@@ -61,6 +67,49 @@
                 .container {
                     padding-left: 1rem;
                     padding-right: 1rem;
+                }
+
+                /* 移动端表格响应式 */
+                .file-row .grid {
+                    grid-template-columns: 1fr;
+                    gap: 0.75rem;
+                }
+
+                .file-row .col-span-6 {
+                    grid-column: span 1;
+                }
+
+                .file-row .col-span-2 {
+                    grid-column: span 1;
+                    text-align: left;
+                }
+
+                .file-row .col-span-2:nth-child(3) {
+                    order: 3;
+                }
+
+                .file-row .col-span-2:nth-child(4) {
+                    order: 4;
+                }
+
+                /* 移动端表格头部隐藏 */
+                .bg-gray-50 .grid {
+                    display: none;
+                }
+
+                /* 移动端文件行布局调整 */
+                .file-row {
+                    padding: 1rem;
+                }
+
+                .file-row .flex.items-center.gap-4 {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 0.5rem;
+                }
+
+                .file-row .flex.items-center.gap-2 {
+                    justify-content: flex-start;
                 }
             }
         }
@@ -257,11 +306,23 @@
                         </select>
                     </div>
 
-                    <!-- 上传按钮 -->
-                    <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2">
-                        <i class="fa fa-upload"></i>
-                        <span>上传文件</span>
-                    </button>
+                    <div class="flex items-center gap-3">
+                        <!-- 布局切换按钮组 -->
+                        <div class="bg-gray-100 rounded-lg p-1 flex">
+                            <button id="grid-view-btn" class="layout-btn px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 bg-white text-gray-900 shadow-sm" title="卡片视图">
+                                <i class="fa fa-th-large"></i>
+                            </button>
+                            <button id="list-view-btn" class="layout-btn px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 text-gray-500 hover:text-gray-700" title="列表视图">
+                                <i class="fa fa-list"></i>
+                            </button>
+                        </div>
+
+                        <!-- 上传按钮 -->
+                        <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2">
+                            <i class="fa fa-upload"></i>
+                            <span>上传文件</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -316,180 +377,30 @@
                 </div>
             </div>
 
-            <!-- 文件列表 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="files-container">
-                <!-- 示例文件卡片 -->
-                <div class="file-card" data-file-type="pdf">
-                    <div class="flex items-start justify-between mb-3">
-                        <div class="w-12 h-12 rounded-lg file-type-pdf flex items-center justify-center">
-                            <i class="fa fa-file-pdf-o text-xl"></i>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <button class="text-gray-400 hover:text-primary transition-colors">
-                                <i class="fa fa-star-o"></i>
-                            </button>
-                            <button class="text-gray-400 hover:text-primary transition-colors">
-                                <i class="fa fa-ellipsis-v"></i>
-                            </button>
+            <!-- 文件列表容器 -->
+            <div id="files-wrapper">
+                <!-- 列表视图（表格布局） -->
+                <div id="list-view" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <!-- 表格头部 -->
+                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                        <div class="grid grid-cols-12 gap-4 items-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <div class="col-span-6">文件信息</div>
+                            <div class="col-span-2 text-center">上传者</div>
+                            <div class="col-span-2 text-center">文件大小</div>
+                            <div class="col-span-2 text-center">操作</div>
                         </div>
                     </div>
-                    <h3 class="font-medium text-gray-800 mb-1 line-clamp-2">深度学习在自然语言处理中的应用综述</h3>
-                    <p class="text-sm text-gray-500 mb-3">张明 · 2023-11-12</p>
-                    <div class="flex items-center justify-between text-xs text-gray-400">
-                        <span>2.4MB</span>
-                        <div class="flex items-center gap-2">
-                            <button class="hover:text-primary transition-colors">
-                                <i class="fa fa-download"></i>
-                            </button>
-                            <button class="hover:text-primary transition-colors">
-                                <i class="fa fa-share-alt"></i>
-                            </button>
-                        </div>
+
+                    <!-- 表格内容 -->
+                    <div class="divide-y divide-gray-100" id="files-container">
+                        <!-- 文件内容将通过JavaScript动态加载 -->
                     </div>
                 </div>
 
-                <div class="file-card" data-file-type="ppt">
-                    <div class="flex items-start justify-between mb-3">
-                        <div class="w-12 h-12 rounded-lg file-type-ppt flex items-center justify-center">
-                            <i class="fa fa-file-powerpoint-o text-xl"></i>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <button class="text-gray-400 hover:text-primary transition-colors">
-                                <i class="fa fa-star-o"></i>
-                            </button>
-                            <button class="text-gray-400 hover:text-primary transition-colors">
-                                <i class="fa fa-ellipsis-v"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <h3 class="font-medium text-gray-800 mb-1 line-clamp-2">第12周组会汇报 - 多模态学习进展</h3>
-                    <p class="text-sm text-gray-500 mb-3">李华 · 2023-11-10</p>
-                    <div class="flex items-center justify-between text-xs text-gray-400">
-                        <span>5.8MB</span>
-                        <div class="flex items-center gap-2">
-                            <button class="hover:text-primary transition-colors">
-                                <i class="fa fa-download"></i>
-                            </button>
-                            <button class="hover:text-primary transition-colors">
-                                <i class="fa fa-share-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="file-card" data-file-type="xls">
-                    <div class="flex items-start justify-between mb-3">
-                        <div class="w-12 h-12 rounded-lg file-type-xls flex items-center justify-center">
-                            <i class="fa fa-file-excel-o text-xl"></i>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <button class="text-yellow-500 hover:text-yellow-600 transition-colors">
-                                <i class="fa fa-star"></i>
-                            </button>
-                            <button class="text-gray-400 hover:text-primary transition-colors">
-                                <i class="fa fa-ellipsis-v"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <h3 class="font-medium text-gray-800 mb-1 line-clamp-2">实验数据统计表 - Q3季度</h3>
-                    <p class="text-sm text-gray-500 mb-3">王芳 · 2023-11-08</p>
-                    <div class="flex items-center justify-between text-xs text-gray-400">
-                        <span>1.2MB</span>
-                        <div class="flex items-center gap-2">
-                            <button class="hover:text-primary transition-colors">
-                                <i class="fa fa-download"></i>
-                            </button>
-                            <button class="hover:text-primary transition-colors">
-                                <i class="fa fa-share-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="file-card" data-file-type="zip">
-                    <div class="flex items-start justify-between mb-3">
-                        <div class="w-12 h-12 rounded-lg file-type-zip flex items-center justify-center">
-                            <i class="fa fa-file-archive-o text-xl"></i>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <button class="text-gray-400 hover:text-primary transition-colors">
-                                <i class="fa fa-star-o"></i>
-                            </button>
-                            <button class="text-gray-400 hover:text-primary transition-colors">
-                                <i class="fa fa-ellipsis-v"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <h3 class="font-medium text-gray-800 mb-1 line-clamp-2">项目代码包 - 图像分割模型</h3>
-                    <p class="text-sm text-gray-500 mb-3">张明 · 2023-11-05</p>
-                    <div class="flex items-center justify-between text-xs text-gray-400">
-                        <span>15.6MB</span>
-                        <div class="flex items-center gap-2">
-                            <button class="hover:text-primary transition-colors">
-                                <i class="fa fa-download"></i>
-                            </button>
-                            <button class="hover:text-primary transition-colors">
-                                <i class="fa fa-share-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="file-card" data-file-type="doc">
-                    <div class="flex items-start justify-between mb-3">
-                        <div class="w-12 h-12 rounded-lg file-type-doc flex items-center justify-center">
-                            <i class="fa fa-file-word-o text-xl"></i>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <button class="text-gray-400 hover:text-primary transition-colors">
-                                <i class="fa fa-star-o"></i>
-                            </button>
-                            <button class="text-gray-400 hover:text-primary transition-colors">
-                                <i class="fa fa-ellipsis-v"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <h3 class="font-medium text-gray-800 mb-1 line-clamp-2">研究论文草稿 - 注意力机制优化</h3>
-                    <p class="text-sm text-gray-500 mb-3">李华 · 2023-11-03</p>
-                    <div class="flex items-center justify-between text-xs text-gray-400">
-                        <span>856KB</span>
-                        <div class="flex items-center gap-2">
-                            <button class="hover:text-primary transition-colors">
-                                <i class="fa fa-download"></i>
-                            </button>
-                            <button class="hover:text-primary transition-colors">
-                                <i class="fa fa-share-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="file-card" data-file-type="pdf">
-                    <div class="flex items-start justify-between mb-3">
-                        <div class="w-12 h-12 rounded-lg file-type-pdf flex items-center justify-center">
-                            <i class="fa fa-file-pdf-o text-xl"></i>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <button class="text-yellow-500 hover:text-yellow-600 transition-colors">
-                                <i class="fa fa-star"></i>
-                            </button>
-                            <button class="text-gray-400 hover:text-primary transition-colors">
-                                <i class="fa fa-ellipsis-v"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <h3 class="font-medium text-gray-800 mb-1 line-clamp-2">Transformer模型架构详解</h3>
-                    <p class="text-sm text-gray-500 mb-3">王芳 · 2023-11-01</p>
-                    <div class="flex items-center justify-between text-xs text-gray-400">
-                        <span>3.2MB</span>
-                        <div class="flex items-center gap-2">
-                            <button class="hover:text-primary transition-colors">
-                                <i class="fa fa-download"></i>
-                            </button>
-                            <button class="hover:text-primary transition-colors">
-                                <i class="fa fa-share-alt"></i>
-                            </button>
-                        </div>
+                <!-- 网格视图（卡片布局） -->
+                <div id="grid-view" class="hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="files-grid-container">
+                        <!-- 卡片内容将通过JavaScript动态加载 -->
                     </div>
                 </div>
             </div>
@@ -1104,10 +1015,19 @@
                 this.updateFileStats();
             }
 
-            createFileCard(fileData) {
-                const fileCard = document.createElement('div');
-                fileCard.className = 'file-card';
-                fileCard.dataset.fileId = fileData.id;
+            createFileCard(fileData, layout = 'list') {
+                if (layout === 'grid') {
+                    return this.createGridCard(fileData);
+                } else {
+                    return this.createListCard(fileData);
+                }
+            }
+
+            createListCard(fileData) {
+                const fileRow = document.createElement('div');
+                fileRow.className = 'file-row px-6 py-4 hover:bg-gray-50 transition-colors';
+                fileRow.dataset.fileId = fileData.id;
+                fileRow.dataset.fileType = this.getFileTypeSimple(fileData.file_type);
 
                 // 根据文件类型确定样式
                 const fileType = this.getFileTypeClass(fileData.file_type);
@@ -1118,6 +1038,88 @@
 
                 // 格式化上传时间
                 const uploadTime = new Date(fileData.upload_time).toLocaleDateString('zh-CN');
+
+                // 获取上传者信息（使用当前用户或默认值）
+                const uploaderName = fileData.uploader_name || '我';
+                const uploaderId = fileData.uploader_id || 'current';
+
+                fileRow.innerHTML = `
+                    <div class="grid grid-cols-12 gap-4 items-center">
+                        <!-- 文件信息 -->
+                        <div class="col-span-6 flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-lg ${fileType} flex items-center justify-center flex-shrink-0">
+                                <i class="fa ${fileIcon} text-lg"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <h3 class="font-medium text-gray-800 truncate" title="${fileData.filename}">${fileData.filename}</h3>
+                                <p class="text-sm text-gray-500">${uploadTime}</p>
+                                ${fileData.description ? `<p class="text-xs text-gray-400 line-clamp-1 mt-1">${fileData.description}</p>` : ''}
+                            </div>
+                        </div>
+
+                        <!-- 上传者 -->
+                        <div class="col-span-2 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <img src="https://picsum.photos/id/${uploaderId}/200/200" alt="${uploaderName}" class="w-6 h-6 rounded-full">
+                                <span class="text-sm text-gray-600">${uploaderName}</span>
+                            </div>
+                        </div>
+
+                        <!-- 文件大小 -->
+                        <div class="col-span-2 text-center">
+                            <span class="text-sm text-gray-600">${formattedSize}</span>
+                        </div>
+
+                        <!-- 操作按钮 -->
+                        <div class="col-span-2 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button class="text-gray-400 hover:text-yellow-500 transition-colors p-2" onclick="fileUploadManager.toggleStar(this, ${fileData.id})" title="收藏">
+                                    <i class="fa fa-star-o"></i>
+                                </button>
+                                <button class="text-gray-400 hover:text-primary transition-colors p-2" onclick="fileUploadManager.downloadFile(${fileData.id}, '${fileData.filename}')" title="下载">
+                                    <i class="fa fa-download"></i>
+                                </button>
+                                <button class="text-gray-400 hover:text-primary transition-colors p-2" onclick="fileUploadManager.shareFile(${fileData.id})" title="分享">
+                                    <i class="fa fa-share-alt"></i>
+                                </button>
+                                <button class="text-gray-400 hover:text-primary transition-colors p-2" onclick="fileUploadManager.showFileOptions(${fileData.id})" title="更多">
+                                    <i class="fa fa-ellipsis-v"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // 添加进入动画
+                fileRow.style.opacity = '0';
+                fileRow.style.transform = 'translateX(-20px)';
+                setTimeout(() => {
+                    fileRow.style.transition = 'all 0.3s ease';
+                    fileRow.style.opacity = '1';
+                    fileRow.style.transform = 'translateX(0)';
+                }, 100);
+
+                return fileRow;
+            }
+
+            createGridCard(fileData) {
+                const fileCard = document.createElement('div');
+                fileCard.className = 'file-card';
+                fileCard.dataset.fileId = fileData.id;
+                fileCard.dataset.fileType = this.getFileTypeSimple(fileData.file_type);
+
+                // 根据文件类型确定样式
+                const fileType = this.getFileTypeClass(fileData.file_type);
+                const fileIcon = this.getFileIconByType(fileData.file_type);
+
+                // 格式化文件大小
+                const formattedSize = this.formatFileSize(fileData.file_size);
+
+                // 格式化上传时间
+                const uploadTime = new Date(fileData.upload_time).toLocaleDateString('zh-CN');
+
+                // 获取上传者信息（使用当前用户或默认值）
+                const uploaderName = fileData.uploader_name || '我';
 
                 fileCard.innerHTML = `
                     <div class="flex items-start justify-between mb-3">
@@ -1134,7 +1136,7 @@
                         </div>
                     </div>
                     <h3 class="font-medium text-gray-800 mb-1 line-clamp-2" title="${fileData.filename}">${fileData.filename}</h3>
-                    <p class="text-sm text-gray-500 mb-3">我 · ${uploadTime}</p>
+                    <p class="text-sm text-gray-500 mb-3">${uploaderName} · ${uploadTime}</p>
                     ${fileData.description ? `<p class="text-xs text-gray-400 mb-2 line-clamp-2">${fileData.description}</p>` : ''}
                     <div class="flex items-center justify-between text-xs text-gray-400">
                         <span>${formattedSize}</span>
@@ -1159,6 +1161,22 @@
                 }, 100);
 
                 return fileCard;
+            }
+
+            getFileTypeSimple(fileType) {
+                if (fileType.includes('pdf')) {
+                    return 'pdf';
+                } else if (fileType.includes('word') || fileType.includes('document')) {
+                    return 'doc';
+                } else if (fileType.includes('powerpoint') || fileType.includes('presentation')) {
+                    return 'ppt';
+                } else if (fileType.includes('excel') || fileType.includes('sheet')) {
+                    return 'xls';
+                } else if (fileType.includes('zip') || fileType.includes('rar')) {
+                    return 'zip';
+                } else {
+                    return 'other';
+                }
             }
 
             getFileTypeClass(fileType) {
@@ -1453,16 +1471,42 @@
                 const sortBy = sortFilter.value;
                 const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
 
-                const fileCards = filesContainer.querySelectorAll('.file-card');
-                const filteredCards = [];
+                // 获取当前布局
+                const layoutManager = window.fileManager ? window.fileManager.layoutManager : null;
+                const currentLayout = layoutManager ? layoutManager.getCurrentLayout() : 'list';
 
-                fileCards.forEach(card => {
-                    const cardFileType = card.dataset.fileType || 'other';
-                    const title = card.querySelector('h3').textContent.toLowerCase();
-                    const author = card.querySelector('p').textContent.toLowerCase();
+                // 获取当前可见的容器和元素
+                let container, elements, elementSelector;
+                if (currentLayout === 'grid') {
+                    container = document.getElementById('files-grid-container');
+                    elements = container.querySelectorAll('.file-card');
+                    elementSelector = '.file-card';
+                } else {
+                    container = document.getElementById('files-container');
+                    elements = container.querySelectorAll('.file-row');
+                    elementSelector = '.file-row';
+                }
+
+                const filteredElements = [];
+
+                elements.forEach(element => {
+                    const elementType = element.dataset.fileType || 'other';
+                    const title = element.querySelector('h3').textContent.toLowerCase();
+
+                    // 根据布局选择不同的作者选择器
+                    let author = '';
+                    if (currentLayout === 'grid') {
+                        // 网格视图中作者信息在p标签中
+                        const authorElement = element.querySelector('p.text-sm.text-gray-500');
+                        author = authorElement ? authorElement.textContent.toLowerCase() : '';
+                    } else {
+                        // 列表视图中作者信息在span标签中
+                        const authorElement = element.querySelector('.col-span-2 span');
+                        author = authorElement ? authorElement.textContent.toLowerCase() : '';
+                    }
 
                     // 文件类型筛选
-                    const typeMatch = !fileType || cardFileType === fileType;
+                    const typeMatch = !fileType || elementType === fileType;
 
                     // 搜索筛选
                     const searchMatch = !searchTerm ||
@@ -1470,12 +1514,12 @@
                         author.includes(searchTerm);
 
                     if (typeMatch && searchMatch) {
-                        filteredCards.push(card);
+                        filteredElements.push(element);
                     }
                 });
 
                 // 排序
-                filteredCards.sort((a, b) => {
+                filteredElements.sort((a, b) => {
                     switch (sortBy) {
                         case 'newest':
                             return 0;
@@ -1493,13 +1537,13 @@
                 });
 
                 // 重新排列显示
-                fileCards.forEach(card => {
-                    card.style.display = 'none';
+                elements.forEach(element => {
+                    element.style.display = 'none';
                 });
 
-                filteredCards.forEach(card => {
-                    card.style.display = 'block';
-                    filesContainer.appendChild(card);
+                filteredElements.forEach(element => {
+                    element.style.display = currentLayout === 'grid' ? 'block' : '';
+                    container.appendChild(element);
                 });
             }
 
@@ -1515,14 +1559,100 @@
             }
         }
 
-        // 文件列表管理
-        class FileManager {
+        // 布局管理器
+        class LayoutManager {
             constructor() {
-                this.currentFiles = [];
+                this.currentLayout = this.getSavedLayout() || 'list'; // 默认列表视图
                 this.init();
             }
 
             init() {
+                this.setupLayoutButtons();
+                this.applyLayout(this.currentLayout);
+            }
+
+            setupLayoutButtons() {
+                const gridBtn = document.getElementById('grid-view-btn');
+                const listBtn = document.getElementById('list-view-btn');
+
+                if (gridBtn) {
+                    gridBtn.addEventListener('click', () => this.switchToGrid());
+                }
+
+                if (listBtn) {
+                    listBtn.addEventListener('click', () => this.switchToList());
+                }
+            }
+
+            switchToGrid() {
+                this.applyLayout('grid');
+                this.saveLayout('grid');
+            }
+
+            switchToList() {
+                this.applyLayout('list');
+                this.saveLayout('list');
+            }
+
+            applyLayout(layout) {
+                const gridView = document.getElementById('grid-view');
+                const listView = document.getElementById('list-view');
+                const gridBtn = document.getElementById('grid-view-btn');
+                const listBtn = document.getElementById('list-view-btn');
+
+                if (layout === 'grid') {
+                    // 显示网格视图
+                    gridView.classList.remove('hidden');
+                    listView.classList.add('hidden');
+
+                    // 更新按钮状态
+                    gridBtn.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+                    gridBtn.classList.remove('text-gray-500', 'hover:text-gray-700');
+                    listBtn.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+                    listBtn.classList.add('text-gray-500', 'hover:text-gray-700');
+                } else {
+                    // 显示列表视图
+                    gridView.classList.add('hidden');
+                    listView.classList.remove('hidden');
+
+                    // 更新按钮状态
+                    listBtn.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+                    listBtn.classList.remove('text-gray-500', 'hover:text-gray-700');
+                    gridBtn.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+                    gridBtn.classList.add('text-gray-500', 'hover:text-gray-700');
+                }
+
+                this.currentLayout = layout;
+
+                // 重新渲染文件
+                if (window.fileManager) {
+                    window.fileManager.renderFiles();
+                }
+            }
+
+            saveLayout(layout) {
+                localStorage.setItem('preferred_file_layout', layout);
+            }
+
+            getSavedLayout() {
+                return localStorage.getItem('preferred_file_layout');
+            }
+
+            getCurrentLayout() {
+                return this.currentLayout;
+            }
+        }
+
+        // 文件列表管理
+        class FileManager {
+            constructor() {
+                this.currentFiles = [];
+                this.layoutManager = null;
+                this.init();
+            }
+
+            init() {
+                this.layoutManager = new LayoutManager();
                 this.loadFiles();
             }
 
@@ -1562,11 +1692,17 @@
             }
 
             renderFiles() {
-                const filesContainer = document.getElementById('files-container');
+                const currentLayout = this.layoutManager.getCurrentLayout();
 
-                // 清空现有内容（除了示例文件）
-                // 这里我们可以选择保留示例文件或完全清空
-                // 为了演示效果，我们清空所有现有内容
+                if (currentLayout === 'grid') {
+                    this.renderGridFiles();
+                } else {
+                    this.renderListFiles();
+                }
+            }
+
+            renderListFiles() {
+                const filesContainer = document.getElementById('files-container');
                 filesContainer.innerHTML = '';
 
                 if (this.currentFiles.length === 0) {
@@ -1574,29 +1710,53 @@
                     return;
                 }
 
-                // 渲染文件列表
+                // 渲染列表视图
                 this.currentFiles.forEach(fileData => {
-                    const fileCard = fileUploadManager.createFileCard(fileData);
+                    const fileCard = fileUploadManager.createFileCard(fileData, 'list');
                     filesContainer.appendChild(fileCard);
                 });
             }
 
+            renderGridFiles() {
+                const filesGridContainer = document.getElementById('files-grid-container');
+                filesGridContainer.innerHTML = '';
+
+                if (this.currentFiles.length === 0) {
+                    this.showEmptyState();
+                    return;
+                }
+
+                // 渲染网格视图
+                this.currentFiles.forEach(fileData => {
+                    const fileCard = fileUploadManager.createFileCard(fileData, 'grid');
+                    filesGridContainer.appendChild(fileCard);
+                });
+            }
+
             showLoadingState() {
-                const filesContainer = document.getElementById('files-container');
-                filesContainer.innerHTML = `
-                    <div class="col-span-full flex items-center justify-center py-12">
+                const currentLayout = this.layoutManager.getCurrentLayout();
+                const loadingContent = `
+                    <div class="flex items-center justify-center py-12">
                         <div class="text-center">
                             <i class="fa fa-spinner fa-spin text-4xl text-primary mb-4"></i>
                             <p class="text-gray-500">正在加载文件列表...</p>
                         </div>
                     </div>
                 `;
+
+                if (currentLayout === 'grid') {
+                    const filesGridContainer = document.getElementById('files-grid-container');
+                    filesGridContainer.innerHTML = loadingContent;
+                } else {
+                    const filesContainer = document.getElementById('files-container');
+                    filesContainer.innerHTML = loadingContent;
+                }
             }
 
             showEmptyState() {
-                const filesContainer = document.getElementById('files-container');
-                filesContainer.innerHTML = `
-                    <div class="col-span-full flex items-center justify-center py-12">
+                const currentLayout = this.layoutManager.getCurrentLayout();
+                const emptyContent = `
+                    <div class="flex items-center justify-center py-12">
                         <div class="text-center">
                             <i class="fa fa-folder-open text-4xl text-gray-300 mb-4"></i>
                             <p class="text-gray-500 text-lg mb-2">还没有上传任何文件</p>
@@ -1607,12 +1767,20 @@
                         </div>
                     </div>
                 `;
+
+                if (currentLayout === 'grid') {
+                    const filesGridContainer = document.getElementById('files-grid-container');
+                    filesGridContainer.innerHTML = emptyContent;
+                } else {
+                    const filesContainer = document.getElementById('files-container');
+                    filesContainer.innerHTML = emptyContent;
+                }
             }
 
             showErrorState(message) {
-                const filesContainer = document.getElementById('files-container');
-                filesContainer.innerHTML = `
-                    <div class="col-span-full flex items-center justify-center py-12">
+                const currentLayout = this.layoutManager.getCurrentLayout();
+                const errorContent = `
+                    <div class="flex items-center justify-center py-12">
                         <div class="text-center">
                             <i class="fa fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
                             <p class="text-gray-500 text-lg mb-2">${message}</p>
@@ -1622,6 +1790,14 @@
                         </div>
                     </div>
                 `;
+
+                if (currentLayout === 'grid') {
+                    const filesGridContainer = document.getElementById('files-grid-container');
+                    filesGridContainer.innerHTML = errorContent;
+                } else {
+                    const filesContainer = document.getElementById('files-container');
+                    filesContainer.innerHTML = errorContent;
+                }
             }
 
             hideLoadingState() {
@@ -1632,23 +1808,44 @@
             addFile(fileData) {
                 // 添加新文件到列表顶部
                 this.currentFiles.unshift(fileData);
-                const filesContainer = document.getElementById('files-container');
+                const currentLayout = this.layoutManager.getCurrentLayout();
 
-                // 如果当前是空状态，先清空
-                if (this.currentFiles.length === 1) {
-                    filesContainer.innerHTML = '';
+                if (currentLayout === 'grid') {
+                    const filesGridContainer = document.getElementById('files-grid-container');
+
+                    // 如果当前是空状态，先清空
+                    if (this.currentFiles.length === 1) {
+                        filesGridContainer.innerHTML = '';
+                    }
+
+                    const fileCard = fileUploadManager.createFileCard(fileData, 'grid');
+                    filesGridContainer.insertBefore(fileCard, filesGridContainer.firstChild);
+                } else {
+                    const filesContainer = document.getElementById('files-container');
+
+                    // 如果当前是空状态，先清空
+                    if (this.currentFiles.length === 1) {
+                        filesContainer.innerHTML = '';
+                    }
+
+                    const fileCard = fileUploadManager.createFileCard(fileData, 'list');
+                    filesContainer.insertBefore(fileCard, filesContainer.firstChild);
                 }
-
-                const fileCard = fileUploadManager.createFileCard(fileData);
-                filesContainer.insertBefore(fileCard, filesContainer.firstChild);
             }
 
             removeFile(fileId) {
                 // 从列表中移除文件
                 this.currentFiles = this.currentFiles.filter(file => file.id !== fileId);
-                const fileCard = document.querySelector(`[data-file-id="${fileId}"]`);
-                if (fileCard) {
-                    fileCard.remove();
+
+                // 移除两个视图中的元素
+                const listElement = document.querySelector('#files-container [data-file-id="${fileId}"]');
+                const gridElement = document.querySelector('#files-grid-container [data-file-id="${fileId}"]');
+
+                if (listElement) {
+                    listElement.remove();
+                }
+                if (gridElement) {
+                    gridElement.remove();
                 }
 
                 // 如果没有文件了，显示空状态
