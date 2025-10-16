@@ -1118,6 +1118,9 @@
                                 <button class="text-gray-400 hover:text-primary transition-colors p-2" onclick="fileUploadManager.downloadFile(${fileData.id}, '${fileData.filename}')" title="下载">
                                     <i class="fa fa-download"></i>
                                 </button>
+                                <button class="text-gray-400 hover:text-red-500 transition-colors p-2" onclick="fileUploadManager.deleteFile(${fileData.id}, '${fileData.filename}')" title="删除">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
                                 <button class="text-gray-400 hover:text-primary transition-colors p-2" onclick="fileUploadManager.showFileOptions(${fileData.id})" title="更多">
                                     <i class="fa fa-ellipsis-v"></i>
                                 </button>
@@ -1176,6 +1179,9 @@
                         <div class="flex items-center gap-2">
                             <button class="hover:text-primary transition-colors" onclick="fileUploadManager.downloadFile(${fileData.id}, '${fileData.filename}')" title="下载">
                                 <i class="fa fa-download"></i>
+                            </button>
+                            <button class="hover:text-red-500 transition-colors" onclick="fileUploadManager.deleteFile(${fileData.id}, '${fileData.filename}')" title="删除">
+                                <i class="fa fa-trash-o"></i>
                             </button>
                         </div>
                     </div>
@@ -1359,6 +1365,74 @@
                 }).catch(() => {
                     alert('复制失败，请手动复制: ' + shareUrl);
                 });
+            }
+
+            async deleteFile(fileId, filename) {
+                // 确认删除
+                const confirmed = confirm(`确定要删除文件 "${filename}" 吗？此操作不可撤销。`);
+                if (!confirmed) {
+                    return;
+                }
+
+                try {
+                    // 调用后端API删除文件
+                    const response = await fetch(`${API_BASE_URL}/api/files/${fileId}`, getAuthFetchOptions({
+                        method: 'DELETE'
+                    }));
+
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        // 从页面中移除文件
+                        window.fileManager.removeFile(fileId);
+
+                        // 显示删除成功提示
+                        this.showDeleteSuccessMessage(`文件 "${filename}" 已删除`);
+
+                        // 更新文件统计
+                        this.updateFileStats();
+                    } else {
+                        throw new Error(result.message || '删除失败');
+                    }
+                } catch (error) {
+                    console.error('删除文件失败:', error);
+                    if (error.message && error.message.includes('401')) {
+                        alert('登录已过期，请重新登录');
+                        setTimeout(() => {
+                            window.location.href = `${API_BASE_URL}/login`;
+                        }, 1000);
+                    } else {
+                        alert(`删除失败: ${error.message}`);
+                    }
+                }
+            }
+
+            showDeleteSuccessMessage(message) {
+                // 创建删除成功提示
+                const successDiv = document.createElement('div');
+                successDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+                successDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fa fa-trash mr-2"></i>
+                        <span>${message}</span>
+                    </div>
+                `;
+                document.body.appendChild(successDiv);
+
+                // 显示动画
+                setTimeout(() => {
+                    successDiv.classList.remove('translate-x-full');
+                }, 100);
+
+                // 3秒后自动移除
+                setTimeout(() => {
+                    successDiv.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        if (document.body.contains(successDiv)) {
+                            document.body.removeChild(successDiv);
+                        }
+                    }, 300);
+                }, 3000);
             }
 
             showError(message) {
