@@ -1776,37 +1776,7 @@
             return false;
         }
 
-        // 退出登录功能
-        async function performLogout() {
-            try {
-                console.log('🔥 开始登出操作');
-
-                const sessionToken = getSessionToken();
-                if (sessionToken) {
-                    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${sessionToken}`
-                        }
-                    });
-
-                    const result = await response.json();
-                    console.log('📋 登出API响应:', result);
-                }
-
-                clearSession();
-
-                console.log('✅ 登出成功，跳转到登录页面');
-                window.location.href = `${API_BASE_URL}/login`;
-
-            } catch (error) {
-                console.error('❌ 登出过程中发生错误:', error);
-                clearSession();
-                window.location.href = `${API_BASE_URL}/login`;
-            }
-        }
-
+  
         // 文件筛选功能
         function initFileFilters() {
             const fileTypeFilter = document.getElementById('file-type-filter');
@@ -2309,13 +2279,12 @@
         document.addEventListener('DOMContentLoaded', function() {
             // 首先检查URL中是否有session_token
             const hasUrlToken = checkUrlSessionToken();
-
+            
             // 初始化文件管理器
             window.fileManager = new FileManager();
 
             initMobileSidebar();
             initFileFilters();
-            renderFileStats()
             // 初始化时先渲染文件统计（显示初始值）
             if (window.fileUploadManager && window.fileUploadManager.renderFileStats) {
                 window.fileUploadManager.renderFileStats();
