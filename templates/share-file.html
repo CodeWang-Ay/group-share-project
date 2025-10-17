@@ -2320,18 +2320,60 @@
             if (window.fileUploadManager && window.fileUploadManager.renderFileStats) {
                 window.fileUploadManager.renderFileStats();
             }
-
-            // 退出登录按钮事件
+            // 登出功能
             const logoutBtn = document.getElementById('logout-btn');
             const logoutBtnMobile = document.getElementById('logout-btn-mobile');
+            // 退出登录函数
+            async function performLogout() {
+                try {
+                    console.log('🔥 开始登出操作');
 
+                    // 调用登出API
+                    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('session_token')}`
+                        }
+                    });
+
+                    const result = await response.json();
+                    console.log('📋 登出API响应:', result);
+
+                    // 清除本地存储的会话信息
+                    localStorage.removeItem('session_token');
+                    localStorage.removeItem('user_info');
+                    localStorage.removeItem('remember_me');
+
+                    console.log('✅ 登出成功，跳转到登录页面');
+
+                    // 跳转到登录页面
+                    window.location.href = 'http://localhost:8081/login';
+
+                } catch (error) {
+                    console.error('❌ 登出过程中发生错误:', error);
+                    // 即使API调用失败，也清除本地存储并跳转
+                    localStorage.removeItem('session_token');
+                    localStorage.removeItem('user_info');
+                    localStorage.removeItem('remember_me');
+                    window.location.href = 'http://localhost:8081/login';
+                }
+            }
+            // 桌面端退出登录按钮事件
             if (logoutBtn) {
-                logoutBtn.addEventListener('click', performLogout);
-            }
-            if (logoutBtnMobile) {
-                logoutBtnMobile.addEventListener('click', performLogout);
+                logoutBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    await performLogout();
+                });
             }
 
+            // 移动端退出登录按钮事件
+            if (logoutBtnMobile) {
+                logoutBtnMobile.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    await performLogout();
+                });
+            }
             // 其他按钮事件
             const buttons = document.querySelectorAll('button');
             buttons.forEach(button => {
