@@ -1804,6 +1804,77 @@ async def get_members(request: Request):
         )
 
 
+# API端点：获取成员统计信息
+@app.get("/api/members/stats")
+async def get_members_stats(request: Request):
+    """
+    获取成员统计信息API端点
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # 获取总成员数
+            cursor.execute("SELECT COUNT(*) FROM users")
+            total_members = cursor.fetchone()[0]
+
+            # 获取激活成员数
+            cursor.execute("SELECT COUNT(*) FROM users WHERE status = 'active'")
+            active_members = cursor.fetchone()[0]
+
+            # 获取学生数量
+            cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'student'")
+            student_count = cursor.fetchone()[0]
+
+            # 获取导师数量
+            cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'teacher'")
+            teacher_count = cursor.fetchone()[0]
+
+            # 获取管理员数量
+            cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")
+            admin_count = cursor.fetchone()[0]
+
+            stats = {
+                "total_members": total_members,
+                "active_members": active_members,
+                "student_count": student_count,
+                "teacher_count": teacher_count,
+                "admin_count": admin_count,
+                "inactive_members": total_members - active_members
+            }
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "data": stats
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"获取成员统计失败：{e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "获取成员统计失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
 # API端点：更新成员状态
 @app.put("/api/members/{member_id}/status")
 async def update_member_status(member_id: int, request: Request):

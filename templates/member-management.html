@@ -297,11 +297,11 @@
                         <div class="bg-white rounded-xl p-4 border border-gray-200">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-sm text-gray-600">本月新增</p>
-                                    <p class="text-2xl font-bold text-purple-600 mt-1">3</p>
+                                    <p class="text-sm text-gray-600">导师数量</p>
+                                    <p class="text-2xl font-bold text-purple-600 mt-1" id="teacher-count">0</p>
                                 </div>
                                 <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                                    <i class="fa fa-user-plus text-purple-600"></i>
+                                    <i class="fa fa-graduation-cap text-purple-600"></i>
                                 </div>
                             </div>
                         </div>
@@ -678,16 +678,18 @@
                     search: document.getElementById('member-search')?.value || ''
                 });
 
-                const response = await fetch(`/api/members?${params}`);
-                const result = await response.json();
+                const [membersResponse, statsResponse] = await Promise.all([
+                    fetch(`/api/members?${params}`),
+                    fetch('/api/members/stats')
+                ]);
 
-                if (result.success) {
-                    members = result.data.members;
-                    totalMembers = result.data.pagination.total;
+                const membersResult = await membersResponse.json();
+                const statsResult = await statsResponse.json();
+
+                if (membersResult.success) {
+                    members = membersResult.data.members;
+                    totalMembers = membersResult.data.pagination.total;
                     filteredMembers = [...members];
-
-                    // 更新统计信息
-                    updateStatistics();
 
                     // 渲染视图
                     if (currentView === 'list') {
@@ -696,8 +698,17 @@
                         renderGridView();
                     }
                 } else {
-                    console.error('获取成员列表失败:', result.message);
+                    console.error('获取成员列表失败:', membersResult.message);
                     showErrorToast('获取成员列表失败');
+                }
+
+                // 更新统计信息
+                if (statsResult.success) {
+                    updateStatisticsFromAPI(statsResult.data);
+                } else {
+                    console.error('获取统计信息失败:', statsResult.message);
+                    // 如果API失败，使用本地数据计算统计
+                    updateStatistics();
                 }
             } catch (error) {
                 console.error('API调用失败:', error);
@@ -705,22 +716,27 @@
             }
         }
 
-        // 更新统计信息
+        // 更新统计信息（使用本地数据）
         function updateStatistics() {
             const totalMembersCount = members.length;
             const activeMembersCount = members.filter(m => m.status === 'active').length;
             const studentCount = members.filter(m => m.role === 'student').length;
-            const thisMonthCount = members.filter(m => {
-                const joinDate = new Date(m.joinDate);
-                const now = new Date();
-                return joinDate.getMonth() === now.getMonth() && joinDate.getFullYear() === now.getFullYear();
-            }).length;
+            const teacherCount = members.filter(m => m.role === 'teacher').length;
 
             // 更新页面上的统计数字
             document.querySelector('.text-2xl.font-bold.text-gray-800').textContent = totalMembersCount;
             document.querySelector('.text-2xl.font-bold.text-green-600').textContent = activeMembersCount;
             document.querySelector('.text-2xl.font-bold.text-orange-600').textContent = studentCount;
-            document.querySelector('.text-2xl.font-bold.text-purple-600').textContent = thisMonthCount;
+            document.getElementById('teacher-count').textContent = teacherCount;
+        }
+
+        // 更新统计信息（使用API数据）
+        function updateStatisticsFromAPI(stats) {
+            // 更新页面上的统计数字
+            document.querySelector('.text-2xl.font-bold.text-gray-800').textContent = stats.total_members;
+            document.querySelector('.text-2xl.font-bold.text-green-600').textContent = stats.active_members;
+            document.querySelector('.text-2xl.font-bold.text-orange-600').textContent = stats.student_count;
+            document.getElementById('teacher-count').textContent = stats.teacher_count;
         }
 
         // 工具函数
