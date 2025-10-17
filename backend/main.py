@@ -1726,9 +1726,13 @@ async def get_members(request: Request):
                 where_conditions.append("role = ?")
                 params.append(role_filter)
 
+            if status_filter:
+                where_conditions.append("status = ?")
+                params.append(status_filter)
+
             if search:
-                where_conditions.append("(username LIKE ? OR id LIKE ?)")
-                params.extend([f"%{search}%", f"%{search}%"])
+                where_conditions.append("(username LIKE ? OR id LIKE ? OR student_id LIKE ?)")
+                params.extend([f"%{search}%", f"%{search}%", f"%{search}%"])
 
             where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
 
@@ -1739,7 +1743,7 @@ async def get_members(request: Request):
 
             # 获取成员列表
             query = f"""
-                SELECT id, username, role, created_at
+                SELECT id, username, role, email, phone, student_id, research_direction, status, created_at
                 FROM users
                 {where_clause}
                 ORDER BY created_at DESC
@@ -1753,12 +1757,12 @@ async def get_members(request: Request):
             for row in rows:
                 member = dict(row)
                 # 为前端添加必要的字段
-                member['studentId'] = member['id']  # 使用id作为学号
+                member['studentId'] = member.get('student_id', str(member['id']))  # 使用student_id或id作为学号
                 member['name'] = member['username']  # 使用username作为姓名
-                member['email'] = f"{member['username']}@example.com"  # 生成示例邮箱
-                member['phone'] = "13800138000"  # 示例手机号
-                member['status'] = 'active'  # 默认状态
-                member['research'] = '未设置研究方向'  # 默认研究方向
+                member['email'] = member.get('email', f"{member['username']}@example.com")  # 使用真实邮箱或生成示例邮箱
+                member['phone'] = member.get('phone', '13800138000')  # 使用真实手机号或示例手机号
+                member['status'] = member.get('status', 'active')  # 使用真实状态
+                member['research'] = member.get('research_direction', '未设置研究方向')  # 使用真实研究方向
                 member['avatar'] = f"https://picsum.photos/seed/{member['username']}/100/100.jpg"  # 生成头像
                 member['joinDate'] = member['created_at'].split(' ')[0]  # 只取日期部分
                 members.append(member)
@@ -1789,11 +1793,147 @@ async def get_members(request: Request):
             )
 
     except Exception as e:
+        logger.error(f"获取成员列表失败：{e}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
                 "success": False,
                 "message": "获取成员列表失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
+# API端点：更新成员状态
+@app.put("/api/members/{member_id}/status")
+async def update_member_status(member_id: int, request: Request):
+    """
+    更新成员状态API端点
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        data = await request.json()
+        new_status = data.get("status")
+
+        if new_status not in ["active", "inactive"]:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "状态值无效",
+                    "error": "INVALID_STATUS"
+                }
+            )
+
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # 更新成员状态
+            cursor.execute(
+                "UPDATE users SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                (new_status, member_id)
+            )
+
+            if cursor.rowcount == 0:
+                return JSONResponse(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    content={
+                        "success": False,
+                        "message": "成员不存在",
+                        "error": "MEMBER_NOT_FOUND"
+                    }
+                )
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": "成员状态更新成功"
+            }
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "更新成员状态失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
+# API端点：删除成员
+@app.delete("/api/members/{member_id}")
+async def delete_member(member_id: int, request: Request):
+    """
+    删除成员API端点
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        # 只有管理员可以删除成员
+        if current_user.role != "admin":
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": "没有权限删除成员",
+                    "error": "ACCESS_DENIED"
+                }
+            )
+
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # 删除成员
+            cursor.execute("DELETE FROM users WHERE id = ?", (member_id,))
+
+            if cursor.rowcount == 0:
+                return JSONResponse(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    content={
+                        "success": False,
+                        "message": "成员不存在",
+                        "error": "MEMBER_NOT_FOUND"
+                    }
+                )
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": "成员删除成功"
+            }
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "删除成员失败",
                 "error": "INTERNAL_ERROR"
             }
         )

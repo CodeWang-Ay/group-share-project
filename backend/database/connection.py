@@ -66,6 +66,11 @@ def init_db() -> None:
                 username VARCHAR(50) UNIQUE NOT NULL,
                 password_hash VARCHAR(255) NOT NULL,
                 role VARCHAR(20) NOT NULL,
+                email VARCHAR(100),
+                phone VARCHAR(20),
+                student_id VARCHAR(50),
+                research_direction VARCHAR(200),
+                status VARCHAR(20) DEFAULT 'active',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
