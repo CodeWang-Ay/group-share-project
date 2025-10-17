@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学术工具导航平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36CFC9',
+                        accent: '#722ED1',
+                        neutral: '#F5F7FA',
+                        dark: '#1D2129'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+            }
+            .nav-active {
+                @apply bg-primary/10 text-primary border-l-4 border-primary;
+            }
+            .section-hidden {
+                @apply hidden;
+            }
+        }
+    </style>
+</head>
+<body class="bg-neutral font-sans text-dark">
+    <!-- 顶部导航栏 -->
+    <header class="sticky top-0 z-50 bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-graduation-cap text-primary text-2xl"></i>
+                <h1 class="text-xl md:text-2xl font-bold text-dark">学术工具导航</h1>
+            </div>
+            <!-- 搜索框 -->
+            <div class="relative w-full max-w-md mx-4">
+                <input 
+                    type="text" 
+                    id="search-input"
+                    placeholder="搜索工具/网站..." 
+                    class="w-full px-4 py-2 pl-10 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                >
+                <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-6 flex flex-col md:flex-row">
+        <!-- 左侧分类导航（新增2个分类项） -->
+        <aside class="w-full md:w-64 flex-shrink-0 mb-6 md:mb-0 md:mr-6">
+            <nav class="bg-white rounded-lg shadow-sm p-4">
+                <ul class="space-y-1">
+                    <li>
+                        <a href="#section-1" class="nav-active block px-4 py-2 rounded-md font-medium category-link" data-target="section-1">
+                            <i class="fa fa-search mr-2"></i>学术论文检索
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#section-2" class="block px-4 py-2 rounded-md font-medium hover:bg-gray-50 transition-colors category-link" data-target="section-2">
+                            <i class="fa fa-book mr-2"></i>文献管理与阅读
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#section-3" class="block px-4 py-2 rounded-md font-medium hover:bg-gray-50 transition-colors category-link" data-target="section-3">
+                            <i class="fa fa-pencil mr-2"></i>论文写作与排版
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#section-4" class="block px-4 py-2 rounded-md font-medium hover:bg-gray-50 transition-colors category-link" data-target="section-4">
+                            <i class="fa fa-flask mr-2"></i>科研数据与工具
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#section-5" class="block px-4 py-2 rounded-md font-medium hover:bg-gray-50 transition-colors category-link" data-target="section-5">
+                            <i class="fa fa-comments mr-2"></i>学术交流与社区
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#section-6" class="block px-4 py-2 rounded-md font-medium hover:bg-gray-50 transition-colors category-link" data-target="section-6">
+                            <i class="fa fa-paper-plane mr-2"></i>会议投稿
+                        </a>
+                    </li>
+                    <!-- 新增：LLM模型访问分类 -->
+                    <li>
+                        <a href="#section-7" class="block px-4 py-2 rounded-md font-medium hover:bg-gray-50 transition-colors category-link" data-target="section-7">
+                            <i class="fa fa-robot mr-2"></i>LLM模型访问
+                        </a>
+                    </li>
+                    <!-- 新增：找工作分类 -->
+                    <li>
+                        <a href="#section-8" class="block px-4 py-2 rounded-md font-medium hover:bg-gray-50 transition-colors category-link" data-target="section-8">
+                            <i class="fa fa-briefcase mr-2"></i>找工作
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- 右侧内容区域（新增2个分类模块） -->
+        <main class="flex-1">
+            <!-- 1. 学术论文检索（原内容不变） -->
+            <section id="section-1" class="mb-10 section-content">
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center text-primary">
+                        <i class="fa fa-search mr-2"></i>一、学术论文检索
+                    </h2>
+                    
+                    <!-- 综合数据库 -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-3 text-dark">综合数据库</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Google Scholar -->
+                            <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="font-semibold">Google Scholar</h4>
+                                    <span class="px-2 py-1 text-xs rounded bg-blue-50 text-blue-600">综合</span>
+                                </div>
+                                <p class="text-gray-600 text-sm mb-3">最通用的学术论文搜索引擎，涵盖多学科文献</p>
+                                <a href="https://scholar.google.com" target="_blank" class="inline-flex items-center text-primary text-sm font-medium hover:underline">
+                                    访问网站 <i class="fa fa-external-link ml-1"></i>
+                                </a>
+                            </div>
+
+                            <!-- IEEE Xplore -->
+                            <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="font-semibold">IEEE Xplore</h4>
+                                    <span class="px-2 py-1 text-xs rounded bg-blue-50 text-blue-600">工程技术</span>
+                                </div>
+                                <p class="text-gray-600 text-sm mb-3">电子工程、计算机科学领域核心文献数据库</p>
+                                <a href="https://ieeexplore.ieee.org" target="_blank" class="inline-flex items-center text-primary text-sm font-medium hover:underline">
+                                    访问网站 <i class="fa fa-external-link ml-1"></i>
+                                </a>
+                            </div>
+
+                            <!-- Web of Science -->
+                            <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="font-semibold">Web of Science</h4>
+                                    <span class="px-2 py-1 text-xs rounded bg-blue-50 text-blue-600">引文索引</span>
+                                </div>
+                                <p class="text-gray-600 text-sm mb-3">权威的学术文献引文数据库，支持影响力分析</p>
+                                <a href="https://www.webofscience.com" target="_blank" class="inline-flex items-center text-primary text-sm font-medium hover:underline">
+                                    访问网站 <i class="fa fa-external-link ml-1"></i>
+                                </a>
+                            </div>
+
+                            <!-- SCI-HUB -->
+                            <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="font-semibold">SCI-HUB</h4>
+                                    <span class="px-2 py-1 text-xs rounded bg-blue-50 text-blue-600">开放获取</span>
+                                </div>
+                                <p class="text-gray-600 text-sm mb-3">提供大量学术论文的免费访问与下载</p>
+                                <a href="https://sci-hub.se" target="_blank" class="inline-flex items-center text-primary text-sm font-medium hover:underline">
+                                    访问网站 <i class="fa fa-external-link ml-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 开源论文 -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-3 text-dark">开源论文</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- arXiv -->
+                            <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                <h4 class="font-semibold mb-2">arXiv</h4>
+                                <p class="text-gray-600 text-sm mb-3">各类预印本（CS/Math/Physics）</p>
+                                <a href="https://arxiv.org" target="_blank" class="inline-flex items-center text-primary text-sm font-medium hover:underline">
+                                    访问网站 <i class="fa fa-external-link ml-1"></i>
+                                </a>
+                            </div>
+
+                            <!-- HAL -->
+                            <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                <h4 class="font-semibold mb-2">HAL</h4>
+                                <p class="text-gray-600 text-sm mb-3">法国科研公开存档系统</p>
+                                <a href="https://hal.archives-ouvertes.fr" target="_blank" class="inline-flex items-center text-primary text-sm font-medium hover:underline">
+                                    访问网站 <i class="fa fa-external-link ml-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 中文论文 -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 text-dark">中文论文</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- 知网 CNKI -->
+                            <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                <h4 class="font-semibold mb-2">知网 CNKI</h4>
+                                <p class="text-gray-600 text-sm mb-3">中国最全中文论文库</p>
+                                <a href="https://www.cnki.net" target="_blank" class="inline-flex items-center text-primary text-sm font-medium hover:underline">
+                                    访问网站 <i class="fa fa-external-link ml-1"></i>
+                                </a>
+                            </div>
+
+                            <!-- 万方数据 -->
+                            <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                <h4 class="font-semibold mb-2">万方数据</h4>
+                                <p class="text-gray-600 text-sm mb-3">中文学位论文与期刊数据库</p>
+                                <a href="https://www.wanfangdata.com.cn" target="_blank" class="inline-flex items-center text-primary text-sm font-medium hover:underline">
+                                    访问网站 <i class="fa fa-external-link ml-1"></i>
+                                </a>
+                            </div>
+
+                            <!-- 维普网 -->
+                            <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                <h4 class="font-semibold mb-2">维普网</h4>
+                                <p class="text-gray-600 text-sm mb-3">中文期刊论文数据库</p>
+                                <a href="https://www.cqvip.com" target="_blank" class="inline-flex items-center text-primary text-sm font-medium hover:underline">
+                                    访问网站 <i class="fa fa-external-link ml-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 学术论文 -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-3 text-dark">学术论文</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- SpringerLink -->
+                            <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                <h4 class="font-semibold mb-2">SpringerLink</h4>
+                                <p class="text-gray-600 text-sm mb-3">Springer 出版社论文资源</p>
+                                <a href="https://link.springer.com" target="_blank" class="inline-flex items-center text-primary text-sm font-medium hover:underline">
+                                    访问网站 <i class="fa fa-external-link ml-1"></i>
+                                </a>
+                            </div>
+
+                            <!-- ScienceDirect -->
+                            <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                <h4 class="font-semibold mb-2">ScienceDirect</h4>
+                                <p class="text-gray-600 text-sm mb-3">Elsevier 出版社论文资源</p>
+                                <a href="https://www.sciencedirect.com" target="_blank" class="inline-flex items-center text-primary text-sm font-medium hover:underline">
+                                    访问网站 <i class="fa fa-external-link ml-1"></i>
+                                </a>
+                            </div>
+
+                            <!-- Wiley Online Library -->
+                            <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                <h4 class="font-semibold mb-2">Wiley Online Library</h4>
+                                <p class="text-gray-600 text-sm mb-3">Wiley 出版社资源</p>
+                                <a href="https://onlinelibrary.wiley.com" target="_blank" class="inline-flex items-center text-primary text-sm font-medium hover:underline">
+                                    访问网站 <i class="fa fa-external-link ml-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- 2. 文献管理与阅读工具（原内容不变） -->
+            <section id="section-2" class="mb-10 section-content section-hidden">
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center text-secondary">
+                        <i class="fa fa-book mr-2"></i>二、文献管理与阅读工具
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- 文献管理 -->
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3 text-dark flex items-center">
+                                <i class="fa fa-folder-open mr-2 text-secondary"></i>文献管理
+                            </h3>
+                            <div class="space-y-4">
+                                <!-- Zotero -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">Zotero</h4>
+                                    <p class="text-gray-600 text-sm mb-3">免费开源，支持插件与标注</p>
+                                    <a href="https://www.zotero.org" target="_blank" class="inline-flex items-center text-secondary text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+
+                                <!-- EndNote -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">EndNote</h4>
+                                    <p class="text-gray-600 text-sm mb-3">专业级引用管理工具</p>
+                                    <a href="https://endnote.com" target="_blank" class="inline-flex items-center text-secondary text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+
+                                <!-- Mendeley -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">Mendeley</h4>
+                                    <p class="text-gray-600 text-sm mb-3">文献云存储与协作</p>
+                                    <a href="https://www.mendeley.com" target="_blank" class="inline-flex items-center text-secondary text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 阅读笔记与工具 -->
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3 text-dark flex items-center">
+                                <i class="fa fa-sticky-note mr-2 text-secondary"></i>阅读笔记与工具
+                            </h3>
+                            <div class="space-y-4">
+                                <!-- 语雀 -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">语雀</h4>
+                                    <p class="text-gray-600 text-sm mb-3">结构化知识库，支持文档协作与版本管理</p>
+                                    <a href="https://www.yuque.com" target="_blank" class="inline-flex items-center text-secondary text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+
+                                <!-- 飞书 -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">飞书</h4>
+                                    <p class="text-gray-600 text-sm mb-3">集成文档、表格与协作功能的办公平台</p>
+                                    <a href="https://www.feishu.cn" target="_blank" class="inline-flex items-center text-secondary text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+                                <!-- Notion -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">Notion</h4>
+                                    <p class="text-gray-600 text-sm mb-3">笔记+文献整理一体化</p>
+                                    <a href="https://www.notion.so" target="_blank" class="inline-flex items-center text-secondary text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+
+                                <!-- Obsidian -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">Obsidian</h4>
+                                    <p class="text-gray-600 text-sm mb-3">Markdown 笔记与知识图谱</p>
+                                    <a href="https://obsidian.md" target="_blank" class="inline-flex items-center text-secondary text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. 论文写作与排版工具（原内容不变） -->
+            <section id="section-3" class="mb-10 section-content section-hidden">
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center text-accent">
+                        <i class="fa fa-pencil mr-2"></i>三、论文写作与排版工具
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- 写作排版 -->
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3 text-dark flex items-center">
+                                <i class="fa fa-file-text mr-2 text-accent"></i>写作排版
+                            </h3>
+                            <div class="space-y-4">
+                                <!-- Overleaf -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">Overleaf</h4>
+                                    <p class="text-gray-600 text-sm mb-3">在线 LaTeX 写作平台</p>
+                                    <a href="https://www.overleaf.com" target="_blank" class="inline-flex items-center text-accent text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+
+                                <!-- LaTeX Templates -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">LaTeX Templates</h4>
+                                    <p class="text-gray-600 text-sm mb-3">各类论文模板</p>
+                                    <a href="https://www.latextemplates.com" target="_blank" class="inline-flex items-center text-accent text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 写作辅助 -->
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3 text-dark flex items-center">
+                                <i class="fa fa-check-circle mr-2 text-accent"></i>写作辅助
+                            </h3>
+                            <div class="space-y-4">
+                                <!-- Grammarly -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">Grammarly</h4>
+                                    <p class="text-gray-600 text-sm mb-3">英语语法与写作纠错</p>
+                                    <a href="https://www.grammarly.com" target="_blank" class="inline-flex items-center text-accent text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+
+                                <!-- QuillBot -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">QuillBot</h4>
+                                    <p class="text-gray-600 text-sm mb-3">改写、润色与摘要生成</p>
+                                    <a href="https://quillbot.com" target="_blank" class="inline-flex items-center text-accent text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. 科研数据与工具网站（原内容不变） -->
+            <section id="section-4" class="mb-10 section-content section-hidden">
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center text-green-600">
+                        <i class="fa fa-flask mr-2"></i>四、科研数据与工具网站
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- 开源数据 -->
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3 text-dark flex items-center">
+                                <i class="fa fa-database mr-2 text-green-600"></i>开源数据
+                            </h3>
+                            <div class="space-y-4">
+                                <!-- Kaggle -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">Kaggle</h4>
+                                    <p class="text-gray-600 text-sm mb-3">机器学习竞赛与数据集</p>
+                                    <a href="https://www.kaggle.com" target="_blank" class="inline-flex items-center text-green-600 text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+
+                                <!-- 飞桨 AI Studio 星河社区 -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">飞桨 AI Studio 星河社区</h4>
+                                    <p class="text-gray-600 text-sm mb-3">包含海量AI数据集与模型的开源社区</p>
+                                    <a href="https://aistudio.baidu.com/datasetoverview" target="_blank" class="inline-flex items-center text-green-600 text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+
+                                <!-- 天池数据集（阿里云） -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">天池数据集（阿里云）</h4>
+                                    <p class="text-gray-600 text-sm mb-3">涵盖多领域的高质量开放数据集平台</p>
+                                    <a href="https://tianchi.aliyun.com/dataset" target="_blank" class="inline-flex items-center text-green-600 text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+
+                                <!-- 书生·万卷 1.0 -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">书生·万卷 1.0</h4>
+                                    <p class="text-gray-600 text-sm mb-3">大规模多模态开源数据集库</p>
+                                    <a href="https://opendatalab.com/" target="_blank" class="inline-flex items-center text-green-600 text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+
+                                <!-- 和鲸数据集库 -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">和鲸数据集库</h4>
+                                    <p class="text-gray-600 text-sm mb-3">集成数据获取、分析与分享的科研平台</p>
+                                    <a href="https://www.heywhale.com/home/dataset" target="_blank" class="inline-flex items-center text-green-600 text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+
+                                <!-- UCI Machine Learning Repository -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">UCI Machine Learning Repository</h4>
+                                    <p class="text-gray-600 text-sm mb-3">经典机器学习数据集</p>
+                                    <a href="https://archive.ics.uci.edu/ml" target="_blank" class="inline-flex items-center text-green-600 text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+
+                                <!-- Hugging Face Datasets -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">Hugging Face Datasets</h4>
+                                    <p class="text-gray-600 text-sm mb-3">NLP 与多模态数据集</p>
+                                    <a href="https://huggingface.co/datasets" target="_blank" class="inline-flex items-center text-green-600 text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- 绘图与统计工具 -->
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3 text-dark flex items-center">
+                                <i class="fa fa-bar-chart mr-2 text-green-600"></i>绘图与统计工具
+                            </h3>
+                            <div class="space-y-4">
+                                <!-- Visio -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">Microsoft Visio</h4>
+                                    <p class="text-gray-600 text-sm mb-3">专业流程图、架构图绘制工具，支持复杂图形排版</p>
+                                    <a href="https://products.office.com/zh-cn/visio/flowchart-software" target="_blank" class="inline-flex items-center text-green-600 text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+
+                                <!-- draw.io -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">draw.io</h4>
+                                    <p class="text-gray-600 text-sm mb-3">通用流程图绘制</p>
+                                    <a href="https://app.diagrams.net" target="_blank" class="inline-flex items-center text-green-600 text-sm font-medium hover:underline">
+                                        访问官网 <i class="fa fa-external-link ml-1"></i>
+                                    </a>
+                                </div>
+                                <!-- Plotly / ChartGPT -->
+                                <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                    <h4 class="font-semibold mb-2">Plotly / ChartGPT</h4>
+                                    <p class="text-gray-600 text-sm mb-3">可视化图表工具</p>
+                                    <div class="flex space-x-2">
+                                        <a href="https://plotly.com" target="_blank" class="inline-flex items-center text-green-600 text-sm font-medium hover:underline">
+                                            Plotly <i class="fa fa-external-link ml-1"></i>
+                                        </a>
+                                        <a href="https://chartgpt.cn" target="_blank" class="inline-flex items-center text-green-600 text-sm font-medium hover:underline">
+                                            ChartGPT <i class="fa fa-external-link ml-1"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. 学术交流与社区平台（原内容不变） -->
+            <section id="section-5" class="mb-10 section-content section-hidden">
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center text-orange-500">
+                        <i class="fa fa-comments mr-2"></i>五、学术交流与社区平台
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- GitHub -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">GitHub</h4>
+                            <p class="text-gray-600 text-sm mb-3">代码、模型与论文实现共享</p>
+                            <a href="https://github.com" target="_blank" class="inline-flex items-center text-orange-500 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+                        <!-- Reddit r/academia -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">Reddit r/academia</h4>
+                            <p class="text-gray-600 text-sm mb-3">全球学者讨论区</p>
+                            <a href="https://www.reddit.com/r/academia" target="_blank" class="inline-flex items-center text-orange-500 text-sm font-medium hover:underline">
+                                访问社区 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+
+                        <!-- 小红书 -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">小红书</h4>
+                            <p class="text-gray-600 text-sm mb-3">科研经验、学习方法分享社区</p>
+                            <a href="https://www.xiaohongshu.com" target="_blank" class="inline-flex items-center text-orange-500 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+
+                        <!-- 知乎 -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">知乎</h4>
+                            <p class="text-gray-600 text-sm mb-3">中文学术圈讨论</p>
+                            <a href="https://www.zhihu.com" target="_blank" class="inline-flex items-center text-orange-500 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+
+                        <!-- CSDN -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">CSDN</h4>
+                            <p class="text-gray-600 text-sm mb-3">IT技术、编程与科研工具教程平台</p>
+                            <a href="https://www.csdn.net" target="_blank" class="inline-flex items-center text-orange-500 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+
+                        <!-- 博客园 -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">博客园</h4>
+                            <p class="text-gray-600 text-sm mb-3">程序员与科研人员技术博客社区</p>
+                            <a href="https://www.cnblogs.com" target="_blank" class="inline-flex items-center text-orange-500 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+
+                        <!-- 科学空间 -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">科学空间</h4>
+                            <p class="text-gray-600 text-sm mb-3">聚焦科研方法与学术工具的深度分享平台</p>
+                            <a href="https://kexue.fm" target="_blank" class="inline-flex items-center text-orange-500 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+                        
+                        <!-- Stack Exchange - Academia -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">Stack Exchange - Academia</h4>
+                            <p class="text-gray-600 text-sm mb-3">学术问答平台</p>
+                            <a href="https://academia.stackexchange.com" target="_blank" class="inline-flex items-center text-orange-500 text-sm font-medium hover:underline">
+                                访问平台 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. 会议投稿（原内容不变） -->
+            <section id="section-6" class="mb-10 section-content section-hidden">
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center text-red-500">
+                        <i class="fa fa-paper-plane mr-2"></i>六、会议投稿
+                    </h2>
+                    
+                    <!-- 顶会投稿 -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-3 text-dark">顶会投稿</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead>
+                                    <tr>
+                                        <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">会议名称</th>
+                                        <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">简称</th>
+                                        <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">官网</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <!-- ACL -->
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <div class="font-medium text-gray-900">Annual Meeting of the Association for Computational Linguistics</div>
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <div class="text-gray-600">ACL</div>
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <a href="https://www.aclweb.org" target="_blank" class="text-red-500 hover:underline text-sm">
+                                                https://www.aclweb.org <i class="fa fa-external-link ml-1"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <!-- EMNLP -->
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <div class="font-medium text-gray-900">Conference on Empirical Methods in Natural Language Processing</div>
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <div class="text-gray-600">EMNLP</div>
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <a href="https://2024.emnlp.org" target="_blank" class="text-red-500 hover:underline text-sm">
+                                                https://2024.emnlp.org <i class="fa fa-external-link ml-1"></i>
+                                                <p class="text-gray-400 text-xs mt-1">每年更新年份域名</p>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <!-- NAACL -->
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <div class="font-medium text-gray-900">North American Chapter of the Association for Computational Linguistics</div>
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <div class="text-gray-600">NAACL</div>
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <a href="https://naacl.org" target="_blank" class="text-red-500 hover:underline text-sm">
+                                                https://naacl.org <i class="fa fa-external-link ml-1"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <!-- COLING -->
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <div class="font-medium text-gray-900">International Conference on Computational Linguistics</div>
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <div class="text-gray-600">COLING</div>
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <a href="https://coling.org" target="_blank" class="text-red-500 hover:underline text-sm">
+                                                https://coling.org <i class="fa fa-external-link ml-1"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <!-- NLPCC -->
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <div class="font-medium text-gray-900">Natural Language Processing and Chinese Computing</div>
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <div class="text-gray-600">NLPCC</div>
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <a href="http://tcci.ccf.org.cn" target="_blank" class="text-red-500 hover:underline text-sm">
+                                                http://tcci.ccf.org.cn <i class="fa fa-external-link ml-1"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 会议快速投稿 -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 text-dark">会议快速投稿</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- CCF Deadline -->
+                            <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                <h4 class="font-semibold mb-2">CCF Deadline</h4>
+                                <p class="text-gray-600 text-sm mb-3">CCF会议截止日期查询</p>
+                                <a href="https://ccfddl.com" target="_blank" class="inline-flex items-center text-red-500 text-sm font-medium hover:underline">
+                                    访问网站 <i class="fa fa-external-link ml-1"></i>
+                                </a>
+                            </div>
+
+                            <!-- CCFDDL 投稿 -->
+                            <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                                <h4 class="font-semibold mb-2">CCFDDL 投稿</h4>
+                                <p class="text-gray-600 text-sm mb-3">CCF会议投稿辅助平台</p>
+                                <a href="https://ccfddl.top" target="_blank" class="inline-flex items-center text-red-500 text-sm font-medium hover:underline">
+                                    访问网站 <i class="fa fa-external-link ml-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 7. 新增模块：LLM模型访问 -->
+            <section id="section-7" class="mb-10 section-content section-hidden">
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center text-purple-600">
+                        <i class="fa fa-robot mr-2"></i>七、LLM模型访问
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- ChatGPT -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">ChatGPT</h4>
+                            <p class="text-gray-600 text-sm mb-3">OpenAI 推出的现象级对话大模型，支持代码/创意/推理</p>
+                            <a href="https://chat.openai.com" target="_blank" class="inline-flex items-center text-purple-600 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+
+                        <!-- Claude -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">Claude</h4>
+                            <p class="text-gray-600 text-sm mb-3">Anthropic 出品的长文本、安全对齐大模型</p>
+                            <a href="https://claude.ai" target="_blank" class="inline-flex items-center text-purple-600 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+                        <!-- DeepSeek -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">DeepSeek</h4>
+                            <p class="text-gray-600 text-sm mb-3">深度求索推出的中英文多模态大模型，专注代码与数学推理</p>
+                            <a href="https://www.deepseek.com" target="_blank" class="inline-flex items-center text-purple-600 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+                        <!-- Kimi -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">Kimi</h4>
+                            <p class="text-gray-600 text-sm mb-3">月之暗面出品、中文长文本友好的国产大模型</p>
+                            <a href="https://kimi.moonshot.cn" target="_blank" class="inline-flex items-center text-purple-600 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+
+                        <!-- GLM-4-6 -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">GLM-4-6</h4>
+                            <p class="text-gray-600 text-sm mb-3">智谱 AI 最新一代中英双语对话大模型</p>
+                            <a href="https://chatglm.cn" target="_blank" class="inline-flex items-center text-purple-600 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+
+                        <!-- 豆包 -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">豆包</h4>
+                            <p class="text-gray-600 text-sm mb-3">字节跳动旗下、集成搜索与插件的 AI 助手</p>
+                            <a href="https://www.doubao.com" target="_blank" class="inline-flex items-center text-purple-600 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+
+                        <!-- Qwen -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">Qwen（通义千问）</h4>
+                            <p class="text-gray-600 text-sm mb-3">阿里通义千问系列，开源+商用双版本</p>
+                            <a href="https://tongyi.aliyun.com/qianwen" target="_blank" class="inline-flex items-center text-purple-600 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+
+                        <!-- 文心一言 -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">文心一言</h4>
+                            <p class="text-gray-600 text-sm mb-3">百度打造的国产知识增强大模型</p>
+                            <a href="https://yiyan.baidu.com" target="_blank" class="inline-flex items-center text-purple-600 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- 8. 新增模块：找工作 -->
+            <section id="section-8" class="mb-10 section-content section-hidden">
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center text-teal-600">
+                        <i class="fa fa-briefcase mr-2"></i>八、找工作
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- LeetCode -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">LeetCode</h4>
+                            <p class="text-gray-600 text-sm mb-3">全球程序员刷题、面试题库与竞赛平台</p>
+                            <a href="https://leetcode.cn" target="_blank" class="inline-flex items-center text-teal-600 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+
+                        <!-- 牛客 -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">牛客</h4>
+                            <p class="text-gray-600 text-sm mb-3">国内校招/实习/面经/题库一站式求职社区</p>
+                            <a href="https://www.nowcoder.com" target="_blank" class="inline-flex items-center text-teal-600 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+
+                        <!-- 赛码网 -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">赛码网</h4>
+                            <p class="text-gray-600 text-sm mb-3">专注算法竞赛与名企笔试真题的刷题平台</p>
+                            <a href="https://www.saima.wang" target="_blank" class="inline-flex items-center text-teal-600 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+
+                        <!-- Boss 直聘 -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">Boss 直聘</h4>
+                            <p class="text-gray-600 text-sm mb-3">直接与 HR/老板在线沟通的招聘平台</p>
+                            <a href="https://www.zhipin.com" target="_blank" class="inline-flex items-center text-teal-600 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+
+                        <!-- 代码随想录 -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">代码随想录</h4>
+                            <p class="text-gray-600 text-sm mb-3">开源免费、系统刷题路线与图文题解仓库</p>
+                            <a href="https://programmercarl.com" target="_blank" class="inline-flex items-center text-teal-600 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+
+                        <!-- 知识星球 -->
+                        <div class="border border-gray-100 rounded-lg p-4 card-hover">
+                            <h4 class="font-semibold mb-2">知识星球</h4>
+                            <p class="text-gray-600 text-sm mb-3">付费社群聚集地，可跟随技术大 V 获取内推与干货</p>
+                            <a href="https://www.zsxq.com" target="_blank" class="inline-flex items-center text-teal-600 text-sm font-medium hover:underline">
+                                访问网站 <i class="fa fa-external-link ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 py-6 mt-10">
+        <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
+            <p>学术工具导航平台 &copy; 2024 | 所有链接均指向第三方官方网站</p>
+            <p class="mt-2">使用提示：点击链接将在新窗口打开，部分资源可能需要学术权限访问</p>
+        </div>
+    </footer>
+
+    <!-- 搜索功能脚本（无需修改，新增模块自动适配） -->
+    <script>
+        // 获取所有工具卡片和搜索输入框
+        const searchInput = document.getElementById('search-input');
+        const toolCards = document.querySelectorAll('.card-hover');
+        // 获取分类导航和内容区域
+        const categoryLinks = document.querySelectorAll('.category-link');
+        const sectionContents = document.querySelectorAll('.section-content');
+        
+        // 搜索功能
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            
+            toolCards.forEach(card => {
+                // 获取卡片中的文本内容
+                const cardText = card.textContent.toLowerCase();
+                // 检查是否包含搜索词
+                const isMatch = cardText.includes(searchTerm);
+                // 显示或隐藏卡片
+                card.style.display = isMatch ? 'block' : 'none';
+            });
+        });
+
+        // 分类切换功能（核心新增）
+        categoryLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault(); // 阻止默认跳转
+                
+                // 1. 获取目标分类ID
+                const targetId = this.getAttribute('data-target');
+                
+                // 2. 更新导航高亮状态
+                categoryLinks.forEach(link => {
+                    link.classList.remove('nav-active');
+                });
+                this.classList.add('nav-active');
+                
+                // 3. 显示目标分类内容，隐藏其他分类
+                sectionContents.forEach(section => {
+                    if (section.id === targetId) {
+                        section.classList.remove('section-hidden');
+                    } else {
+                        section.classList.add('section-hidden');
+                    }
+                });
+                
+                // 4. 平滑滚动到内容区域顶部
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) {
+                    window.scrollTo({
+                        top: targetSection.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // 初始加载时默认显示第一个分类（已通过CSS实现，此处做兼容）
+        window.addEventListener('load', function() {
+            const firstLink = document.querySelector('.category-link');
+            if (firstLink) {
+                firstLink.click();
+            }
+        });
+    </script>
+</body>
+</html>
