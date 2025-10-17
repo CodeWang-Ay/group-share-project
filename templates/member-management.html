@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成员管理 - 研究生组会文件共享系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        // 配置Tailwind自定义颜色
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#10b981',
+                        accent: '#6366f1',
+                        neutral: '#f3f4f6',
+                        'neutral-dark': '#4b5563',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .sidebar-icon {
+                @apply flex items-center gap-3 p-3 rounded-lg transition-all duration-200 cursor-pointer;
+            }
+            .sidebar-icon.active {
+                @apply bg-primary/10 text-primary font-medium;
+            }
+            .member-card {
+                @apply bg-white rounded-xl shadow-sm border border-gray-100 p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+            }
+            .member-row {
+                @apply transition-all duration-200;
+            }
+            .member-row:hover {
+                @apply bg-gray-50;
+            }
+            .status-active {
+                @apply text-green-600 bg-green-100;
+            }
+            .status-inactive {
+                @apply text-red-600 bg-red-100;
+            }
+            .role-admin {
+                @apply text-purple-600 bg-purple-100;
+            }
+            .role-teacher {
+                @apply text-blue-600 bg-blue-100;
+            }
+            .role-student {
+                @apply text-orange-600 bg-orange-100;
+            }
+            @media (max-width: 640px) {
+                .container {
+                    padding-left: 1rem;
+                    padding-right: 1rem;
+                }
+
+                /* 移动端表格响应式 */
+                .member-row .grid {
+                    grid-template-columns: 1fr;
+                    gap: 0.75rem;
+                }
+
+                .member-row .col-span-5 {
+                    grid-column: span 1;
+                }
+
+                .member-row .col-span-2 {
+                    grid-column: span 1;
+                    text-align: left;
+                }
+
+                .member-row .col-span-1 {
+                    grid-column: span 1;
+                }
+
+                /* 移动端表格头部隐藏 */
+                .bg-gray-50 .grid {
+                    display: none;
+                }
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm border-b border-gray-200 fixed top-0 left-0 right-0 z-30">
+        <div class="h-16 flex items-center justify-between px-4 lg:px-6">
+            <!-- Logo和侧边栏切换 -->
+            <div class="flex items-center gap-4">
+                <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100 transition-colors lg:hidden">
+                    <i class="fa fa-bars text-gray-600"></i>
+                </button>
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center">
+                        <i class="fa fa-graduation-cap text-sm"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-semibold text-gray-800">研究生组会系统</h1>
+                        <p class="text-xs text-gray-500 hidden sm:inline">成员管理</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用户信息和操作 -->
+            <div class="flex items-center gap-4">
+                <!-- 通知图标 -->
+                <div class="relative hidden sm:block">
+                    <button class="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
+                        <i class="fa fa-bell text-gray-600"></i>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                </div>
+
+                <!-- 用户菜单 -->
+                <div class="flex items-center gap-3">
+                    <div class="hidden sm:block text-right">
+                        <p class="text-sm font-medium text-gray-800">张教授</p>
+                        <p class="text-xs text-gray-500">导师</p>
+                    </div>
+                    <div class="relative">
+                        <button class="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200">
+                            <img src="https://picsum.photos/seed/user-avatar/100/100.jpg" alt="用户头像" class="w-full h-full object-cover">
+                        </button>
+                    </div>
+                    <button id="logout-btn" class="p-2 rounded-lg hover:bg-gray-100 transition-colors hidden sm:block">
+                        <i class="fa fa-sign-out text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 flex pt-16">
+        <!-- 侧边栏 -->
+        <aside id="sidebar" class="fixed lg:sticky top-16 lg:top-16 left-0 z-40 w-64 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto">
+            <!-- 移动端关闭按钮 -->
+            <div class="lg:hidden sticky top-0 bg-white border-b border-gray-200 p-4 z-10">
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold text-gray-800">菜单</span>
+                    <button id="mobile-sidebar-close" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-times text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-4 overflow-y-auto h-full">
+                <!-- 角色标识 -->
+                <div class="bg-primary/10 text-primary rounded-lg p-3 mb-6">
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium">当前角色</span>
+                        <span class="text-sm bg-primary text-white px-2 py-1 rounded-full">导师</span>
+                    </div>
+                </div>
+
+                <!-- 导航菜单 -->
+                <nav>
+                    <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3">组会管理</p>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="/" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-dashboard w-5 text-center"></i>
+                                <span>工作台</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-calendar w-5 text-center"></i>
+                                <span>组会安排</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-file-text-o w-5 text-center"></i>
+                                <span>汇报材料</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-comments-o w-5 text-center"></i>
+                                <span>组会记录</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6">资源管理</p>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-book w-5 text-center"></i>
+                                <span>文献库</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/share-file" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-folder-open-o w-5 text-center"></i>
+                                <span>共享文件</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-tasks w-5 text-center"></i>
+                                <span>研究任务</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6">团队管理</p>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="/member-management" class="sidebar-icon active">
+                                <i class="fa fa-users w-5 text-center"></i>
+                                <span>成员管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-line-chart w-5 text-center"></i>
+                                <span>研究进展</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- 主内容区域 -->
+        <div class="flex-1 lg:ml-0 overflow-hidden">
+            <div class="h-full overflow-y-auto">
+                <!-- 页面标题和操作栏 -->
+                <div class="bg-white border-b border-gray-200 px-4 lg:px-6 py-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-800">成员管理</h1>
+                            <p class="text-gray-600 mt-1">管理研究团队成员信息和权限</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button id="add-member-btn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2">
+                                <i class="fa fa-plus"></i>
+                                <span>添加成员</span>
+                            </button>
+                            <button id="export-members-btn" class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2">
+                                <i class="fa fa-download"></i>
+                                <span>导出列表</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div class="px-4 lg:px-6 py-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white rounded-xl p-4 border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">总成员数</p>
+                                    <p class="text-2xl font-bold text-gray-800 mt-1">24</p>
+                                </div>
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <i class="fa fa-users text-blue-600"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">激活成员</p>
+                                    <p class="text-2xl font-bold text-green-600 mt-1">22</p>
+                                </div>
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i class="fa fa-user-check text-green-600"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">研究生</p>
+                                    <p class="text-2xl font-bold text-orange-600 mt-1">18</p>
+                                </div>
+                                <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                                    <i class="fa fa-graduation-cap text-orange-600"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">本月新增</p>
+                                    <p class="text-2xl font-bold text-purple-600 mt-1">3</p>
+                                </div>
+                                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                    <i class="fa fa-user-plus text-purple-600"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 筛选和搜索栏 -->
+                    <div class="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+                        <div class="flex flex-col lg:flex-row gap-4">
+                            <!-- 搜索框 -->
+                            <div class="flex-1">
+                                <div class="relative">
+                                    <input type="text" id="member-search" placeholder="搜索成员姓名、学号或邮箱..."
+                                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                    <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                </div>
+                            </div>
+
+                            <!-- 筛选器 -->
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <select id="role-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                    <option value="">全部角色</option>
+                                    <option value="admin">管理员</option>
+                                    <option value="teacher">导师</option>
+                                    <option value="student">学生</option>
+                                </select>
+
+                                <select id="status-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                    <option value="">全部状态</option>
+                                    <option value="active">激活</option>
+                                    <option value="inactive">停用</option>
+                                </select>
+
+                                <!-- 视图切换 -->
+                                <div class="flex bg-gray-100 rounded-lg p-1">
+                                    <button id="list-view-btn" class="px-3 py-1 rounded bg-white text-primary shadow-sm">
+                                        <i class="fa fa-list"></i>
+                                    </button>
+                                    <button id="grid-view-btn" class="px-3 py-1 rounded text-gray-600 hover:text-primary">
+                                        <i class="fa fa-th"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 表格视图 -->
+                    <div id="list-view" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        <!-- 表格头部 -->
+                        <div class="bg-gray-50 px-6 py-3 border-b border-gray-200">
+                            <div class="grid grid-cols-12 gap-4 items-center">
+                                <div class="col-span-5">
+                                    <span class="text-sm font-medium text-gray-700">成员信息</span>
+                                </div>
+                                <div class="col-span-2">
+                                    <span class="text-sm font-medium text-gray-700">角色</span>
+                                </div>
+                                <div class="col-span-2">
+                                    <span class="text-sm font-medium text-gray-700">状态</span>
+                                </div>
+                                <div class="col-span-2">
+                                    <span class="text-sm font-medium text-gray-700">加入时间</span>
+                                </div>
+                                <div class="col-span-1 text-center">
+                                    <span class="text-sm font-medium text-gray-700">操作</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 成员列表 -->
+                        <div id="members-list-container">
+                            <!-- 成员行将通过JavaScript动态加载 -->
+                        </div>
+
+                        <!-- 分页控件 -->
+                        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <!-- 每页显示数量选择器 -->
+                                    <div class="flex items-center gap-2">
+                                        <label for="per-page-select" class="text-sm text-gray-600">每页显示</label>
+                                        <select id="per-page-select" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                            <option value="5">5条</option>
+                                            <option value="10" selected>10条</option>
+                                            <option value="20">20条</option>
+                                            <option value="50">50条</option>
+                                        </select>
+                                    </div>
+                                    <!-- 显示统计信息 -->
+                                    <div class="text-sm text-gray-600" id="pagination-info">
+                                        显示第 1-10 条，共 24 条
+                                    </div>
+                                </div>
+
+                                <!-- 分页按钮 -->
+                                <div class="flex items-center gap-2">
+                                    <button id="prev-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fa fa-chevron-left mr-1"></i>上一页
+                                    </button>
+                                    <span class="px-3 py-1 text-sm text-gray-600" id="current-page-info">第 1 页</span>
+                                    <button id="next-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                        下一页<i class="fa fa-chevron-right ml-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 网格视图（卡片布局） -->
+                    <div id="grid-view" class="hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="members-grid-container">
+                            <!-- 卡片内容将通过JavaScript动态加载 -->
+                        </div>
+
+                        <!-- 分页控件 -->
+                        <div class="mt-6 px-4 py-3 bg-white rounded-lg border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <!-- 每页显示数量选择器 -->
+                                    <div class="flex items-center gap-2">
+                                        <label for="grid-per-page-select" class="text-sm text-gray-600">每页显示</label>
+                                        <select id="grid-per-page-select" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                            <option value="5">5条</option>
+                                            <option value="10">10条</option>
+                                            <option value="20">20条</option>
+                                            <option value="50">50条</option>
+                                        </select>
+                                    </div>
+                                    <!-- 显示统计信息 -->
+                                    <div class="text-sm text-gray-600" id="grid-pagination-info">
+                                        显示第 1-10 条，共 24 条
+                                    </div>
+                                </div>
+
+                                <!-- 分页按钮 -->
+                                <div class="flex items-center gap-2">
+                                    <button id="grid-prev-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fa fa-chevron-left mr-1"></i>上一页
+                                    </button>
+                                    <span class="px-3 py-1 text-sm text-gray-600" id="grid-current-page-info">第 1 页</span>
+                                    <button id="grid-next-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                        下一页<i class="fa fa-chevron-right ml-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 添加成员模态框 -->
+    <div id="add-member-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+                <!-- 模态框头部 -->
+                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-800">添加新成员</h3>
+                    <button id="close-add-member-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- 模态框内容 -->
+                <div class="p-6">
+                    <form id="add-member-form" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">姓名 *</label>
+                                <input type="text" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">学号/工号 *</label>
+                                <input type="text" name="studentId" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">邮箱 *</label>
+                                <input type="email" name="email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">手机号</label>
+                                <input type="tel" name="phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">角色 *</label>
+                                <select name="role" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                    <option value="">请选择角色</option>
+                                    <option value="student">学生</option>
+                                    <option value="teacher">导师</option>
+                                    <option value="admin">管理员</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">研究方向</label>
+                                <input type="text" name="research" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">备注</label>
+                            <textarea name="notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary"></textarea>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input type="checkbox" id="send-welcome" name="sendWelcome" class="mr-2">
+                            <label for="send-welcome" class="text-sm text-gray-700">发送欢迎邮件</label>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 模态框底部 -->
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+                    <button id="cancel-add-member" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                        取消
+                    </button>
+                    <button id="submit-add-member" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                        添加成员
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑成员模态框 -->
+    <div id="edit-member-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+                <!-- 模态框头部 -->
+                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-800">编辑成员信息</h3>
+                    <button id="close-edit-member-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- 模态框内容 -->
+                <div class="p-6">
+                    <form id="edit-member-form" class="space-y-4">
+                        <input type="hidden" name="memberId">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">姓名 *</label>
+                                <input type="text" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">学号/工号 *</label>
+                                <input type="text" name="studentId" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">邮箱 *</label>
+                                <input type="email" name="email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">手机号</label>
+                                <input type="tel" name="phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">角色 *</label>
+                                <select name="role" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                    <option value="">请选择角色</option>
+                                    <option value="student">学生</option>
+                                    <option value="teacher">导师</option>
+                                    <option value="admin">管理员</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">状态</label>
+                                <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                    <option value="active">激活</option>
+                                    <option value="inactive">停用</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">研究方向</label>
+                            <input type="text" name="research" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">备注</label>
+                            <textarea name="notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary"></textarea>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 模态框底部 -->
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+                    <button id="cancel-edit-member" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                        取消
+                    </button>
+                    <button id="submit-edit-member" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                        保存更改
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认模态框 -->
+    <div id="delete-member-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl max-w-md w-full">
+                <div class="p-6">
+                    <div class="flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mx-auto mb-4">
+                        <i class="fa fa-exclamation-triangle text-red-600"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 text-center mb-2">确认删除成员</h3>
+                    <p class="text-gray-600 text-center mb-6">确定要删除成员 <span id="delete-member-name" class="font-medium"></span> 吗？此操作不可撤销。</p>
+
+                    <form id="delete-member-form">
+                        <input type="hidden" name="memberId">
+                        <div class="flex justify-center gap-3">
+                            <button type="button" id="cancel-delete-member" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                                取消
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                                确认删除
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 成功提示 -->
+    <div id="success-toast" class="fixed top-20 right-4 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50">
+        <div class="flex items-center gap-3">
+            <i class="fa fa-check-circle"></i>
+            <span id="success-message">操作成功</span>
+        </div>
+    </div>
+
+    <!-- 禁用/启用提示 -->
+    <div id="status-toast" class="fixed top-20 right-4 bg-yellow-500 text-white px-4 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50">
+        <div class="flex items-center gap-3">
+            <i class="fa fa-ban"></i>
+            <span id="status-message">状态更改成功</span>
+        </div>
+    </div>
+
+    <script>
+        // 模拟成员数据
+        const mockMembers = [
+            { id: 1, name: '张三', studentId: '2021001', email: 'zhangsan@example.com', phone: '13800138001', role: 'student', status: 'active', research: '机器学习', joinDate: '2023-09-01', avatar: 'https://picsum.photos/seed/member1/100/100.jpg' },
+            { id: 2, name: '李四', studentId: '2021002', email: 'lisi@example.com', phone: '13800138002', role: 'student', status: 'active', research: '深度学习', joinDate: '2023-09-01', avatar: 'https://picsum.photos/seed/member2/100/100.jpg' },
+            { id: 3, name: '王五', studentId: '2021003', email: 'wangwu@example.com', phone: '13800138003', role: 'student', status: 'inactive', research: '自然语言处理', joinDate: '2023-09-01', avatar: 'https://picsum.photos/seed/member3/100/100.jpg' },
+            { id: 4, name: '赵六', studentId: '2021004', email: 'zhaoliu@example.com', phone: '13800138004', role: 'student', status: 'active', research: '计算机视觉', joinDate: '2023-09-01', avatar: 'https://picsum.photos/seed/member4/100/100.jpg' },
+            { id: 5, name: '钱七', studentId: 'T001', email: 'qianqi@university.edu.cn', phone: '13800138005', role: 'teacher', status: 'active', research: '人工智能', joinDate: '2022-09-01', avatar: 'https://picsum.photos/seed/member5/100/100.jpg' },
+            { id: 6, name: '孙八', studentId: '2021005', email: 'sunba@example.com', phone: '13800138006', role: 'student', status: 'active', research: '数据挖掘', joinDate: '2023-09-01', avatar: 'https://picsum.photos/seed/member6/100/100.jpg' },
+            { id: 7, name: '周九', studentId: '2021006', email: 'zhoujiu@example.com', phone: '13800138007', role: 'student', status: 'active', research: '强化学习', joinDate: '2023-09-01', avatar: 'https://picsum.photos/seed/member7/100/100.jpg' },
+            { id: 8, name: '吴十', studentId: '2021007', email: 'wushi@example.com', phone: '13800138008', role: 'student', status: 'active', research: '知识图谱', joinDate: '2023-09-01', avatar: 'https://picsum.photos/seed/member8/100/100.jpg' },
+            { id: 9, name: '郑十一', studentId: '2021008', email: 'zhengshiyi@example.com', phone: '13800138009', role: 'student', status: 'active', research: '推荐系统', joinDate: '2023-09-01', avatar: 'https://picsum.photos/seed/member9/100/100.jpg' },
+            { id: 10, name: '陈十二', studentId: '2021009', email: 'chenshier@example.com', phone: '13800138010', role: 'student', status: 'active', research: '语音识别', joinDate: '2023-09-01', avatar: 'https://picsum.photos/seed/member10/100/100.jpg' }
+        ];
+
+        // 全局变量
+        let currentView = 'list';
+        let currentPage = 1;
+        let pageSize = 10;
+        let filteredMembers = [...mockMembers];
+        let sortField = 'name';
+        let sortOrder = 'asc';
+
+        // 工具函数
+        function getRoleLabel(role) {
+            const roleMap = {
+                'admin': '管理员',
+                'teacher': '导师',
+                'student': '学生'
+            };
+            return roleMap[role] || role;
+        }
+
+        function getRoleClass(role) {
+            const classMap = {
+                'admin': 'role-admin',
+                'teacher': 'role-teacher',
+                'student': 'role-student'
+            };
+            return classMap[role] || 'role-student';
+        }
+
+        function getStatusLabel(status) {
+            return status === 'active' ? '激活' : '停用';
+        }
+
+        function getStatusClass(status) {
+            return status === 'active' ? 'status-active' : 'status-inactive';
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('zh-CN');
+        }
+
+        // 渲染表格视图
+        function renderListView() {
+            const container = document.getElementById('members-list-container');
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageMembers = filteredMembers.slice(startIndex, endIndex);
+
+            container.innerHTML = pageMembers.map(member => `
+                <div class="member-row px-6 py-4 border-b border-gray-100 last:border-b-0">
+                    <div class="grid grid-cols-12 gap-4 items-center">
+                        <div class="col-span-5">
+                            <div class="flex items-center gap-3">
+                                <img src="${member.avatar}" alt="${member.name}" class="w-10 h-10 rounded-full object-cover">
+                                <div>
+                                    <p class="font-medium text-gray-800">${member.name}</p>
+                                    <p class="text-sm text-gray-500">${member.studentId}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full ${getRoleClass(member.role)}">
+                                ${getRoleLabel(member.role)}
+                            </span>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusClass(member.status)}">
+                                ${getStatusLabel(member.status)}
+                            </span>
+                        </div>
+                        <div class="col-span-2">
+                            <p class="text-sm text-gray-600">${formatDate(member.joinDate)}</p>
+                        </div>
+                        <div class="col-span-1">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="editMember(${member.id})" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors">
+                                    <i class="fa fa-edit"></i>
+                                </button>
+                                <button onclick="toggleMemberStatus(${member.id})" class="p-1 ${member.status === 'active' ? 'text-yellow-600 hover:bg-yellow-50' : 'text-green-600 hover:bg-green-50'} rounded transition-colors">
+                                    <i class="fa fa-${member.status === 'active' ? 'ban' : 'check-circle'}"></i>
+                                </button>
+                                <button onclick="deleteMember(${member.id})" class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                                <div class="relative">
+                                    <button onclick="toggleMemberMenu(${member.id})" class="p-1 text-gray-600 hover:bg-gray-50 rounded transition-colors">
+                                        <i class="fa fa-ellipsis-v"></i>
+                                    </button>
+                                    <div id="member-menu-${member.id}" class="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 hidden z-10">
+                                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">查看详情</a>
+                                        <a href="#" onclick="toggleMemberStatus(${member.id})" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                            ${member.status === 'active' ? '禁用账号' : '启用账号'}
+                                        </a>
+                                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">重置密码</a>
+                                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">发送消息</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            updatePagination();
+        }
+
+        // 渲染网格视图
+        function renderGridView() {
+            const container = document.getElementById('members-grid-container');
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageMembers = filteredMembers.slice(startIndex, endIndex);
+
+            container.innerHTML = pageMembers.map(member => `
+                <div class="member-card">
+                    <div class="flex items-center gap-3 mb-3">
+                        <img src="${member.avatar}" alt="${member.name}" class="w-12 h-12 rounded-full object-cover">
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-800">${member.name}</p>
+                            <p class="text-sm text-gray-500">${member.studentId}</p>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">角色</span>
+                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full ${getRoleClass(member.role)}">
+                                ${getRoleLabel(member.role)}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">状态</span>
+                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusClass(member.status)}">
+                                ${getStatusLabel(member.status)}
+                            </span>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <p class="truncate">${member.email}</p>
+                            <p class="text-xs">${member.research || '未设置研究方向'}</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2 mt-4 flex-wrap">
+                        <button onclick="editMember(${member.id})" class="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors">
+                            <i class="fa fa-edit mr-1"></i>编辑
+                        </button>
+                        <button onclick="toggleMemberStatus(${member.id})" class="px-3 py-1 text-sm ${member.status === 'active' ? 'text-yellow-600 hover:bg-yellow-50' : 'text-green-600 hover:bg-green-50'} rounded transition-colors">
+                            <i class="fa fa-${member.status === 'active' ? 'ban' : 'check-circle'} mr-1"></i>${member.status === 'active' ? '禁用' : '启用'}
+                        </button>
+                        <button onclick="deleteMember(${member.id})" class="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded transition-colors">
+                            <i class="fa fa-trash mr-1"></i>删除
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            updateGridPagination();
+        }
+
+        // 更新分页信息
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredMembers.length / pageSize);
+            const startItem = (currentPage - 1) * pageSize + 1;
+            const endItem = Math.min(currentPage * pageSize, filteredMembers.length);
+
+            document.getElementById('pagination-info').textContent =
+                `显示第 ${startItem}-${endItem} 条，共 ${filteredMembers.length} 条`;
+            document.getElementById('current-page-info').textContent = `第 ${currentPage} 页`;
+
+            const prevBtn = document.getElementById('prev-page-btn');
+            const nextBtn = document.getElementById('next-page-btn');
+
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+        }
+
+        function updateGridPagination() {
+            const totalPages = Math.ceil(filteredMembers.length / pageSize);
+            const startItem = (currentPage - 1) * pageSize + 1;
+            const endItem = Math.min(currentPage * pageSize, filteredMembers.length);
+
+            document.getElementById('grid-pagination-info').textContent =
+                `显示第 ${startItem}-${endItem} 条，共 ${filteredMembers.length} 条`;
+            document.getElementById('grid-current-page-info').textContent = `第 ${currentPage} 页`;
+
+            const prevBtn = document.getElementById('grid-prev-page-btn');
+            const nextBtn = document.getElementById('grid-next-page-btn');
+
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+        }
+
+        // 切换视图
+        function switchToListView() {
+            currentView = 'list';
+            document.getElementById('list-view').classList.remove('hidden');
+            document.getElementById('grid-view').classList.add('hidden');
+            document.getElementById('list-view-btn').classList.add('bg-white', 'text-primary', 'shadow-sm');
+            document.getElementById('list-view-btn').classList.remove('text-gray-600');
+            document.getElementById('grid-view-btn').classList.remove('bg-white', 'text-primary', 'shadow-sm');
+            document.getElementById('grid-view-btn').classList.add('text-gray-600');
+            renderListView();
+        }
+
+        function switchToGridView() {
+            currentView = 'grid';
+            document.getElementById('list-view').classList.add('hidden');
+            document.getElementById('grid-view').classList.remove('hidden');
+            document.getElementById('grid-view-btn').classList.add('bg-white', 'text-primary', 'shadow-sm');
+            document.getElementById('grid-view-btn').classList.remove('text-gray-600');
+            document.getElementById('list-view-btn').classList.remove('bg-white', 'text-primary', 'shadow-sm');
+            document.getElementById('list-view-btn').classList.add('text-gray-600');
+            renderGridView();
+        }
+
+        // 搜索和筛选
+        function filterMembers() {
+            const searchTerm = document.getElementById('member-search').value.toLowerCase();
+            const roleFilter = document.getElementById('role-filter').value;
+            const statusFilter = document.getElementById('status-filter').value;
+
+            filteredMembers = mockMembers.filter(member => {
+                const matchesSearch = !searchTerm ||
+                    member.name.toLowerCase().includes(searchTerm) ||
+                    member.studentId.toLowerCase().includes(searchTerm) ||
+                    member.email.toLowerCase().includes(searchTerm);
+
+                const matchesRole = !roleFilter || member.role === roleFilter;
+                const matchesStatus = !statusFilter || member.status === statusFilter;
+
+                return matchesSearch && matchesRole && matchesStatus;
+            });
+
+            currentPage = 1;
+            if (currentView === 'list') {
+                renderListView();
+            } else {
+                renderGridView();
+            }
+        }
+
+        // 成员操作函数
+        function editMember(memberId) {
+            const member = mockMembers.find(m => m.id === memberId);
+            if (!member) return;
+
+            const form = document.getElementById('edit-member-form');
+            form.elements['memberId'].value = member.id;
+            form.elements['name'].value = member.name;
+            form.elements['studentId'].value = member.studentId;
+            form.elements['email'].value = member.email;
+            form.elements['phone'].value = member.phone || '';
+            form.elements['role'].value = member.role;
+            form.elements['status'].value = member.status;
+            form.elements['research'].value = member.research || '';
+            form.elements['notes'].value = member.notes || '';
+
+            document.getElementById('edit-member-modal').classList.remove('hidden');
+        }
+
+        function deleteMember(memberId) {
+            const member = mockMembers.find(m => m.id === memberId);
+            if (!member) return;
+
+            document.getElementById('delete-member-name').textContent = member.name;
+            document.getElementById('delete-member-form').elements['memberId'].value = member.id;
+            document.getElementById('delete-member-modal').classList.remove('hidden');
+        }
+
+        function toggleMemberStatus(memberId) {
+            const member = mockMembers.find(m => m.id === memberId);
+            if (!member) return;
+
+            const newStatus = member.status === 'active' ? 'inactive' : 'active';
+            const action = newStatus === 'active' ? '启用' : '禁用';
+
+            // 更新成员状态
+            member.status = newStatus;
+
+            // 刷新视图
+            if (currentView === 'list') {
+                renderListView();
+            } else {
+                renderGridView();
+            }
+
+            // 根据操作类型显示不同颜色的提示
+            if (action === '禁用') {
+                showStatusToast(`成员${action}成功！`); // 黄色提示
+            } else {
+                showSuccessToast(`成员${action}成功！`); // 绿色提示
+            }
+
+            // 关闭所有菜单
+            document.querySelectorAll('[id^="member-menu-"]').forEach(menu => {
+                menu.classList.add('hidden');
+            });
+        }
+
+        function toggleMemberMenu(memberId) {
+            const menu = document.getElementById(`member-menu-${memberId}`);
+            const allMenus = document.querySelectorAll('[id^="member-menu-"]');
+
+            allMenus.forEach(m => {
+                if (m !== menu) {
+                    m.classList.add('hidden');
+                }
+            });
+
+            menu.classList.toggle('hidden');
+        }
+
+        function showSuccessToast(message) {
+            const toast = document.getElementById('success-toast');
+            document.getElementById('success-message').textContent = message;
+            toast.classList.remove('translate-x-full');
+
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000);
+        }
+
+        function showStatusToast(message) {
+            const toast = document.getElementById('status-toast');
+            document.getElementById('status-message').textContent = message;
+            toast.classList.remove('translate-x-full');
+
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000);
+        }
+
+        // 事件监听器
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化视图
+            renderListView();
+
+            // 视图切换
+            document.getElementById('list-view-btn').addEventListener('click', switchToListView);
+            document.getElementById('grid-view-btn').addEventListener('click', switchToGridView);
+
+            // 搜索和筛选
+            document.getElementById('member-search').addEventListener('input', filterMembers);
+            document.getElementById('role-filter').addEventListener('change', filterMembers);
+            document.getElementById('status-filter').addEventListener('change', filterMembers);
+
+            // 分页
+            document.getElementById('per-page-select').addEventListener('change', (e) => {
+                pageSize = parseInt(e.target.value);
+                currentPage = 1;
+                renderListView();
+            });
+
+            document.getElementById('grid-per-page-select').addEventListener('change', (e) => {
+                pageSize = parseInt(e.target.value);
+                currentPage = 1;
+                renderGridView();
+            });
+
+            document.getElementById('prev-page-btn').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderListView();
+                }
+            });
+
+            document.getElementById('next-page-btn').addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredMembers.length / pageSize);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderListView();
+                }
+            });
+
+            document.getElementById('grid-prev-page-btn').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderGridView();
+                }
+            });
+
+            document.getElementById('grid-next-page-btn').addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredMembers.length / pageSize);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderGridView();
+                }
+            });
+
+            // 添加成员模态框
+            document.getElementById('add-member-btn').addEventListener('click', () => {
+                document.getElementById('add-member-modal').classList.remove('hidden');
+            });
+
+            document.getElementById('close-add-member-modal').addEventListener('click', () => {
+                document.getElementById('add-member-modal').classList.add('hidden');
+            });
+
+            document.getElementById('cancel-add-member').addEventListener('click', () => {
+                document.getElementById('add-member-modal').classList.add('hidden');
+            });
+
+            document.getElementById('submit-add-member').addEventListener('click', () => {
+                const form = document.getElementById('add-member-form');
+                if (form.checkValidity()) {
+                    // 这里应该添加实际的添加逻辑
+                    showSuccessToast('成员添加成功！');
+                    document.getElementById('add-member-modal').classList.add('hidden');
+                    form.reset();
+                } else {
+                    form.reportValidity();
+                }
+            });
+
+            // 编辑成员模态框
+            document.getElementById('close-edit-member-modal').addEventListener('click', () => {
+                document.getElementById('edit-member-modal').classList.add('hidden');
+            });
+
+            document.getElementById('cancel-edit-member').addEventListener('click', () => {
+                document.getElementById('edit-member-modal').classList.add('hidden');
+            });
+
+            document.getElementById('submit-edit-member').addEventListener('click', () => {
+                const form = document.getElementById('edit-member-form');
+                if (form.checkValidity()) {
+                    // 这里应该添加实际的编辑逻辑
+                    showSuccessToast('成员信息更新成功！');
+                    document.getElementById('edit-member-modal').classList.add('hidden');
+                } else {
+                    form.reportValidity();
+                }
+            });
+
+            // 删除成员模态框
+            document.getElementById('cancel-delete-member').addEventListener('click', () => {
+                document.getElementById('delete-member-modal').classList.add('hidden');
+            });
+
+            document.getElementById('delete-member-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const memberId = parseInt(e.target.elements['memberId'].value);
+                const index = mockMembers.findIndex(m => m.id === memberId);
+                if (index !== -1) {
+                    mockMembers.splice(index, 1);
+                    filteredMembers = [...mockMembers];
+                    if (currentView === 'list') {
+                        renderListView();
+                    } else {
+                        renderGridView();
+                    }
+                    showSuccessToast('成员删除成功！');
+                    document.getElementById('delete-member-modal').classList.add('hidden');
+                }
+            });
+
+            // 导出功能
+            document.getElementById('export-members-btn').addEventListener('click', () => {
+                showSuccessToast('成员列表导出成功！');
+            });
+
+            // 移动端侧边栏
+            function initMobileSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const sidebarToggle = document.getElementById('sidebar-toggle');
+                const sidebarClose = document.getElementById('mobile-sidebar-close');
+
+                function openMobileSidebar() {
+                    sidebar.classList.remove('-translate-x-full');
+                }
+
+                function closeMobileSidebar() {
+                    sidebar.classList.add('-translate-x-full');
+                }
+
+                sidebarToggle.addEventListener('click', openMobileSidebar);
+                sidebarClose.addEventListener('click', closeMobileSidebar);
+
+                // 点击外部关闭侧边栏
+                document.addEventListener('click', (e) => {
+                    if (window.innerWidth < 1024 &&
+                        !sidebar.contains(e.target) &&
+                        !sidebarToggle.contains(e.target)) {
+                        closeMobileSidebar();
+                    }
+                });
+            }
+
+            initMobileSidebar();
+
+            // 点击外部关闭成员菜单
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('[id^="member-menu-"]') &&
+                    !e.target.closest('.fa-ellipsis-v')) {
+                    document.querySelectorAll('[id^="member-menu-"]').forEach(menu => {
+                        menu.classList.add('hidden');
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1652,6 +1652,25 @@ async def clear_all_sessions():
             }
         )
 
+# 共享文件页面路由
+@app.get("/member-management", response_class=HTMLResponse)
+async def member_management_page(request: Request):
+    """
+    共享文件页面路由
+    需要用户登录才能访问
+    """
+    # 检查用户是否已登录
+    current_user = await get_current_user(request)
+    if not current_user:
+        # 未登录，重定向到登录页面
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/login", status_code=302)
+
+    # 已登录，显示成员管理页面
+    return templates.TemplateResponse("member-management.html", {
+        "request": request,
+        "user": current_user
+    })
 
 # 启动命令
 if __name__ == "__main__":
