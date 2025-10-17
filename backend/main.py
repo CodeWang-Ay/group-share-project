@@ -549,6 +549,7 @@ async def share_file_page(request: Request):
     需要用户登录才能访问
     """
     # 检查用户是否已登录
+    logger.info("用户进入共享登录页面中")
     current_user = await get_current_user(request)
     if not current_user:
         # 未登录，重定向到登录页面
@@ -1083,6 +1084,8 @@ async def get_files(request: Request):
     """
     获取文件列表API端点
     """
+
+    logger.info("加载用户文件列表")
     # 检查用户登录状态
     current_user = await get_current_user(request)
     if not current_user:
@@ -1652,13 +1655,14 @@ async def clear_all_sessions():
             }
         )
 
-# 共享文件页面路由
+# 成员管理页面路由
 @app.get("/member-management", response_class=HTMLResponse)
 async def member_management_page(request: Request):
     """
-    共享文件页面路由
+    成员管理页面路由
     需要用户登录才能访问
     """
+    logger.info("成员管理页面路由")
     # 检查用户是否已登录
     current_user = await get_current_user(request)
     if not current_user:
@@ -1671,6 +1675,128 @@ async def member_management_page(request: Request):
         "request": request,
         "user": current_user
     })
+
+
+# API端点：获取成员列表
+@app.get("/api/members")
+async def get_members(request: Request):
+    """
+    获取成员列表API端点
+    """
+    logger.info("获取成员列表")
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        # 获取查询参数
+        page = int(request.query_params.get("page", 1))
+        per_page = int(request.query_params.get("per_page", 10))
+        role_filter = request.query_params.get("role", "")
+        status_filter = request.query_params.get("status", "")
+        search = request.query_params.get("search", "")
+
+        # 验证参数
+        if per_page not in [5, 10, 20, 50]:
+            per_page = 10
+
+        if page < 1:
+            page = 1
+
+        # 计算偏移量
+        offset = (page - 1) * per_page
+
+        # 查询成员数据
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # 构建查询条件
+            where_conditions = []
+            params = []
+
+            if role_filter:
+                where_conditions.append("role = ?")
+                params.append(role_filter)
+
+            if search:
+                where_conditions.append("(username LIKE ? OR id LIKE ?)")
+                params.extend([f"%{search}%", f"%{search}%"])
+
+            where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
+
+            # 获取总记录数
+            count_query = f"SELECT COUNT(*) FROM users {where_clause}"
+            cursor.execute(count_query, params)
+            total = cursor.fetchone()[0]
+
+            # 获取成员列表
+            query = f"""
+                SELECT id, username, role, created_at
+                FROM users
+                {where_clause}
+                ORDER BY created_at DESC
+                LIMIT ? OFFSET ?
+            """
+            cursor.execute(query, params + [per_page, offset])
+            rows = cursor.fetchall()
+
+            # 转换为字典格式
+            members = []
+            for row in rows:
+                member = dict(row)
+                # 为前端添加必要的字段
+                member['studentId'] = member['id']  # 使用id作为学号
+                member['name'] = member['username']  # 使用username作为姓名
+                member['email'] = f"{member['username']}@example.com"  # 生成示例邮箱
+                member['phone'] = "13800138000"  # 示例手机号
+                member['status'] = 'active'  # 默认状态
+                member['research'] = '未设置研究方向'  # 默认研究方向
+                member['avatar'] = f"https://picsum.photos/seed/{member['username']}/100/100.jpg"  # 生成头像
+                member['joinDate'] = member['created_at'].split(' ')[0]  # 只取日期部分
+                members.append(member)
+
+            # 计算分页信息
+            total_pages = (total + per_page - 1) // per_page if total > 0 else 1
+            has_next = page < total_pages
+            has_prev = page > 1
+
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content={
+                    "success": True,
+                    "data": {
+                        "members": members,
+                        "pagination": {
+                            "current_page": page,
+                            "per_page": per_page,
+                            "total": total,
+                            "total_pages": total_pages,
+                            "has_next": has_next,
+                            "has_prev": has_prev,
+                            "next_page": page + 1 if has_next else None,
+                            "prev_page": page - 1 if has_prev else None
+                        }
+                    }
+                }
+            )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "获取成员列表失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
 
 # 启动命令
 if __name__ == "__main__":
