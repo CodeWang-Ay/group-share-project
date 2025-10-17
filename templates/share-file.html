@@ -369,54 +369,8 @@
             </div>
 
             <!-- 文件统计 -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white rounded-lg p-4 border border-gray-100">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-sm">总文件数</p>
-                            <h3 class="text-2xl font-bold mt-1">156</h3>
-                        </div>
-                        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                            <i class="fa fa-file"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg p-4 border border-gray-100">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-sm">总大小</p>
-                            <h3 class="text-2xl font-bold mt-1">2.8GB</h3>
-                        </div>
-                        <div class="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
-                            <i class="fa fa-database"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg p-4 border border-gray-100">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-sm">本周新增</p>
-                            <h3 class="text-2xl font-bold mt-1">12</h3>
-                        </div>
-                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                            <i class="fa fa-plus"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg p-4 border border-gray-100">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-sm">共享者</p>
-                            <h3 class="text-2xl font-bold mt-1">8</h3>
-                        </div>
-                        <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
-                            <i class="fa fa-users"></i>
-                        </div>
-                    </div>
-                </div>
+            <div id="file-stats-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <!-- 文件统计将通过JavaScript动态加载 -->
             </div>
 
             <!-- 文件列表容器 -->
@@ -1014,6 +968,10 @@
                     // 如果有成功的文件，添加到页面
                     if (successCount > 0) {
                         this.addUploadedFilesToGrid();
+                        // 更新文件统计显示
+                        if (window.fileUploadManager && window.fileUploadManager.updateFileStats) {
+                            window.fileUploadManager.updateFileStats();
+                        }
                         setTimeout(() => this.closeModal(), 2000); // 2秒后关闭模态框
                     }
 
@@ -1057,6 +1015,11 @@
                             this.uploadedFiles = [];
                         }
                         this.uploadedFiles.push(result.data);
+
+                        // 更新总文件数
+                        if (window.fileManager) {
+                            window.fileManager.totalFilesCount++;
+                        }
                     } else {
                         // 对于重复文件，显示更友好的错误信息
                         if (response.status === 409) {
@@ -1389,27 +1352,97 @@
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
             }
 
-            updateFileStats() {
-                // 更新页面上的文件统计信息
+            renderFileStats() {
+                // 动态渲染文件统计信息
                 try {
-                    // 更新总文件数
-                    const totalFilesElement = document.querySelector('.text-2xl.font-bold.mt-1');
-                    if (totalFilesElement && window.fileManager && window.fileManager.currentFiles) {
-                        totalFilesElement.textContent = window.fileManager.currentFiles.length;
+                    console.log('🔄 开始渲染文件统计...');
+                    console.log('🔄 window.fileManager:', window.fileManager);
+                    console.log('🔄 totalFilesCount:', window.fileManager?.totalFilesCount);
+
+                    const container = document.getElementById('file-stats-container');
+                    if (!container) {
+                        console.error('❌ file-stats-container元素未找到');
+                        return;
                     }
 
-                    // 更新总大小
-                    const totalSizeElement = document.querySelectorAll('.text-2xl.font-bold.mt-1')[1];
-                    if (totalSizeElement && window.fileManager && window.fileManager.currentFiles) {
-                        const totalSize = window.fileManager.currentFiles.reduce((sum, file) => sum + file.file_size, 0);
-                        totalSizeElement.textContent = this.formatFileSize(totalSize);
+                    // 计算总大小
+                    let totalSize = 0;
+                    if (window.fileManager && window.fileManager.currentFiles) {
+                        totalSize = window.fileManager.currentFiles.reduce((sum, file) => sum + file.file_size, 0);
                     }
 
-                    // 这里可以进一步更新其他统计信息
-                    console.log('文件统计已更新');
+                    // 如果还没有加载数据，显示加载状态
+                    if (!window.fileManager || window.fileManager.totalFilesCount === undefined) {
+                        container.innerHTML = `
+                            <div class="col-span-full text-center py-8 text-gray-500">
+                                <i class="fa fa-spinner fa-spin text-2xl mb-2"></i>
+                                <p>正在加载文件统计...</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    // 动态生成统计卡片HTML
+                    const statsHTML = `
+                        <div class="bg-white rounded-lg p-4 border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500 text-sm">总文件数</p>
+                                    <h3 class="text-2xl font-bold mt-1">${window.fileManager?.totalFilesCount || 0}</h3>
+                                </div>
+                                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                    <i class="fa fa-file"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg p-4 border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500 text-sm">总大小</p>
+                                    <h3 class="text-2xl font-bold mt-1">${this.formatFileSize(totalSize)}</h3>
+                                </div>
+                                <div class="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
+                                    <i class="fa fa-database"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg p-4 border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500 text-sm">本周新增</p>
+                                    <h3 class="text-2xl font-bold mt-1">12</h3>
+                                </div>
+                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                    <i class="fa fa-plus"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg p-4 border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500 text-sm">共享者</p>
+                                    <h3 class="text-2xl font-bold mt-1">8</h3>
+                                </div>
+                                <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                                    <i class="fa fa-users"></i>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    container.innerHTML = statsHTML;
+                    console.log('✅ 文件统计渲染完成，总文件数:', window.fileManager?.totalFilesCount);
                 } catch (error) {
-                    console.error('更新文件统计失败:', error);
+                    console.error('❌ 渲染文件统计失败:', error);
                 }
+            }
+
+        updateFileStats() {
+                // 更新页面上的文件统计信息（兼容旧方法）
+                this.renderFileStats();
             }
 
             // 文件操作方法
@@ -1536,6 +1569,11 @@
 
                         // 从页面中移除文件
                         window.fileManager.removeFile(fileId);
+
+                        // 更新总文件数
+                        if (window.fileManager.totalFilesCount > 0) {
+                            window.fileManager.totalFilesCount--;
+                        }
 
                         // 显示删除成功提示
                         this.showDeleteSuccessMessage(`文件 "${filename}" 已删除`);
@@ -1664,7 +1702,7 @@
         }
 
         // 初始化文件上传管理器
-        const fileUploadManager = new FileUploadManager();
+        window.fileUploadManager = new FileUploadManager();
 
         // 移动端侧边栏功能
         function initMobileSidebar() {
@@ -1957,6 +1995,7 @@
         class FileManager {
             constructor() {
                 this.currentFiles = [];
+                this.totalFilesCount = 0;
                 this.pagination = {
                     current_page: 1,
                     per_page: 5,
@@ -2062,8 +2101,15 @@
                     if (response.ok && result.success) {
                         this.currentFiles = result.data.files;
                         this.pagination = result.data.pagination;
+                        this.totalFilesCount = result.data.total_files_count || result.data.pagination.total;
+                        console.log('📊 加载文件列表成功，total_files_count:', result.data.total_files_count);
+                        console.log('📊 设置的totalFilesCount:', this.totalFilesCount);
                         this.renderFiles();
                         this.updatePaginationUI();
+                        // 通过FileUploadManager更新文件统计
+                        if (window.fileUploadManager && window.fileUploadManager.updateFileStats) {
+                            window.fileUploadManager.updateFileStats();
+                        }
                     } else {
                         console.error('加载文件列表失败:', result.message);
 
@@ -2269,6 +2315,11 @@
 
             initMobileSidebar();
             initFileFilters();
+            renderFileStats()
+            // 初始化时先渲染文件统计（显示初始值）
+            if (window.fileUploadManager && window.fileUploadManager.renderFileStats) {
+                window.fileUploadManager.renderFileStats();
+            }
 
             // 退出登录按钮事件
             const logoutBtn = document.getElementById('logout-btn');

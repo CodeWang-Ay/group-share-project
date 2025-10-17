@@ -1156,6 +1156,7 @@ async def get_files(request: Request):
                 "success": True,
                 "data": {
                     "files": [file.to_dict() for file in files],
+                    "total_files_count": total,
                     "pagination": {
                         "current_page": page,
                         "per_page": limit,
