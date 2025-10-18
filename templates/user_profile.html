@@ -121,7 +121,7 @@
                                     {% else %}学生{% endif %}
                                 </p>
                             </div>
-                            <a href="/personal_profile" class="block px-4 py-2 text-sm hover:bg-gray-100">
+                            <a href="/user_profile" class="block px-4 py-2 text-sm hover:bg-gray-100">
                                 <i class="fa fa-user-o mr-2 text-gray-500"></i>个人资料
                             </a>
                             <a href="/edit_password" class="block px-4 py-2 text-sm hover:bg-gray-100">
@@ -180,7 +180,7 @@
                     <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3">个人中心</p>
                     <ul class="space-y-1">
                         <li>
-                            <a href="/personal_profile" class="sidebar-icon active">
+                            <a href="/user_profile" class="sidebar-icon active">
                                 <i class="fa fa-user-o w-5 text-center"></i>
                                 <span>个人资料</span>
                             </a>
@@ -468,6 +468,321 @@
         </div>
     </div>
 
+    <!-- 错误提示框 -->
+    <div id="error-toast" class="fixed bottom-6 right-6 bg-white rounded-lg shadow-lg p-4 max-w-xs transform translate-y-20 opacity-0 transition-all duration-300 z-50 border-l-4 border-error">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <i class="fa fa-exclamation-circle text-error"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-gray-800">操作失败</h3>
+                <div class="mt-1 text-sm text-gray-600">
+                    <p id="error-message">操作过程中发生错误，请重试。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API基础URL - 根据当前环境自动检测
+        let API_BASE_URL = '';
+        if (window.location.hostname === 'localhost') {
+            if (window.location.port === '8081' || window.location.port === '8000') {
+                API_BASE_URL = `http://localhost:${window.location.port}`;
+            } else if (window.location.port === '3000' || window.location.port === '3001') {
+                API_BASE_URL = 'http://localhost:8081';
+            }
+        }
+
+        // 显示提示框
+        function showToast(type, message) {
+            const toast = document.getElementById(`${type}-toast`);
+            const messageElement = toast.querySelector('#error-message');
+            if (messageElement && message) {
+                messageElement.textContent = message;
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // 获取会话令牌的通用函数 - 从多个来源尝试获取
+        function getSessionToken() {
+            // 首先尝试从localStorage获取
+            let sessionToken = localStorage.getItem('session_token');
+
+            // 如果localStorage中没有，尝试从cookie获取
+            if (!sessionToken) {
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    const [name, value] = cookie.trim().split('=');
+                    if (name === 'session_token') {
+                        sessionToken = value;
+                        break;
+                    }
+                }
+            }
+
+            // 如果localStorage中没有token但cookie中有，同步到localStorage
+            if (sessionToken && !localStorage.getItem('session_token')) {
+                localStorage.setItem('session_token', sessionToken);
+            }
+
+            return sessionToken;
+        }
+
+        // 加载用户个人资料数据
+        async function loadUserProfile() {
+            try {
+                console.log('🔄 开始加载用户个人资料数据...');
+
+                // 获取会话令牌
+                const sessionToken = getSessionToken();
+                console.log('🔑 获取到的sessionToken:', sessionToken ? sessionToken.substring(0, 20) + '...' : 'null');
+
+                // 调用API获取用户资料
+                const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': sessionToken ? `Bearer ${sessionToken}` : ''
+                    }
+                });
+
+                const result = await response.json();
+                console.log('📋 用户资料API响应:', result);
+
+                if (result.success) {
+                    // 填充表单数据
+                    const userData = result.data;
+                    console.log('👤 用户数据:', userData);
+
+                    // 填充基本信息
+                    if (document.getElementById('username')) {
+                        document.getElementById('username').value = userData.username || '';
+                    }
+                    if (document.getElementById('gender')) {
+                        document.getElementById('gender').value = userData.gender || '';
+                    }
+                    if (document.getElementById('role')) {
+                        document.getElementById('role').value = userData.role || '';
+                    }
+                    if (document.getElementById('student_id')) {
+                        document.getElementById('student_id').value = userData.student_id || '';
+                    }
+                    if (document.getElementById('created_at')) {
+                        document.getElementById('created_at').value = userData.created_at || '';
+                    }
+                    if (document.getElementById('updated_at')) {
+                        document.getElementById('updated_at').value = userData.updated_at || '';
+                    }
+
+                    // 填充联系信息
+                    if (document.getElementById('email')) {
+                        document.getElementById('email').value = userData.email || '';
+                    }
+                    if (document.getElementById('phone')) {
+                        document.getElementById('phone').value = userData.phone || '';
+                    }
+                    if (document.getElementById('personal_homepage')) {
+                        document.getElementById('personal_homepage').value = userData.personal_homepage || '';
+                    }
+
+                    // 填充身份信息
+                    if (document.getElementById('id_card')) {
+                        document.getElementById('id_card').value = userData.id_card || '';
+                    }
+                    if (document.getElementById('bank_card')) {
+                        document.getElementById('bank_card').value = userData.bank_card || '';
+                    }
+
+                    // 填充学业/职业信息
+                    if (document.getElementById('graduation_status')) {
+                        document.getElementById('graduation_status').value = userData.graduation_status || '';
+                    }
+                    if (document.getElementById('supervisor')) {
+                        document.getElementById('supervisor').value = userData.supervisor || '';
+                    }
+                    if (document.getElementById('degree_type')) {
+                        document.getElementById('degree_type').value = userData.degree_type || '';
+                    }
+                    if (document.getElementById('research_direction')) {
+                        document.getElementById('research_direction').value = userData.research_direction || '';
+                    }
+                    if (document.getElementById('work_location')) {
+                        document.getElementById('work_location').value = userData.work_location || '';
+                    }
+                    if (document.getElementById('work_company')) {
+                        document.getElementById('work_company').value = userData.work_company || '';
+                    }
+                    if (document.getElementById('status')) {
+                        document.getElementById('status').value = userData.status || '';
+                    }
+
+                    // 填充个人简介
+                    if (document.getElementById('personal_bio')) {
+                        document.getElementById('personal_bio').value = userData.personal_bio || '';
+                    }
+
+                    console.log('✅ 个人资料数据加载完成');
+                } else {
+                    console.error('❌ 获取用户资料失败:', result.message);
+                    showToast('error', result.message || '获取用户资料失败');
+                }
+            } catch (error) {
+                console.error('❌ 加载用户资料过程中发生错误:', error);
+                showToast('error', '网络连接失败，请重试');
+            }
+        }
+
+        // 保存个人资料
+        async function saveUserProfile() {
+            try {
+                console.log('💾 开始保存用户个人资料...');
+
+                // 收集表单数据
+                const formData = {
+                    username: document.getElementById('username')?.value || '',
+                    gender: document.getElementById('gender')?.value || '',
+                    role: document.getElementById('role')?.value || '',
+                    student_id: document.getElementById('student_id')?.value || '',
+                    email: document.getElementById('email')?.value || '',
+                    phone: document.getElementById('phone')?.value || '',
+                    personal_homepage: document.getElementById('personal_homepage')?.value || '',
+                    id_card: document.getElementById('id_card')?.value || '',
+                    bank_card: document.getElementById('bank_card')?.value || '',
+                    graduation_status: document.getElementById('graduation_status')?.value || '',
+                    supervisor: document.getElementById('supervisor')?.value || '',
+                    degree_type: document.getElementById('degree_type')?.value || '',
+                    research_direction: document.getElementById('research_direction')?.value || '',
+                    work_location: document.getElementById('work_location')?.value || '',
+                    work_company: document.getElementById('work_company')?.value || '',
+                    status: document.getElementById('status')?.value || '',
+                    personal_bio: document.getElementById('personal_bio')?.value || ''
+                };
+
+                console.log('📝 表单数据:', formData);
+
+                // 获取会话令牌
+                const sessionToken = getSessionToken();
+                console.log('🔑 保存时获取到的sessionToken:', sessionToken ? sessionToken.substring(0, 20) + '...' : 'null');
+
+                // 调用API更新用户资料
+                const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': sessionToken ? `Bearer ${sessionToken}` : ''
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                console.log('📋 保存用户资料API响应:', result);
+
+                if (result.success) {
+                    console.log('✅ 个人资料保存成功');
+                    showToast('success', '您的个人资料已更新成功');
+
+                    // 重新加载数据以显示最新信息
+                    setTimeout(() => {
+                        loadUserProfile();
+                    }, 1000);
+                } else {
+                    console.error('❌ 保存用户资料失败:', result.message);
+                    showToast('error', result.message || '保存个人资料失败');
+                }
+            } catch (error) {
+                console.error('❌ 保存用户资料过程中发生错误:', error);
+                showToast('error', '网络连接失败，请重试');
+            }
+        }
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载用户个人资料数据
+            loadUserProfile();
+
+            // 绑定保存按钮事件
+            const saveBtn = document.getElementById('save-btn');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    await saveUserProfile();
+                });
+            }
+
+            // 登出功能
+            const logoutBtn = document.getElementById('logout-btn');
+            const logoutBtnMobile = document.getElementById('logout-btn-mobile');
+
+            // 退出登录函数
+            async function performLogout() {
+                try {
+                    console.log('🔥 开始登出操作');
+
+                    // 获取会话令牌用于登出
+                    const sessionToken = getSessionToken();
+
+                    // 调用登出API
+                    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': sessionToken ? `Bearer ${sessionToken}` : ''
+                        }
+                    });
+
+                    const result = await response.json();
+                    console.log('📋 登出API响应:', result);
+
+                    // 清除本地存储的会话信息
+                    localStorage.removeItem('session_token');
+                    localStorage.removeItem('user_info');
+                    localStorage.removeItem('remember_me');
+
+                    // 清除cookie中的session_token
+                    document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
+                    console.log('✅ 登出成功，跳转到登录页面');
+
+                    // 跳转到登录页面
+                    window.location.href = `${API_BASE_URL}/login`;
+
+                } catch (error) {
+                    console.error('❌ 登出过程中发生错误:', error);
+                    // 即使API调用失败，也清除本地存储并跳转
+                    localStorage.removeItem('session_token');
+                    localStorage.removeItem('user_info');
+                    localStorage.removeItem('remember_me');
+                    // 清除cookie中的session_token
+                    document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                    window.location.href = `${API_BASE_URL}/login`;
+                }
+            }
+
+            // 桌面端退出登录按钮事件
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    await performLogout();
+                });
+            }
+
+            // 移动端退出登录按钮事件
+            if (logoutBtnMobile) {
+                logoutBtnMobile.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    await performLogout();
+                });
+            }
+        });
+    </script>
 
 </body>
 </html>

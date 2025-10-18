@@ -855,6 +855,166 @@ async def get_current_user_info(request: Request):
     )
 
 
+# API端点：获取用户详细个人资料
+@app.get("/api/user/profile")
+async def get_user_profile(request: Request):
+    """
+    获取用户详细个人资料信息
+    包含用户表中的所有字段
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # 查询用户的所有字段信息
+            cursor.execute("""
+                SELECT id, username, role, created_at, updated_at, email, phone,
+                       student_id, research_direction, status, graduation_status,
+                       supervisor, degree_type, work_location, work_company,
+                       personal_bio, personal_homepage, gender, id_card, bank_card
+                FROM users
+                WHERE id = ?
+            """, (current_user.id,))
+
+            user_data = cursor.fetchone()
+
+            if not user_data:
+                return JSONResponse(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    content={
+                        "success": False,
+                        "message": "用户信息不存在",
+                        "error": "USER_NOT_FOUND"
+                    }
+                )
+
+            # 将查询结果转换为字典
+            columns = [description[0] for description in cursor.description]
+            user_profile = dict(zip(columns, user_data))
+
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content={
+                    "success": True,
+                    "data": user_profile
+                }
+            )
+
+    except Exception as e:
+        logger.error(f"获取用户个人资料失败：{e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "获取用户个人资料失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
+# API端点：更新用户个人资料
+@app.put("/api/user/profile")
+async def update_user_profile(request: Request):
+    """
+    更新用户个人资料信息
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        # 获取更新数据
+        data = await request.json()
+
+        # 允许更新的字段
+        allowed_fields = [
+            'email', 'phone', 'student_id', 'research_direction',
+            'graduation_status', 'supervisor', 'degree_type',
+            'work_location', 'work_company', 'personal_bio',
+            'personal_homepage', 'gender', 'id_card', 'bank_card'
+        ]
+
+        # 过滤出允许更新的字段
+        update_data = {}
+        for field in allowed_fields:
+            if field in data:
+                update_data[field] = data[field]
+
+        if not update_data:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "没有提供要更新的数据",
+                    "error": "NO_DATA"
+                }
+            )
+
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # 构建更新语句
+            set_clause = ", ".join([f"{field} = ?" for field in update_data.keys()])
+            values = list(update_data.values()) + [current_user.id]
+
+            # 更新数据
+            cursor.execute(f"""
+                UPDATE users
+                SET {set_clause}, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """, values)
+
+            if cursor.rowcount == 0:
+                return JSONResponse(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    content={
+                        "success": False,
+                        "message": "用户不存在",
+                        "error": "USER_NOT_FOUND"
+                    }
+                )
+
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content={
+                    "success": True,
+                    "message": "个人资料更新成功",
+                    "data": update_data
+                }
+            )
+
+    except Exception as e:
+        logger.error(f"更新用户个人资料失败：{e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "更新个人资料失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
 # API端点：刷新会话
 @app.post("/api/auth/refresh")
 async def refresh_session(request: Request):
@@ -2052,22 +2212,42 @@ async def share_file_page(request: Request):
         "user": current_user
     })
 
-@app.get("/personal_profile", response_class=HTMLResponse)
-async def share_file_page(request: Request):
+@app.get("/user_profile", response_class=HTMLResponse)
+async def user_profile_page(request: Request):
     """
-    共享文件页面路由
+    个人资料页面路由
     需要用户登录才能访问
     """
     # 检查用户是否已登录
-    logger.info("用户学术工具页面中")
+    logger.info("用户访问个人资料页面")
     current_user = await get_current_user(request)
     if not current_user:
         # 未登录，重定向到登录页面
         from fastapi.responses import RedirectResponse
         return RedirectResponse(url="/login", status_code=302)
 
-    # 已登录，显示共享文件页面
-    return templates.TemplateResponse("personal_profile.html", {
+    # 已登录，显示个人资料页面
+    return templates.TemplateResponse("user_profile.html", {
+        "request": request,
+        "user": current_user
+    })
+
+@app.get("/user_profile", response_class=HTMLResponse)
+async def user_profile_page(request: Request):
+    """
+    个人资料页面路由（别名）
+    需要用户登录才能访问
+    """
+    # 检查用户是否已登录
+    logger.info("用户访问个人资料页面（别名路由）")
+    current_user = await get_current_user(request)
+    if not current_user:
+        # 未登录，重定向到登录页面
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/login", status_code=302)
+
+    # 已登录，显示个人资料页面
+    return templates.TemplateResponse("user_profile.html", {
         "request": request,
         "user": current_user
     })
