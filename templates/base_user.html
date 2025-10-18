@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>研究生组会文件共享系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        // 配置Tailwind自定义颜色
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#10b981',
+                        accent: '#6366f1',
+                        neutral: '#f3f4f6',
+                        'neutral-dark': '#4b5563',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .sidebar-icon {
+                @apply flex items-center gap-3 p-3 rounded-lg transition-all duration-200 cursor-pointer;
+            }
+            .sidebar-icon.active {
+                @apply bg-primary/10 text-primary font-medium;
+            }
+            .file-card {
+                @apply bg-white rounded-xl shadow-sm border border-gray-100 p-4 transition-all duration-200 hover:shadow-md;
+            }
+            .meeting-card {
+                @apply bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+            }
+            .line-clamp-2 {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+            .line-clamp-3 {
+                display: -webkit-box;
+                -webkit-line-clamp: 3;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+            @media (max-width: 640px) {
+                .container {
+                    padding-left: 1rem;
+                    padding-right: 1rem;
+                }
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <!-- 左侧Logo和标题 -->
+                <div class="flex items-center">
+                    <!-- 移动端侧边栏切换按钮 -->
+                    <button id="mobile-sidebar-toggle" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 mr-2 transition-colors">
+                        <i class="fa fa-bars text-gray-600"></i>
+                    </button>
+
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <i class="fa fa-flask text-primary text-2xl"></i>
+                        <span class="hidden sm:inline-block text-xl font-semibold text-gray-800">智能计算实验室</span>
+                        <span class="sm:hidden text-lg font-semibold text-gray-800">实验室</span>
+                    </div>
+                </div>
+
+                <!-- 右侧用户信息和操作 -->
+                <div class="flex items-center gap-2 sm:gap-4">
+                    <!-- 搜索框 - 移动端隐藏 -->
+                    <div class="relative hidden md:block">
+                        <input type="text" placeholder="搜索文献、汇报材料..."
+                               class="py-2 pl-10 pr-4 rounded-lg bg-gray-100 border-0 focus:ring-2 focus:ring-primary/30 focus:bg-white w-48 lg:w-64 transition-all">
+                        <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+
+                    <!-- 移动端搜索按钮 -->
+                    <button class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-search text-gray-600"></i>
+                    </button>
+
+                    <!-- 通知 -->
+                    <div class="relative cursor-pointer p-2 rounded-full hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-bell-o text-gray-600"></i>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </div>
+
+                    <!-- 用户信息 -->
+                    <div class="relative group">
+                        <div class="flex items-center gap-2 cursor-pointer">
+                            <img src="https://picsum.photos/id/{{ user.id }}/200/200" alt="{{ user.username }}头像" class="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm">
+                            <span class="hidden md:inline-block font-medium">{{ user.username }}</span>
+                            <i class="fa fa-chevron-down text-xs text-gray-500"></i>
+                        </div>
+
+                        <!-- 下拉菜单 -->
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right scale-95 group-hover:scale-100">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p class="font-medium">{{ user.username }}</p>
+                                <p class="text-xs text-gray-500">
+                                    {% if user.role == 'admin' %}管理员
+                                    {% elif user.role == 'teacher' %}导师
+                                    {% else %}学生{% endif %}
+                                </p>
+                            </div>
+                            <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-100">
+                                <i class="fa fa-user-o mr-2 text-gray-500"></i>个人资料
+                            </a>
+                            <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-100">
+                                <i class="fa fa-cog mr-2 text-gray-500"></i>设置
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 退出登录按钮 -->
+                    <button id="logout-btn" class="hidden sm:flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                        <i class="fa fa-sign-out"></i>
+                        <span>退出登录</span>
+                    </button>
+
+                    <!-- 移动端退出登录按钮 -->
+                    <button id="logout-btn-mobile" class="sm:hidden p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors">
+                        <i class="fa fa-sign-out"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="flex-1 flex">
+        <!-- 侧边栏 -->
+        <aside id="sidebar" class="fixed lg:sticky top-16 lg:top-16 left-0 z-40 w-64 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto">
+            <!-- 移动端关闭按钮 -->
+            <div class="lg:hidden sticky top-0 bg-white border-b border-gray-200 p-4 z-10">
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold text-gray-800">菜单</span>
+                    <button id="mobile-sidebar-close" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-times text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-4 overflow-y-auto h-full">
+                <!-- 角色标识 -->
+                <div class="bg-primary/10 text-primary rounded-lg p-3 mb-6">
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium">当前角色</span>
+                        <span class="text-sm bg-primary text-white px-2 py-1 rounded-full">
+                            {% if user.role == 'admin' %}管理员
+                            {% elif user.role == 'teacher' %}导师
+                            {% else %}学生{% endif %}
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- 导航菜单 -->
+                <nav>
+                    <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3">个人中心</p>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="#" class="sidebar-icon active">
+                                <i class="fa fa-user-o w-5 text-center"></i>
+                                <span>个人资料</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-chevron-right w-5 text-center"></i>
+                                <span>修改密码</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-cog w-5 text-center"></i>
+                                <span>设置</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-reply w-5 text-center"></i>
+                                <span>返回主页面</span>
+                            </a>
+                        </li>
+                    </ul>                    
+
+                </nav>
+            </div>
+        </aside>
+        
+
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 py-4">
+        <div class="container mx-auto px-4 text-center text-sm text-gray-500">
+            <p>© 2023 智能计算实验室 - 研究生组会文件共享系统</p>
+        </div>
+    </footer>
+
+
+</body>
+</html>
+    

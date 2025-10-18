@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑个人资料 - 智能计算实验室</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        success: '#10b981',
+                        error: '#ef4444',
+                        admin: '#ec4899',
+                        teacher: '#8b5cf6',
+                        student: '#3b82f6'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .sidebar-icon {
+                @apply flex items-center gap-3 p-3 rounded-lg transition-all duration-200 cursor-pointer;
+            }
+            .sidebar-icon.active {
+                @apply bg-primary/10 text-primary font-medium;
+            }
+            .form-input {
+                @apply w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all;
+            }
+            .form-input.error {
+                @apply border-error focus:ring-error/30;
+            }
+            .form-input.success {
+                @apply border-success focus:ring-success/30;
+            }
+            .form-input:disabled {
+                @apply bg-gray-100 cursor-not-allowed text-gray-500;
+            }
+            .form-label {
+                @apply block text-sm font-medium text-gray-700 mb-1.5;
+            }
+            .form-hint {
+                @apply text-xs text-gray-500 mt-1;
+            }
+            .form-error {
+                @apply text-xs text-error mt-1;
+            }
+            .section-divider {
+                @apply py-6 border-b border-gray-100;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航栏 -->
+    <!-- 顶部导航栏 -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <!-- 左侧Logo和标题 -->
+                <div class="flex items-center">
+                    <!-- 移动端侧边栏切换按钮 -->
+                    <button id="mobile-sidebar-toggle" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 mr-2 transition-colors">
+                        <i class="fa fa-bars text-gray-600"></i>
+                    </button>
+
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <i class="fa fa-flask text-primary text-2xl"></i>
+                        <span class="hidden sm:inline-block text-xl font-semibold text-gray-800">智能计算实验室</span>
+                        <span class="sm:hidden text-lg font-semibold text-gray-800">实验室</span>
+                    </div>
+                </div>
+
+                <!-- 右侧用户信息和操作 -->
+                <div class="flex items-center gap-2 sm:gap-4">
+                    <!-- 搜索框 - 移动端隐藏 -->
+                    <div class="relative hidden md:block">
+                        <input type="text" placeholder="搜索文献、汇报材料..."
+                               class="py-2 pl-10 pr-4 rounded-lg bg-gray-100 border-0 focus:ring-2 focus:ring-primary/30 focus:bg-white w-48 lg:w-64 transition-all">
+                        <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+
+                    <!-- 移动端搜索按钮 -->
+                    <button class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-search text-gray-600"></i>
+                    </button>
+
+                    <!-- 通知 -->
+                    <div class="relative cursor-pointer p-2 rounded-full hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-bell-o text-gray-600"></i>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </div>
+
+                    <!-- 用户信息 -->
+                    <div class="relative group">
+                        <div class="flex items-center gap-2 cursor-pointer">
+                            <img src="https://picsum.photos/id/{{ user.id }}/200/200" alt="{{ user.username }}头像" class="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm">
+                            <span class="hidden md:inline-block font-medium">{{ user.username }}</span>
+                            <i class="fa fa-chevron-down text-xs text-gray-500"></i>
+                        </div>
+
+                        <!-- 下拉菜单 -->
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right scale-95 group-hover:scale-100">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p class="font-medium">{{ user.username }}</p>
+                                <p class="text-xs text-gray-500">
+                                    {% if user.role == 'admin' %}管理员
+                                    {% elif user.role == 'teacher' %}导师
+                                    {% else %}学生{% endif %}
+                                </p>
+                            </div>
+                            <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-100">
+                                <i class="fa fa-user-o mr-2 text-gray-500"></i>个人资料
+                            </a>
+                            <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-100">
+                                <i class="fa fa-cog mr-2 text-gray-500"></i>设置
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 退出登录按钮 -->
+                    <button id="logout-btn" class="hidden sm:flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                        <i class="fa fa-sign-out"></i>
+                        <span>退出登录</span>
+                    </button>
+
+                    <!-- 移动端退出登录按钮 -->
+                    <button id="logout-btn-mobile" class="sm:hidden p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors">
+                        <i class="fa fa-sign-out"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="flex-1 flex">
+        <!-- 侧边栏 -->
+        <aside id="sidebar" class="fixed lg:sticky top-16 lg:top-16 left-0 z-40 w-64 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto">
+            <!-- 移动端关闭按钮 -->
+            <div class="lg:hidden sticky top-0 bg-white border-b border-gray-200 p-4 z-10">
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold text-gray-800">菜单</span>
+                    <button id="mobile-sidebar-close" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-times text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-4 overflow-y-auto h-full">
+                <!-- 角色标识 -->
+                <div class="bg-primary/10 text-primary rounded-lg p-3 mb-6">
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium">当前角色</span>
+                        <span class="text-sm bg-primary text-white px-2 py-1 rounded-full">
+                            {% if user.role == 'admin' %}管理员
+                            {% elif user.role == 'teacher' %}导师
+                            {% else %}学生{% endif %}
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- 导航菜单 -->
+                <nav>
+                    <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3">个人中心</p>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="/personal_profile" class="sidebar-icon active">
+                                <i class="fa fa-user-o w-5 text-center"></i>
+                                <span>个人资料</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/edit_password" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-key w-5 text-center"></i>
+                                <span>修改密码</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/settings" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-cog w-5 text-center"></i>
+                                <span>设置</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/" class="sidebar-icon hover:bg-gray-100">
+                                <i class="fa fa-reply w-5 text-center"></i>
+                                <span>返回主页面</span>
+                            </a>
+                        </li>
+                    </ul>                    
+                </nav>
+            </div>
+        </aside>
+        
+        <!-- 内容区域 -->
+        <div class="flex-1 p-6 overflow-y-auto">
+            <div class="mb-6 flex flex-wrap justify-between items-center gap-4">
+                <div>
+                    <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gray-800">编辑个人资料</h1>
+                    <p class="text-gray-500">更新您的个人信息和偏好设置</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="profile.html" class="border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
+                        <i class="fa fa-arrow-left"></i>
+                        <span>返回</span>
+                    </a>
+                    <button id="save-btn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm">
+                        <i class="fa fa-save"></i>
+                        <span>保存修改</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 个人资料编辑表单 -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-6">
+                <form id="profile-form">
+                    <!-- 头像和基本信息 -->
+                    <div class="section-divider">
+                        <h2 class="text-lg font-bold mb-5">基本信息</h2>
+                        
+                        <div class="flex flex-col sm:flex-row gap-6">
+                            <div class="flex flex-col items-center sm:items-start">
+                                <div class="relative mb-3">
+                                    <img id="avatar-preview" src="https://picsum.photos/id/1005/200/200" alt="个人头像" class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-sm">
+                                    <div class="absolute inset-0 bg-black/40 rounded-full opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                                        <i class="fa fa-camera text-white text-xl"></i>
+                                    </div>
+                                    <input type="file" id="avatar-upload" accept="image/*" class="hidden">
+                                </div>
+                                <button type="button" id="change-avatar-btn" class="text-sm text-primary hover:text-primary/80 flex items-center">
+                                    <i class="fa fa-upload mr-1"></i> 更换头像
+                                </button>
+                                <p class="form-hint mt-1 text-center sm:text-left">支持JPG、PNG格式，建议尺寸200×200px</p>
+                            </div>
+                            
+                            <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label for="fullname" class="form-label">姓名 <span class="text-red-500">*</span></label>
+                                    <input type="text" id="fullname" value="张明" class="form-input" required>
+                                </div>
+                                
+                                <div>
+                                    <label for="username" class="form-label">用户名 <span class="text-red-500">*</span></label>
+                                    <input type="text" id="username" value="zhangming" class="form-input" required>
+                                    <p class="form-hint">用户名用于登录，不能包含特殊字符</p>
+                                </div>
+                                
+                                <div>
+                                    <label for="role" class="form-label">身份角色 <span class="text-red-500">*</span></label>
+                                    <select id="role" class="form-input appearance-none bg-gray-50" required>
+                                        <option value="admin">管理员</option>
+                                        <option value="teacher">导师</option>
+                                        <option value="student" selected>学生</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label for="student-id" class="form-label">学号/工号 <span class="text-red-500">*</span></label>
+                                    <input type="text" id="student-id" value="2020001001" class="form-input" required>
+                                    <p class="form-hint">请使用学校统一分配的号码</p>
+                                </div>
+                                
+                                <div>
+                                    <label for="creation-time" class="form-label">创建时间</label>
+                                    <input type="text" id="creation-time" value="2020-09-01 09:30:00" class="form-input" disabled>
+                                    <p class="form-hint">账号创建的时间，不可修改</p>
+                                </div>
+                                
+                                <div>
+                                    <label for="update-time" class="form-label">更新时间</label>
+                                    <input type="text" id="update-time" value="2023-09-15 16:45:22" class="form-input" disabled>
+                                    <p class="form-hint">上次更新资料的时间</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 联系信息 -->
+                    <div class="section-divider">
+                        <h2 class="text-lg font-bold mb-5">联系信息</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label for="email" class="form-label">电子邮箱 <span class="text-red-500">*</span></label>
+                                <input type="email" id="email" value="zhangming@stu.university.edu" class="form-input" required>
+                                <p class="form-hint">用于接收系统通知和重置密码</p>
+                            </div>
+                            
+                            <div>
+                                <label for="phone" class="form-label">电话号码</label>
+                                <input type="tel" id="phone" value="138****7890" class="form-input">
+                                <p class="form-hint">请填写常用手机号码</p>
+                            </div>
+                            
+                            <div>
+                                <label for="work-location" class="form-label">工作地点</label>
+                                <input type="text" id="work-location" value="计算机学院 308-2室" class="form-input">
+                            </div>
+                            
+                            <div>
+                                <label for="work-company" class="form-label">工作公司</label>
+                                <input type="text" id="work-company" value="" class="form-input">
+                                <p class="form-hint">学生可留空，教职工或已毕业学生请填写</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 学业/职业信息 -->
+                    <div class="section-divider">
+                        <h2 class="text-lg font-bold mb-5">学业/职业信息</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label for="graduation-status" class="form-label">毕业状态</label>
+                                <select id="graduation-status" class="form-input appearance-none bg-gray-50">
+                                    <option value="studying" selected>在读</option>
+                                    <option value="graduated">毕业</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="advisor" class="form-label">导师姓名</label>
+                                <input type="text" id="advisor" value="王教授" class="form-input">
+                            </div>
+                            
+                            <div>
+                                <label for="degree-type" class="form-label">学位类型</label>
+                                <select id="degree-type" class="form-input appearance-none bg-gray-50">
+                                    <option value="">请选择学位类型</option>
+                                    <option value="bachelor">学士学位</option>
+                                    <option value="master" selected>硕士学位</option>
+                                    <option value="phd">博士学位</option>
+                                    <option value="professor">教授</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="research-direction" class="form-label">研究方向 <span class="text-red-500">*</span></label>
+                                <input type="text" id="research-direction" value="自然语言处理、低资源学习、预训练模型" class="form-input" required>
+                                <p class="form-hint">请用逗号分隔多个研究方向</p>
+                            </div>
+                            
+                            <div>
+                                <label for="status" class="form-label">状态</label>
+                                <select id="status" class="form-input appearance-none bg-gray-50">
+                                    <option value="active" selected>正常</option>
+                                    <option value="leave">休假</option>
+                                    <option value="sabbatical">学术休假</option>
+                                    <option value="other">其他</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 个人简介 -->
+                    <div class="section-divider">
+                        <h2 class="text-lg font-bold mb-5">个人简介</h2>
+                        
+                        <div>
+                            <label for="bio" class="form-label">个人简介</label>
+                            <textarea id="bio" rows="4" class="form-input resize-none">2020年9月入学，主要研究方向为低资源自然语言处理。曾在EMNLP、ACL等国际会议发表论文2篇，参与国家自然科学基金项目1项，校企合作项目1项。</textarea>
+                            <p class="form-hint">简要介绍您的教育背景、研究兴趣等（最多500字）</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 隐私设置 -->
+                    <div>
+                        <h2 class="text-lg font-bold mb-5">隐私设置</h2>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-start gap-3">
+                                <div class="mt-1">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" checked class="sr-only peer">
+                                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                                    </label>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium text-sm">允许其他成员查看我的联系方式</h3>
+                                    <p class="text-xs text-gray-500 mt-0.5">开启后，实验室其他成员可以查看您的邮箱和电话</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start gap-3">
+                                <div class="mt-1">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" checked class="sr-only peer">
+                                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                                    </label>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium text-sm">接收组会提醒通知</h3>
+                                    <p class="text-xs text-gray-500 mt-0.5">组会开始前通过邮件和系统消息提醒您</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 py-4">
+        <div class="container mx-auto px-4 text-center text-sm text-gray-500">
+            <p>© 2023 智能计算实验室 - 研究生组会文件共享系统</p>
+        </div>
+    </footer>
+
+    <!-- 成功提示框 -->
+    <div id="success-toast" class="fixed bottom-6 right-6 bg-white rounded-lg shadow-lg p-4 max-w-xs transform translate-y-20 opacity-0 transition-all duration-300 z-50 border-l-4 border-success">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <i class="fa fa-check-circle text-success"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-gray-800">保存成功</h3>
+                <div class="mt-1 text-sm text-gray-600">
+                    <p>您的个人资料已更新成功。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 头像上传功能
+            const avatarUpload = document.getElementById('avatar-upload');
+            const changeAvatarBtn = document.getElementById('change-avatar-btn');
+            const avatarPreview = document.getElementById('avatar-preview');
+            const avatarContainer = avatarPreview.parentElement;
+            
+            changeAvatarBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                avatarUpload.click();
+            });
+            
+            avatarContainer.addEventListener('click', function(e) {
+                if (e.target === this || e.target.classList.contains('fa-camera')) {
+                    avatarUpload.click();
+                }
+            });
+            
+            avatarUpload.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        avatarPreview.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // 表单验证
+            const formInputs = document.querySelectorAll('.form-input:not([disabled])');
+            formInputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    validateInput(this);
+                });
+            });
+            
+            function validateInput(input) {
+                input.classList.remove('error', 'success');
+                const errorEl = input.parentNode.querySelector('.form-error');
+                if (errorEl) errorEl.remove();
+                
+                if (input.hasAttribute('required') && !input.value.trim()) {
+                    showError(input, '此字段不能为空');
+                    return false;
+                }
+                
+                if (input.id === 'email' && input.value.trim()) {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(input.value.trim())) {
+                        showError(input, '请输入有效的电子邮箱地址');
+                        return false;
+                    }
+                }
+                
+                input.classList.add('success');
+                return true;
+            }
+            
+            function showError(input, message) {
+                input.classList.add('error');
+                const errorEl = document.createElement('p');
+                errorEl.className = 'form-error';
+                errorEl.textContent = message;
+                input.parentNode.appendChild(errorEl);
+            }
+            
+            // 保存按钮点击事件
+            document.getElementById('save-btn').addEventListener('click', function() {
+                let isValid = true;
+                
+                formInputs.forEach(input => {
+                    if (input.hasAttribute('required')) {
+                        if (!validateInput(input)) {
+                            isValid = false;
+                        }
+                    }
+                });
+                
+                if (isValid) {
+                    // 更新最后修改时间
+                    const now = new Date();
+                    const formattedTime = now.getFullYear() + '-' + 
+                                         String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                                         String(now.getDate()).padStart(2, '0') + ' ' + 
+                                         String(now.getHours()).padStart(2, '0') + ':' + 
+                                         String(now.getMinutes()).padStart(2, '0') + ':' + 
+                                         String(now.getSeconds()).padStart(2, '0');
+                    document.getElementById('update-time').value = formattedTime;
+                    
+                    // 显示成功提示
+                    const toast = document.getElementById('success-toast');
+                    toast.classList.remove('translate-y-20', 'opacity-0');
+                    
+                    setTimeout(() => {
+                        toast.classList.add('translate-y-20', 'opacity-0');
+                    }, 3000);
+                }
+            });
+            
+            // 侧边栏菜单切换
+            const sidebarItems = document.querySelectorAll('.sidebar-icon');
+            sidebarItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    sidebarItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+    
