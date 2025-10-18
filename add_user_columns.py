@@ -41,7 +41,10 @@ def add_user_columns():
             'work_location': 'VARCHAR(200)',
             'work_company': 'VARCHAR(200)',
             'personal_bio': 'TEXT',
-            'personal_homepage': 'VARCHAR(500)'
+            'personal_homepage': 'VARCHAR(500)',
+            'gender': 'VARCHAR(10) DEFAULT "男"',
+            'id_card': 'VARCHAR(18)',
+            'bank_card': 'VARCHAR(19)'
         }
 
         for column_name, column_type in new_columns.items():
@@ -75,6 +78,12 @@ def add_user_columns():
                 default_work_company = ""
                 default_personal_bio = f"我是{username}，专注于机器学习和人工智能研究。目前在读博士，主要研究方向为深度学习与计算机视觉。"
                 default_personal_homepage = f"https://github.com/{username}"
+
+                # 根据用户ID生成性别（交替生成男女）
+                if user_id % 2 == 1:
+                    default_gender = "男"
+                else:
+                    default_gender = "女"
             else:  # teacher
                 default_graduation_status = "已毕业"
                 default_supervisor = "李院长"
@@ -83,15 +92,32 @@ def add_user_columns():
                 default_work_company = "清华大学计算机科学与技术系"
                 default_personal_bio = f"我是{username}教授，主要从事人工智能和机器学习教学与科研工作。发表SCI论文50余篇，主持国家自然科学基金项目3项。"
                 default_personal_homepage = f"https://faculty.example.edu/{username}"
+                # 导师也根据ID交替生成性别
+                if user_id % 2 == 1:
+                    default_gender = "男"
+                else:
+                    default_gender = "女"
+
+            # 生成测试用的身份证号和银行卡号
+            # 身份证号：基于用户ID生成，前6位地区码 + 出生年份 + 随机序列
+            region_code = "110101"  # 北京市东城区
+            birth_year = 1990 + (user_id % 30)  # 1990-2019年
+            sequence = str(user_id).zfill(3)
+            default_id_card = f"{region_code}{birth_year}0101{sequence}123"
+
+            # 银行卡号：基于用户ID生成，19位数字
+            bank_prefix = "6227"  # 招商银行前缀
+            card_number = str(user_id).zfill(15)
+            default_bank_card = f"{bank_prefix}{card_number}"
 
             # 检查是否已有数据，如果没有则更新
-            cursor.execute("SELECT email, phone, student_id, research_direction, status, graduation_status, supervisor, degree_type, work_location, work_company, personal_bio, personal_homepage FROM users WHERE id = ?", (user_id,))
+            cursor.execute("SELECT email, phone, student_id, research_direction, status, graduation_status, supervisor, degree_type, work_location, work_company, personal_bio, personal_homepage, gender, id_card, bank_card FROM users WHERE id = ?", (user_id,))
             current_data = cursor.fetchone()
 
             if current_data:
-                current_email, current_phone, current_student_id, current_research, current_status, current_graduation_status, current_supervisor, current_degree_type, current_work_location, current_work_company, current_personal_bio, current_personal_homepage = current_data
+                current_email, current_phone, current_student_id, current_research, current_status, current_graduation_status, current_supervisor, current_degree_type, current_work_location, current_work_company, current_personal_bio, current_personal_homepage, current_gender, current_id_card, current_bank_card = current_data
 
-                # 只更新空值
+                # 只更新空值，但强制更新性别字段
                 update_data = {}
                 if not current_email:
                     update_data['email'] = default_email
@@ -117,6 +143,13 @@ def add_user_columns():
                     update_data['personal_bio'] = default_personal_bio
                 if not current_personal_homepage:
                     update_data['personal_homepage'] = default_personal_homepage
+                # 强制更新性别字段
+                if not current_gender or current_gender == "未设置":
+                    update_data['gender'] = default_gender
+                if not current_id_card:
+                    update_data['id_card'] = default_id_card
+                if not current_bank_card:
+                    update_data['bank_card'] = default_bank_card
 
                 if update_data:
                     set_clause = ", ".join([f"{k} = ?" for k in update_data.keys()])
@@ -140,19 +173,23 @@ def add_user_columns():
                     work_location = ?,
                     work_company = ?,
                     personal_bio = ?,
-                    personal_homepage = ?
+                    personal_homepage = ?,
+                    gender = ?,
+                    id_card = ?,
+                    bank_card = ?
                     WHERE id = ?
                 """, (default_email, default_phone, default_student_id, default_research, 'active',
                       default_graduation_status, default_supervisor, default_degree_type,
                       default_work_location, default_work_company, default_personal_bio,
-                      default_personal_homepage, user_id))
+                      default_personal_homepage, default_gender, default_id_card,
+                      default_bank_card, user_id))
                 print(f"  完整更新用户数据")
 
         # 提交更改
         conn.commit()
 
         # 验证结果
-        cursor.execute("SELECT id, username, email, phone, student_id, research_direction, status, graduation_status, supervisor, degree_type, work_location, work_company, personal_bio, personal_homepage FROM users")
+        cursor.execute("SELECT id, username, email, phone, student_id, research_direction, status, graduation_status, supervisor, degree_type, work_location, work_company, personal_bio, personal_homepage, gender, id_card, bank_card FROM users")
         updated_users = cursor.fetchall()
 
         print("\n更新后的用户数据:")
@@ -162,11 +199,13 @@ def add_user_columns():
             print(f"{user[0]}\t{user[1]}\t{user[2]}\t{user[3]}\t{user[4]}\t{user[7]}\t\t{user[8]}\t{user[9]}")
 
         print("\n详细信息:")
-        print("ID\t用户名\t工作地点\t\t工作公司\t\t个人简介")
-        print("-" * 100)
+        print("ID\t用户名\t性别\t身份证号\t\t\t银行卡号\t\t\t个人简介")
+        print("-" * 120)
         for user in updated_users:
-            bio_short = user[11][:30] + "..." if len(user[11]) > 30 else user[11]
-            print(f"{user[0]}\t{user[1]}\t{user[10]}\t\t{user[11]}\t\t{bio_short}")
+            bio_short = user[11][:20] + "..." if len(user[11]) > 20 else user[11]
+            id_card_masked = user[13][:6] + "****" + user[13][-4:] if user[13] and len(user[13]) >= 10 else user[13]
+            bank_card_masked = user[14][:4] + "****" + user[14][-4:] if user[14] and len(user[14]) >= 8 else user[14]
+            print(f"{user[0]}\t{user[1]}\t{user[12]}\t{id_card_masked}\t{bank_card_masked}\t{bio_short}")
 
         print(f"\n成功更新了 {len(updated_users)} 个用户")
 

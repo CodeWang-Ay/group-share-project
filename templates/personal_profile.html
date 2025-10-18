@@ -256,9 +256,13 @@
                                 </div>
                                 
                                 <div>
-                                    <label for="username" class="form-label">用户名 <span class="text-red-500">*</span></label>
-                                    <input type="text" id="username" value="zhangming" class="form-input" required>
-                                    <p class="form-hint">用户名用于登录，不能包含特殊字符</p>
+                                    <label for="gender" class="form-label">性别 <span class="text-red-500">*</span></label>
+                                    <select id="gender" class="form-input appearance-none bg-gray-50" required>
+                                        <option value="" disabled selected hidden>请选择性别</option>
+                                        <option value="male">男</option>
+                                        <option value="female">女</option>
+                                    </select>
+                                    <p class="form-hint">请选择您的性别</p>
                                 </div>
                                 
                                 <div>
@@ -320,7 +324,26 @@
                             </div>
                         </div>
                     </div>
-                    
+
+                    <!-- 身份信息 -->
+                    <div class="section-divider">
+                        <h2 class="text-lg font-bold mb-5">身份信息</h2>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label for="id-card" class="form-label">身份证号</label>
+                                <input type="text" id="id-card" value="" class="form-input" maxlength="18" pattern="[0-9X]{18}">
+                                <p class="form-hint">请输入18位身份证号码</p>
+                            </div>
+
+                            <div>
+                                <label for="bank-card" class="form-label">银行卡号</label>
+                                <input type="text" id="bank-card" value="" class="form-input" maxlength="19" pattern="[0-9]{16,19}">
+                                <p class="form-hint">请输入16-19位银行卡号码</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- 学业/职业信息 -->
                     <div class="section-divider">
                         <h2 class="text-lg font-bold mb-5">学业/职业信息</h2>
