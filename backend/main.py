@@ -2031,6 +2031,27 @@ async def share_file_page(request: Request):
         "user": current_user
     })
 
+# 研究进展页面
+@app.get("/research_progress", response_class=HTMLResponse)
+async def share_file_page(request: Request):
+    """
+    共享文件页面路由
+    需要用户登录才能访问
+    """
+    # 检查用户是否已登录
+    logger.info("用户学术工具页面中")
+    current_user = await get_current_user(request)
+    if not current_user:
+        # 未登录，重定向到登录页面
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/login", status_code=302)
+
+    # 已登录，显示共享文件页面
+    return templates.TemplateResponse("research_progress.html", {
+        "request": request,
+        "user": current_user
+    })
+
 # 启动命令
 if __name__ == "__main__":
     import uvicorn
