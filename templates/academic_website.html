@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>成员管理 - 研究生组会文件共享系统</title>
+    <title>学术工具 - 研究生组会文件共享系统</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script>
@@ -109,7 +109,7 @@
         <div class="h-16 flex items-center justify-between px-4 lg:px-6">
             <!-- Logo和侧边栏切换 -->
             <div class="flex items-center gap-4">
-                <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100 transition-colors lg:hidden">
+                <button id="mobile-sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100 transition-colors lg:hidden">
                     <i class="fa fa-bars text-gray-600"></i>
                 </button>
                 <div class="flex items-center gap-3">
@@ -118,7 +118,7 @@
                     </div>
                     <div>
                         <h1 class="text-lg font-semibold text-gray-800">研究生组会系统</h1>
-                        <p class="text-xs text-gray-500 hidden sm:inline">成员管理</p>
+                        <p class="text-xs text-gray-500 hidden sm:inline">学术工具</p>
                     </div>
                 </div>
             </div>
@@ -126,7 +126,7 @@
                 <div class="flex items-center gap-2 sm:gap-4">
                     <!-- 搜索框 - 移动端隐藏 -->
                     <div class="relative hidden md:block">
-                        <input type="text" id="search-input" placeholder="搜索文件..."
+                        <input type="text" id="search-input" placeholder="搜索学术工具..."
                                class="py-2 pl-10 pr-4 rounded-lg bg-gray-100 border-0 focus:ring-2 focus:ring-primary/30 focus:bg-white w-48 lg:w-64 transition-all">
                         <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                     </div>
@@ -1156,6 +1156,131 @@
     </main>
 
     <script>
+        // API基础URL - 根据当前环境自动检测
+        let API_BASE_URL = '';
+        if (window.location.hostname === 'localhost') {
+            if (window.location.port === '8081' || window.location.port === '8000') {
+                API_BASE_URL = `http://localhost:${window.location.port}`;
+            } else if (window.location.port === '3000' || window.location.port === '3001') {
+                API_BASE_URL = 'http://localhost:8081';
+            }
+        }
+
+        // 移动端侧边栏功能
+        function initMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('mobile-sidebar-toggle');
+            const sidebarClose = document.getElementById('mobile-sidebar-close');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+            // 创建遮罩层（如果不存在）
+            if (!sidebarOverlay) {
+                const overlay = document.createElement('div');
+                overlay.id = 'sidebar-overlay';
+                overlay.className = 'fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden hidden';
+                document.body.appendChild(overlay);
+
+                // 点击遮罩层关闭侧边栏
+                overlay.addEventListener('click', closeMobileSidebar);
+            }
+
+            function openMobileSidebar() {
+                sidebar.classList.remove('-translate-x-full');
+                document.getElementById('sidebar-overlay').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeMobileSidebar() {
+                sidebar.classList.add('-translate-x-full');
+                document.getElementById('sidebar-overlay').classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+
+            // 绑定事件
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', openMobileSidebar);
+            }
+            if (sidebarClose) {
+                sidebarClose.addEventListener('click', closeMobileSidebar);
+            }
+
+            // 侧边栏菜单点击后关闭移动端侧边栏
+            const sidebarItems = document.querySelectorAll('.sidebar-icon');
+            sidebarItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    sidebarItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // 移动端点击后关闭侧边栏
+                    if (window.innerWidth < 1024) {
+                        closeMobileSidebar();
+                    }
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化移动端侧边栏
+            initMobileSidebar();
+
+            // 登出功能
+            const logoutBtn = document.getElementById('logout-btn');
+            const logoutBtnMobile = document.getElementById('logout-btn-mobile');
+
+            // 退出登录函数
+            async function performLogout() {
+                try {
+                    console.log('🔥 开始登出操作');
+
+                    // 调用登出API
+                    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('session_token')}`
+                        }
+                    });
+
+                    const result = await response.json();
+                    console.log('📋 登出API响应:', result);
+
+                    // 清除本地存储的会话信息
+                    localStorage.removeItem('session_token');
+                    localStorage.removeItem('user_info');
+                    localStorage.removeItem('remember_me');
+
+                    console.log('✅ 登出成功，跳转到登录页面');
+
+                    // 跳转到登录页面
+                    window.location.href = 'http://localhost:8081/login';
+
+                } catch (error) {
+                    console.error('❌ 登出过程中发生错误:', error);
+                    // 即使API调用失败，也清除本地存储并跳转
+                    localStorage.removeItem('session_token');
+                    localStorage.removeItem('user_info');
+                    localStorage.removeItem('remember_me');
+                    window.location.href = 'http://localhost:8081/login';
+                }
+            }
+
+            // 桌面端退出登录按钮事件
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    await performLogout();
+                });
+            }
+
+            // 移动端退出登录按钮事件
+            if (logoutBtnMobile) {
+                logoutBtnMobile.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    await performLogout();
+                });
+            }
+        })
+
         // 获取所有工具卡片和搜索输入框
         const searchInput = document.getElementById('search-input');
         const toolCards = document.querySelectorAll('.card-hover');
@@ -1218,6 +1343,8 @@
                 firstLink.click();
             }
         });
+
+
     </script>
 </body>
 </html>
