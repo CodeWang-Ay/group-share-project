@@ -248,23 +248,23 @@
                                 </button>
                                 <p class="form-hint mt-1 text-center sm:text-left">支持JPG、PNG格式，建议尺寸200×200px</p>
                             </div>
-                            
+
                             <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
-                                    <label for="fullname" class="form-label">姓名 <span class="text-red-500">*</span></label>
-                                    <input type="text" id="fullname" value="张明" class="form-input" required>
+                                    <label for="username" class="form-label">用户名/姓名 <span class="text-red-500">*</span></label>
+                                    <input type="text" id="username" value="张明" class="form-input" required>
                                 </div>
-                                
+
                                 <div>
                                     <label for="gender" class="form-label">性别 <span class="text-red-500">*</span></label>
                                     <select id="gender" class="form-input appearance-none bg-gray-50" required>
                                         <option value="" disabled selected hidden>请选择性别</option>
-                                        <option value="male">男</option>
-                                        <option value="female">女</option>
+                                        <option value="男">男</option>
+                                        <option value="女">女</option>
                                     </select>
                                     <p class="form-hint">请选择您的性别</p>
                                 </div>
-                                
+
                                 <div>
                                     <label for="role" class="form-label">身份角色 <span class="text-red-500">*</span></label>
                                     <select id="role" class="form-input appearance-none bg-gray-50" required>
@@ -273,22 +273,22 @@
                                         <option value="student" selected>学生</option>
                                     </select>
                                 </div>
-                                
+
                                 <div>
-                                    <label for="student-id" class="form-label">学号/工号 <span class="text-red-500">*</span></label>
-                                    <input type="text" id="student-id" value="2020001001" class="form-input" required>
+                                    <label for="student_id" class="form-label">学号/工号 <span class="text-red-500">*</span></label>
+                                    <input type="text" id="student_id" value="2020001001" class="form-input" required>
                                     <p class="form-hint">请使用学校统一分配的号码</p>
                                 </div>
-                                
+
                                 <div>
-                                    <label for="creation-time" class="form-label">创建时间</label>
-                                    <input type="text" id="creation-time" value="2020-09-01 09:30:00" class="form-input" disabled>
+                                    <label for="created_at" class="form-label">创建时间</label>
+                                    <input type="text" id="created_at" value="2020-09-01 09:30:00" class="form-input" disabled>
                                     <p class="form-hint">账号创建的时间，不可修改</p>
                                 </div>
-                                
+
                                 <div>
-                                    <label for="update-time" class="form-label">更新时间</label>
-                                    <input type="text" id="update-time" value="2023-09-15 16:45:22" class="form-input" disabled>
+                                    <label for="updated_at" class="form-label">更新时间</label>
+                                    <input type="text" id="updated_at" value="2023-09-15 16:45:22" class="form-input" disabled>
                                     <p class="form-hint">上次更新资料的时间</p>
                                 </div>
                             </div>
@@ -298,29 +298,24 @@
                     <!-- 联系信息 -->
                     <div class="section-divider">
                         <h2 class="text-lg font-bold mb-5">联系信息</h2>
-                        
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
                                 <label for="email" class="form-label">电子邮箱 <span class="text-red-500">*</span></label>
                                 <input type="email" id="email" value="zhangming@stu.university.edu" class="form-input" required>
                                 <p class="form-hint">用于接收系统通知和重置密码</p>
                             </div>
-                            
+
                             <div>
                                 <label for="phone" class="form-label">电话号码</label>
                                 <input type="tel" id="phone" value="138****7890" class="form-input">
                                 <p class="form-hint">请填写常用手机号码</p>
                             </div>
-                            
+
                             <div>
-                                <label for="work-location" class="form-label">工作地点</label>
-                                <input type="text" id="work-location" value="计算机学院 308-2室" class="form-input">
-                            </div>
-                            
-                            <div>
-                                <label for="work-company" class="form-label">工作公司</label>
-                                <input type="text" id="work-company" value="" class="form-input">
-                                <p class="form-hint">学生可留空，教职工或已毕业学生请填写</p>
+                                <label for="personal_homepage" class="form-label">个人主页</label>
+                                <input type="url" id="personal_homepage" value="" class="form-input">
+                                <p class="form-hint">个人学术主页或GitHub等链接</p>
                             </div>
                         </div>
                     </div>
@@ -332,13 +327,13 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
                                 <label for="id-card" class="form-label">身份证号</label>
-                                <input type="text" id="id-card" value="" class="form-input" maxlength="18" pattern="[0-9X]{18}">
+                                <input type="text" id="id_card" value="" class="form-input" maxlength="18" pattern="[0-9X]{18}">
                                 <p class="form-hint">请输入18位身份证号码</p>
                             </div>
 
                             <div>
                                 <label for="bank-card" class="form-label">银行卡号</label>
-                                <input type="text" id="bank-card" value="" class="form-input" maxlength="19" pattern="[0-9]{16,19}">
+                                <input type="text" id="bank_card" value="" class="form-input" maxlength="19" pattern="[0-9]{16,19}">
                                 <p class="form-hint">请输入16-19位银行卡号码</p>
                             </div>
                         </div>
@@ -347,38 +342,50 @@
                     <!-- 学业/职业信息 -->
                     <div class="section-divider">
                         <h2 class="text-lg font-bold mb-5">学业/职业信息</h2>
-                        
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label for="graduation-status" class="form-label">毕业状态</label>
-                                <select id="graduation-status" class="form-input appearance-none bg-gray-50">
-                                    <option value="studying" selected>在读</option>
-                                    <option value="graduated">毕业</option>
+                                <label for="graduation_status" class="form-label">毕业状态</label>
+                                <select id="graduation_status" class="form-input appearance-none bg-gray-50">
+                                    <option value="在读" selected>在读</option>
+                                    <option value="已毕业">毕业</option>
                                 </select>
                             </div>
-                            
+
                             <div>
-                                <label for="advisor" class="form-label">导师姓名</label>
-                                <input type="text" id="advisor" value="王教授" class="form-input">
+                                <label for="supervisor" class="form-label">导师姓名</label>
+                                <input type="text" id="supervisor" value="王教授" class="form-input">
                             </div>
-                            
+
                             <div>
-                                <label for="degree-type" class="form-label">学位类型</label>
-                                <select id="degree-type" class="form-input appearance-none bg-gray-50">
+                                <label for="degree_type" class="form-label">学位类型</label>
+                                <select id="degree_type" class="form-input appearance-none bg-gray-50">
                                     <option value="">请选择学位类型</option>
-                                    <option value="bachelor">学士学位</option>
-                                    <option value="master" selected>硕士学位</option>
-                                    <option value="phd">博士学位</option>
-                                    <option value="professor">教授</option>
+                                    <option value="学士学位">学士学位</option>
+                                    <option value="硕士学位" selected>硕士学位</option>
+                                    <option value="博士学位">博士学位</option>
+                                    <option value="博士研究生">博士研究生</option>
+                                    <option value="教授">教授</option>
                                 </select>
                             </div>
-                            
+
                             <div>
-                                <label for="research-direction" class="form-label">研究方向 <span class="text-red-500">*</span></label>
-                                <input type="text" id="research-direction" value="自然语言处理、低资源学习、预训练模型" class="form-input" required>
+                                <label for="research_direction" class="form-label">研究方向 <span class="text-red-500">*</span></label>
+                                <input type="text" id="research_direction" value="自然语言处理、低资源学习、预训练模型" class="form-input" required>
                                 <p class="form-hint">请用逗号分隔多个研究方向</p>
                             </div>
-                            
+
+                            <div>
+                                <label for="work_location" class="form-label">工作地点</label>
+                                <input type="text" id="work_location" value="计算机学院 308-2室" class="form-input">
+                            </div>
+
+                            <div>
+                                <label for="work_company" class="form-label">工作公司</label>
+                                <input type="text" id="work_company" value="" class="form-input">
+                                <p class="form-hint">学生可留空，教职工或已毕业学生请填写</p>
+                            </div>
+
                             <div>
                                 <label for="status" class="form-label">状态</label>
                                 <select id="status" class="form-input appearance-none bg-gray-50">
@@ -394,10 +401,10 @@
                     <!-- 个人简介 -->
                     <div class="section-divider">
                         <h2 class="text-lg font-bold mb-5">个人简介</h2>
-                        
+
                         <div>
-                            <label for="bio" class="form-label">个人简介</label>
-                            <textarea id="bio" rows="4" class="form-input resize-none">2020年9月入学，主要研究方向为低资源自然语言处理。曾在EMNLP、ACL等国际会议发表论文2篇，参与国家自然科学基金项目1项，校企合作项目1项。</textarea>
+                            <label for="personal_bio" class="form-label">个人简介</label>
+                            <textarea id="personal_bio" rows="4" class="form-input resize-none">2020年9月入学，主要研究方向为低资源自然语言处理。曾在EMNLP、ACL等国际会议发表论文2篇，参与国家自然科学基金项目1项，校企合作项目1项。</textarea>
                             <p class="form-hint">简要介绍您的教育背景、研究兴趣等（最多500字）</p>
                         </div>
                     </div>
