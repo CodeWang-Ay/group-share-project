@@ -210,7 +210,7 @@
         
         <!-- 内容区域 -->
         <div class="flex-1 p-6 overflow-y-auto">
-            <!-- <div class="mb-6 flex flex-wrap justify-between items-center gap-4">
+            <div class="mb-6 flex flex-wrap justify-between items-center gap-4">
                 <div>
                     <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gray-800">编辑个人资料</h1>
                     <p class="text-gray-500">更新您的个人信息和偏好设置</p>
@@ -225,7 +225,7 @@
                         <span>保存修改</span>
                     </button>
                 </div>
-            </div> -->
+            </div>
             
             <!-- 个人资料编辑表单 -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-6">
@@ -438,118 +438,7 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // 头像上传功能
-            const avatarUpload = document.getElementById('avatar-upload');
-            const changeAvatarBtn = document.getElementById('change-avatar-btn');
-            const avatarPreview = document.getElementById('avatar-preview');
-            const avatarContainer = avatarPreview.parentElement;
-            
-            changeAvatarBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                avatarUpload.click();
-            });
-            
-            avatarContainer.addEventListener('click', function(e) {
-                if (e.target === this || e.target.classList.contains('fa-camera')) {
-                    avatarUpload.click();
-                }
-            });
-            
-            avatarUpload.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        avatarPreview.src = event.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-            
-            // 表单验证
-            const formInputs = document.querySelectorAll('.form-input:not([disabled])');
-            formInputs.forEach(input => {
-                input.addEventListener('blur', function() {
-                    validateInput(this);
-                });
-            });
-            
-            function validateInput(input) {
-                input.classList.remove('error', 'success');
-                const errorEl = input.parentNode.querySelector('.form-error');
-                if (errorEl) errorEl.remove();
-                
-                if (input.hasAttribute('required') && !input.value.trim()) {
-                    showError(input, '此字段不能为空');
-                    return false;
-                }
-                
-                if (input.id === 'email' && input.value.trim()) {
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    if (!emailRegex.test(input.value.trim())) {
-                        showError(input, '请输入有效的电子邮箱地址');
-                        return false;
-                    }
-                }
-                
-                input.classList.add('success');
-                return true;
-            }
-            
-            function showError(input, message) {
-                input.classList.add('error');
-                const errorEl = document.createElement('p');
-                errorEl.className = 'form-error';
-                errorEl.textContent = message;
-                input.parentNode.appendChild(errorEl);
-            }
-            
-            // 保存按钮点击事件
-            document.getElementById('save-btn').addEventListener('click', function() {
-                let isValid = true;
-                
-                formInputs.forEach(input => {
-                    if (input.hasAttribute('required')) {
-                        if (!validateInput(input)) {
-                            isValid = false;
-                        }
-                    }
-                });
-                
-                if (isValid) {
-                    // 更新最后修改时间
-                    const now = new Date();
-                    const formattedTime = now.getFullYear() + '-' + 
-                                         String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-                                         String(now.getDate()).padStart(2, '0') + ' ' + 
-                                         String(now.getHours()).padStart(2, '0') + ':' + 
-                                         String(now.getMinutes()).padStart(2, '0') + ':' + 
-                                         String(now.getSeconds()).padStart(2, '0');
-                    document.getElementById('update-time').value = formattedTime;
-                    
-                    // 显示成功提示
-                    const toast = document.getElementById('success-toast');
-                    toast.classList.remove('translate-y-20', 'opacity-0');
-                    
-                    setTimeout(() => {
-                        toast.classList.add('translate-y-20', 'opacity-0');
-                    }, 3000);
-                }
-            });
-            
-            // 侧边栏菜单切换
-            const sidebarItems = document.querySelectorAll('.sidebar-icon');
-            sidebarItems.forEach(item => {
-                item.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    sidebarItems.forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
-        });
-    </script>
+
 </body>
 </html>
     
