@@ -2029,9 +2029,12 @@ async def get_members(request: Request):
             cursor.execute(count_query, params)
             total = cursor.fetchone()[0]
 
-            # 获取成员列表
+            # 获取成员信息列表
             query = f"""
-                SELECT id, username, role, email, phone, student_id, research_direction, status, created_at
+                SELECT id, username, role, created_at, updated_at, email, phone,
+                       student_id, research_direction, status, graduation_status,
+                       supervisor, degree_type, work_location, work_company,
+                       personal_bio, personal_homepage, gender, id_card, bank_card
                 FROM users
                 {where_clause}
                 ORDER BY created_at DESC
@@ -2045,14 +2048,14 @@ async def get_members(request: Request):
             for row in rows:
                 member = dict(row)
                 # 为前端添加必要的字段
-                member['studentId'] = member.get('student_id', str(member['id']))  # 使用student_id或id作为学号
-                member['name'] = member['username']  # 使用username作为姓名
+                member['student_id'] = member.get('student_id', str(member['id']))  # 使用student_id或id作为学号
+                member['username'] = member['username']  # 使用username作为姓名
                 member['email'] = member.get('email', f"{member['username']}@example.com")  # 使用真实邮箱或生成示例邮箱
                 member['phone'] = member.get('phone', '13800138000')  # 使用真实手机号或示例手机号
                 member['status'] = member.get('status', 'active')  # 使用真实状态
-                member['research'] = member.get('research_direction', '未设置研究方向')  # 使用真实研究方向
+                member['research_direction'] = member.get('research_direction', '未设置研究方向')  # 使用真实研究方向
                 member['avatar'] = f"https://picsum.photos/seed/{member['username']}/100/100.jpg"  # 生成头像
-                member['joinDate'] = member['created_at'].split(' ')[0]  # 只取日期部分
+                member['created_at'] = member['created_at'].split(' ')[0]  # 只取日期部分
                 members.append(member)
 
             # 计算分页信息
