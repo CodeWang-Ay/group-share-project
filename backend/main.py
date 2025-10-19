@@ -2236,6 +2236,157 @@ async def update_member_status(member_id: int, request: Request):
         )
 
 
+# API端点：更新成员信息
+@app.put("/api/members/{member_id}")
+async def update_member_info(member_id: int, request: Request):
+    """
+    更新成员信息API端点
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        # 获取更新数据
+        data = await request.json()
+
+        # 允许更新的字段
+        allowed_fields = [
+            'username', 'email', 'phone', 'student_id', 'role',
+            'research_direction', 'personal_bio', 'gender',
+            'id_card', 'bank_card', 'status'
+        ]
+
+        # 过滤出允许更新的字段
+        update_data = {}
+        for field in allowed_fields:
+            if field in data and data[field] is not None:
+                update_data[field] = data[field]
+
+        if not update_data:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "没有提供要更新的数据",
+                    "error": "NO_DATA"
+                }
+            )
+
+        # 验证角色
+        if 'role' in update_data and update_data['role'] not in ['admin', 'teacher', 'student']:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "角色值无效",
+                    "error": "INVALID_ROLE"
+                }
+            )
+
+        # 验证状态
+        if 'status' in update_data and update_data['status'] not in ['active', 'inactive']:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "状态值无效",
+                    "error": "INVALID_STATUS"
+                }
+            )
+
+        # 验证身份证号格式
+        if 'id_card' in update_data and update_data['id_card']:
+            id_card = update_data['id_card']
+            if len(id_card) != 18:
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    content={
+                        "success": False,
+                        "message": "身份证号必须为18位",
+                        "error": "INVALID_ID_CARD"
+                    }
+                )
+
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # 检查成员是否存在
+            cursor.execute("SELECT id FROM users WHERE id = ?", (member_id,))
+            if not cursor.fetchone():
+                return JSONResponse(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    content={
+                        "success": False,
+                        "message": "成员不存在",
+                        "error": "MEMBER_NOT_FOUND"
+                    }
+                )
+
+            # 如果更新用户名，检查是否重复
+            if 'username' in update_data:
+                cursor.execute("SELECT id FROM users WHERE username = ? AND id != ?",
+                              (update_data['username'], member_id))
+                if cursor.fetchone():
+                    return JSONResponse(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        content={
+                            "success": False,
+                            "message": "用户名已存在",
+                            "error": "USERNAME_EXISTS"
+                        }
+                    )
+
+            # 构建更新语句
+            set_clause = ", ".join([f"{field} = ?" for field in update_data.keys()])
+            values = list(update_data.values()) + [member_id]
+
+            # 更新数据
+            cursor.execute(f"""
+                UPDATE users
+                SET {set_clause}, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """, values)
+
+            if cursor.rowcount == 0:
+                return JSONResponse(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    content={
+                        "success": False,
+                        "message": "成员不存在或更新失败",
+                        "error": "UPDATE_FAILED"
+                    }
+                )
+
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content={
+                    "success": True,
+                    "message": "成员信息更新成功",
+                    "data": update_data
+                }
+            )
+
+    except Exception as e:
+        logger.error(f"更新成员信息失败：{e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "更新成员信息失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
 # API端点：删除成员
 @app.delete("/api/members/{member_id}")
 async def delete_member(member_id: int, request: Request):

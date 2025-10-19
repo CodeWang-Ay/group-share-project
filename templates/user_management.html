@@ -984,6 +984,135 @@
         }
 
         // 成员操作函数
+        async function saveMemberChanges() {
+            const form = document.getElementById('edit-member-form');
+            const submitBtn = document.getElementById('submit-edit-member');
+            const originalText = submitBtn.innerHTML;
+
+            try {
+                // 禁用提交按钮，显示加载状态
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-1"></i>保存中...';
+
+                // 获取表单数据
+                const formData = new FormData(form);
+                const memberId = parseInt(formData.get('user_id'));
+
+                // 构建要发送的数据
+                const updateData = {
+                    username: formData.get('username'),
+                    student_id: formData.get('student_id'),
+                    email: formData.get('email'),
+                    phone: formData.get('phone'),
+                    role: formData.get('role'),
+                    status: formData.get('status'),
+                    research_direction: formData.get('research_direction'),
+                    personal_bio: formData.get('personal_bio'),
+                    gender: formData.get('gender'),
+                    id_card: formData.get('id_card'),
+                    bank_card: formData.get('bank_card')
+                };
+
+                // 过滤掉空值
+                Object.keys(updateData).forEach(key => {
+                    if (updateData[key] === '' || updateData[key] === null || updateData[key] === undefined) {
+                        delete updateData[key];
+                    }
+                });
+
+                // 发送API请求
+                const response = await fetch(`/api/members/${memberId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // 关闭模态框
+                    document.getElementById('edit-member-modal').classList.add('hidden');
+
+                    // 显示成功消息
+                    showSuccessToast('成员信息更新成功！');
+
+                    // 刷新成员列表
+                    await fetchMembers();
+                } else {
+                    // 显示错误消息
+                    showErrorToast(`更新失败: ${result.message}`);
+                }
+
+            } catch (error) {
+                console.error('保存成员信息失败:', error);
+                showErrorToast('网络错误，请稍后重试');
+            } finally {
+                // 恢复提交按钮状态
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        }
+
+        // 表单验证函数
+        function validateMemberForm() {
+            const form = document.getElementById('edit-member-form');
+
+            // 验证必填字段
+            const requiredFields = ['username', 'student_id', 'email'];
+            for (const fieldName of requiredFields) {
+                const field = form.querySelector(`[name="${fieldName}"]`);
+                if (field && !field.value.trim()) {
+                    field.focus();
+                    showErrorToast(`请填写${getFieldLabel(fieldName)}`);
+                    return false;
+                }
+            }
+
+            // 验证邮箱格式
+            const emailField = form.querySelector('[name="email"]');
+            if (emailField && emailField.value) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(emailField.value)) {
+                    emailField.focus();
+                    showErrorToast('请填写正确的邮箱格式');
+                    return false;
+                }
+            }
+
+            // 验证身份证号格式
+            const idCardField = form.querySelector('[name="id_card"]');
+            if (idCardField && idCardField.value) {
+                const idCard = idCardField.value.trim();
+                if (idCard.length !== 18) {
+                    idCardField.focus();
+                    showErrorToast('身份证号必须为18位');
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // 获取字段标签
+        function getFieldLabel(fieldName) {
+            const labels = {
+                'username': '姓名',
+                'student_id': '学号/工号',
+                'email': '邮箱',
+                'phone': '手机号',
+                'role': '角色',
+                'status': '状态',
+                'research_direction': '研究方向',
+                'personal_bio': '个人简介',
+                'gender': '性别',
+                'id_card': '身份证号',
+                'bank_card': '银行卡号'
+            };
+            return labels[fieldName] || fieldName;
+        }
+
         function editMember(memberId) {
             const member = members.find(m => m.id === memberId);
             if (!member) return;
@@ -1262,12 +1391,10 @@
                 document.getElementById('edit-member-modal').classList.add('hidden');
             });
 
-            document.getElementById('submit-edit-member').addEventListener('click', () => {
+            document.getElementById('submit-edit-member').addEventListener('click', async () => {
                 const form = document.getElementById('edit-member-form');
-                if (form.checkValidity()) {
-                    // 这里应该添加实际的编辑逻辑
-                    showSuccessToast('成员信息更新成功！');
-                    document.getElementById('edit-member-modal').classList.add('hidden');
+                if (form.checkValidity() && validateMemberForm()) {
+                    await saveMemberChanges();
                 } else {
                     form.reportValidity();
                 }
