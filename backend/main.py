@@ -543,7 +543,7 @@ async def register_page(request: Request):
 
 
 # 共享文件页面路由
-@app.get("/share-file", response_class=HTMLResponse)
+@app.get("/share_file", response_class=HTMLResponse)
 async def share_file_page(request: Request):
     """
     共享文件页面路由
@@ -558,7 +558,7 @@ async def share_file_page(request: Request):
         return RedirectResponse(url="/login", status_code=302)
 
     # 已登录，显示共享文件页面
-    return templates.TemplateResponse("share-file.html", {
+    return templates.TemplateResponse("share_file.html", {
         "request": request,
         "user": current_user
     })
@@ -1944,7 +1944,7 @@ async def clear_all_sessions():
         )
 
 # 成员管理页面路由
-@app.get("/member-management", response_class=HTMLResponse)
+@app.get("/user_management", response_class=HTMLResponse)
 async def member_management_page(request: Request):
     """
     成员管理页面路由
@@ -1959,7 +1959,7 @@ async def member_management_page(request: Request):
         return RedirectResponse(url="/login", status_code=302)
 
     # 已登录，显示成员管理页面
-    return templates.TemplateResponse("member-management.html", {
+    return templates.TemplateResponse("user_management.html", {
         "request": request,
         "user": current_user
     })
