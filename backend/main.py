@@ -2,7 +2,7 @@
 FastAPI应用主入口
 提供用户认证系统的API服务
 """
-
+import bcrypt
 from fastapi import FastAPI, Request, Depends, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -121,6 +121,7 @@ async def get_current_user(request: Request) -> Optional[User]:
     """
     # 从请求头中获取会话令牌
     session_token = request.headers.get("Authorization")
+    logger.info(f"当前用户session_token: {session_token}")
     if session_token and session_token.startswith("Bearer "):
         session_token = session_token[7:]  # 移除 "Bearer " 前缀
 
@@ -855,6 +856,131 @@ async def get_current_user_info(request: Request):
     )
 
 
+# API端点：修改密码
+@app.put("/api/auth/change-password")
+async def change_password(request: Request):
+    """
+    修改用户密码API端点
+    """
+    # 检查用户登录状态
+    logger.info("修改密码页面....")
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        # 获取请求数据
+        data = await request.json()
+        old_password = data.get("old_password")
+        new_password = data.get("new_password")
+        confirm_password = data.get("confirm_password")
+
+        # 验证输入
+        if not old_password or not new_password or not confirm_password:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "请填写完整的密码信息",
+                    "error": "VALIDATION_ERROR"
+                }
+            )
+
+        # 验证新密码长度
+        if len(new_password) < 6:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "新密码长度至少为6位",
+                    "error": "PASSWORD_TOO_SHORT"
+                }
+            )
+
+        # 验证新密码与确认密码是否一致
+        if new_password != confirm_password:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "新密码与确认密码不一致",
+                    "error": "PASSWORD_MISMATCH"
+                }
+            )
+
+        # 验证新密码不能与旧密码相同
+        if old_password == new_password:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "新密码不能与当前密码相同",
+                    "error": "SAME_PASSWORD"
+                }
+            )
+
+        # 验证旧密码是否正确
+        if not AuthService.authenticate_user(current_user.username, old_password):
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "当前密码不正确",
+                    "error": "INVALID_OLD_PASSWORD"
+                }
+            )
+
+        # 生成新密码的哈希值
+        # new_password_hash = User.hash_password(new_password)
+        password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+
+        # 更新数据库中的密码
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                (password_hash.decode('utf-8'), current_user.id)
+            )
+
+            if cursor.rowcount == 0:
+                return JSONResponse(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    content={
+                        "success": False,
+                        "message": "用户不存在",
+                        "error": "USER_NOT_FOUND"
+                    }
+                )
+
+        print(f"密码修改成功: user={current_user.username}")
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": "密码修改成功，请使用新密码登录"
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"修改密码失败: {str(e)}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "修改密码过程中发生错误",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
 # API端点：获取用户详细个人资料
 @app.get("/api/user/profile")
 async def get_user_profile(request: Request):
@@ -863,6 +989,7 @@ async def get_user_profile(request: Request):
     包含用户表中的所有字段
     """
     # 检查用户登录状态
+    logger.info("用户详细个人资料页面")
     current_user = await get_current_user(request)
     if not current_user:
         return JSONResponse(
@@ -931,6 +1058,7 @@ async def update_user_profile(request: Request):
     更新用户个人资料信息
     """
     # 检查用户登录状态
+    logger.info("更新用户个人资料")
     current_user = await get_current_user(request)
     if not current_user:
         return JSONResponse(
