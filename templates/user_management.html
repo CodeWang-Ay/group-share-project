@@ -642,13 +642,21 @@
                 </div>
 
                 <!-- 模态框底部 -->
-                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
-                    <button id="cancel-edit-member" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
-                        取消
-                    </button>
-                    <button id="submit-edit-member" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
-                        保存更改
-                    </button>
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between gap-3">
+                    <div class="flex gap-3">
+                        <button id="reset-password-btn" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors flex items-center gap-2">
+                            <i class="fa fa-key"></i>
+                            <span>重置密码</span>
+                        </button>
+                    </div>
+                    <div class="flex gap-3">
+                        <button id="cancel-edit-member" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                            取消
+                        </button>
+                        <button id="submit-edit-member" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                            保存更改
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -673,6 +681,45 @@
                             </button>
                             <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
                                 确认删除
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 重置密码模态框 -->
+    <div id="reset-password-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl max-w-md w-full">
+                <div class="p-6">
+                    <div class="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full mx-auto mb-4">
+                        <i class="fa fa-key text-yellow-600"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 text-center mb-2">重置密码</h3>
+                    <p class="text-gray-600 text-center mb-4">确定要重置成员 <span id="reset-member-name" class="font-medium"></span> 的密码吗？</p>
+
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">新密码</label>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="new-password-input" value="123456" readonly
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600">
+                            <button id="copy-password-btn" class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                                <i class="fa fa-copy"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">默认密码为 "123456"，可以复制后告知用户</p>
+                    </div>
+
+                    <form id="reset-password-form">
+                        <input type="hidden" name="memberId">
+                        <div class="flex justify-center gap-3">
+                            <button type="button" id="cancel-reset-password" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                                取消
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
+                                确认重置
                             </button>
                         </div>
                     </form>
@@ -846,7 +893,10 @@
                                 <button onclick="editMember(${member.id})" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors">
                                     <i class="fa fa-edit"></i>
                                 </button>
-                                <button onclick="toggleMemberStatus(${member.id})" class="p-1 ${member.status === 'active' ? 'text-yellow-600 hover:bg-yellow-50' : 'text-green-600 hover:bg-green-50'} rounded transition-colors">
+                                <button onclick="quickResetPassword(${member.id})" class="p-1 text-orange-600 hover:bg-orange-50 rounded transition-colors" title="重置密码">
+                                    <i class="fa fa-key"></i>
+                                </button>
+                                <button onclick="toggleMemberStatus(${member.id})" class="p-1 ${member.status === 'active' ? 'text-gray-600 hover:bg-gray-50' : 'text-green-600 hover:bg-green-50'} rounded transition-colors">
                                     <i class="fa fa-${member.status === 'active' ? 'ban' : 'check-circle'}"></i>
                                 </button>
                                 <button onclick="deleteMember(${member.id})" class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors">
@@ -858,10 +908,9 @@
                                     </button>
                                     <div id="member-menu-${member.id}" class="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 hidden z-10">
                                         <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">查看详情</a>
-                                        <a href="#" onclick="toggleMemberStatus(${member.id})" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                            ${member.status === 'active' ? '禁用账号' : '启用账号'}
+                                        <a href="#" onclick="quickResetPassword(${member.id})" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                            <i class="fa fa-key mr-2 text-yellow-500"></i>重置密码
                                         </a>
-                                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">重置密码</a>
                                         <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">发送消息</a>
                                     </div>
                                 </div>
@@ -909,7 +958,10 @@
                         <button onclick="editMember(${member.id})" class="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors">
                             <i class="fa fa-edit mr-1"></i>编辑
                         </button>
-                        <button onclick="toggleMemberStatus(${member.id})" class="px-3 py-1 text-sm ${member.status === 'active' ? 'text-yellow-600 hover:bg-yellow-50' : 'text-green-600 hover:bg-green-50'} rounded transition-colors">
+                        <button onclick="quickResetPassword(${member.id})" class="px-3 py-1 text-sm text-orange-600 hover:bg-orange-50 rounded transition-colors">
+                            <i class="fa fa-key mr-1"></i>重置
+                        </button>
+                        <button onclick="toggleMemberStatus(${member.id})" class="px-3 py-1 text-sm ${member.status === 'active' ? 'text-gray-600 hover:bg-gray-50' : 'text-green-600 hover:bg-green-50'} rounded transition-colors">
                             <i class="fa fa-${member.status === 'active' ? 'ban' : 'check-circle'} mr-1"></i>${member.status === 'active' ? '禁用' : '启用'}
                         </button>
                         <button onclick="deleteMember(${member.id})" class="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded transition-colors">
@@ -1170,6 +1222,70 @@
             }
         }
 
+        // 重置密码功能
+        async function resetMemberPassword(memberId) {
+            const member = members.find(m => m.id === memberId);
+            if (!member) return;
+
+            const newPassword = '123456'; // 默认重置密码
+
+            try {
+                const response = await fetch(`/api/members/${memberId}/reset-password`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        password: newPassword
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // 关闭重置密码模态框
+                    document.getElementById('reset-password-modal').classList.add('hidden');
+
+                    // 显示成功消息，包含新密码
+                    showPasswordToast(`密码重置成功！新密码: ${newPassword}`, newPassword);
+
+                    // 刷新成员列表
+                    await fetchMembers();
+                } else {
+                    showErrorToast(`重置密码失败: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('重置密码失败:', error);
+                showErrorToast('网络错误，请稍后重试');
+            }
+        }
+
+        // 复制密码到剪贴板
+        async function copyPassword() {
+            const passwordInput = document.getElementById('new-password-input');
+            const copyBtn = document.getElementById('copy-password-btn');
+
+            try {
+                await navigator.clipboard.writeText(passwordInput.value);
+
+                // 临时更改按钮文本
+                const originalHTML = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fa fa-check"></i>';
+                copyBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                copyBtn.classList.add('bg-green-500');
+
+                // 2秒后恢复
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                    copyBtn.classList.remove('bg-green-500');
+                    copyBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+                }, 2000);
+            } catch (err) {
+                console.error('复制失败:', err);
+                showErrorToast('复制失败，请手动复制');
+            }
+        }
+
         // 添加成员表单验证函数
         function validateAddMemberForm() {
             const form = document.getElementById('add-member-form');
@@ -1241,6 +1357,20 @@
             return labels[fieldName] || fieldName;
         }
 
+        // 快速重置密码（从成员菜单调用）
+        function quickResetPassword(memberId) {
+            const member = members.find(m => m.id === memberId);
+            if (!member) return;
+
+            // 关闭菜单
+            document.getElementById(`member-menu-${memberId}`).classList.add('hidden');
+
+            // 显示重置密码模态框
+            document.getElementById('reset-member-name').textContent = member.username;
+            document.getElementById('reset-password-form').elements['memberId'].value = member.id;
+            document.getElementById('reset-password-modal').classList.remove('hidden');
+        }
+
         function editMember(memberId) {
             const member = members.find(m => m.id === memberId);
             if (!member) return;
@@ -1265,7 +1395,7 @@
             const member = members.find(m => m.id === memberId);
             if (!member) return;
 
-            document.getElementById('delete-member-name').textContent = member.name;
+            document.getElementById('delete-member-name').textContent = member.username;
             document.getElementById('delete-member-form').elements['memberId'].value = member.id;
             document.getElementById('delete-member-modal').classList.remove('hidden');
         }
@@ -1345,6 +1475,37 @@
             setTimeout(() => {
                 toast.classList.add('translate-x-full');
             }, 3000);
+        }
+
+        // 密码重置成功提示（显示更长时间，包含密码信息）
+        function showPasswordToast(message, password) {
+            // 创建密码重置成功提示元素
+            const passwordToast = document.createElement('div');
+            passwordToast.className = 'fixed top-20 right-4 bg-yellow-500 text-white px-4 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50';
+            passwordToast.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fa fa-key"></i>
+                    <div>
+                        <div class="font-medium">${message}</div>
+                        <div class="text-xs opacity-90 mt-1">新密码: ${password}</div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(passwordToast);
+
+            // 显示提示
+            setTimeout(() => {
+                passwordToast.classList.remove('translate-x-full');
+            }, 100);
+
+            // 8秒后隐藏（比普通提示显示更长时间）
+            setTimeout(() => {
+                passwordToast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(passwordToast);
+                }, 300);
+            }, 8000);
         }
 
         function showErrorToast(message) {
@@ -1523,6 +1684,31 @@
                 } else {
                     form.reportValidity();
                 }
+            });
+
+            // 重置密码模态框事件
+            document.getElementById('reset-password-btn').addEventListener('click', () => {
+                const form = document.getElementById('edit-member-form');
+                const memberId = parseInt(form.elements['user_id'].value);
+                const member = members.find(m => m.id === memberId);
+
+                if (member) {
+                    document.getElementById('reset-member-name').textContent = member.username;
+                    document.getElementById('reset-password-form').elements['memberId'].value = member.id;
+                    document.getElementById('reset-password-modal').classList.remove('hidden');
+                }
+            });
+
+            document.getElementById('cancel-reset-password').addEventListener('click', () => {
+                document.getElementById('reset-password-modal').classList.add('hidden');
+            });
+
+            document.getElementById('copy-password-btn').addEventListener('click', copyPassword);
+
+            document.getElementById('reset-password-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const memberId = parseInt(e.target.elements['memberId'].value);
+                await resetMemberPassword(memberId);
             });
 
             // 删除成员模态框

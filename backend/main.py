@@ -2660,6 +2660,116 @@ async def delete_member(member_id: int, request: Request):
         )
 
 
+# API端点：重置成员密码
+@app.put("/api/members/{member_id}/reset-password")
+async def reset_member_password(member_id: int, request: Request):
+    """
+    重置成员密码API端点（管理员专用）
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        # 只有管理员可以重置密码
+        if current_user.role != "admin":
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": "没有权限重置密码",
+                    "error": "ACCESS_DENIED"
+                }
+            )
+
+        # 获取请求数据
+        data = await request.json()
+        new_password = data.get("password", "123456")  # 默认密码为123456
+
+        # 验证密码长度
+        if len(new_password) < 6:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "密码长度至少为6位",
+                    "error": "PASSWORD_TOO_SHORT"
+                }
+            )
+
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # 检查成员是否存在
+            cursor.execute("SELECT username FROM users WHERE id = ?", (member_id,))
+            member_data = cursor.fetchone()
+            if not member_data:
+                return JSONResponse(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    content={
+                        "success": False,
+                        "message": "成员不存在",
+                        "error": "MEMBER_NOT_FOUND"
+                    }
+                )
+
+            member_username = member_data[0]
+
+            # 生成新密码的哈希值
+            password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+
+            # 更新密码
+            cursor.execute(
+                "UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                (password_hash.decode('utf-8'), member_id)
+            )
+
+            if cursor.rowcount == 0:
+                return JSONResponse(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    content={
+                        "success": False,
+                        "message": "密码重置失败",
+                        "error": "UPDATE_FAILED"
+                    }
+                )
+
+            # 记录操作日志
+            logger.info(f"管理员 {current_user.username} 重置了用户 {member_username} (ID: {member_id}) 的密码")
+
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content={
+                    "success": True,
+                    "message": "密码重置成功",
+                    "data": {
+                        "new_password": new_password,
+                        "member_id": member_id,
+                        "member_username": member_username
+                    }
+                }
+            )
+
+    except Exception as e:
+        logger.error(f"重置密码失败：{e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "重置密码失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
 # 共享文件页面路由
 @app.get("/academic_website", response_class=HTMLResponse)
 async def share_file_page(request: Request):
