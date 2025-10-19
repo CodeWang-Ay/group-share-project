@@ -2184,6 +2184,17 @@ async def update_member_status(member_id: int, request: Request):
             }
         )
 
+    # 只有管理员可以更新成员状态
+    if current_user.role != "admin":
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={
+                "success": False,
+                "message": "没有权限修改成员状态",
+                "error": "ACCESS_DENIED"
+            }
+        )
+
     try:
         data = await request.json()
         new_status = data.get("status")

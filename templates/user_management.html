@@ -644,10 +644,12 @@
                 <!-- 模态框底部 -->
                 <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between gap-3">
                     <div class="flex gap-3">
+                        {% if user.role == 'admin' %}
                         <button id="reset-password-btn" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors flex items-center gap-2">
                             <i class="fa fa-key"></i>
                             <span>重置密码</span>
                         </button>
+                        {% endif %}
                     </div>
                     <div class="flex gap-3">
                         <button id="cancel-edit-member" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
@@ -754,6 +756,7 @@
         let totalMembers = 0;
         let sortField = 'name';
         let sortOrder = 'asc';
+        let currentUserRole = '{{ user.role }}'; // 获取当前用户角色
 
         // API调用函数
         async function fetchMembers() {
@@ -893,24 +896,28 @@
                                 <button onclick="editMember(${member.id})" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors">
                                     <i class="fa fa-edit"></i>
                                 </button>
-                                <button onclick="quickResetPassword(${member.id})" class="p-1 text-orange-600 hover:bg-orange-50 rounded transition-colors" title="重置密码">
-                                    <i class="fa fa-key"></i>
-                                </button>
-                                <button onclick="toggleMemberStatus(${member.id})" class="p-1 ${member.status === 'active' ? 'text-gray-600 hover:bg-gray-50' : 'text-green-600 hover:bg-green-50'} rounded transition-colors">
-                                    <i class="fa fa-${member.status === 'active' ? 'ban' : 'check-circle'}"></i>
-                                </button>
-                                <button onclick="deleteMember(${member.id})" class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors">
-                                    <i class="fa fa-trash"></i>
-                                </button>
+                                ${currentUserRole === 'admin' ? `
+                                    <button onclick="quickResetPassword(${member.id})" class="p-1 text-orange-600 hover:bg-orange-50 rounded transition-colors" title="重置密码">
+                                        <i class="fa fa-key"></i>
+                                    </button>
+                                    <button onclick="toggleMemberStatus(${member.id})" class="p-1 ${member.status === 'active' ? 'text-gray-600 hover:bg-gray-50' : 'text-green-600 hover:bg-green-50'} rounded transition-colors">
+                                        <i class="fa fa-${member.status === 'active' ? 'ban' : 'check-circle'}"></i>
+                                    </button>
+                                    <button onclick="deleteMember(${member.id})" class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                ` : ''}
                                 <div class="relative">
                                     <button onclick="toggleMemberMenu(${member.id})" class="p-1 text-gray-600 hover:bg-gray-50 rounded transition-colors">
                                         <i class="fa fa-ellipsis-v"></i>
                                     </button>
                                     <div id="member-menu-${member.id}" class="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 hidden z-10">
                                         <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">查看详情</a>
-                                        <a href="#" onclick="quickResetPassword(${member.id})" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                            <i class="fa fa-key mr-2 text-yellow-500"></i>重置密码
-                                        </a>
+                                        ${currentUserRole === 'admin' ? `
+                                            <a href="#" onclick="quickResetPassword(${member.id})" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                                <i class="fa fa-key mr-2 text-yellow-500"></i>重置密码
+                                            </a>
+                                        ` : ''}
                                         <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">发送消息</a>
                                     </div>
                                 </div>
@@ -958,15 +965,17 @@
                         <button onclick="editMember(${member.id})" class="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors">
                             <i class="fa fa-edit mr-1"></i>编辑
                         </button>
-                        <button onclick="quickResetPassword(${member.id})" class="px-3 py-1 text-sm text-orange-600 hover:bg-orange-50 rounded transition-colors">
-                            <i class="fa fa-key mr-1"></i>重置
-                        </button>
-                        <button onclick="toggleMemberStatus(${member.id})" class="px-3 py-1 text-sm ${member.status === 'active' ? 'text-gray-600 hover:bg-gray-50' : 'text-green-600 hover:bg-green-50'} rounded transition-colors">
-                            <i class="fa fa-${member.status === 'active' ? 'ban' : 'check-circle'} mr-1"></i>${member.status === 'active' ? '禁用' : '启用'}
-                        </button>
-                        <button onclick="deleteMember(${member.id})" class="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded transition-colors">
-                            <i class="fa fa-trash mr-1"></i>删除
-                        </button>
+                        ${currentUserRole === 'admin' ? `
+                            <button onclick="quickResetPassword(${member.id})" class="px-3 py-1 text-sm text-orange-600 hover:bg-orange-50 rounded transition-colors">
+                                <i class="fa fa-key mr-1"></i>重置
+                            </button>
+                            <button onclick="toggleMemberStatus(${member.id})" class="px-3 py-1 text-sm ${member.status === 'active' ? 'text-gray-600 hover:bg-gray-50' : 'text-green-600 hover:bg-green-50'} rounded transition-colors">
+                                <i class="fa fa-${member.status === 'active' ? 'ban' : 'check-circle'} mr-1"></i>${member.status === 'active' ? '禁用' : '启用'}
+                            </button>
+                            <button onclick="deleteMember(${member.id})" class="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded transition-colors">
+                                <i class="fa fa-trash mr-1"></i>删除
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
             `).join('');
@@ -1686,18 +1695,21 @@
                 }
             });
 
-            // 重置密码模态框事件
-            document.getElementById('reset-password-btn').addEventListener('click', () => {
-                const form = document.getElementById('edit-member-form');
-                const memberId = parseInt(form.elements['user_id'].value);
-                const member = members.find(m => m.id === memberId);
+            // 重置密码模态框事件（仅管理员）
+            const resetPasswordBtn = document.getElementById('reset-password-btn');
+            if (resetPasswordBtn) {
+                resetPasswordBtn.addEventListener('click', () => {
+                    const form = document.getElementById('edit-member-form');
+                    const memberId = parseInt(form.elements['user_id'].value);
+                    const member = members.find(m => m.id === memberId);
 
-                if (member) {
-                    document.getElementById('reset-member-name').textContent = member.username;
-                    document.getElementById('reset-password-form').elements['memberId'].value = member.id;
-                    document.getElementById('reset-password-modal').classList.remove('hidden');
-                }
-            });
+                    if (member) {
+                        document.getElementById('reset-member-name').textContent = member.username;
+                        document.getElementById('reset-password-form').elements['memberId'].value = member.id;
+                        document.getElementById('reset-password-modal').classList.remove('hidden');
+                    }
+                });
+            }
 
             document.getElementById('cancel-reset-password').addEventListener('click', () => {
                 document.getElementById('reset-password-modal').classList.add('hidden');
