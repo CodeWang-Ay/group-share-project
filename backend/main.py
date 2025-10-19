@@ -2387,6 +2387,214 @@ async def update_member_info(member_id: int, request: Request):
         )
 
 
+# API端点：添加成员
+@app.post("/api/members")
+async def create_member(request: Request):
+    """
+    添加成员API端点（管理员专用）
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    # 只有管理员可以添加成员
+    if current_user.role != "admin":
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={
+                "success": False,
+                "message": "没有权限添加成员",
+                "error": "ACCESS_DENIED"
+            }
+        )
+
+    try:
+        # 获取请求数据
+        data = await request.json()
+
+        # 必填字段验证
+        required_fields = ['username', 'password', 'email', 'role']
+        for field in required_fields:
+            if not data.get(field) or data.get(field).strip() == '':
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    content={
+                        "success": False,
+                        "message": f"请填写{getFieldLabel(field)}",
+                        "error": "MISSING_FIELD"
+                    }
+                )
+
+        username = data.get('username', '').strip()
+        password = data.get('password', '').strip()
+        email = data.get('email', '').strip()
+        phone = data.get('phone', '').strip()
+        student_id = data.get('student_id', '').strip()
+        role = data.get('role', '').strip()
+
+        # 验证角色
+        if role not in ['admin', 'teacher', 'student']:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "角色值无效",
+                    "error": "INVALID_ROLE"
+                }
+            )
+
+        # 验证用户名格式
+        if not User.is_valid_username(username):
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "用户名格式不正确：3-50个字符，只允许字母、数字、下划线",
+                    "error": "INVALID_USERNAME"
+                }
+            )
+
+        # 验证密码长度
+        if len(password) < 6:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "密码长度至少为6位",
+                    "error": "PASSWORD_TOO_SHORT"
+                }
+            )
+
+        # 验证邮箱格式
+        import re
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, email):
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "邮箱格式不正确",
+                    "error": "INVALID_EMAIL"
+                }
+            )
+
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # 检查用户名是否已存在
+            cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+            if cursor.fetchone():
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    content={
+                        "success": False,
+                        "message": "用户名已存在",
+                        "error": "USERNAME_EXISTS"
+                    }
+                )
+
+            # 检查邮箱是否已存在
+            cursor.execute("SELECT id FROM users WHERE email = ?", (email,))
+            if cursor.fetchone():
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    content={
+                        "success": False,
+                        "message": "邮箱已存在",
+                        "error": "EMAIL_EXISTS"
+                    }
+                )
+
+            # 检查学号是否已存在（如果提供了学号）
+            if student_id:
+                cursor.execute("SELECT id FROM users WHERE student_id = ?", (student_id,))
+                if cursor.fetchone():
+                    return JSONResponse(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        content={
+                            "success": False,
+                            "message": "学号/工号已存在",
+                            "error": "STUDENT_ID_EXISTS"
+                        }
+                    )
+
+            # 创建新用户
+            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+            # 插入新用户数据
+            cursor.execute("""
+                INSERT INTO users (
+                    username, password_hash, email, phone, student_id, role,
+                    research_direction, personal_bio, gender, id_card, bank_card,
+                    status, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            """, (
+                username,
+                password_hash.decode('utf-8'),
+                email,
+                phone if phone else None,
+                student_id if student_id else None,
+                role,
+                data.get('research_direction'),
+                data.get('personal_bio'),
+                data.get('gender'),
+                data.get('id_card'),
+                data.get('bank_card')
+            ))
+
+            # 获取新创建的用户ID
+            cursor.execute("SELECT last_insert_rowid()")
+            new_user_id = cursor.fetchone()[0]
+
+            logger.info(f"管理员 {current_user.username} 创建了新用户: {username} (ID: {new_user_id})")
+
+            return JSONResponse(
+                status_code=status.HTTP_201_CREATED,
+                content={
+                    "success": True,
+                    "message": "成员添加成功",
+                    "data": {
+                        "id": new_user_id,
+                        "username": username,
+                        "email": email,
+                        "role": role,
+                        "student_id": student_id
+                    }
+                }
+            )
+
+    except Exception as e:
+        logger.error(f"添加成员失败：{e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "添加成员失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+# 辅助函数：获取字段标签
+def getFieldLabel(field):
+    labels = {
+        'username': '用户名',
+        'password': '密码',
+        'email': '邮箱',
+        'phone': '手机号',
+        'student_id': '学号/工号',
+        'role': '角色'
+    }
+    return labels.get(field, field)
+
+
 # API端点：删除成员
 @app.delete("/api/members/{member_id}")
 async def delete_member(member_id: int, request: Request):
