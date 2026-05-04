@@ -543,8 +543,8 @@ async def register_page(request: Request):
 
 
 # 共享文件页面路由
-@app.get("/share_file", response_class=HTMLResponse)
-async def share_file_page(request: Request):
+@app.get("/rm_share_file", response_class=HTMLResponse)
+async def rm_share_file_page(request: Request):
     """
     共享文件页面路由
     需要用户登录才能访问
@@ -558,7 +558,7 @@ async def share_file_page(request: Request):
         return RedirectResponse(url="/login", status_code=302)
 
     # 已登录，显示共享文件页面
-    return templates.TemplateResponse("share_file.html", {
+    return templates.TemplateResponse("rm_share_file.html", {
         "request": request,
         "user": current_user
     })
@@ -1944,7 +1944,7 @@ async def clear_all_sessions():
         )
 
 # 成员管理页面路由
-@app.get("/user_management", response_class=HTMLResponse)
+@app.get("/tm_user_management", response_class=HTMLResponse)
 async def member_management_page(request: Request):
     """
     成员管理页面路由
@@ -1959,7 +1959,7 @@ async def member_management_page(request: Request):
         return RedirectResponse(url="/login", status_code=302)
 
     # 已登录，显示成员管理页面
-    return templates.TemplateResponse("user_management.html", {
+    return templates.TemplateResponse("tm_user_management.html", {
         "request": request,
         "user": current_user
     })
@@ -2791,8 +2791,8 @@ async def reset_member_password(member_id: int, request: Request):
 
 
 # 共享文件页面路由
-@app.get("/academic_website", response_class=HTMLResponse)
-async def share_file_page(request: Request):
+@app.get("/tm_academic_website", response_class=HTMLResponse)
+async def rm_share_file_page(request: Request):
     """
     共享文件页面路由
     需要用户登录才能访问
@@ -2806,14 +2806,14 @@ async def share_file_page(request: Request):
         return RedirectResponse(url="/login", status_code=302)
 
     # 已登录，显示共享文件页面
-    return templates.TemplateResponse("academic_website.html", {
+    return templates.TemplateResponse("tm_academic_website.html", {
         "request": request,
         "user": current_user
     })
 
 # 研究进展页面
-@app.get("/research_progress", response_class=HTMLResponse)
-async def research_progress_page(request: Request):
+@app.get("/tm_research_progress", response_class=HTMLResponse)
+async def tm_research_progress_page(request: Request):
     """
     研究进展页面路由
     需要用户登录才能访问
@@ -2824,14 +2824,14 @@ async def research_progress_page(request: Request):
         from fastapi.responses import RedirectResponse
         return RedirectResponse(url="/login", status_code=302)
 
-    return templates.TemplateResponse("research_progress.html", {
+    return templates.TemplateResponse("tm_research_progress.html", {
         "request": request,
         "user": current_user
     })
 
 # 文献库页面
-@app.get("/paper_database", response_class=HTMLResponse)
-async def paper_database_page(request: Request):
+@app.get("/rm_paper_database", response_class=HTMLResponse)
+async def rm_paper_database_page(request: Request):
     """
     文献库页面路由
     需要用户登录才能访问
@@ -2842,7 +2842,7 @@ async def paper_database_page(request: Request):
         from fastapi.responses import RedirectResponse
         return RedirectResponse(url="/login", status_code=302)
 
-    return templates.TemplateResponse("paper_database.html", {
+    return templates.TemplateResponse("rm_paper_database.html", {
         "request": request,
         "user": current_user
     })
@@ -2902,8 +2902,8 @@ async def gm_meeting_record_page(request: Request):
     })
 
 # 研究任务页面
-@app.get("/research_tasks", response_class=HTMLResponse)
-async def research_tasks_page(request: Request):
+@app.get("/rm_research_tasks", response_class=HTMLResponse)
+async def rm_research_tasks_page(request: Request):
     """
     研究任务页面路由
     需要用户登录才能访问
@@ -2914,7 +2914,7 @@ async def research_tasks_page(request: Request):
         from fastapi.responses import RedirectResponse
         return RedirectResponse(url="/login", status_code=302)
 
-    return templates.TemplateResponse("research_tasks.html", {
+    return templates.TemplateResponse("rm_research_tasks.html", {
         "request": request,
         "user": current_user
     })
@@ -2960,7 +2960,7 @@ async def user_profile_page(request: Request):
     })
 
 @app.get("/edit_password", response_class=HTMLResponse)
-async def share_file_page(request: Request):
+async def rm_share_file_page(request: Request):
     """
     共享文件页面路由
     需要用户登录才能访问
@@ -2980,7 +2980,7 @@ async def share_file_page(request: Request):
     })
 
 @app.get("/settings", response_class=HTMLResponse)
-async def share_file_page(request: Request):
+async def rm_share_file_page(request: Request):
     """
     共享文件页面路由
     需要用户登录才能访问
