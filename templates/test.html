@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>研究进展 - 智能计算实验室</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        neutral: '#f3f4f6',
+                        'neutral-dark': '#4b5563',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .sidebar-icon {
+                @apply flex items-center gap-3 p-3 rounded-lg transition-all duration-200 cursor-pointer;
+            }
+            .sidebar-icon.active {
+                @apply bg-primary/10 text-primary font-medium;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 min-h-screen flex flex-col">
+
+<!-- 顶部导航 完全不变 -->
+<header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <div class="container mx-auto px-4">
+        <div class="flex items-center justify-between h-16">
+            <div class="flex items-center">
+                <button id="mobile-sidebar-toggle" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 mr-2 transition-colors">
+                    <i class="fa fa-bars text-gray-600"></i>
+                </button>
+                <div class="flex-shrink-0 flex items-center gap-2">
+                    <i class="fa fa-flask text-primary text-2xl"></i>
+                    <span class="hidden sm:inline-block text-xl font-semibold text-gray-800">智能计算实验室</span>
+                    <span class="sm:hidden text-lg font-semibold text-gray-800">实验室</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 sm:gap-4">
+                <div class="relative hidden md:block">
+                    <input type="text" placeholder="搜索研究方向/成员姓名"
+                        class="py-2 pl-10 pr-4 rounded-lg bg-gray-100 border-0 focus:ring-2 focus:ring-primary/30 focus:bg-white w-48 lg:w-64 transition-all">
+                    <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <button class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <i class="fa fa-search text-gray-600"></i>
+                </button>
+                <div class="relative cursor-pointer p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <i class="fa fa-bell-o text-gray-600"></i>
+                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                </div>
+                <div class="relative group">
+                    <div class="flex items-center gap-2 cursor-pointer">
+                        <img src="https://picsum.photos/id/100/200/200" alt="用户头像" class="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm">
+                        <span class="hidden md:inline-block font-medium">WJG</span>
+                        <i class="fa fa-chevron-down text-xs text-gray-500"></i>
+                    </div>
+                </div>
+                <button class="hidden sm:flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                    <i class="fa fa-sign-out"></i><span>退出登录</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 flex">
+    <!-- 侧边栏 完全不变 高亮【研究进展】 -->
+    <aside id="sidebar" class="fixed lg:sticky top-16 left-0 z-40 w-64 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto">
+        <div class="lg:hidden sticky top-0 bg-white border-b border-gray-200 p-4 z-10">
+            <div class="flex justify-between items-center">
+                <span class="font-semibold text-gray-800">菜单</span>
+                <button id="mobile-sidebar-close" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <i class="fa fa-times text-gray-600"></i>
+                </button>
+            </div>
+        </div>
+        <div class="p-4">
+            <div class="bg-primary/10 text-primary rounded-lg p-3 mb-6">
+                <div class="flex items-center justify-between">
+                    <span class="font-medium">当前角色</span>
+                    <span class="text-sm bg-primary text-white px-2 py-1 rounded-full">学生</span>
+                </div>
+            </div>
+            <nav>
+                <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3">组会管理</p>
+                <ul class="space-y-1">
+                    <li><a class="sidebar-icon hover:bg-gray-100"><i class="fa fa-dashboard w-5 text-center"></i><span>工作台</span></a></li>
+                    <li><a class="sidebar-icon hover:bg-gray-100"><i class="fa fa-calendar w-5 text-center"></i><span>组会安排</span></a></li>
+                    <li><a class="sidebar-icon hover:bg-gray-100"><i class="fa fa-file-text-o w-5 text-center"></i><span>汇报材料</span></a></li>
+                    <li><a class="sidebar-icon hover:bg-gray-100"><i class="fa fa-comments-o w-5 text-center"></i><span>组会记录</span></a></li>
+                </ul>
+                <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6">资源管理</p>
+                <ul class="space-y-1">
+                    <li><a class="sidebar-icon hover:bg-gray-100"><i class="fa fa-book w-5 text-center"></i><span>文献库</span></a></li>
+                    <li><a class="sidebar-icon hover:bg-gray-100"><i class="fa fa-folder-open-o w-5 text-center"></i><span>共享文件</span></a></li>
+                    <li><a class="sidebar-icon hover:bg-gray-100"><i class="fa fa-tasks w-5 text-center"></i><span>研究任务</span></a></li>
+                </ul>
+                <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6">团队管理</p>
+                <ul class="space-y-1">
+                    <li><a class="sidebar-icon hover:bg-gray-100"><i class="fa fa-users w-5 text-center"></i><span>成员管理</span></a></li>
+                    <li><a class="sidebar-icon hover:bg-gray-100"><i class="fa fa-graduation-cap w-5 text-center"></i><span>学术工具</span></a></li>
+                    <li><a class="sidebar-icon active"><i class="fa fa-line-chart w-5 text-center"></i><span>研究进展</span></a></li>
+                </ul>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- 研究进展 内容区域（按你截图改成表格样式） -->
+    <div class="flex-1 p-4 lg:p-6 overflow-y-auto">
+        <div class="mb-6">
+            <h1 class="text-xl font-bold text-gray-800 mb-2">研究进展</h1>
+            <p class="text-gray-500 mb-6">查看各成员研究方向、阶段进度与科研完成情况</p>
+
+            <!-- 筛选工具栏 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-primary/10 text-primary text-sm rounded-lg">全部成员</span>
+                        <span class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 cursor-pointer">博士生</span>
+                        <span class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 cursor-pointer">硕士生</span>
+                        <span class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 cursor-pointer">进度预警</span>
+                    </div>
+                    <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2">
+                        <i class="fa fa-plus"></i><span>提交个人进展</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-lg p-4 border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div><p class="text-gray-500 text-sm">总人数</p><h3 class="text-2xl font-bold mt-1">18</h3></div>
+                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary">
+                            <i class="fa fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg p-4 border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div><p class="text-gray-500 text-sm">进度正常</p><h3 class="text-2xl font-bold mt-1">12</h3></div>
+                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-secondary">
+                            <i class="fa fa-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg p-4 border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div><p class="text-gray-500 text-sm">进度滞后</p><h3 class="text-2xl font-bold mt-1">4</h3></div>
+                        <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-warning">
+                            <i class="fa fa-exclamation-circle"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg p-4 border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div><p class="text-gray-500 text-sm">未更新本周</p><h3 class="text-2xl font-bold mt-1">2</h3></div>
+                        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-danger">
+                            <i class="fa fa-times-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 按你截图的表格样式实现 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="p-6 border-b border-gray-100">
+                    <h3 class="text-lg font-semibold text-gray-800">学生研究进展</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 text-left text-sm text-gray-500">
+                            <tr>
+                                <th class="px-6 py-4 font-medium">学生</th>
+                                <th class="px-6 py-4 font-medium">研究方向</th>
+                                <th class="px-6 py-4 font-medium">最近进展</th>
+                                <th class="px-6 py-4 font-medium">下次目标</th>
+                                <th class="px-6 py-4 font-medium">最后更新</th>
+                                <th class="px-6 py-4 font-medium">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 text-sm">
+                            <!-- 张明 -->
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <img src="https://picsum.photos/id/101/200/200" class="w-10 h-10 rounded-full">
+                                        <div>
+                                            <div class="font-medium text-gray-800">张明</div>
+                                            <div class="text-gray-500">博士2年级</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-gray-700">多模态学习与生成模型</td>
+                                <td class="px-6 py-4 text-gray-600">完成了跨模态注意力机制设计，初步实验结果显示较基线模型提升3.2%</td>
+                                <td class="px-6 py-4 text-gray-600">准备数据集扩展和 ablation study，计划下周完成</td>
+                                <td class="px-6 py-4 text-gray-500">2023-11-12</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex gap-3">
+                                        <a href="#" class="text-primary hover:underline">详情</a>
+                                        <button class="bg-blue-50 text-primary px-3 py-1 rounded hover:bg-blue-100">沟通</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- 李华 -->
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <img src="https://picsum.photos/id/102/200/200" class="w-10 h-10 rounded-full">
+                                        <div>
+                                            <div class="font-medium text-gray-800">李华</div>
+                                            <div class="text-gray-500">硕士3年级</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-gray-700">低资源场景下的文本分类</td>
+                                <td class="px-6 py-4 text-gray-600">完成了基于对比学习的预训练模型微调，在多个低资源数据集上进行了验证</td>
+                                <td class="px-6 py-4 text-gray-600">撰写研究论文，计划月底前完成初稿</td>
+                                <td class="px-6 py-4 text-gray-500">2023-11-10</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex gap-3">
+                                        <a href="#" class="text-primary hover:underline">详情</a>
+                                        <button class="bg-blue-50 text-primary px-3 py-1 rounded hover:bg-blue-100">沟通</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- 王芳 -->
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <img src="https://picsum.photos/id/103/200/200" class="w-10 h-10 rounded-full">
+                                        <div>
+                                            <div class="font-medium text-gray-800">王芳</div>
+                                            <div class="text-gray-500">硕士2年级</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-gray-700">可解释性AI与模型可信度</td>
+                                <td class="px-6 py-4 text-gray-600">设计了基于注意力权重的模型解释方法，正在进行有效性验证实验</td>
+                                <td class="px-6 py-4 text-gray-600">完成用户研究实验设计，招募受试者进行评估</td>
+                                <td class="px-6 py-4 text-gray-500">2023-11-08</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex gap-3">
+                                        <a href="#" class="text-primary hover:underline">详情</a>
+                                        <button class="bg-blue-50 text-primary px-3 py-1 rounded hover:bg-blue-100">沟通</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-4 text-center border-t border-gray-100">
+                    <a href="#" class="text-primary hover:underline">查看所有学生进展</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="bg-white border-t border-gray-200 py-4">
+    <div class="container mx-auto px-4 text-center text-sm text-gray-500">
+        <p>© 智能计算实验室 - 研究生组会文件共享系统</p>
+    </div>
+</footer>
+
+<script>
+    const sidebar = document.getElementById('sidebar');
+    document.getElementById('mobile-sidebar-toggle').onclick = () => sidebar.classList.remove('-translate-x-full');
+    document.getElementById('mobile-sidebar-close').onclick = () => sidebar.classList.add('-translate-x-full');
+</script>
+
+</body>
+</html>

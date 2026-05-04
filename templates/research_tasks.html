@@ -266,13 +266,13 @@
                             </a>
                         </li>
                         <li>
-                            <a href="/share_file" class="sidebar-icon active">
+                            <a href="/share_file" class="sidebar-icon hover:bg-gray-100">
                                 <i class="fa fa-folder-open-o w-5 text-center"></i>
                                 <span>共享文件</span>
                             </a>
                         </li>
                         <li>
-                            <a href="/research_tasks" class="sidebar-icon hover:bg-gray-100">
+                            <a href="/research_tasks" class="sidebar-icon active">
                                 <i class="fa fa-tasks w-5 text-center"></i>
                                 <span>研究任务</span>
                             </a>
@@ -332,315 +332,145 @@
 
         <!-- 内容区域 -->
         <div class="flex-1 p-4 lg:p-6 overflow-y-auto">
-
-            <!-- 操作栏 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div class="flex flex-col sm:flex-row gap-4 flex-1">
-                        <!-- 文件类型筛选 -->
-                        <select id="file-type-filter" class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
-                            <option value="">所有类型</option>
-                            <option value="pdf">PDF文档</option>
-                            <option value="doc">Word文档</option>
-                            <option value="ppt">PPT演示</option>
-                            <option value="xls">Excel表格</option>
-                            <option value="zip">压缩包</option>
-                            <option value="other">其他</option>
-                        </select>
-
-                        <!-- 时间排序 -->
-                        <select id="sort-filter" class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
-                            <option value="newest">最新上传</option>
-                            <option value="oldest">最早上传</option>
-                            <option value="name">按名称</option>
-                            <option value="size">按大小</option>
-                        </select>
-                    </div>
-
-                    <div class="flex items-center gap-3">
-                        <!-- 布局切换按钮组 -->
-                        <div class="bg-gray-100 rounded-lg p-1 flex">
-                            <button id="grid-view-btn" class="layout-btn px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 bg-white text-gray-900 shadow-sm" title="卡片视图">
-                                <i class="fa fa-th-large"></i>
-                            </button>
-                            <button id="list-view-btn" class="layout-btn px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 text-gray-500 hover:text-gray-700" title="列表视图">
-                                <i class="fa fa-list"></i>
-                            </button>
+            <div class="mb-6">
+                <h1 class="text-xl font-bold text-gray-800 mb-4">研究任务管理</h1>
+                <!-- 顶部筛选栏（保留原有筛选，微调布局，和整体统一） -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div class="flex flex-wrap gap-2">
+                            <span class="task-status status-doing">全部任务</span>
+                            <span class="task-status status-wait">待开始</span>
+                            <span class="task-status status-doing">进行中</span>
+                            <span class="task-status status-finish">已完成</span>
+                            <span class="task-status status-overdue">已逾期</span>
                         </div>
-
-                        <!-- 上传按钮 -->
-                        <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2">
-                            <i class="fa fa-upload"></i>
-                            <span>上传文件</span>
+                        <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2">
+                            <i class="fa fa-plus"></i><span>新建任务</span>
                         </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- 文件统计 -->
-            <div id="file-stats-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <!-- 文件统计将通过JavaScript动态加载 -->
-            </div>
-
-            <!-- 文件列表容器 -->
-            <div id="files-wrapper">
-                <!-- 列表视图（表格布局） -->
-                <div id="list-view" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <!-- 表格头部 -->
-                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                        <div class="grid grid-cols-12 gap-4 items-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <div class="col-span-6">文件信息</div>
-                            <div class="col-span-2 text-center">上传者</div>
-                            <div class="col-span-2 text-center">文件大小</div>
-                            <div class="col-span-2 text-center">操作</div>
+                <!-- 统计卡片（保留，位置不变） -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-lg p-4 border border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div><p class="text-gray-500 text-sm">总任务数</p><h3 class="text-2xl font-bold mt-1">32</h3></div>
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary"><i class="fa fa-tasks"></i></div>
                         </div>
                     </div>
-
-                    <!-- 表格内容 -->
-                    <div class="divide-y divide-gray-100" id="files-container">
-                        <!-- 文件内容将通过JavaScript动态加载 -->
-                    </div>
-
-                    <!-- 分页控件 -->
-                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200" id="pagination-container">
+                    <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-4">
-                                <!-- 每页显示数量选择器 -->
-                                <div class="flex items-center gap-2">
-                                    <label for="per-page-select" class="text-sm text-gray-600">每页显示</label>
-                                    <select id="per-page-select" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
-                                        <option value="5">5条</option>
-                                        <option value="10">10条</option>
-                                        <option value="20">20条</option>
-                                        <option value="100">100条</option>
-                                    </select>
-                                </div>
-                                <!-- 显示统计信息 -->
-                                <div class="text-sm text-gray-600" id="pagination-info">
-                                    显示第 1-5 条，共 0 条
-                                </div>
-                            </div>
-
-                            <!-- 分页按钮 -->
-                            <div class="flex items-center gap-2">
-                                <button id="prev-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                    <i class="fa fa-chevron-left mr-1"></i>上一页
-                                </button>
-                                <span class="px-3 py-1 text-sm text-gray-600" id="current-page-info">第 1 页</span>
-                                <button id="next-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                    下一页<i class="fa fa-chevron-right ml-1"></i>
-                                </button>
-                            </div>
+                            <div><p class="text-gray-500 text-sm">进行中</p><h3 class="text-2xl font-bold mt-1">14</h3></div>
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"><i class="fa fa-spinner"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 border border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div><p class="text-gray-500 text-sm">已完成</p><h3 class="text-2xl font-bold mt-1">16</h3></div>
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="fa fa-check-circle"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 border border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div><p class="text-gray-500 text-sm">逾期任务</p><h3 class="text-2xl font-bold mt-1">2</h3></div>
+                            <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600"><i class="fa fa-exclamation-triangle"></i></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 网格视图（卡片布局） -->
-                <div id="grid-view" class="hidden">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="files-grid-container">
-                        <!-- 卡片内容将通过JavaScript动态加载 -->
+                <!-- 核心修改：任务展示改成卡片网格布局（替换原来的表格） -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <!-- 任务卡片1 -->
+                    <div class="bg-white rounded-xl shadow-sm p-5 task-card-hover border border-gray-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="task-priority priority-high">高优先级</span>
+                            <span class="task-status status-doing">进行中</span>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-2">大模型检索增强实验设计</h4>
+                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">验证不同检索策略对生成效果的影响，完成对比实验与数据分析。</p>
+                        <div class="flex items-center justify-between text-sm">
+                            <div class="flex items-center gap-2">
+                                <img src="https://picsum.photos/id/101/200/200" class="w-6 h-6 rounded-full">
+                                <span>李华</span>
+                            </div>
+                            <span class="text-gray-400"><i class="fa fa-calendar"></i> 2025-12-20</span>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-3">
+                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i></button>
+                            <button class="text-gray-400 hover:text-yellow-500"><i class="fa fa-pencil"></i></button>
+                            <button class="text-gray-400 hover:text-red-500"><i class="fa fa-trash-o"></i></button>
+                        </div>
                     </div>
 
-                    <!-- 分页控件 -->
-                    <div class="mt-6 px-4 py-3 bg-white rounded-lg border border-gray-200" id="grid-pagination-container">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-4">
-                                <!-- 每页显示数量选择器 -->
-                                <div class="flex items-center gap-2">
-                                    <label for="grid-per-page-select" class="text-sm text-gray-600">每页显示</label>
-                                    <select id="grid-per-page-select" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
-                                        <option value="5">5条</option>
-                                        <option value="10">10条</option>
-                                        <option value="20">20条</option>
-                                        <option value="100">100条</option>
-                                    </select>
-                                </div>
-                                <!-- 显示统计信息 -->
-                                <div class="text-sm text-gray-600" id="grid-pagination-info">
-                                    显示第 1-5 条，共 0 条
-                                </div>
-                            </div>
-
-                            <!-- 分页按钮 -->
+                    <!-- 任务卡片2 -->
+                    <div class="bg-white rounded-xl shadow-sm p-5 task-card-hover border border-gray-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="task-priority priority-middle">中优先级</span>
+                            <span class="task-status status-wait">待开始</span>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-2">ACL 2024 论文调研与复现</h4>
+                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">复现3篇顶会论文并整理报告，梳理核心创新点与实验方法。</p>
+                        <div class="flex items-center justify-between text-sm">
                             <div class="flex items-center gap-2">
-                                <button id="grid-prev-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                    <i class="fa fa-chevron-left mr-1"></i>上一页
-                                </button>
-                                <span class="px-3 py-1 text-sm text-gray-600" id="grid-current-page-info">第 1 页</span>
-                                <button id="grid-next-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                    下一页<i class="fa fa-chevron-right ml-1"></i>
-                                </button>
+                                <img src="https://picsum.photos/id/102/200/200" class="w-6 h-6 rounded-full">
+                                <span>王明</span>
                             </div>
+                            <span class="text-gray-400"><i class="fa fa-calendar"></i> 2025-12-30</span>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-3">
+                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i></button>
+                            <button class="text-gray-400 hover:text-yellow-500"><i class="fa fa-pencil"></i></button>
+                            <button class="text-gray-400 hover:text-red-500"><i class="fa fa-trash-o"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- 任务卡片3 -->
+                    <div class="bg-white rounded-xl shadow-sm p-5 task-card-hover border border-gray-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="task-priority priority-low">低优先级</span>
+                            <span class="task-status status-finish">已完成</span>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-2">实验数据清洗与可视化</h4>
+                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">完成所有实验数据清洗与图表生成，确保数据准确性与可视化美观度。</p>
+                        <div class="flex items-center justify-between text-sm">
+                            <div class="flex items-center gap-2">
+                                <img src="https://picsum.photos/id/103/200/200" class="w-6 h-6 rounded-full">
+                                <span>赵芳</span>
+                            </div>
+                            <span class="text-gray-400"><i class="fa fa-calendar"></i> 2025-11-10</span>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-3">
+                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i></button>
+                            <button class="text-gray-400 hover:text-yellow-500"><i class="fa fa-pencil"></i></button>
+                            <button class="text-gray-400 hover:text-red-500"><i class="fa fa-trash-o"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- 任务卡片4 -->
+                    <div class="bg-white rounded-xl shadow-sm p-5 task-card-hover border border-gray-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="task-priority priority-high">高优先级</span>
+                            <span class="task-status status-overdue">已逾期</span>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-2">多模态RAG模型调试</h4>
+                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">调试图文混合检索链路，优化多级召回与重排策略，修复接口报错问题。</p>
+                        <div class="flex items-center justify-between text-sm">
+                            <div class="flex items-center gap-2">
+                                <img src="https://picsum.photos/id/104/200/200" class="w-6 h-6 rounded-full">
+                                <span>陈宇</span>
+                            </div>
+                            <span class="text-gray-400"><i class="fa fa-calendar"></i> 2025-11-25</span>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-3">
+                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i></button>
+                            <button class="text-gray-400 hover:text-yellow-500"><i class="fa fa-pencil"></i></button>
+                            <button class="text-gray-400 hover:text-red-500"><i class="fa fa-trash-o"></i></button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </main>
-
-    <!-- 上传文件模态框 -->
-    <div id="upload-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
-                <!-- 模态框头部 -->
-                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-gray-800">上传文件</h3>
-                    <button id="close-upload-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
-                        <i class="fa fa-times text-xl"></i>
-                    </button>
-                </div>
-
-                <!-- 模态框内容 -->
-                <div class="p-6">
-                    <!-- 文件拖拽区域 -->
-                    <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
-                        <i class="fa fa-cloud-upload text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-gray-600 mb-2">拖拽文件到此处上传</p>
-                        <p class="text-sm text-gray-500 mb-4">或者</p>
-                        <label for="file-input" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors cursor-pointer inline-block">
-                            <i class="fa fa-folder-open mr-2"></i>选择文件
-                        </label>
-                        <input type="file" id="file-input" class="hidden" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.txt,.md">
-                        <p class="text-xs text-gray-500 mt-4">支持格式：PDF、Word、PPT、Excel、压缩包、文本文件等</p>
-                        <p class="text-xs text-gray-500">单个文件最大 50MB，总大小最大 200MB</p>
-                    </div>
-
-                    <!-- 文件列表 -->
-                    <div id="file-list" class="mt-6 hidden">
-                        <h4 class="font-medium text-gray-700 mb-3">待上传文件</h4>
-                        <div id="file-items" class="space-y-2 max-h-60 overflow-y-auto">
-                            <!-- 文件项将动态添加到这里 -->
-                        </div>
-                    </div>
-
-                    <!-- 上传设置 -->
-                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">文件分类</label>
-                            <select id="file-category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
-                                <option value="">选择分类</option>
-                                <option value="research">研究资料</option>
-                                <option value="report">汇报材料</option>
-                                <option value="paper" selected>学术论文</option>
-                                <option value="data">实验数据</option>
-                                <option value="code">代码文件</option>
-                                <option value="other">其他文件</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">访问权限</label>
-                            <select id="file-permission" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
-                                <option value="public">所有人可见</option>
-                                <option value="team">团队成员可见</option>
-                                <option value="private">仅自己可见</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- 文件描述 -->
-                    <div class="mt-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">文件描述</label>
-                        <textarea id="file-description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none" placeholder="请输入文件描述（可选）"></textarea>
-                    </div>
-                </div>
-
-                <!-- 模态框底部 -->
-                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
-                    <button id="cancel-upload" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
-                        取消
-                    </button>
-                    <button id="start-upload" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                        <i class="fa fa-upload mr-2"></i>开始上传
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 上传进度提示 -->
-    <div id="upload-toast" class="fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 max-w-sm transform translate-x-full transition-transform duration-300 z-50 border-l-4 border-primary hidden">
-        <div class="flex items-start">
-            <div class="flex-shrink-0">
-                <div id="upload-icon" class="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
-                    <i class="fa fa-upload text-primary text-xs"></i>
-                </div>
-            </div>
-            <div class="ml-3 flex-1">
-                <h4 id="upload-title" class="text-sm font-medium text-gray-800">准备上传</h4>
-                <div id="upload-message" class="mt-1 text-sm text-gray-600">
-                    <p>正在处理文件...</p>
-                </div>
-                <!-- 进度条 -->
-                <div id="upload-progress-container" class="mt-2 hidden">
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div id="upload-progress-bar" class="bg-primary h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
-                    </div>
-                    <p id="upload-progress-text" class="text-xs text-gray-500 mt-1">0%</p>
-                </div>
-            </div>
-            <div class="ml-3 flex-shrink-0">
-                <button id="close-upload-toast" class="text-gray-400 hover:text-gray-600">
-                    <i class="fa fa-times"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 文件预览模态框 -->
-    <div id="preview-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
-                <!-- 模态框头部 -->
-                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div id="preview-file-icon" class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                            <i class="fa fa-file-o text-gray-500 text-xl"></i>
-                        </div>
-                        <div>
-                            <h3 id="preview-file-name" class="text-lg font-semibold text-gray-800 truncate">文件预览</h3>
-                            <p id="preview-file-info" class="text-sm text-gray-500">加载中...</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                          <button id="close-preview-modal" class="text-gray-400 hover:text-gray-600 transition-colors p-2">
-                            <i class="fa fa-times text-xl"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 模态框内容 -->
-                <div class="flex-1 overflow-hidden">
-                    <div id="preview-content" class="w-full h-[70vh] flex items-center justify-center">
-                        <!-- 预览内容将动态加载到这里 -->
-                        <div class="text-center">
-                            <i class="fa fa-spinner fa-spin text-4xl text-primary mb-4"></i>
-                            <p class="text-gray-500">正在加载文件预览...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 模态框底部（可选，用于显示额外信息） -->
-                <div id="preview-footer" class="px-6 py-4 bg-gray-50 border-t border-gray-200 hidden">
-                    <div class="flex items-center justify-between">
-                        <div class="text-sm text-gray-600">
-                            <span id="preview-file-meta"></span>
-                        </div>
-                        <div class="flex gap-2">
-                            <button id="preview-zoom-in" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
-                                <i class="fa fa-search-plus"></i> 放大
-                            </button>
-                            <button id="preview-zoom-out" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
-                                <i class="fa fa-search-minus"></i> 缩小
-                            </button>
-                            <button id="preview-reset-zoom" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
-                                <i class="fa fa-compress"></i> 重置
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- 页脚 -->
     <footer class="bg-white border-t border-gray-200 py-4">

@@ -1355,7 +1355,7 @@ async def upload_file(request: Request):
             )
 
     except Exception as e:
-        logger.error(e)
+        logger.error(f"文件上传错误: {str(e)}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
@@ -2813,21 +2813,108 @@ async def share_file_page(request: Request):
 
 # 研究进展页面
 @app.get("/research_progress", response_class=HTMLResponse)
-async def share_file_page(request: Request):
+async def research_progress_page(request: Request):
     """
-    共享文件页面路由
+    研究进展页面路由
     需要用户登录才能访问
     """
-    # 检查用户是否已登录
-    logger.info("用户学术工具页面中")
+    logger.info("用户研究进展页面")
     current_user = await get_current_user(request)
     if not current_user:
-        # 未登录，重定向到登录页面
         from fastapi.responses import RedirectResponse
         return RedirectResponse(url="/login", status_code=302)
 
-    # 已登录，显示共享文件页面
     return templates.TemplateResponse("research_progress.html", {
+        "request": request,
+        "user": current_user
+    })
+
+# 文献库页面
+@app.get("/paper_database", response_class=HTMLResponse)
+async def paper_database_page(request: Request):
+    """
+    文献库页面路由
+    需要用户登录才能访问
+    """
+    logger.info("用户文献库页面")
+    current_user = await get_current_user(request)
+    if not current_user:
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/login", status_code=302)
+
+    return templates.TemplateResponse("paper_database.html", {
+        "request": request,
+        "user": current_user
+    })
+
+# 组会安排页面
+@app.get("/gm_meeting_schedule", response_class=HTMLResponse)
+async def gm_meeting_schedule_page(request: Request):
+    """
+    组会安排页面路由
+    需要用户登录才能访问
+    """
+    logger.info("用户组会安排页面")
+    current_user = await get_current_user(request)
+    if not current_user:
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/login", status_code=302)
+
+    return templates.TemplateResponse("gm_meeting_schedule.html", {
+        "request": request,
+        "user": current_user
+    })
+
+# 汇报材料页面
+@app.get("/gm_report_materials", response_class=HTMLResponse)
+async def gm_report_materials_page(request: Request):
+    """
+    汇报材料页面路由
+    需要用户登录才能访问
+    """
+    logger.info("用户汇报材料页面")
+    current_user = await get_current_user(request)
+    if not current_user:
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/login", status_code=302)
+
+    return templates.TemplateResponse("gm_report_materials.html", {
+        "request": request,
+        "user": current_user
+    })
+
+# 组会记录页面
+@app.get("/gm_meeting_record", response_class=HTMLResponse)
+async def gm_meeting_record_page(request: Request):
+    """
+    组会记录页面路由
+    需要用户登录才能访问
+    """
+    logger.info("用户组会记录页面")
+    current_user = await get_current_user(request)
+    if not current_user:
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/login", status_code=302)
+
+    return templates.TemplateResponse("gm_meeting_record.html", {
+        "request": request,
+        "user": current_user
+    })
+
+# 研究任务页面
+@app.get("/research_tasks", response_class=HTMLResponse)
+async def research_tasks_page(request: Request):
+    """
+    研究任务页面路由
+    需要用户登录才能访问
+    """
+    logger.info("用户研究任务页面")
+    current_user = await get_current_user(request)
+    if not current_user:
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/login", status_code=302)
+
+    return templates.TemplateResponse("research_tasks.html", {
         "request": request,
         "user": current_user
     })
