@@ -17,10 +17,12 @@ from typing import Optional
 # 导入内部模块
 from models.user import User
 from models.file import File
+from models.meeting import Meeting, MeetingPresenter, MeetingFile
 from database.connection import get_db, DATABASE_PATH
 from services.auth import AuthService
 from services.session import session_manager
 from services.file_service import FileService
+from services.meeting_service import MeetingService
 from loguru import logger
 
 # 创建FastAPI应用实例
@@ -2998,6 +3000,368 @@ async def rm_share_file_page(request: Request):
         "request": request,
         "user": current_user
     })
+
+# ==================== 组会管理API ====================
+
+@app.get("/api/meetings")
+async def get_meetings(request: Request):
+    """
+    获取组会列表API
+    支持分页和筛选
+    """
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    try:
+        # 获取查询参数
+        page = int(request.query_params.get("page", 1))
+        limit = int(request.query_params.get("limit", 10))
+        status = request.query_params.get("status")
+        meeting_type = request.query_params.get("meeting_type")
+
+        offset = (page - 1) * limit
+
+        # 获取组会列表
+        meetings = MeetingService.get_meetings(
+            status=status,
+            meeting_type=meeting_type,
+            limit=limit,
+            offset=offset
+        )
+
+        # 获取总数
+        total = MeetingService.get_meetings_count(
+            status=status,
+            meeting_type=meeting_type
+        )
+
+        # 计算分页信息
+        total_pages = (total + limit - 1) // limit if total > 0 else 1
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "data": {
+                    "meetings": [m.to_dict() for m in meetings],
+                    "pagination": {
+                        "current_page": page,
+                        "per_page": limit,
+                        "total": total,
+                        "total_pages": total_pages,
+                        "has_next": page < total_pages,
+                        "has_prev": page > 1
+                    }
+                }
+            }
+        )
+    except Exception as e:
+        logger.error(f"获取组会列表失败: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": "获取组会列表失败", "error": "INTERNAL_ERROR"}
+        )
+
+
+@app.post("/api/meetings")
+async def create_meeting(request: Request):
+    """
+    创建组会API
+    """
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    try:
+        data = await request.json()
+
+        # 验证必填字段
+        if not data.get("title"):
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"success": False, "message": "组会标题不能为空", "error": "VALIDATION_ERROR"}
+            )
+
+        if not data.get("scheduled_at"):
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"success": False, "message": "会议时间不能为空", "error": "VALIDATION_ERROR"}
+            )
+
+        # 解析时间
+        scheduled_at = datetime.fromisoformat(data["scheduled_at"])
+        material_deadline = None
+        if data.get("material_deadline"):
+            material_deadline = datetime.fromisoformat(data["material_deadline"])
+
+        # 创建组会
+        meeting = MeetingService.create_meeting(
+            title=data["title"],
+            meeting_type=data.get("meeting_type", "regular"),
+            scheduled_at=scheduled_at,
+            created_by=current_user.id,
+            description=data.get("description"),
+            location=data.get("location"),
+            is_online=data.get("is_online", False),
+            online_link=data.get("online_link"),
+            duration_total=data.get("duration_total", 60),
+            material_required=data.get("material_required", True),
+            material_deadline=material_deadline,
+            notes=data.get("notes")
+        )
+
+        logger.info(f"创建组会成功: {meeting.title} (ID: {meeting.id})")
+
+        return JSONResponse(
+            status_code=status.HTTP_201_CREATED,
+            content={
+                "success": True,
+                "message": "组会创建成功",
+                "data": meeting.to_dict()
+            }
+        )
+    except Exception as e:
+        logger.error(f"创建组会失败: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": "创建组会失败", "error": "INTERNAL_ERROR"}
+        )
+
+
+@app.get("/api/meetings/{meeting_id}")
+async def get_meeting_detail(meeting_id: int, request: Request):
+    """
+    获取组会详情API
+    """
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    try:
+        meeting = MeetingService.get_meeting_by_id(meeting_id)
+        if not meeting:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"success": False, "message": "组会不存在", "error": "MEETING_NOT_FOUND"}
+            )
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "data": meeting.to_dict()
+            }
+        )
+    except Exception as e:
+        logger.error(f"获取组会详情失败: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": "获取组会详情失败", "error": "INTERNAL_ERROR"}
+        )
+
+
+@app.put("/api/meetings/{meeting_id}")
+async def update_meeting(meeting_id: int, request: Request):
+    """
+    更新组会API
+    只有导师、管理员或创建者可以更新
+    """
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    try:
+        # 获取组会
+        meeting = MeetingService.get_meeting_by_id(meeting_id)
+        if not meeting:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"success": False, "message": "组会不存在", "error": "MEETING_NOT_FOUND"}
+            )
+
+        # 权限检查：只有导师、管理员或创建者可以更新
+        if current_user.role not in ['admin', 'teacher'] and meeting.created_by != current_user.id:
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={"success": False, "message": "没有权限修改此组会", "error": "ACCESS_DENIED"}
+            )
+
+        data = await request.json()
+
+        # 解析时间字段
+        update_data = {}
+        if data.get("scheduled_at"):
+            update_data["scheduled_at"] = datetime.fromisoformat(data["scheduled_at"])
+        if data.get("material_deadline"):
+            update_data["material_deadline"] = datetime.fromisoformat(data["material_deadline"])
+
+        # 其他字段
+        for field in ['title', 'meeting_type', 'description', 'location', 'is_online',
+                       'online_link', 'duration_total', 'material_required', 'notes', 'status']:
+            if field in data:
+                update_data[field] = data[field]
+
+        updated_meeting = MeetingService.update_meeting(meeting_id, **update_data)
+
+        if not updated_meeting:
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={"success": False, "message": "更新组会失败", "error": "UPDATE_FAILED"}
+            )
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": "组会更新成功",
+                "data": updated_meeting.to_dict()
+            }
+        )
+    except Exception as e:
+        logger.error(f"更新组会失败: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": "更新组会失败", "error": "INTERNAL_ERROR"}
+        )
+
+
+@app.delete("/api/meetings/{meeting_id}")
+async def delete_meeting(meeting_id: int, request: Request):
+    """
+    删除组会API
+    只有导师和管理员可以删除
+    """
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    # 权限检查
+    if current_user.role not in ['admin', 'teacher']:
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"success": False, "message": "没有权限删除组会", "error": "ACCESS_DENIED"}
+        )
+
+    try:
+        success = MeetingService.delete_meeting(meeting_id)
+
+        if not success:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"success": False, "message": "组会不存在", "error": "MEETING_NOT_FOUND"}
+            )
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"success": True, "message": "组会删除成功"}
+        )
+    except Exception as e:
+        logger.error(f"删除组会失败: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": "删除组会失败", "error": "INTERNAL_ERROR"}
+        )
+
+
+@app.put("/api/meetings/{meeting_id}/status")
+async def update_meeting_status(meeting_id: int, request: Request):
+    """
+    更新组会状态API
+    只有导师和管理员可以更新状态
+    """
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    # 权限检查
+    if current_user.role not in ['admin', 'teacher']:
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"success": False, "message": "没有权限更新组会状态", "error": "ACCESS_DENIED"}
+        )
+
+    try:
+        data = await request.json()
+        status_value = data.get("status")
+
+        if status_value not in ['scheduled', 'ongoing', 'completed']:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"success": False, "message": "状态值无效", "error": "INVALID_STATUS"}
+            )
+
+        updated_meeting = MeetingService.update_meeting_status(meeting_id, status_value)
+
+        if not updated_meeting:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"success": False, "message": "组会不存在", "error": "MEETING_NOT_FOUND"}
+            )
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": "组会状态更新成功",
+                "data": updated_meeting.to_dict()
+            }
+        )
+    except Exception as e:
+        logger.error(f"更新组会状态失败: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": "更新组会状态失败", "error": "INTERNAL_ERROR"}
+        )
+
+
+@app.get("/api/meetings/stats")
+async def get_meeting_stats(request: Request):
+    """
+    获取组会统计信息API
+    """
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    try:
+        stats = MeetingService.get_meeting_stats()
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "data": stats
+            }
+        )
+    except Exception as e:
+        logger.error(f"获取组会统计失败: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": "获取组会统计失败", "error": "INTERNAL_ERROR"}
+        )
+
 
 # 启动命令
 if __name__ == "__main__":

@@ -71,6 +71,16 @@ def init_db() -> None:
                 student_id VARCHAR(50),
                 research_direction VARCHAR(200),
                 status VARCHAR(20) DEFAULT 'active',
+                graduation_status VARCHAR(50),
+                supervisor VARCHAR(100),
+                degree_type VARCHAR(50),
+                work_location VARCHAR(100),
+                work_company VARCHAR(100),
+                personal_bio TEXT,
+                personal_homepage VARCHAR(200),
+                gender VARCHAR(10),
+                id_card VARCHAR(20),
+                bank_card VARCHAR(30),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -78,6 +88,67 @@ def init_db() -> None:
 
         # 创建username字段的唯一索引
         cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_username ON users(username)")
+
+        # 创建组会表
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS meetings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title VARCHAR(200) NOT NULL,
+                meeting_type VARCHAR(50) DEFAULT 'regular',
+                description TEXT,
+                location VARCHAR(100),
+                is_online BOOLEAN DEFAULT 0,
+                online_link VARCHAR(500),
+                scheduled_at TIMESTAMP NOT NULL,
+                duration_total INTEGER DEFAULT 60,
+                material_required BOOLEAN DEFAULT 1,
+                material_deadline TIMESTAMP,
+                notes TEXT,
+                status VARCHAR(20) DEFAULT 'scheduled',
+                created_by INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_meetings_status ON meetings(status)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_meetings_scheduled ON meetings(scheduled_at)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_meetings_created_by ON meetings(created_by)")
+
+        # 创建汇报人关联表
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS meeting_presenters (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                meeting_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                presenter_type VARCHAR(20) DEFAULT 'pending',
+                duration_minutes INTEGER DEFAULT 20,
+                material_required BOOLEAN DEFAULT 1,
+                status VARCHAR(20) DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (meeting_id) REFERENCES meetings(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_presenters_meeting ON meeting_presenters(meeting_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_presenters_user ON meeting_presenters(user_id)")
+
+        # 创建组会材料关联表
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS meeting_files (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                meeting_id INTEGER NOT NULL,
+                file_id INTEGER NOT NULL,
+                presenter_id INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (meeting_id) REFERENCES meetings(id) ON DELETE CASCADE,
+                FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE,
+                FOREIGN KEY (presenter_id) REFERENCES meeting_presenters(id) ON DELETE CASCADE
+            )
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_meeting_files_meeting ON meeting_files(meeting_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_meeting_files_file ON meeting_files(file_id)")
 
         # 创建文件表
         cursor.execute("""
