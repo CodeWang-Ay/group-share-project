@@ -108,7 +108,7 @@ def init_db() -> None:
                 created_by INTEGER NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (created_by) REFERENCES users(id)
+                FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
             )
         """)
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_meetings_status ON meetings(status)")
