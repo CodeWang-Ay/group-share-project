@@ -340,31 +340,27 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div><p class="text-gray-500 text-sm">本月组会次数</p><h3 class="text-2xl font-bold mt-1">4</h3></div>
+                            <div><p class="text-gray-500 text-sm">本月组会次数</p><h3 class="text-2xl font-bold mt-1 stats-this-month">0</h3></div>
                             <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary"><i class="fa fa-calendar"></i></div>
                         </div>
-                        <p class="text-xs text-green-600 mt-2">↑ 较上月增加1次</p>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div><p class="text-gray-500 text-sm">待审阅材料</p><h3 class="text-2xl font-bold mt-1">7</h3></div>
-                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="fa fa-file-text-o"></i></div>
+                            <div><p class="text-gray-500 text-sm">待召开组会</p><h3 class="text-2xl font-bold mt-1 stats-scheduled">0</h3></div>
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="fa fa-clock-o"></i></div>
                         </div>
-                        <a href="#" class="text-xs text-primary mt-2 hover:underline">立即审阅 →</a>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div><p class="text-gray-500 text-sm">团队成员</p><h3 class="text-2xl font-bold mt-1">18</h3></div>
-                            <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600"><i class="fa fa-users"></i></div>
+                            <div><p class="text-gray-500 text-sm">已完成组会</p><h3 class="text-2xl font-bold mt-1 stats-completed">0</h3></div>
+                            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600"><i class="fa fa-check-circle"></i></div>
                         </div>
-                        <p class="text-xs text-gray-500 mt-2">博士生6人，硕士生12人</p>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div><p class="text-gray-500 text-sm">共享文献</p><h3 class="text-2xl font-bold mt-1">326</h3></div>
-                            <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600"><i class="fa fa-book"></i></div>
+                            <div><p class="text-gray-500 text-sm">组会总数</p><h3 class="text-2xl font-bold mt-1 stats-total">0</h3></div>
+                            <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600"><i class="fa fa-list-alt"></i></div>
                         </div>
-                        <p class="text-xs text-green-600 mt-2">↑ 本月新增24篇</p>
                     </div>
                 </div>
 
@@ -2139,9 +2135,101 @@
         }
 
         // 初始化
+        // 组会页面相关变量和函数
+        let meetingCurrentPage = 1;
+        let meetingCurrentStatus = '';
+        let meetingCurrentType = '';
+
+        // 加载组会统计
+        async function loadMeetingStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/meetings/stats`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    document.querySelector('.stats-this-month').textContent = result.data.this_month_meetings || 0;
+                    document.querySelector('.stats-scheduled').textContent = result.data.scheduled_count || 0;
+                    document.querySelector('.stats-completed').textContent = result.data.completed_count || 0;
+                    document.querySelector('.stats-total').textContent = result.data.total_meetings || 0;
+                }
+            } catch (e) { console.error('加载组会统计失败:', e); }
+        }
+
+        // 加载组会列表
+        async function loadMeetings() {
+            try {
+                const params = new URLSearchParams();
+                params.append('page', meetingCurrentPage);
+                params.append('limit', 10);
+                if (meetingCurrentStatus) params.append('status', meetingCurrentStatus);
+                if (meetingCurrentType) params.append('meeting_type', meetingCurrentType);
+
+                const response = await fetch(`${API_BASE_URL}/api/meetings?${params.toString()}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    renderMeetingList(result.data.meetings, result.data.pagination);
+                }
+            } catch (e) { console.error('加载组会列表失败:', e); }
+        }
+
+        // 渲染组会列表
+        function renderMeetingList(meetings, pagination) {
+            const container = document.getElementById('meetings-container');
+            if (!container) return;
+
+            if (!meetings || meetings.length === 0) {
+                container.innerHTML = '<div class="text-center py-12 text-gray-500"><p>暂无组会安排</p></div>';
+                return;
+            }
+
+            container.innerHTML = meetings.map(m => {
+                const statusText = m.status === 'scheduled' ? '待召开' : (m.status === 'ongoing' ? '进行中' : '已完成');
+                const statusClass = m.status === 'scheduled' ? 'bg-blue-100 text-blue-700' : (m.status === 'ongoing' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700');
+                const typeText = m.meeting_type === 'regular' ? '常规组会' : (m.meeting_type === 'paper_reading' ? '论文研读' : '专题讨论');
+                const date = new Date(m.scheduled_at);
+                const formattedDate = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+
+                return `
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <span class="${statusClass} text-xs px-3 py-1 rounded-full font-medium">${statusText}</span>
+                            <span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full font-medium ml-2">${typeText}</span>
+                            <h3 class="text-lg font-semibold mt-3">${m.title}</h3>
+                            ${m.description ? `<p class="text-sm text-gray-500 mt-1">${m.description}</p>` : ''}
+                        </div>
+                        <div class="text-right text-sm text-gray-500">
+                            <p><i class="fa fa-calendar mr-1"></i>${formattedDate}</p>
+                            <p class="mt-1"><i class="fa fa-clock-o mr-1"></i>${m.duration_total}分钟</p>
+                            ${m.location ? `<p class="mt-1"><i class="fa fa-map-marker mr-1"></i>${m.location}</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                        <div class="text-sm text-gray-500">
+                            ${m.material_required ? '<span class="mr-4"><i class="fa fa-file-text-o mr-1"></i>需提交材料</span>' : ''}
+                        </div>
+                        <div>
+                            <button onclick="viewMeeting(${m.id})" class="px-3 py-1 text-sm text-primary hover:bg-primary/10 rounded-lg"><i class="fa fa-eye mr-1"></i>详情</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function viewMeeting(id) {
+            alert('组会详情页面即将上线，ID: ' + id);
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             // 首先检查URL中是否有session_token
             const hasUrlToken = checkUrlSessionToken();
+
+            // 加载组会数据
+            loadMeetingStats();
+            loadMeetings();
             
             // 初始化文件管理器
             window.fileManager = new FileManager();
