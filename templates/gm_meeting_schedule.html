@@ -333,7 +333,12 @@
         <!-- ====================== 【核心：组会安排内容区】 ====================== -->
         <div class="flex-1 p-4 lg:p-6 overflow-y-auto">
             <div class="mb-6">
-                <h1 class="text-xl font-bold text-gray-800 mb-4">组会安排</h1>
+                <div class="flex justify-between items-center mb-4">
+                    <h1 class="text-xl font-bold text-gray-800">组会安排</h1>
+                    <button id="create-meeting-btn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 flex items-center gap-2 transition-colors">
+                        <i class="fa fa-plus"></i> 发布组会
+                    </button>
+                </div>
                 <p class="text-gray-500 mb-6">查看、管理和安排实验室的每周组会</p>
 
                 <!-- 组会统计卡片 -->
@@ -364,125 +369,11 @@
                     </div>
                 </div>
 
-                <!-- 即将到来的组会卡片（1:1复刻截图样式） -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 meeting-card-hover mb-6">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full font-medium">本周组会</span>
-                            <h3 class="text-lg font-semibold mt-3">第12周组会 - 论文研读与进展汇报</h3>
-                            <p class="text-sm text-gray-500 mt-1">主题：最新神经网络模型在自然语言处理中的应用</p>
-                        </div>
-                        <div class="text-right text-sm text-gray-500">
-                            <p class="flex items-center gap-2 justify-end"><i class="fa fa-calendar"></i> 2023-11-15（周三）14:00</p>
-                            <p class="flex items-center gap-2 justify-end mt-1"><i class="fa fa-map-marker"></i> 计算中心302会议室</p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                        <!-- 汇报人 -->
-                        <div>
-                            <div class="flex items-center gap-2 text-gray-600 mb-3"><i class="fa fa-user-o"></i> 汇报人</div>
-                            <div class="flex flex-wrap gap-3">
-                                <div class="flex items-center gap-2">
-                                    <img src="https://picsum.photos/id/101/200/200" class="w-8 h-8 rounded-full">
-                                    <span class="text-sm">张明（博士2年级）</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <img src="https://picsum.photos/id/102/200/200" class="w-8 h-8 rounded-full">
-                                    <span class="text-sm">李华（硕士3年级）</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <img src="https://picsum.photos/id/103/200/200" class="w-8 h-8 rounded-full">
-                                    <span class="text-sm">王芳（硕士2年级）</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 已提交材料 -->
-                        <div>
-                            <div class="flex items-center gap-2 text-gray-600 mb-3"><i class="fa fa-file-text-o"></i> 已提交材料</div>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex items-center justify-between">
-                                    <span class="flex items-center gap-2"><i class="fa fa-file-pdf-o text-red-500"></i> 张明 - 论文综述.pdf</span>
-                                    <span class="text-green-600 text-xs bg-green-100 px-2 py-0.5 rounded">已提交</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="flex items-center gap-2"><i class="fa fa-file-powerpoint-o text-orange-500"></i> 李华 - 研究进展汇报.pptx</span>
-                                    <span class="text-green-600 text-xs bg-green-100 px-2 py-0.5 rounded">已提交</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="flex items-center gap-2"><i class="fa fa-file-powerpoint-o text-orange-500"></i> 王芳 - 实验设计汇报.pptx</span>
-                                    <span class="text-yellow-600 text-xs bg-yellow-100 px-2 py-0.5 rounded">未提交</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 组会准备 -->
-                        <div>
-                            <div class="flex items-center gap-2 text-gray-600 mb-3"><i class="fa fa-check-square-o"></i> 组会准备</div>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500"></i> 确定组会主题和时间</div>
-                                <div class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500"></i> 分配汇报任务</div>
-                                <div class="flex items-center gap-2"><i class="fa fa-check-circle text-green-500"></i> 共享参考资料</div>
-                                <div class="flex items-center gap-2 text-gray-400"><i class="fa fa-circle-o"></i> 准备反馈意见</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end gap-4 mt-6 pt-4 border-t border-gray-100">
-                        <button class="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 flex items-center gap-2">
-                            <i class="fa fa-envelope-o"></i> 提醒未提交者
-                        </button>
-                        <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 flex items-center gap-2">
-                            <i class="fa fa-eye"></i> 查看详情
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 历史组会列表 -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                        <div class="grid grid-cols-12 gap-4 items-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <div class="col-span-5">组会信息</div>
-                            <div class="col-span-2 text-center">时间</div>
-                            <div class="col-span-2 text-center">地点</div>
-                            <div class="col-span-1 text-center">状态</div>
-                            <div class="col-span-2 text-center">操作</div>
-                        </div>
-                    </div>
-
-                    <!-- 历史组会1 -->
-                    <div class="px-6 py-4 border-b border-gray-100 hover:bg-gray-50">
-                        <div class="grid grid-cols-12 gap-4 items-center">
-                            <div class="col-span-5">
-                                <h4 class="font-medium text-gray-800">第11周组会 - 实验结果与讨论</h4>
-                                <p class="text-xs text-gray-500 mt-1">主题：模型性能对比与优化方案讨论</p>
-                            </div>
-                            <div class="col-span-2 text-center text-sm text-gray-600">2023-11-08</div>
-                            <div class="col-span-2 text-center text-sm text-gray-600">计算中心302</div>
-                            <div class="col-span-1 text-center"><span class="status-done text-xs px-2 py-1 rounded">已完成</span></div>
-                            <div class="col-span-2 text-center flex gap-2 justify-center">
-                                <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i></button>
-                                <button class="text-gray-400 hover:text-gray-600"><i class="fa fa-download"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 历史组会2 -->
-                    <div class="px-6 py-4 hover:bg-gray-50">
-                        <div class="grid grid-cols-12 gap-4 items-center">
-                            <div class="col-span-5">
-                                <h4 class="font-medium text-gray-800">第10周组会 - 中期进展汇报</h4>
-                                <p class="text-xs text-gray-500 mt-1">主题：项目中期检查与后续计划调整</p>
-                            </div>
-                            <div class="col-span-2 text-center text-sm text-gray-600">2023-11-01</div>
-                            <div class="col-span-2 text-center text-sm text-gray-600">计算中心302</div>
-                            <div class="col-span-1 text-center"><span class="status-done text-xs px-2 py-1 rounded">已完成</span></div>
-                            <div class="col-span-2 text-center flex gap-2 justify-center">
-                                <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i></button>
-                                <button class="text-gray-400 hover:text-gray-600"><i class="fa fa-download"></i></button>
-                            </div>
-                        </div>
+                <!-- 组会列表 -->
+                <div id="meetings-container">
+                    <!-- 动态加载的组会列表将在这里显示 -->
+                    <div class="text-center py-12 text-gray-500">
+                        <p>加载中...</p>
                     </div>
                 </div>
             </div>
@@ -565,6 +456,13 @@
             }
 
             setupModalEvents() {
+                // 检查上传模态框是否存在（组会页面可能不需要）
+                const uploadModal = document.getElementById('upload-modal');
+                if (!uploadModal) {
+                    console.log('上传模态框不存在，跳过文件上传事件绑定');
+                    return;
+                }
+
                 // 打开上传模态框
                 const uploadBtns = document.querySelectorAll('button');
                 uploadBtns.forEach(btn => {
@@ -575,17 +473,21 @@
                 });
 
                 // 关闭模态框
-                document.getElementById('close-upload-modal').addEventListener('click', () => this.closeModal());
-                document.getElementById('cancel-upload').addEventListener('click', () => this.closeModal());
+                const closeUploadModal = document.getElementById('close-upload-modal');
+                if (closeUploadModal) closeUploadModal.addEventListener('click', () => this.closeModal());
+                const cancelUpload = document.getElementById('cancel-upload');
+                if (cancelUpload) cancelUpload.addEventListener('click', () => this.closeModal());
 
                 // 开始上传
-                document.getElementById('start-upload').addEventListener('click', () => this.startUpload());
+                const startUpload = document.getElementById('start-upload');
+                if (startUpload) startUpload.addEventListener('click', () => this.startUpload());
 
                 // 关闭上传提示
-                document.getElementById('close-upload-toast').addEventListener('click', () => this.hideUploadToast());
+                const closeUploadToast = document.getElementById('close-upload-toast');
+                if (closeUploadToast) closeUploadToast.addEventListener('click', () => this.hideUploadToast());
 
                 // 点击模态框背景关闭
-                document.getElementById('upload-modal').addEventListener('click', (e) => {
+                uploadModal.addEventListener('click', (e) => {
                     if (e.target.id === 'upload-modal') {
                         this.closeModal();
                     }
@@ -594,6 +496,7 @@
 
             setupDragAndDrop() {
                 const dropZone = document.getElementById('drop-zone');
+                if (!dropZone) return;
 
                 dropZone.addEventListener('dragover', (e) => {
                     e.preventDefault();
@@ -614,30 +517,45 @@
 
             setupFileInput() {
                 const fileInput = document.getElementById('file-input');
-                fileInput.addEventListener('change', (e) => {
-                    this.handleFiles(e.target.files);
-                });
+                if (fileInput) {
+                    fileInput.addEventListener('change', (e) => {
+                        this.handleFiles(e.target.files);
+                    });
+                }
             }
 
             openModal() {
-                document.getElementById('upload-modal').classList.remove('hidden');
-                this.resetForm();
+                const modal = document.getElementById('upload-modal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    this.resetForm();
+                }
             }
 
             closeModal() {
-                document.getElementById('upload-modal').classList.add('hidden');
-                this.resetForm();
+                const modal = document.getElementById('upload-modal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                    this.resetForm();
+                }
             }
 
             resetForm() {
                 this.selectedFiles = [];
-                document.getElementById('file-list').classList.add('hidden');
-                document.getElementById('file-items').innerHTML = '';
-                document.getElementById('file-category').value = 'paper';
-                document.getElementById('file-permission').value = 'public';
-                document.getElementById('file-description').value = '';
-                document.getElementById('start-upload').disabled = true;
-                document.getElementById('file-input').value = '';
+                const fileList = document.getElementById('file-list');
+                if (fileList) fileList.classList.add('hidden');
+                const fileItems = document.getElementById('file-items');
+                if (fileItems) fileItems.innerHTML = '';
+                const fileCategory = document.getElementById('file-category');
+                if (fileCategory) fileCategory.value = 'paper';
+                const filePermission = document.getElementById('file-permission');
+                if (filePermission) filePermission.value = 'public';
+                const fileDescription = document.getElementById('file-description');
+                if (fileDescription) fileDescription.value = '';
+                const startUpload = document.getElementById('start-upload');
+                if (startUpload) startUpload.disabled = true;
+                const fileInput = document.getElementById('file-input');
+                if (fileInput) fileInput.value = '';
             }
 
             handleFiles(files) {
@@ -2144,9 +2062,10 @@
         async function loadMeetingStats() {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/meetings/stats`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                    credentials: 'include'
                 });
                 const result = await response.json();
+                console.log('组会统计响应:', result);
                 if (result.success) {
                     document.querySelector('.stats-this-month').textContent = result.data.this_month_meetings || 0;
                     document.querySelector('.stats-scheduled').textContent = result.data.scheduled_count || 0;
@@ -2166,13 +2085,26 @@
                 if (meetingCurrentType) params.append('meeting_type', meetingCurrentType);
 
                 const response = await fetch(`${API_BASE_URL}/api/meetings?${params.toString()}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                    credentials: 'include'
                 });
                 const result = await response.json();
+                console.log('组会列表响应:', result);
                 if (result.success) {
                     renderMeetingList(result.data.meetings, result.data.pagination);
+                } else {
+                    console.error('加载组会列表失败:', result.message);
+                    const container = document.getElementById('meetings-container');
+                    if (container) {
+                        container.innerHTML = `<div class="text-center py-12 text-gray-500"><p>${result.message || '加载失败'}</p></div>`;
+                    }
                 }
-            } catch (e) { console.error('加载组会列表失败:', e); }
+            } catch (e) {
+                console.error('加载组会列表失败:', e);
+                const container = document.getElementById('meetings-container');
+                if (container) {
+                    container.innerHTML = '<div class="text-center py-12 text-gray-500"><p>网络错误，请刷新重试</p></div>';
+                }
+            }
         }
 
         // 渲染组会列表
@@ -2186,11 +2118,25 @@
             }
 
             container.innerHTML = meetings.map(m => {
-                const statusText = m.status === 'scheduled' ? '待召开' : (m.status === 'ongoing' ? '进行中' : '已完成');
-                const statusClass = m.status === 'scheduled' ? 'bg-blue-100 text-blue-700' : (m.status === 'ongoing' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700');
+                const statusText = m.status === 'scheduled' ? '待召开' : (m.status === 'ongoing' ? '进行中' : (m.status === 'completed' ? '已召开' : (m.status === 'cancelled' ? '已废弃' : '已推迟')));
+                const statusClass = m.status === 'scheduled' ? 'bg-blue-100 text-blue-700' : (m.status === 'ongoing' ? 'bg-green-100 text-green-700' : (m.status === 'completed' ? 'bg-gray-100 text-gray-700' : (m.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700')));
                 const typeText = m.meeting_type === 'regular' ? '常规组会' : (m.meeting_type === 'paper_reading' ? '论文研读' : '专题讨论');
                 const date = new Date(m.scheduled_at);
                 const formattedDate = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+
+                // 汇报人信息
+                const presenters = m.presenters || [];
+                const presentersHtml = presenters.length > 0
+                    ? `<div class="flex items-center gap-2 mt-3">
+                        <i class="fa fa-users text-gray-400"></i>
+                        <div class="flex flex-wrap gap-2">
+                            ${presenters.map(p => `<span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-700">
+                                <i class="fa fa-user-o"></i>${p.real_name || p.username}
+                                <span class="text-gray-400">${p.duration_minutes}分钟</span>
+                            </span>`).join('')}
+                        </div>
+                       </div>`
+                    : '<p class="text-sm text-gray-400 mt-3"><i class="fa fa-users mr-1"></i>暂无汇报人</p>';
 
                 return `
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
@@ -2200,6 +2146,7 @@
                             <span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full font-medium ml-2">${typeText}</span>
                             <h3 class="text-lg font-semibold mt-3">${m.title}</h3>
                             ${m.description ? `<p class="text-sm text-gray-500 mt-1">${m.description}</p>` : ''}
+                            ${presentersHtml}
                         </div>
                         <div class="text-right text-sm text-gray-500">
                             <p><i class="fa fa-calendar mr-1"></i>${formattedDate}</p>
@@ -2210,20 +2157,822 @@
                     <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
                         <div class="text-sm text-gray-500">
                             ${m.material_required ? '<span class="mr-4"><i class="fa fa-file-text-o mr-1"></i>需提交材料</span>' : ''}
+                            <span class="text-gray-400"><i class="fa fa-users mr-1"></i>${presenters.length} 位汇报人</span>
                         </div>
-                        <div>
-                            <button onclick="viewMeeting(${m.id})" class="px-3 py-1 text-sm text-primary hover:bg-primary/10 rounded-lg"><i class="fa fa-eye mr-1"></i>详情</button>
+                        <div class="flex gap-2">
+                            <button onclick="viewMeeting(${m.id})" class="px-3 py-1 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"><i class="fa fa-eye mr-1"></i>详情</button>
+                            <button onclick="openEditMeetingFromList(${m.id})" class="px-3 py-1 text-sm text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"><i class="fa fa-edit mr-1"></i>编辑</button>
+                            <button onclick="confirmDeleteMeeting(${m.id}, '${m.title.replace(/'/g, "\\'")}')\" class="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"><i class="fa fa-trash-o mr-1"></i>删除</button>
                         </div>
                     </div>
                 </div>`;
             }).join('');
         }
 
+        // 从列表直接打开编辑模态框
+        async function openEditMeetingFromList(id) {
+            currentMeetingId = id;
+            await openEditModal();
+        }
+
+        // 删除组会相关功能
+        let meetingToDelete = null;
+        let currentMeetingId = null; // 当前查看详情的组会ID
+        let createSelectedPresenters = []; // 创建组会时选择的汇报人列表
+        let editSelectedPresenters = []; // 编辑组会时选择的汇报人列表
+        let membersList = []; // 成员列表缓存
+
+        function confirmDeleteMeeting(id, title) {
+            meetingToDelete = id;
+            const modal = document.getElementById('delete-meeting-modal');
+            const titleEl = document.getElementById('delete-meeting-title');
+            if (modal && titleEl) {
+                titleEl.textContent = title;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('delete-meeting-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            meetingToDelete = null;
+        }
+
+        async function deleteMeeting() {
+            if (!meetingToDelete) return;
+
+            const deleteBtn = document.getElementById('confirm-delete-btn');
+            try {
+                if (deleteBtn) {
+                    deleteBtn.disabled = true;
+                    deleteBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 删除中...';
+                }
+
+                const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingToDelete}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('组会已删除');
+                    closeDeleteModal();
+                    loadMeetingStats();
+                    loadMeetings();
+                } else {
+                    alert(result.message || '删除失败');
+                }
+            } catch (error) {
+                console.error('删除组会失败:', error);
+                alert('网络错误，请重试');
+            } finally {
+                if (deleteBtn) {
+                    deleteBtn.disabled = false;
+                    deleteBtn.innerHTML = '确认删除';
+                }
+            }
+        }
+
         function viewMeeting(id) {
-            alert('组会详情页面即将上线，ID: ' + id);
+            // 获取组会详情并显示模态框
+            loadMeetingDetail(id);
+        }
+
+        async function loadMeetingDetail(id) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/meetings/${id}`, {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showMeetingDetail(result.data);
+                } else {
+                    alert(result.message || '获取详情失败');
+                }
+            } catch (error) {
+                console.error('获取组会详情失败:', error);
+                alert('网络错误，请重试');
+            }
+        }
+
+        function showMeetingDetail(meeting) {
+            const modal = document.getElementById('meeting-detail-modal');
+            if (!modal) return;
+
+            // 保存当前组会ID
+            currentMeetingId = meeting.id;
+
+            // 填充详情数据
+            const statusText = meeting.status === 'scheduled' ? '待召开' : (meeting.status === 'ongoing' ? '进行中' : (meeting.status === 'completed' ? '已召开' : (meeting.status === 'cancelled' ? '已废弃' : '已推迟')));
+            const statusClass = meeting.status === 'scheduled' ? 'bg-blue-100 text-blue-700' : (meeting.status === 'ongoing' ? 'bg-green-100 text-green-700' : (meeting.status === 'completed' ? 'bg-gray-100 text-gray-700' : (meeting.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700')));
+            const typeText = meeting.meeting_type === 'regular' ? '常规组会' : (meeting.meeting_type === 'paper_reading' ? '论文研读' : '专题讨论');
+
+            const date = new Date(meeting.scheduled_at);
+            const formattedDate = `${date.getFullYear()}年${date.getMonth()+1}月${date.getDate()}日 ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+
+            document.getElementById('detail-status').innerHTML = `<span class="${statusClass} text-xs px-3 py-1 rounded-full font-medium">${statusText}</span>`;
+            document.getElementById('detail-type').innerHTML = `<span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full font-medium">${typeText}</span>`;
+            document.getElementById('detail-title').textContent = meeting.title;
+            document.getElementById('detail-time').textContent = formattedDate;
+            document.getElementById('detail-duration').textContent = meeting.duration_total + '分钟';
+            document.getElementById('detail-location').textContent = meeting.location || '待定';
+            document.getElementById('detail-online').innerHTML = meeting.is_online ?
+                `<a href="${meeting.online_link}" target="_blank" class="text-primary hover:underline">${meeting.online_link || '无链接'}</a>` : '线下会议';
+            document.getElementById('detail-description').textContent = meeting.description || '无描述';
+            document.getElementById('detail-material').textContent = meeting.material_required ? '需要提交材料' : '无需提交材料';
+            document.getElementById('detail-notes').textContent = meeting.notes || '无备注';
+            document.getElementById('detail-creator').textContent = meeting.created_by || '未知';
+
+            // 加载汇报人列表
+            loadPresenters(meeting.id);
+
+            // 高亮当前状态按钮
+            highlightCurrentStatus(meeting.status);
+
+            // 显示模态框
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // 加载汇报人列表
+        async function loadPresenters(meetingId) {
+            const container = document.getElementById('presenters-list');
+            if (!container) return;
+
+            container.innerHTML = '<p class="text-sm text-gray-400">加载中...</p>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/presenters`, {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    const presenters = result.data.presenters;
+                    if (presenters.length === 0) {
+                        container.innerHTML = '<p class="text-sm text-gray-400">暂无汇报人，点击上方按钮添加</p>';
+                    } else {
+                        container.innerHTML = presenters.map(p => {
+                            const typeText = p.presenter_type === 'assigned' ? '导师指定' : '主动报名';
+                            const statusText = p.status === 'pending' ? '待确认' : (p.status === 'confirmed' ? '已确认' : '已完成');
+                            const statusClass = p.status === 'pending' ? 'text-yellow-600' : (p.status === 'confirmed' ? 'text-blue-600' : 'text-green-600');
+                            return `
+                            <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                                        <i class="fa fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-800">${p.user.real_name || p.user.username}</p>
+                                        <p class="text-sm text-gray-500">${p.user.research_direction || ''}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="text-right">
+                                        <p class="text-sm ${statusClass}">${statusText}</p>
+                                        <p class="text-xs text-gray-400">${p.duration_minutes}分钟 · ${typeText}</p>
+                                    </div>
+                                    <button onclick="removePresenter(${p.id})" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>`;
+                        }).join('');
+                    }
+                } else {
+                    container.innerHTML = '<p class="text-sm text-red-400">加载失败</p>';
+                }
+            } catch (error) {
+                console.error('加载汇报人失败:', error);
+                container.innerHTML = '<p class="text-sm text-red-400">网络错误</p>';
+            }
+        }
+
+        // 添加汇报人相关功能
+        async function openAddPresenterModal() {
+            if (!currentMeetingId) return;
+
+            // 加载成员列表
+            await loadMembersForPresenter();
+
+            const modal = document.getElementById('add-presenter-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        async function loadMembersForPresenter() {
+            const select = document.getElementById('presenter-user-select');
+            if (!select) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/members`, {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    const members = result.data.members;
+                    select.innerHTML = '<option value="">请选择成员</option>' +
+                        members.map(m => `<option value="${m.id}">${m.real_name || m.username} (${m.role === 'student' ? '学生' : '导师'})</option>`).join('');
+                } else {
+                    select.innerHTML = '<option value="">加载失败</option>';
+                }
+            } catch (error) {
+                console.error('加载成员失败:', error);
+                select.innerHTML = '<option value="">网络错误</option>';
+            }
+        }
+
+        function closeAddPresenterModal() {
+            const modal = document.getElementById('add-presenter-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        async function submitAddPresenter() {
+            if (!currentMeetingId) return;
+
+            const userId = document.getElementById('presenter-user-select').value;
+            if (!userId) {
+                alert('请选择汇报人');
+                return;
+            }
+
+            const duration = parseInt(document.getElementById('presenter-duration').value) || 20;
+            const presenterType = document.getElementById('presenter-type').value;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/meetings/${currentMeetingId}/presenters`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        user_id: parseInt(userId),
+                        duration_minutes: duration,
+                        presenter_type: presenterType
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('添加汇报人成功');
+                    closeAddPresenterModal();
+                    loadPresenters(currentMeetingId);
+                } else {
+                    alert(result.message || '添加失败');
+                }
+            } catch (error) {
+                console.error('添加汇报人失败:', error);
+                alert('网络错误');
+            }
+        }
+
+        async function removePresenter(presenterId) {
+            if (!currentMeetingId) return;
+
+            if (!confirm('确定要移除该汇报人吗？')) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/meetings/${currentMeetingId}/presenters/${presenterId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    loadPresenters(currentMeetingId);
+                } else {
+                    alert(result.message || '移除失败');
+                }
+            } catch (error) {
+                console.error('移除汇报人失败:', error);
+                alert('网络错误');
+            }
+        }
+
+        // 高亮当前状态按钮
+        function highlightCurrentStatus(currentStatus) {
+            const buttons = document.querySelectorAll('.status-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-offset-2');
+            });
+        }
+
+        // 更新组会状态
+        async function updateMeetingStatus(meetingId, newStatus) {
+            if (!meetingId) return;
+
+            const statusNames = {
+                'scheduled': '待召开',
+                'ongoing': '进行中',
+                'completed': '已召开',
+                'cancelled': '已废弃',
+                'postponed': '已推迟'
+            };
+
+            if (!confirm(`确定将组会状态更改为"${statusNames[newStatus]}"吗？`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('状态更新成功');
+                    // 更新详情显示
+                    showMeetingDetail(result.data);
+                    // 刷新列表
+                    loadMeetingStats();
+                    loadMeetings();
+                } else {
+                    alert(result.message || '更新失败');
+                }
+            } catch (error) {
+                console.error('更新状态失败:', error);
+                alert('网络错误，请重试');
+            }
+        }
+
+        function closeDetailModal() {
+            const modal = document.getElementById('meeting-detail-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        // 编辑组会相关功能
+        let currentMeetingData = null;
+
+        async function openEditModal() {
+            if (!currentMeetingId) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/meetings/${currentMeetingId}`, {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    currentMeetingData = result.data;
+                    populateEditForm(result.data);
+
+                    // 加载现有汇报人
+                    await loadExistingPresenters(currentMeetingId);
+
+                    const modal = document.getElementById('edit-meeting-modal');
+                    if (modal) {
+                        modal.classList.remove('hidden');
+                        modal.classList.add('flex');
+                    }
+                } else {
+                    alert(result.message || '获取组会信息失败');
+                }
+            } catch (error) {
+                console.error('获取组会信息失败:', error);
+                alert('网络错误，请重试');
+            }
+        }
+
+        // 加载现有汇报人到编辑表单
+        async function loadExistingPresenters(meetingId) {
+            const container = document.getElementById('edit-presenters-container');
+            if (!container) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/presenters`, {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    editSelectedPresenters = result.data.presenters.map(p => ({
+                        id: p.id,
+                        user_id: p.user_id,
+                        name: p.user.real_name || p.user.username,
+                        duration: p.duration_minutes,
+                        type: p.presenter_type
+                    }));
+                    renderEditPresenters();
+                } else {
+                    container.innerHTML = '<p class="text-sm text-gray-400">加载失败</p>';
+                }
+            } catch (error) {
+                console.error('加载汇报人失败:', error);
+                container.innerHTML = '<p class="text-sm text-gray-400">网络错误</p>';
+            }
+        }
+
+        // 添加汇报人到创建表单
+        async function addPresenterToCreateForm() {
+            await openPresenterSelectModal('create');
+        }
+
+        // 添加汇报人到编辑表单
+        async function addPresenterToEditForm() {
+            await openPresenterSelectModal('edit');
+        }
+
+        // 加载成员列表
+        async function loadMembersForSelect() {
+            // 每次都重新加载以确保数据最新
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/members`, {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                console.log('成员列表响应:', result);
+
+                if (result.success) {
+                    membersList = result.data.members || [];
+                } else {
+                    console.error('加载成员失败:', result.message);
+                    membersList = [];
+                }
+            } catch (error) {
+                console.error('加载成员失败:', error);
+                membersList = [];
+            }
+        }
+
+        // 打开汇报人选择模态框
+        async function openPresenterSelectModal(target) {
+            // 先加载成员列表
+            await loadMembersForSelect();
+
+            const modal = document.getElementById('presenter-select-modal');
+            const membersListContainer = document.getElementById('presenter-members-list');
+            const durationInput = document.getElementById('presenter-select-duration');
+            const typeSelect = document.getElementById('presenter-select-type');
+            const selectedCountEl = document.getElementById('selected-count');
+
+            if (!modal || !membersListContainer) return;
+
+            // 填充成员多选列表（checkbox形式）
+            if (membersList.length === 0) {
+                membersListContainer.innerHTML = '<p class="text-sm text-gray-400">暂无成员</p>';
+            } else {
+                // 根据target判断哪些成员已被选中，需要排除
+                const existingIds = target === 'create'
+                    ? createSelectedPresenters.map(p => p.user_id)
+                    : editSelectedPresenters.map(p => p.user_id);
+
+                membersListContainer.innerHTML = membersList
+                    .filter(m => !existingIds.includes(m.id)) // 排除已添加的成员
+                    .map(m => `
+                        <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                            <input type="checkbox" class="presenter-checkbox rounded border-gray-300 text-primary focus:ring-primary"
+                                value="${m.id}" data-name="${m.real_name || m.username}"
+                                onchange="updateSelectedCount()">
+                            <div class="flex-1">
+                                <span class="font-medium text-gray-800">${m.real_name || m.username}</span>
+                                <span class="text-xs text-gray-500 ml-2">${m.role === 'student' ? '学生' : m.role === 'teacher' ? '导师' : '管理员'}</span>
+                            </div>
+                        </label>
+                    `).join('');
+
+                if (membersListContainer.innerHTML === '') {
+                    membersListContainer.innerHTML = '<p class="text-sm text-gray-400">所有成员都已添加</p>';
+                }
+            }
+
+            durationInput.value = 20;
+            typeSelect.value = 'assigned';
+            selectedCountEl.textContent = '已选择 0 人';
+
+            // 设置目标标识
+            modal.dataset.target = target;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // 更新已选择人数显示
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('.presenter-checkbox:checked');
+            const countEl = document.getElementById('selected-count');
+            if (countEl) {
+                countEl.textContent = `已选择 ${checkboxes.length} 人`;
+            }
+        }
+
+        function closePresenterSelectModal() {
+            const modal = document.getElementById('presenter-select-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        // 确认选择汇报人（支持多选）
+        function confirmPresenterSelect() {
+            const modal = document.getElementById('presenter-select-modal');
+            const checkboxes = document.querySelectorAll('.presenter-checkbox:checked');
+            const durationInput = document.getElementById('presenter-select-duration');
+            const typeSelect = document.getElementById('presenter-select-type');
+
+            if (checkboxes.length === 0) {
+                alert('请至少选择一个成员');
+                return;
+            }
+
+            const duration = parseInt(durationInput.value) || 20;
+            const type = typeSelect.value;
+            const target = modal.dataset.target;
+
+            // 添加所有选中的成员
+            checkboxes.forEach(cb => {
+                const userId = parseInt(cb.value);
+                const userName = cb.dataset.name;
+
+                const presenter = {
+                    user_id: userId,
+                    name: userName,
+                    duration: duration,
+                    type: type
+                };
+
+                if (target === 'create') {
+                    createSelectedPresenters.push(presenter);
+                } else if (target === 'edit') {
+                    editSelectedPresenters.push(presenter);
+                }
+            });
+
+            // 更新显示
+            if (target === 'create') {
+                renderCreatePresenters();
+            } else if (target === 'edit') {
+                renderEditPresenters();
+            }
+
+            closePresenterSelectModal();
+        }
+
+        // 渲染创建表单的汇报人列表
+        function renderCreatePresenters() {
+            const container = document.getElementById('create-presenters-container');
+            if (!container) return;
+
+            if (createSelectedPresenters.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-400">点击上方按钮添加汇报人</p>';
+                return;
+            }
+
+            container.innerHTML = createSelectedPresenters.map((p, index) => `
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm">
+                            <i class="fa fa-user"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-800">${p.name}</p>
+                            <p class="text-xs text-gray-500">${p.duration}分钟 · ${p.type === 'assigned' ? '导师指定' : '主动报名'}</p>
+                        </div>
+                    </div>
+                    <button onclick="removeCreatePresenter(${index})" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // 渲染编辑表单的汇报人列表
+        function renderEditPresenters() {
+            const container = document.getElementById('edit-presenters-container');
+            if (!container) return;
+
+            if (editSelectedPresenters.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-400">点击上方按钮添加汇报人</p>';
+                return;
+            }
+
+            container.innerHTML = editSelectedPresenters.map((p, index) => `
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm">
+                            <i class="fa fa-user"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-800">${p.name}</p>
+                            <p class="text-xs text-gray-500">${p.duration}分钟 · ${p.type === 'assigned' ? '导师指定' : '主动报名'}${p.id ? ' (已保存)' : ''}</p>
+                        </div>
+                    </div>
+                    <button onclick="removeEditPresenter(${index})" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // 移除创建表单的汇报人
+        function removeCreatePresenter(index) {
+            createSelectedPresenters.splice(index, 1);
+            renderCreatePresenters();
+        }
+
+        // 移除编辑表单的汇报人
+        async function removeEditPresenter(index) {
+            const presenter = editSelectedPresenters[index];
+
+            // 如果是已保存的汇报人，需要调用API删除
+            if (presenter.id && currentMeetingId) {
+                if (!confirm('确定要移除该汇报人吗？')) return;
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/meetings/${currentMeetingId}/presenters/${presenter.id}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+                    const result = await response.json();
+
+                    if (!result.success) {
+                        alert(result.message || '删除失败');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('删除汇报人失败:', error);
+                    alert('网络错误');
+                    return;
+                }
+            }
+
+            editSelectedPresenters.splice(index, 1);
+            renderEditPresenters();
+        }
+
+        function populateEditForm(meeting) {
+            document.getElementById('edit-meeting-title').value = meeting.title || '';
+            document.getElementById('edit-meeting-type').value = meeting.meeting_type || 'regular';
+            document.getElementById('edit-meeting-duration').value = meeting.duration_total || 60;
+            document.getElementById('edit-meeting-location').value = meeting.location || '';
+
+            // 处理时间格式
+            if (meeting.scheduled_at) {
+                const date = new Date(meeting.scheduled_at);
+                const formatted = date.toISOString().slice(0, 16);
+                document.getElementById('edit-meeting-scheduled-at').value = formatted;
+            }
+
+            // 线上会议
+            const isOnlineCheckbox = document.getElementById('edit-meeting-is-online');
+            const onlineLinkContainer = document.getElementById('edit-online-link-container');
+            isOnlineCheckbox.checked = meeting.is_online || false;
+            if (meeting.is_online) {
+                onlineLinkContainer.classList.remove('hidden');
+                document.getElementById('edit-meeting-online-link').value = meeting.online_link || '';
+            } else {
+                onlineLinkContainer.classList.add('hidden');
+            }
+
+            document.getElementById('edit-meeting-description').value = meeting.description || '';
+            document.getElementById('edit-meeting-material-required').checked = meeting.material_required || false;
+            document.getElementById('edit-meeting-notes').value = meeting.notes || '';
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('edit-meeting-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            currentMeetingData = null;
+            editSelectedPresenters = [];
+        }
+
+        async function submitEditMeeting() {
+            if (!currentMeetingId) return;
+
+            const title = document.getElementById('edit-meeting-title').value.trim();
+            const scheduledAt = document.getElementById('edit-meeting-scheduled-at').value;
+
+            if (!title) {
+                alert('请输入组会标题');
+                return;
+            }
+            if (!scheduledAt) {
+                alert('请选择会议时间');
+                return;
+            }
+
+            const isOnlineCheckbox = document.getElementById('edit-meeting-is-online');
+
+            const formData = {
+                title: title,
+                meeting_type: document.getElementById('edit-meeting-type').value,
+                duration_total: parseInt(document.getElementById('edit-meeting-duration').value) || 60,
+                scheduled_at: scheduledAt,
+                location: document.getElementById('edit-meeting-location').value.trim() || null,
+                is_online: isOnlineCheckbox.checked,
+                online_link: isOnlineCheckbox.checked ? document.getElementById('edit-meeting-online-link').value.trim() : null,
+                description: document.getElementById('edit-meeting-description').value.trim() || null,
+                material_required: document.getElementById('edit-meeting-material-required').checked,
+                notes: document.getElementById('edit-meeting-notes').value.trim() || null
+            };
+
+            try {
+                const submitBtn = document.querySelector('#edit-meeting-modal button:last-child');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 保存中...';
+                }
+
+                // 更新组会基本信息
+                const response = await fetch(`${API_BASE_URL}/api/meetings/${currentMeetingId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // 添加新的汇报人（没有id的是新添加的）
+                    const newPresenters = editSelectedPresenters.filter(p => !p.id);
+                    for (const presenter of newPresenters) {
+                        await fetch(`${API_BASE_URL}/api/meetings/${currentMeetingId}/presenters`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                                user_id: presenter.user_id,
+                                duration_minutes: presenter.duration,
+                                presenter_type: presenter.type
+                            })
+                        });
+                    }
+
+                    alert('组会更新成功！');
+                    closeEditModal();
+                    closeDetailModal();
+                    editSelectedPresenters = [];
+                    loadMeetingStats();
+                    loadMeetings();
+                } else {
+                    alert(result.message || '更新失败，请重试');
+                }
+            } catch (error) {
+                console.error('更新组会失败:', error);
+                alert('网络错误，请重试');
+            } finally {
+                const submitBtn = document.querySelector('#edit-meeting-modal button:last-child');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '保存修改';
+                }
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            // 编辑模态框线上会议切换
+            const editIsOnlineCheckbox = document.getElementById('edit-meeting-is-online');
+            const editOnlineLinkContainer = document.getElementById('edit-online-link-container');
+
+            if (editIsOnlineCheckbox) {
+                editIsOnlineCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        editOnlineLinkContainer.classList.remove('hidden');
+                    } else {
+                        editOnlineLinkContainer.classList.add('hidden');
+                        document.getElementById('edit-meeting-online-link').value = '';
+                    }
+                });
+            }
+
+            // 点击编辑模态框背景关闭
+            const editModal = document.getElementById('edit-meeting-modal');
+            if (editModal) {
+                editModal.addEventListener('click', function(e) {
+                    if (e.target === editModal) {
+                        closeEditModal();
+                    }
+                });
+            }
+
             // 首先检查URL中是否有session_token
             const hasUrlToken = checkUrlSessionToken();
 
@@ -2321,6 +3070,615 @@
                 }, 500);
             }
         });
+    </script>
+
+    <!-- 创建组会模态框 -->
+    <div id="create-meeting-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-800">发布组会</h2>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="create-meeting-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">组会标题 <span class="text-red-500">*</span></label>
+                        <input type="text" id="meeting-title" name="title" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="例如：第13周组会 - 论文研读与进展汇报">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">组会类型</label>
+                            <select id="meeting-type" name="meeting_type"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                                <option value="regular">常规组会</option>
+                                <option value="paper_reading">论文研读</option>
+                                <option value="topic_discussion">专题讨论</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">总时长（分钟）</label>
+                            <input type="number" id="meeting-duration" name="duration_total" value="60" min="15" max="180"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">会议时间 <span class="text-red-500">*</span></label>
+                            <input type="datetime-local" id="meeting-scheduled-at" name="scheduled_at" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">会议地点</label>
+                            <input type="text" id="meeting-location" name="location"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                placeholder="例如：计算中心302会议室">
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="meeting-is-online" name="is_online" class="rounded border-gray-300 text-primary focus:ring-primary">
+                            <span class="text-sm text-gray-700">线上会议</span>
+                        </label>
+                        <div id="online-link-container" class="flex-1 hidden">
+                            <input type="text" id="meeting-online-link" name="online_link"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                placeholder="线上会议链接">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">组会描述</label>
+                        <textarea id="meeting-description" name="description" rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
+                            placeholder="组会主题说明"></textarea>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="meeting-material-required" name="material_required" checked class="rounded border-gray-300 text-primary focus:ring-primary">
+                            <span class="text-sm text-gray-700">需要提交材料</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
+                        <textarea id="meeting-notes" name="notes" rows="2"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
+                            placeholder="例如：请各位汇报人提前提交PPT"></textarea>
+                    </div>
+
+                    <!-- 汇报人选择 -->
+                    <div class="border-t border-gray-200 pt-4 mt-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="block text-sm font-medium text-gray-700">汇报人</label>
+                            <button type="button" onclick="addPresenterToCreateForm()" class="text-sm text-primary hover:text-primary/80 flex items-center gap-1">
+                                <i class="fa fa-plus"></i> 添加汇报人
+                            </button>
+                        </div>
+                        <div id="create-presenters-container" class="space-y-2">
+                            <p class="text-sm text-gray-400">点击上方按钮添加汇报人</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                <button id="cancel-meeting-btn" onclick="closeCreateModal()" class="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+                    取消
+                </button>
+                <button id="submit-meeting-btn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                    发布组会
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除组会确认模态框 -->
+    <div id="delete-meeting-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-800">删除组会</h2>
+                <button onclick="closeDeleteModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="text-center mb-4">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-trash-o text-2xl text-red-600"></i>
+                    </div>
+                    <p class="text-gray-600">确定要删除组会：</p>
+                    <p class="font-semibold text-gray-800 mt-2" id="delete-meeting-title"></p>
+                    <p class="text-sm text-red-500 mt-4">删除后将无法恢复，请谨慎操作</p>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                <button onclick="closeDeleteModal()" class="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+                    取消
+                </button>
+                <button id="confirm-delete-btn" onclick="deleteMeeting()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    确认删除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 组会详情模态框 -->
+    <div id="meeting-detail-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-800">组会详情</h2>
+                <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <!-- 基本信息 -->
+                <div class="flex items-center gap-3 mb-4">
+                    <span id="detail-status"></span>
+                    <span id="detail-type"></span>
+                </div>
+                <h3 id="detail-title" class="text-xl font-bold text-gray-800 mb-4"></h3>
+
+                <!-- 详细信息 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                <i class="fa fa-calendar text-primary"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">会议时间</p>
+                                <p id="detail-time" class="font-medium text-gray-800"></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                                <i class="fa fa-clock-o text-green-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">会议时长</p>
+                                <p id="detail-duration" class="font-medium text-gray-800"></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                                <i class="fa fa-map-marker text-purple-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">会议地点</p>
+                                <p id="detail-location" class="font-medium text-gray-800"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                                <i class="fa fa-video-camera text-indigo-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">线上会议</p>
+                                <p id="detail-online" class="font-medium text-gray-800"></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+                                <i class="fa fa-file-text-o text-orange-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">材料要求</p>
+                                <p id="detail-material" class="font-medium text-gray-800"></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                                <i class="fa fa-user text-gray-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">创建者</p>
+                                <p id="detail-creator" class="font-medium text-gray-800"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 描述 -->
+                <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <p class="text-sm text-gray-500 mb-2">组会描述</p>
+                    <p id="detail-description" class="text-gray-800"></p>
+                </div>
+
+                <!-- 备注 -->
+                <div class="mt-4 p-4 bg-yellow-50 rounded-lg">
+                    <p class="text-sm text-gray-500 mb-2">备注</p>
+                    <p id="detail-notes" class="text-gray-800"></p>
+                </div>
+
+                <!-- 汇报人列表 -->
+                <div class="mt-6 p-4 bg-green-50 rounded-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="text-sm text-gray-500">汇报人</p>
+                        <button onclick="openAddPresenterModal()" class="px-3 py-1 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors flex items-center gap-1">
+                            <i class="fa fa-plus"></i> 添加汇报人
+                        </button>
+                    </div>
+                    <div id="presenters-list" class="space-y-2">
+                        <p class="text-sm text-gray-400">加载中...</p>
+                    </div>
+                </div>
+
+                <!-- 状态管理 -->
+                <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <p class="text-sm text-gray-500 mb-3">状态管理</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="updateMeetingStatus(currentMeetingId, 'scheduled')" class="status-btn px-3 py-2 rounded-lg border-2 border-blue-200 bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors text-sm flex items-center gap-1">
+                            <i class="fa fa-clock-o"></i> 待召开
+                        </button>
+                        <button onclick="updateMeetingStatus(currentMeetingId, 'ongoing')" class="status-btn px-3 py-2 rounded-lg border-2 border-green-200 bg-green-100 text-green-700 hover:bg-green-200 transition-colors text-sm flex items-center gap-1">
+                            <i class="fa fa-play-circle"></i> 进行中
+                        </button>
+                        <button onclick="updateMeetingStatus(currentMeetingId, 'completed')" class="status-btn px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors text-sm flex items-center gap-1">
+                            <i class="fa fa-check-circle"></i> 已召开
+                        </button>
+                        <button onclick="updateMeetingStatus(currentMeetingId, 'postponed')" class="status-btn px-3 py-2 rounded-lg border-2 border-yellow-200 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition-colors text-sm flex items-center gap-1">
+                            <i class="fa fa-pause-circle"></i> 推迟
+                        </button>
+                        <button onclick="updateMeetingStatus(currentMeetingId, 'cancelled')" class="status-btn px-3 py-2 rounded-lg border-2 border-red-200 bg-red-100 text-red-700 hover:bg-red-200 transition-colors text-sm flex items-center gap-1">
+                            <i class="fa fa-ban"></i> 废弃
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-between">
+                <button onclick="openEditModal()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2">
+                    <i class="fa fa-edit"></i> 编辑组会
+                </button>
+                <button onclick="closeDetailModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑组会模态框 -->
+    <div id="edit-meeting-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-800">编辑组会</h2>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="edit-meeting-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">组会标题 <span class="text-red-500">*</span></label>
+                        <input type="text" id="edit-meeting-title" name="title" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="例如：第13周组会 - 论文研读与进展汇报">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">组会类型</label>
+                            <select id="edit-meeting-type" name="meeting_type"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                                <option value="regular">常规组会</option>
+                                <option value="paper_reading">论文研读</option>
+                                <option value="topic_discussion">专题讨论</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">总时长（分钟）</label>
+                            <input type="number" id="edit-meeting-duration" name="duration_total" value="60" min="15" max="180"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">会议时间 <span class="text-red-500">*</span></label>
+                            <input type="datetime-local" id="edit-meeting-scheduled-at" name="scheduled_at" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">会议地点</label>
+                            <input type="text" id="edit-meeting-location" name="location"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                placeholder="例如：计算中心302会议室">
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="edit-meeting-is-online" name="is_online" class="rounded border-gray-300 text-primary focus:ring-primary">
+                            <span class="text-sm text-gray-700">线上会议</span>
+                        </label>
+                        <div id="edit-online-link-container" class="flex-1 hidden">
+                            <input type="text" id="edit-meeting-online-link" name="online_link"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                placeholder="线上会议链接">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">组会描述</label>
+                        <textarea id="edit-meeting-description" name="description" rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
+                            placeholder="组会主题说明"></textarea>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="edit-meeting-material-required" name="material_required" checked class="rounded border-gray-300 text-primary focus:ring-primary">
+                            <span class="text-sm text-gray-700">需要提交材料</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
+                        <textarea id="edit-meeting-notes" name="notes" rows="2"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
+                            placeholder="例如：请各位汇报人提前提交PPT"></textarea>
+                    </div>
+
+                    <!-- 汇报人选择 -->
+                    <div class="border-t border-gray-200 pt-4 mt-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="block text-sm font-medium text-gray-700">汇报人</label>
+                            <button type="button" onclick="addPresenterToEditForm()" class="text-sm text-primary hover:text-primary/80 flex items-center gap-1">
+                                <i class="fa fa-plus"></i> 添加汇报人
+                            </button>
+                        </div>
+                        <div id="edit-presenters-container" class="space-y-2">
+                            <p class="text-sm text-gray-400">加载中...</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                <button onclick="closeEditModal()" class="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+                    取消
+                </button>
+                <button onclick="submitEditMeeting()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                    保存修改
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 汇报人选择模态框（用于创建/编辑组会） -->
+    <div id="presenter-select-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-800">选择汇报人（可多选）</h2>
+                <button onclick="closePresenterSelectModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <!-- 成员多选列表 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">选择成员 <span class="text-red-500">*</span></label>
+                        <div class="text-xs text-gray-500 mb-2">提示：可勾选多个成员，一次添加多个汇报人</div>
+                        <div id="presenter-members-list" class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
+                            <p class="text-sm text-gray-400">加载中...</p>
+                        </div>
+                    </div>
+                    <!-- 公共设置 -->
+                    <div class="grid grid-cols-2 gap-4 pt-3 border-t border-gray-100">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">汇报时长（分钟）</label>
+                            <input type="number" id="presenter-select-duration" value="20" min="5" max="60"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">分配类型</label>
+                            <select id="presenter-select-type"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                                <option value="assigned">导师指定</option>
+                                <option value="volunteered">主动报名</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+                <span id="selected-count" class="text-sm text-gray-500">已选择 0 人</span>
+                <div class="flex gap-3">
+                    <button onclick="closePresenterSelectModal()" class="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+                        取消
+                    </button>
+                    <button onclick="confirmPresenterSelect()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                        确认添加
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加汇报人模态框 -->
+    <div id="add-presenter-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-800">添加汇报人</h2>
+                <button onclick="closeAddPresenterModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="add-presenter-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">选择成员 <span class="text-red-500">*</span></label>
+                        <select id="presenter-user-select" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                            <option value="">加载中...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">汇报时长（分钟）</label>
+                        <input type="number" id="presenter-duration" value="20" min="5" max="60"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">分配类型</label>
+                        <select id="presenter-type"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                            <option value="assigned">导师指定</option>
+                            <option value="volunteered">主动报名</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                <button onclick="closeAddPresenterModal()" class="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+                    取消
+                </button>
+                <button onclick="submitAddPresenter()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                    添加
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 创建组会模态框相关功能
+        const createMeetingBtn = document.getElementById('create-meeting-btn');
+        const createMeetingModal = document.getElementById('create-meeting-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const cancelMeetingBtn = document.getElementById('cancel-meeting-btn');
+        const submitMeetingBtn = document.getElementById('submit-meeting-btn');
+        const isOnlineCheckbox = document.getElementById('meeting-is-online');
+        const onlineLinkContainer = document.getElementById('online-link-container');
+        const createMeetingForm = document.getElementById('create-meeting-form');
+
+        // 打开模态框
+        if (createMeetingBtn) {
+            createMeetingBtn.addEventListener('click', function() {
+                createMeetingModal.classList.remove('hidden');
+                createMeetingModal.classList.add('flex');
+                // 设置默认时间为下周同一时间
+                const now = new Date();
+                now.setDate(now.getDate() + 7);
+                const defaultTime = now.toISOString().slice(0, 16);
+                document.getElementById('meeting-scheduled-at').value = defaultTime;
+            });
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            createMeetingModal.classList.add('hidden');
+            createMeetingModal.classList.remove('flex');
+            createMeetingForm.reset();
+            onlineLinkContainer.classList.add('hidden');
+            createSelectedPresenters = [];
+            renderCreatePresenters();
+        }
+
+        function closeCreateModal() {
+            closeModal();
+        }
+
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', closeModal);
+        }
+        if (cancelMeetingBtn) {
+            cancelMeetingBtn.addEventListener('click', closeModal);
+        }
+
+        // 点击模态框外部关闭
+        createMeetingModal.addEventListener('click', function(e) {
+            if (e.target === createMeetingModal) {
+                closeModal();
+            }
+        });
+
+        // 线上会议切换
+        if (isOnlineCheckbox) {
+            isOnlineCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    onlineLinkContainer.classList.remove('hidden');
+                } else {
+                    onlineLinkContainer.classList.add('hidden');
+                    document.getElementById('meeting-online-link').value = '';
+                }
+            });
+        }
+
+        // 提交创建组会
+        if (submitMeetingBtn) {
+            submitMeetingBtn.addEventListener('click', async function() {
+                const title = document.getElementById('meeting-title').value.trim();
+                const scheduledAt = document.getElementById('meeting-scheduled-at').value;
+
+                if (!title) {
+                    alert('请输入组会标题');
+                    return;
+                }
+                if (!scheduledAt) {
+                    alert('请选择会议时间');
+                    return;
+                }
+
+                const formData = {
+                    title: title,
+                    meeting_type: document.getElementById('meeting-type').value,
+                    duration_total: parseInt(document.getElementById('meeting-duration').value) || 60,
+                    scheduled_at: scheduledAt,
+                    location: document.getElementById('meeting-location').value.trim() || null,
+                    is_online: isOnlineCheckbox.checked,
+                    online_link: isOnlineCheckbox.checked ? document.getElementById('meeting-online-link').value.trim() : null,
+                    description: document.getElementById('meeting-description').value.trim() || null,
+                    material_required: document.getElementById('meeting-material-required').checked,
+                    notes: document.getElementById('meeting-notes').value.trim() || null
+                };
+
+                try {
+                    submitMeetingBtn.disabled = true;
+                    submitMeetingBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 发布中...';
+
+                    const response = await fetch(`${API_BASE_URL}/api/meetings`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        const meetingId = result.data.id;
+
+                        // 添加汇报人
+                        if (createSelectedPresenters.length > 0) {
+                            for (const presenter of createSelectedPresenters) {
+                                await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/presenters`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    credentials: 'include',
+                                    body: JSON.stringify({
+                                        user_id: presenter.user_id,
+                                        duration_minutes: presenter.duration,
+                                        presenter_type: presenter.type
+                                    })
+                                });
+                            }
+                        }
+
+                        alert('组会发布成功！');
+                        closeCreateModal();
+                        createSelectedPresenters = [];
+                        loadMeetingStats();
+                        loadMeetings();
+                    } else {
+                        alert(result.message || '发布失败，请重试');
+                    }
+                } catch (error) {
+                    console.error('创建组会失败:', error);
+                    alert('网络错误，请重试');
+                } finally {
+                    submitMeetingBtn.disabled = false;
+                    submitMeetingBtn.innerHTML = '发布组会';
+                }
+            });
+        }
     </script>
 </body>
 </html>

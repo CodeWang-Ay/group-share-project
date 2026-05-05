@@ -45,7 +45,7 @@ templates.env.globals['current_year'] = datetime.now().year
 # 配置CORS中间件 - 支持前后端通信
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 在生产环境中应该设置具体的前端域名
+    allow_origins=["http://localhost:8081", "http://127.0.0.1:8081", "http://localhost:8000", "http://127.0.0.1:8000"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -3007,7 +3007,7 @@ async def rm_share_file_page(request: Request):
 async def get_meetings(request: Request):
     """
     获取组会列表API
-    支持分页和筛选
+    支持分页和筛选，同时返回汇报人信息
     """
     current_user = await get_current_user(request)
     if not current_user:
@@ -3020,14 +3020,14 @@ async def get_meetings(request: Request):
         # 获取查询参数
         page = int(request.query_params.get("page", 1))
         limit = int(request.query_params.get("limit", 10))
-        status = request.query_params.get("status")
+        meeting_status = request.query_params.get("status")
         meeting_type = request.query_params.get("meeting_type")
 
         offset = (page - 1) * limit
 
         # 获取组会列表
         meetings = MeetingService.get_meetings(
-            status=status,
+            status=meeting_status,
             meeting_type=meeting_type,
             limit=limit,
             offset=offset
@@ -3035,9 +3035,42 @@ async def get_meetings(request: Request):
 
         # 获取总数
         total = MeetingService.get_meetings_count(
-            status=status,
+            status=meeting_status,
             meeting_type=meeting_type
         )
+
+        # 为每个组会获取汇报人信息
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            meetings_with_presenters = []
+            for m in meetings:
+                meeting_dict = m.to_dict()
+
+                # 获取该组会的汇报人
+                cursor.execute("""
+                    SELECT mp.id, mp.user_id, mp.presenter_type, mp.duration_minutes, mp.status,
+                           u.username, u.role
+                    FROM meeting_presenters mp
+                    LEFT JOIN users u ON mp.user_id = u.id
+                    WHERE mp.meeting_id = ?
+                    ORDER BY mp.created_at ASC
+                """, (m.id,))
+
+                presenters = []
+                for row in cursor.fetchall():
+                    presenters.append({
+                        "id": row[0],
+                        "user_id": row[1],
+                        "presenter_type": row[2],
+                        "duration_minutes": row[3],
+                        "status": row[4],
+                        "username": row[5],
+                        "real_name": row[5]
+                    })
+
+                meeting_dict["presenters"] = presenters
+                meetings_with_presenters.append(meeting_dict)
 
         # 计算分页信息
         total_pages = (total + limit - 1) // limit if total > 0 else 1
@@ -3047,7 +3080,7 @@ async def get_meetings(request: Request):
             content={
                 "success": True,
                 "data": {
-                    "meetings": [m.to_dict() for m in meetings],
+                    "meetings": meetings_with_presenters,
                     "pagination": {
                         "current_page": page,
                         "per_page": limit,
@@ -3132,6 +3165,36 @@ async def create_meeting(request: Request):
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"success": False, "message": "创建组会失败", "error": "INTERNAL_ERROR"}
+        )
+
+
+@app.get("/api/meetings/stats")
+async def get_meeting_stats(request: Request):
+    """
+    获取组会统计信息API
+    """
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    try:
+        stats = MeetingService.get_meeting_stats()
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "data": stats
+            }
+        )
+    except Exception as e:
+        logger.error(f"获取组会统计失败: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": "获取组会统计失败", "error": "INTERNAL_ERROR"}
         )
 
 
@@ -3303,10 +3366,12 @@ async def update_meeting_status(meeting_id: int, request: Request):
         data = await request.json()
         status_value = data.get("status")
 
-        if status_value not in ['scheduled', 'ongoing', 'completed']:
+        # 支持的状态：scheduled(待召开)、ongoing(进行中)、completed(已召开)、cancelled(废弃)、postponed(推迟)
+        valid_statuses = ['scheduled', 'ongoing', 'completed', 'cancelled', 'postponed']
+        if status_value not in valid_statuses:
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                content={"success": False, "message": "状态值无效", "error": "INVALID_STATUS"}
+                content={"success": False, "message": f"状态值无效，有效状态：{', '.join(valid_statuses)}", "error": "INVALID_STATUS"}
             )
 
         updated_meeting = MeetingService.update_meeting_status(meeting_id, status_value)
@@ -3333,10 +3398,12 @@ async def update_meeting_status(meeting_id: int, request: Request):
         )
 
 
-@app.get("/api/meetings/stats")
-async def get_meeting_stats(request: Request):
+# ==================== 汇报人管理API ====================
+
+@app.get("/api/meetings/{meeting_id}/presenters")
+async def get_meeting_presenters(meeting_id: int, request: Request):
     """
-    获取组会统计信息API
+    获取组会汇报人列表API
     """
     current_user = await get_current_user(request)
     if not current_user:
@@ -3346,20 +3413,197 @@ async def get_meeting_stats(request: Request):
         )
 
     try:
-        stats = MeetingService.get_meeting_stats()
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # 获取汇报人列表，包含用户信息
+            cursor.execute("""
+                SELECT mp.id, mp.meeting_id, mp.user_id, mp.presenter_type, mp.duration_minutes,
+                       mp.material_required, mp.status, mp.created_at, mp.updated_at,
+                       u.username, u.role, u.research_direction
+                FROM meeting_presenters mp
+                LEFT JOIN users u ON mp.user_id = u.id
+                WHERE mp.meeting_id = ?
+                ORDER BY mp.created_at ASC
+            """, (meeting_id,))
+
+            presenters = []
+            for row in cursor.fetchall():
+                presenters.append({
+                    "id": row[0],
+                    "meeting_id": row[1],
+                    "user_id": row[2],
+                    "presenter_type": row[3],
+                    "duration_minutes": row[4],
+                    "material_required": row[5],
+                    "status": row[6],
+                    "created_at": row[7],
+                    "updated_at": row[8],
+                    "user": {
+                        "id": row[2],
+                        "username": row[9],
+                        "real_name": row[9],
+                        "role": row[10],
+                        "research_direction": row[11]
+                    }
+                })
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"success": True, "data": {"presenters": presenters}}
+        )
+    except Exception as e:
+        logger.error(f"获取汇报人列表失败: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": "获取汇报人列表失败", "error": "INTERNAL_ERROR"}
+        )
+
+
+@app.post("/api/meetings/{meeting_id}/presenters")
+async def add_meeting_presenter(meeting_id: int, request: Request):
+    """
+    添加汇报人API
+    导师、管理员或组会创建者可以添加
+    """
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    # 权限检查：导师和管理员直接允许
+    if current_user.role not in ['admin', 'teacher']:
+        # 检查是否是组会创建者
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT created_by FROM meetings WHERE id = ?", (meeting_id,))
+            meeting_row = cursor.fetchone()
+
+        if not meeting_row or meeting_row[0] != current_user.id:
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={"success": False, "message": "只有导师、管理员或组会创建者可以分配汇报人", "error": "ACCESS_DENIED"}
+            )
+
+    try:
+        data = await request.json()
+        user_id = data.get("user_id")
+        presenter_type = data.get("presenter_type", "assigned")
+        duration_minutes = data.get("duration_minutes", 20)
+
+        if not user_id:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"success": False, "message": "请选择汇报人", "error": "VALIDATION_ERROR"}
+            )
+
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # 检查是否已存在
+            cursor.execute("SELECT id FROM meeting_presenters WHERE meeting_id = ? AND user_id = ?", (meeting_id, user_id))
+            if cursor.fetchone():
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    content={"success": False, "message": "该成员已是汇报人", "error": "ALREADY_EXISTS"}
+                )
+
+            # 添加汇报人
+            cursor.execute("""
+                INSERT INTO meeting_presenters (meeting_id, user_id, presenter_type, duration_minutes, status)
+                VALUES (?, ?, ?, ?, 'pending')
+            """, (meeting_id, user_id, presenter_type, duration_minutes))
+            presenter_id = cursor.lastrowid
+
+            # 获取添加的汇报人信息
+            cursor.execute("""
+                SELECT mp.id, mp.user_id, mp.presenter_type, mp.duration_minutes, mp.status,
+                       u.username, u.research_direction
+                FROM meeting_presenters mp
+                LEFT JOIN users u ON mp.user_id = u.id
+                WHERE mp.id = ?
+            """, (presenter_id,))
+            row = cursor.fetchone()
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
                 "success": True,
-                "data": stats
+                "message": "添加汇报人成功",
+                "data": {
+                    "id": row[0],
+                    "meeting_id": meeting_id,
+                    "user_id": row[1],
+                    "presenter_type": row[2],
+                    "duration_minutes": row[3],
+                    "status": row[4],
+                    "user": {
+                        "id": row[1],
+                        "username": row[5],
+                        "real_name": row[5],
+                        "research_direction": row[6]
+                    }
+                }
             }
         )
     except Exception as e:
-        logger.error(f"获取组会统计失败: {e}")
+        logger.error(f"添加汇报人失败: {e}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"success": False, "message": "获取组会统计失败", "error": "INTERNAL_ERROR"}
+            content={"success": False, "message": "添加汇报人失败", "error": "INTERNAL_ERROR"}
+        )
+
+
+@app.delete("/api/meetings/{meeting_id}/presenters/{presenter_id}")
+async def remove_meeting_presenter(meeting_id: int, presenter_id: int, request: Request):
+    """
+    移除汇报人API
+    导师、管理员或组会创建者可以移除
+    """
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    # 权限检查：导师和管理员直接允许
+    if current_user.role not in ['admin', 'teacher']:
+        # 检查是否是组会创建者
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT created_by FROM meetings WHERE id = ?", (meeting_id,))
+            meeting_row = cursor.fetchone()
+
+        if not meeting_row or meeting_row[0] != current_user.id:
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={"success": False, "message": "只有导师、管理员或组会创建者可以移除汇报人", "error": "ACCESS_DENIED"}
+            )
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM meeting_presenters WHERE id = ? AND meeting_id = ?", (presenter_id, meeting_id))
+            deleted = cursor.rowcount > 0
+
+        if not deleted:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"success": False, "message": "汇报人不存在", "error": "NOT_FOUND"}
+            )
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"success": True, "message": "移除汇报人成功"}
+        )
+    except Exception as e:
+        logger.error(f"移除汇报人失败: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": "移除汇报人失败", "error": "INTERNAL_ERROR"}
         )
 
 
