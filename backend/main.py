@@ -1265,6 +1265,7 @@ async def upload_file(request: Request):
     文件上传API端点
     """
     # 检查用户登录状态
+    logger.info(f"上传文件 {request}")
     current_user = await get_current_user(request)
     if not current_user:
         return JSONResponse(
@@ -1357,12 +1358,12 @@ async def upload_file(request: Request):
             )
 
     except Exception as e:
-        logger.error(f"文件上传错误: {str(e)}")
+        logger.error(f"文件上传错误: {str(e)}", exc_info=True)
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
                 "success": False,
-                "message": "文件上传过程中发生错误",
+                "message": f"文件上传过程中发生错误: {str(e)}",
                 "error": "INTERNAL_ERROR"
             }
         )

@@ -677,11 +677,17 @@
                 credentials: 'include'
             };
 
-            if (sessionToken && !options.headers) {
-                options.headers = {};
-            }
+            // FormData需要浏览器自动设置Content-Type，不要手动设置headers
+            const isFormData = options.body instanceof FormData;
 
             if (sessionToken) {
+                if (!options.headers) {
+                    options.headers = {};
+                }
+                // FormData时只设置Authorization，不设置Content-Type
+                if (!isFormData) {
+                    options.headers['Content-Type'] = 'application/json';
+                }
                 options.headers['Authorization'] = `Bearer ${sessionToken}`;
             }
 
@@ -1011,11 +1017,19 @@
 
                 try {
                     // 调用后端API上传文件
-                    const response = await fetch(`${API_BASE_URL}/api/files/upload`, getAuthFetchOptions({
+                    // FormData上传时不要设置Content-Type，让浏览器自动设置
+                    const sessionToken = getSessionToken();
+                    const headers = {};
+                    if (sessionToken) {
+                        headers['Authorization'] = `Bearer ${sessionToken}`;
+                    }
+
+                    const response = await fetch(`${API_BASE_URL}/api/files/upload`, {
                         method: 'POST',
-                        body: formData
-                        // 不设置Content-Type，让浏览器自动设置multipart/form-data边界
-                    }));
+                        headers: headers,
+                        body: formData,
+                        credentials: 'include'
+                    });
 
                     const result = await response.json();
 
