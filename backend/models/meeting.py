@@ -6,46 +6,56 @@ from datetime import datetime
 from typing import Optional
 
 
+def _parse_datetime(value) -> Optional[datetime]:
+    """安全解析 datetime，格式错误返回 None"""
+    if value is None:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except (ValueError, TypeError):
+        return None
+
+
 @dataclass
 class Meeting:
     """组会模型"""
-    id: int
+    id: Optional[int]
     title: str
     meeting_type: str  # regular, paper_reading, topic_discussion
     description: Optional[str]
     location: Optional[str]
     is_online: bool
     online_link: Optional[str]
-    scheduled_at: datetime
+    scheduled_at: Optional[datetime]
     duration_total: int  # 总时长（分钟）
     material_required: bool
     material_deadline: Optional[datetime]
     notes: Optional[str]
     status: str  # scheduled, ongoing, completed
-    created_by: int
-    created_at: datetime
-    updated_at: datetime
+    created_by: Optional[int]
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
 
     @classmethod
     def from_dict(cls, data: dict) -> 'Meeting':
         """从字典创建Meeting对象"""
         return cls(
             id=data.get('id'),
-            title=data.get('title'),
+            title=data['title'],
             meeting_type=data.get('meeting_type', 'regular'),
             description=data.get('description'),
             location=data.get('location'),
             is_online=data.get('is_online', False),
             online_link=data.get('online_link'),
-            scheduled_at=datetime.fromisoformat(data['scheduled_at']) if data.get('scheduled_at') else None,
+            scheduled_at=_parse_datetime(data.get('scheduled_at')),
             duration_total=data.get('duration_total', 60),
             material_required=data.get('material_required', True),
-            material_deadline=datetime.fromisoformat(data['material_deadline']) if data.get('material_deadline') else None,
+            material_deadline=_parse_datetime(data.get('material_deadline')),
             notes=data.get('notes'),
             status=data.get('status', 'scheduled'),
             created_by=data.get('created_by'),
-            created_at=datetime.fromisoformat(data['created_at']) if data.get('created_at') else datetime.now(),
-            updated_at=datetime.fromisoformat(data['updated_at']) if data.get('updated_at') else datetime.now()
+            created_at=_parse_datetime(data.get('created_at')) or datetime.now(),
+            updated_at=_parse_datetime(data.get('updated_at')) or datetime.now()
         )
 
     def to_dict(self) -> dict:
@@ -73,15 +83,15 @@ class Meeting:
 @dataclass
 class MeetingPresenter:
     """汇报人模型"""
-    id: int
-    meeting_id: int
-    user_id: int
+    id: Optional[int]
+    meeting_id: Optional[int]
+    user_id: Optional[int]
     presenter_type: str  # assigned, volunteered, pending
     duration_minutes: int
     material_required: bool
     status: str  # pending, confirmed, completed
-    created_at: datetime
-    updated_at: datetime
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
 
     @classmethod
     def from_dict(cls, data: dict) -> 'MeetingPresenter':
@@ -94,8 +104,8 @@ class MeetingPresenter:
             duration_minutes=data.get('duration_minutes', 20),
             material_required=data.get('material_required', True),
             status=data.get('status', 'pending'),
-            created_at=datetime.fromisoformat(data['created_at']) if data.get('created_at') else datetime.now(),
-            updated_at=datetime.fromisoformat(data['updated_at']) if data.get('updated_at') else datetime.now()
+            created_at=_parse_datetime(data.get('created_at')) or datetime.now(),
+            updated_at=_parse_datetime(data.get('updated_at')) or datetime.now()
         )
 
     def to_dict(self) -> dict:
@@ -116,11 +126,11 @@ class MeetingPresenter:
 @dataclass
 class MeetingFile:
     """组会材料关联模型"""
-    id: int
-    meeting_id: int
-    file_id: int
-    presenter_id: int
-    created_at: datetime
+    id: Optional[int]
+    meeting_id: Optional[int]
+    file_id: Optional[int]
+    presenter_id: Optional[int]
+    created_at: Optional[datetime]
 
     @classmethod
     def from_dict(cls, data: dict) -> 'MeetingFile':
@@ -130,7 +140,7 @@ class MeetingFile:
             meeting_id=data.get('meeting_id'),
             file_id=data.get('file_id'),
             presenter_id=data.get('presenter_id'),
-            created_at=datetime.fromisoformat(data['created_at']) if data.get('created_at') else datetime.now()
+            created_at=_parse_datetime(data.get('created_at')) or datetime.now()
         )
 
     def to_dict(self) -> dict:
