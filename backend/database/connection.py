@@ -71,6 +71,16 @@ def init_db() -> None:
                 student_id VARCHAR(50),
                 research_direction VARCHAR(200),
                 status VARCHAR(20) DEFAULT 'active',
+                graduation_status VARCHAR(50),
+                supervisor VARCHAR(100),
+                degree_type VARCHAR(50),
+                work_location VARCHAR(100),
+                work_company VARCHAR(100),
+                personal_bio TEXT,
+                personal_homepage VARCHAR(200),
+                gender VARCHAR(10),
+                id_card VARCHAR(20),
+                bank_card VARCHAR(30),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
