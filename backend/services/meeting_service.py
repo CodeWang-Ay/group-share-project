@@ -249,11 +249,16 @@ class MeetingService:
             status_counts = dict(cursor.fetchall())
 
             # 本月组会数
-            cursor.execute(f"""
-                SELECT COUNT(*) FROM meetings
-                {where_clause.replace('WHERE', 'WHERE') if where_clause else 'WHERE'}
-                scheduled_at >= date('now', 'start of month')
-            """, params if where_clause else [])
+            if where_clause:
+                cursor.execute(f"""
+                    SELECT COUNT(*) FROM meetings
+                    {where_clause} AND scheduled_at >= date('now', 'start of month')
+                """, params)
+            else:
+                cursor.execute("""
+                    SELECT COUNT(*) FROM meetings
+                    WHERE scheduled_at >= date('now', 'start of month')
+                """)
             this_month_meetings = cursor.fetchone()[0]
 
             return {
