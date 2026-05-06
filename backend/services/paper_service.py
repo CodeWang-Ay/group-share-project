@@ -161,71 +161,73 @@ class PaperService:
                    tag: Optional[str] = None, status: Optional[str] = None,
                    year: Optional[int] = None, starred: Optional[bool] = None,
                    library_type: Optional[str] = None,
-                   sort: str = 'newest', limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
-        """获取文献列表"""
+                   sort: str = 'newest', limit: int = 20, offset: int = 0):
+        """获取文献列表，返回 (papers, total) 元组"""
         try:
             with get_db() as conn:
                 cursor = conn.cursor()
 
-                # 构建查询
-                query = """
-                    SELECT p.*, pur.read_status, pur.is_starred, pur.library_type,
-                        u.username as uploader_name
+                # 构建筛选条件
+                base_query = """
                     FROM papers p
                     JOIN paper_user_relations pur ON p.id = pur.paper_id
                     LEFT JOIN users u ON p.uploader_id = u.id
                     WHERE pur.user_id = ?
                 """
-                params = [user_id]
+                base_params = [user_id]
 
-                # 添加筛选条件
                 if library_type:
-                    query += " AND pur.library_type = ?"
-                    params.append(library_type)
+                    base_query += " AND pur.library_type = ?"
+                    base_params.append(library_type)
 
                 if keyword:
-                    query += " AND (p.title LIKE ? OR p.authors LIKE ?)"
-                    params.extend([f"%{keyword}%", f"%{keyword}%"])
+                    base_query += " AND (p.title LIKE ? OR p.authors LIKE ? OR p.abstract LIKE ? OR p.journal LIKE ?)"
+                    base_params.extend([f"%{keyword}%"] * 4)
 
                 if status:
-                    query += " AND pur.read_status = ?"
-                    params.append(status)
+                    base_query += " AND pur.read_status = ?"
+                    base_params.append(status)
 
                 if year:
-                    query += " AND p.year = ?"
-                    params.append(year)
+                    base_query += " AND p.year = ?"
+                    base_params.append(year)
 
                 if starred is not None:
-                    query += " AND pur.is_starred = ?"
-                    params.append(1 if starred else 0)
+                    base_query += " AND pur.is_starred = ?"
+                    base_params.append(1 if starred else 0)
 
                 if tag:
-                    query += """
+                    base_query += """
                         AND EXISTS (
                             SELECT 1 FROM paper_tags pt
                             JOIN tags t ON pt.tag_id = t.id
                             WHERE pt.paper_id = p.id AND t.name = ?
                         )
                     """
-                    params.append(tag)
+                    base_params.append(tag)
 
-                # 排序
+                # 查询总数
+                count_query = "SELECT COUNT(*) " + base_query
+                cursor.execute(count_query, base_params)
+                total = cursor.fetchone()[0]
+
+                # 查询列表
                 order_by = {
                     'newest': 'p.created_at DESC',
                     'oldest': 'p.created_at ASC',
                     'title': 'p.title ASC',
                     'starred': 'pur.is_starred DESC'
                 }.get(sort, 'p.created_at DESC')
-                query += f" ORDER BY {order_by}"
 
-                query += " LIMIT ? OFFSET ?"
-                params.extend([limit, offset])
+                list_query = ("SELECT p.*, pur.read_status, pur.is_starred, pur.library_type, "
+                              "u.username as uploader_name " + base_query
+                              + f" ORDER BY {order_by} LIMIT ? OFFSET ?")
+                list_params = base_params + [limit, offset]
 
-                rows = cursor.execute(query, params).fetchall()
+                rows = cursor.execute(list_query, list_params).fetchall()
                 papers = []
                 for row in rows:
                     paper_dict = dict(row)
-                    # 获取标签
                     cursor.execute("""
                         SELECT t.id, t.name, t.tag_type
                         FROM paper_tags pt
@@ -235,7 +237,7 @@ class PaperService:
                     paper_dict['tags'] = [dict(t) for t in cursor.fetchall()]
                     papers.append(paper_dict)
 
-                return papers
+                return papers, total
 
         except Exception as e:
             print(f"获取文献列表失败: {str(e)}")
@@ -430,6 +432,88 @@ class PaperService:
         except Exception as e:
             print(f"获取文献详情失败: {str(e)}")
             return None
+
+    @classmethod
+    def update_paper(cls, paper_id: int, user_id: int, title: Optional[str] = None,
+                     authors: Optional[str] = None, year: Optional[int] = None,
+                     journal: Optional[str] = None, doi: Optional[str] = None,
+                     abstract: Optional[str] = None, arxiv_link: Optional[str] = None,
+                     semantic_scholar_link: Optional[str] = None,
+                     tags: Optional[List[str]] = None) -> Tuple[Optional[Dict], Optional[str]]:
+        """更新文献元数据（不含PDF）"""
+        try:
+            with get_db() as conn:
+                cursor = conn.cursor()
+                # 检查权限
+                cursor.execute("""
+                    SELECT p.uploader_id FROM papers p
+                    JOIN paper_user_relations pur ON p.id = pur.paper_id
+                    WHERE p.id = ? AND pur.user_id = ?
+                """, (paper_id, user_id))
+                row = cursor.fetchone()
+                if not row:
+                    return None, "文献不存在或无权限"
+
+                # 更新文献信息
+                update_fields = []
+                update_params = []
+                if title is not None:
+                    update_fields.append("title = ?")
+                    update_params.append(title)
+                if authors is not None:
+                    update_fields.append("authors = ?")
+                    update_params.append(authors)
+                if year is not None:
+                    update_fields.append("year = ?")
+                    update_params.append(year)
+                if journal is not None:
+                    update_fields.append("journal = ?")
+                    update_params.append(journal)
+                if doi is not None:
+                    update_fields.append("doi = ?")
+                    update_params.append(doi)
+                if abstract is not None:
+                    update_fields.append("abstract = ?")
+                    update_params.append(abstract)
+                if arxiv_link is not None:
+                    update_fields.append("arxiv_link = ?")
+                    update_params.append(arxiv_link)
+                if semantic_scholar_link is not None:
+                    update_fields.append("semantic_scholar_link = ?")
+                    update_params.append(semantic_scholar_link)
+
+                if update_fields:
+                    update_fields.append("updated_at = ?")
+                    update_params.append(datetime.now())
+                    update_params.append(paper_id)
+                    cursor.execute(f"UPDATE papers SET {', '.join(update_fields)} WHERE id = ?", update_params)
+
+                # 更新标签
+                if tags is not None:
+                    # 清除旧标签
+                    cursor.execute("DELETE FROM paper_tags WHERE paper_id = ?", (paper_id,))
+                    # 添加新标签
+                    for tag_name in tags:
+                        tag_name = tag_name.strip()
+                        if not tag_name:
+                            continue
+                        cursor.execute("SELECT id FROM tags WHERE name = ?", (tag_name,))
+                        tag_row = cursor.fetchone()
+                        if tag_row:
+                            tag_id = tag_row[0]
+                        else:
+                            cursor.execute("""
+                                INSERT INTO tags (name, tag_type, created_by, created_at)
+                                VALUES (?, 'custom', ?, ?)
+                            """, (tag_name, user_id, datetime.now()))
+                            cursor.execute("SELECT last_insert_rowid()")
+                            tag_id = cursor.fetchone()[0]
+                        cursor.execute("INSERT OR IGNORE INTO paper_tags (paper_id, tag_id) VALUES (?, ?)", (paper_id, tag_id))
+
+                # 返回更新后的文献信息
+                return cls.get_paper_by_id(paper_id, user_id), None
+        except Exception as e:
+            return None, f"更新失败: {str(e)}"
 
     @classmethod
     def increment_download_count(cls, paper_id: int) -> bool:

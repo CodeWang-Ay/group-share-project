@@ -349,7 +349,7 @@
                     <!-- 搜索框 -->
                     <div class="flex-1">
                         <div class="relative">
-                            <input type="text" id="search-input" placeholder="搜索文献标题、作者、关键词..."
+                            <input type="text" id="paper-search-input" placeholder="搜索文献标题、作者、关键词..."
                                    class="w-full py-2 pl-10 pr-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
                             <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                         </div>
@@ -444,9 +444,10 @@
                             <input type="checkbox" id="header-checkbox" class="w-4 h-4 rounded border-gray-300">
                         </div>
                         <div class="col-span-4">文献信息</div>
-                        <div class="col-span-3 text-center">年份</div>
+                        <div class="col-span-2 text-center">分类信息</div>
+                        <div class="col-span-2 text-center">年份</div>
                         <div class="col-span-1 text-center">状态</div>
-                        <div class="col-span-3 text-center">操作</div>
+                        <div class="col-span-2 text-center">操作</div>
                     </div>
                 </div>
 
@@ -637,21 +638,17 @@
             </div>
 
             <!-- 分页 -->
-            <div class="mt-4 flex items-center justify-between">
-                <p class="text-sm text-gray-500">显示 1-20 共 128 篇文献</p>
-                <div class="flex items-center gap-2">
-                    <button class="px-3 py-1 border border-gray-200 rounded text-sm hover:bg-gray-50 disabled:opacity-50" disabled>
-                        <i class="fa fa-chevron-left"></i>
-                    </button>
-                    <button class="px-3 py-1 bg-primary text-white rounded text-sm">1</button>
-                    <button class="px-3 py-1 border border-gray-200 rounded text-sm hover:bg-gray-50">2</button>
-                    <button class="px-3 py-1 border border-gray-200 rounded text-sm hover:bg-gray-50">3</button>
-                    <span class="text-gray-400">...</span>
-                    <button class="px-3 py-1 border border-gray-200 rounded text-sm hover:bg-gray-50">7</button>
-                    <button class="px-3 py-1 border border-gray-200 rounded text-sm hover:bg-gray-50">
-                        <i class="fa fa-chevron-right"></i>
-                    </button>
+            <div class="mt-4 flex items-center justify-between" id="pagination-container">
+                <div class="flex items-center gap-3">
+                    <p class="text-sm text-gray-500" id="pagination-info">显示 0-0 共 0 篇文献</p>
+                    <select id="page-size-select" class="text-sm border border-gray-200 rounded px-2 py-1 focus:ring-1 focus:ring-primary/30">
+                        <option value="5" selected>5条/页</option>
+                        <option value="10">10条/页</option>
+                        <option value="20">20条/页</option>
+                        <option value="50">50条/页</option>
+                    </select>
                 </div>
+                <div class="flex items-center gap-2" id="pagination-buttons"></div>
             </div>
         </div>
         <!-- ====================== 【内容区结束】 ====================== -->
@@ -853,7 +850,7 @@
                             <span class="tag-badge bg-green-100 text-green-700 cursor-pointer" onclick="PaperManager.addTag('NLP')">+ NLP</span>
                         </div>
                     </div>
-                    <div>
+                    <div id="pdf-upload-area">
                         <label class="block text-sm font-medium text-gray-700 mb-1">PDF文件</label>
                         <div class="flex items-center gap-2">
                             <input type="file" id="paper-pdf" accept=".pdf" class="hidden">
@@ -928,6 +925,10 @@
             currentYear: '',
             currentStarred: null,
             sortBy: 'newest',
+            currentPage: 1,
+            pageSize: 5,
+            totalCount: 0,
+            currentPaperPdfPath: null,
 
             getAuthHeaders() {
                 const headers = {};
@@ -952,6 +953,8 @@
                     if (this.currentYear) params.set('year', this.currentYear);
                     if (this.currentStarred) params.set('starred', this.currentStarred);
                     if (this.sortBy) params.set('sort', this.sortBy);
+                    params.set('limit', this.pageSize);
+                    params.set('offset', (this.currentPage - 1) * this.pageSize);
 
                     const response = await fetch(`${API_BASE_URL}/api/paper_database/?${params.toString()}`, {
                         headers: this.getAuthHeaders()
@@ -959,7 +962,9 @@
                     const result = await response.json();
                     if (result.success) {
                         this.papers = result.data;
+                        this.totalCount = result.total || 0;
                         this.renderPaperList();
+                        this.renderPagination();
                     }
                 } catch (error) {
                     console.error('加载文献失败:', error);
@@ -1020,19 +1025,24 @@
                                         ${paper.is_starred ? '<i class="fa fa-star text-yellow-500 paper-starred" title="已收藏"></i>' : ''}
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1 line-clamp-1">${paper.abstract || ''}</p>
-                                    <div class="mt-2 flex gap-1">
-                                        ${(paper.tags || []).map(t => `<span class="tag-badge bg-${t.tag_type === 'system' ? 'blue' : 'gray'}-100 text-${t.tag_type === 'system' ? 'blue' : 'gray'}-700">${t.name}</span>`).join('')}
-                                    </div>
                                 </div>
                             </div>
-                            <div class="col-span-3 text-center text-sm text-gray-600">${paper.year || '-'}</div>
+                            <div class="col-span-2 text-center">
+                                <div class="flex flex-wrap gap-1 justify-center">
+                                    ${(paper.tags || []).map(t => `<span class="tag-badge bg-${t.tag_type === 'system' ? 'blue' : 'gray'}-100 text-${t.tag_type === 'system' ? 'blue' : 'gray'}-700">${t.name}</span>`).join('')}
+                                </div>
+                            </div>
+                            <div class="col-span-2 text-center text-sm text-gray-600">${paper.year || '-'}</div>
                             <div class="col-span-1 text-center">
                                 <span class="px-2 py-1 rounded-full text-xs ${this.getStatusStyle(paper.read_status)}">${this.getStatusText(paper.read_status)}</span>
                             </div>
-                            <div class="col-span-3 text-center">
+                            <div class="col-span-2 text-center">
                                 <div class="flex gap-2 justify-center">
                                     <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.toggleStar(${paper.id})" title="收藏">
                                         <i class="fa fa-star${paper.is_starred ? ' text-yellow-500' : '-o text-gray-400'}"></i>
+                                    </button>
+                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.editPaper(${paper.id})" title="编辑">
+                                        <i class="fa fa-edit text-gray-500"></i>
                                     </button>
                                     <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.downloadPaper(${paper.id})" title="下载">
                                         <i class="fa fa-download text-gray-500"></i>
@@ -1045,6 +1055,59 @@
                         </div>
                     </div>
                 `).join('');
+            },
+
+            renderPagination() {
+                const totalPages = Math.ceil(this.totalCount / this.pageSize);
+                const info = document.getElementById('pagination-info');
+                const buttons = document.getElementById('pagination-buttons');
+
+                if (this.totalCount === 0) {
+                    info.textContent = '暂无文献';
+                    buttons.innerHTML = '';
+                    return;
+                }
+
+                const start = (this.currentPage - 1) * this.pageSize + 1;
+                const end = Math.min(this.currentPage * this.pageSize, this.totalCount);
+                info.textContent = `显示 ${start}-${end} 共 ${this.totalCount} 篇文献`;
+
+                let html = '';
+                // 上一页
+                html += `<button class="px-3 py-1 border border-gray-200 rounded text-sm hover:bg-gray-50 disabled:opacity-50" ${this.currentPage === 1 ? 'disabled' : ''} onclick="PaperManager.goToPage(${this.currentPage - 1})"><i class="fa fa-chevron-left"></i></button>`;
+
+                // 页码
+                const pages = [];
+                if (totalPages <= 7) {
+                    for (let i = 1; i <= totalPages; i++) pages.push(i);
+                } else {
+                    pages.push(1);
+                    if (this.currentPage > 3) pages.push('...');
+                    for (let i = Math.max(2, this.currentPage - 1); i <= Math.min(totalPages - 1, this.currentPage + 1); i++) pages.push(i);
+                    if (this.currentPage < totalPages - 2) pages.push('...');
+                    pages.push(totalPages);
+                }
+
+                pages.forEach(p => {
+                    if (p === '...') {
+                        html += '<span class="text-gray-400 px-1">...</span>';
+                    } else {
+                        const active = p === this.currentPage ? 'bg-primary text-white' : 'border border-gray-200 hover:bg-gray-50';
+                        html += `<button class="px-3 py-1 ${active} rounded text-sm" onclick="PaperManager.goToPage(${p})">${p}</button>`;
+                    }
+                });
+
+                // 下一页
+                html += `<button class="px-3 py-1 border border-gray-200 rounded text-sm hover:bg-gray-50 disabled:opacity-50" ${this.currentPage === totalPages ? 'disabled' : ''} onclick="PaperManager.goToPage(${this.currentPage + 1})"><i class="fa fa-chevron-right"></i></button>`;
+
+                buttons.innerHTML = html;
+            },
+
+            goToPage(page) {
+                const totalPages = Math.ceil(this.totalCount / this.pageSize);
+                if (page < 1 || page > totalPages) return;
+                this.currentPage = page;
+                this.loadPapers();
             },
 
             getStatusStyle(status) {
@@ -1062,13 +1125,20 @@
             },
 
             setupEventListeners() {
-                document.getElementById('search-input').addEventListener('input', (e) => { this.currentKeyword = e.target.value; this.loadPapers(); });
-                document.getElementById('filter-tag').addEventListener('change', (e) => { this.currentTag = e.target.value; this.loadPapers(); });
-                document.getElementById('filter-status').addEventListener('change', (e) => { this.currentStatus = e.target.value; this.loadPapers(); });
-                document.getElementById('filter-starred').addEventListener('change', (e) => { this.currentStarred = e.target.value === 'starred' ? true : e.target.value === 'unstarred' ? false : null; this.loadPapers(); });
+                const reload = () => { this.currentPage = 1; this.loadPapers(); };
+                let searchTimer;
+                document.getElementById('paper-search-input').addEventListener('input', (e) => {
+                    this.currentKeyword = e.target.value;
+                    clearTimeout(searchTimer);
+                    searchTimer = setTimeout(() => reload(), 300);
+                });
+                document.getElementById('filter-tag').addEventListener('change', (e) => { this.currentTag = e.target.value; reload(); });
+                document.getElementById('filter-status').addEventListener('change', (e) => { this.currentStatus = e.target.value; reload(); });
+                document.getElementById('filter-starred').addEventListener('change', (e) => { this.currentStarred = e.target.value === 'starred' ? true : e.target.value === 'unstarred' ? false : null; reload(); });
                 document.getElementById('clear-filter-btn').addEventListener('click', () => this.clearFilters());
-                document.querySelectorAll('.year-card').forEach(card => { card.addEventListener('click', () => this.filterByYear(card.dataset.year)); });
-                document.getElementById('sort-select').addEventListener('change', (e) => { this.sortBy = e.target.value; this.loadPapers(); });
+                document.querySelectorAll('.year-card').forEach(card => { card.addEventListener('click', () => { this.filterByYear(card.dataset.year); reload(); }); });
+                document.getElementById('sort-select').addEventListener('change', (e) => { this.sortBy = e.target.value; reload(); });
+                document.getElementById('page-size-select').addEventListener('change', (e) => { this.pageSize = parseInt(e.target.value); reload(); });
                 document.getElementById('toggle-select-mode-btn').addEventListener('click', () => this.toggleSelectMode());
                 document.getElementById('select-all-btn').addEventListener('click', () => this.selectAll());
                 document.getElementById('cancel-select-btn').addEventListener('click', () => this.cancelSelection());
@@ -1077,6 +1147,12 @@
                 document.getElementById('batch-tag-btn').addEventListener('click', () => this.openBatchTagModal());
                 document.getElementById('batch-delete-btn').addEventListener('click', () => this.batchDelete());
                 document.getElementById('header-checkbox').addEventListener('change', (e) => { document.querySelectorAll('.paper-checkbox').forEach(cb => { cb.checked = e.target.checked; this.handleCheckboxChange(cb); }); });
+                // 事件委托：动态生成的 checkbox 也需要响应
+                document.getElementById('paper-list').addEventListener('change', (e) => {
+                    if (e.target.classList.contains('paper-checkbox')) {
+                        this.handleCheckboxChange(e.target);
+                    }
+                });
                 document.getElementById('add-paper-btn').addEventListener('click', () => this.openEditModal());
                 document.getElementById('import-doi-btn').addEventListener('click', () => this.switchImportMode('doi'));
                 document.getElementById('import-manual-btn').addEventListener('click', () => this.switchImportMode('manual'));
@@ -1175,7 +1251,11 @@
 
             editPaper(paperId) { this.openEditModal(paperId); },
 
-            editPaperFromDetail() { this.closeDetailModal(); this.openEditModal(this.currentPaperId); },
+            editPaperFromDetail() {
+                const paperId = this.currentPaperId;
+                this.closeDetailModal();
+                this.openEditModal(paperId);
+            },
 
             async deletePaper(paperId) {
                 if (confirm('确定删除此文献吗？')) {
@@ -1198,24 +1278,47 @@
                 }
             },
 
-            openEditModal(paperId = null) {
+            async openEditModal(paperId = null) {
                 const modal = document.getElementById('paper-edit-modal');
                 const title = document.getElementById('edit-modal-title');
+                const pdfUploadArea = document.getElementById('pdf-upload-area');
+                const pdfFileName = document.getElementById('pdf-file-name');
+                const pdfInput = document.getElementById('paper-pdf');
+
                 if (paperId) {
                     title.textContent = '编辑文献';
-                    const paper = this.papers.find(p => p.id === paperId);
-                    if (paper) {
-                        document.getElementById('paper-title').value = paper.title;
-                        document.getElementById('paper-authors').value = paper.authors || '';
-                        document.getElementById('paper-year').value = paper.year || '';
-                        document.getElementById('paper-journal').value = paper.journal || '';
-                        document.getElementById('paper-doi').value = paper.doi || '';
-                        document.getElementById('paper-abstract').value = paper.abstract || '';
-                        document.getElementById('paper-tags').value = (paper.tags || []).map(t => t.name).join(', ');
+                    pdfUploadArea.classList.add('hidden');  // 编辑模式隐藏PDF上传
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/api/paper_database/${paperId}`, {
+                            headers: this.getAuthHeaders()
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            const paper = result.data;
+                            document.getElementById('paper-title').value = paper.title || '';
+                            document.getElementById('paper-authors').value = paper.authors || '';
+                            document.getElementById('paper-year').value = paper.year || '';
+                            document.getElementById('paper-journal').value = paper.journal || '';
+                            document.getElementById('paper-doi').value = paper.doi || '';
+                            document.getElementById('paper-abstract').value = paper.abstract || '';
+                            document.getElementById('paper-tags').value = (paper.tags || []).map(t => t.name).join(', ');
+                            // 显示已有PDF文件名
+                            if (paper.pdf_path) {
+                                const fileName = paper.pdf_path.split('/').pop().replace(/^\d+_/, '');
+                                pdfFileName.textContent = `已有文件: ${fileName}`;
+                            }
+                            this.currentPaperPdfPath = paper.pdf_path;
+                        }
+                    } catch (e) {
+                        console.error('加载文献详情失败:', e);
                     }
                     this.currentPaperId = paperId;
                 } else {
                     title.textContent = '添加文献';
+                    pdfUploadArea.classList.remove('hidden');  // 添加模式显示PDF上传
+                    pdfFileName.textContent = '未选择文件';
+                    pdfInput.value = '';
+                    this.currentPaperPdfPath = null;
                     this.clearEditForm();
                     this.currentPaperId = null;
                 }
@@ -1234,6 +1337,7 @@
                 document.getElementById('paper-abstract').value = '';
                 document.getElementById('paper-tags').value = '';
                 document.getElementById('pdf-file-name').textContent = '未选择文件';
+                document.getElementById('paper-pdf').value = '';
                 document.getElementById('doi-input').value = '';
             },
 
@@ -1279,34 +1383,63 @@
                 const title = document.getElementById('paper-title').value;
                 if (!title) { alert('请填写文献标题'); return; }
 
-                const formData = new FormData();
-                formData.append('title', title);
-                formData.append('authors', document.getElementById('paper-authors').value);
-                formData.append('year', document.getElementById('paper-year').value);
-                formData.append('journal', document.getElementById('paper-journal').value);
-                formData.append('doi', document.getElementById('paper-doi').value);
-                formData.append('abstract', document.getElementById('paper-abstract').value);
-                formData.append('tags', document.getElementById('paper-tags').value);
-
-                const pdfFile = document.getElementById('paper-pdf').files[0];
-                if (pdfFile) {
-                    formData.append('pdf', pdfFile);
-                }
-
                 try {
-                    const response = await fetch(`${API_BASE_URL}/api/paper_database/`, {
-                        method: 'POST',
-                        headers: this.getAuthHeaders(),
-                        body: formData
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        this.closeEditModal();
-                        await this.loadPapers();
-                        await this.updateStats();
-                        alert('文献保存成功');
+                    if (this.currentPaperId) {
+                        // 编辑模式：使用 PUT API 更新元数据
+                        const response = await fetch(`${API_BASE_URL}/api/paper_database/${this.currentPaperId}`, {
+                            method: 'PUT',
+                            headers: {
+                                ...this.getAuthHeaders(),
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                title: title,
+                                authors: document.getElementById('paper-authors').value,
+                                year: document.getElementById('paper-year').value,
+                                journal: document.getElementById('paper-journal').value,
+                                doi: document.getElementById('paper-doi').value,
+                                abstract: document.getElementById('paper-abstract').value,
+                                tags: document.getElementById('paper-tags').value
+                            })
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            this.closeEditModal();
+                            await this.loadPapers();
+                            await this.updateStats();
+                            alert('文献更新成功');
+                        } else {
+                            alert(result.message || '更新失败');
+                        }
                     } else {
-                        alert(result.message || '保存失败');
+                        // 添加模式：使用 POST API 上传新文献
+                        const pdfFile = document.getElementById('paper-pdf').files[0];
+                        if (!pdfFile) { alert('请上传PDF文件'); return; }
+
+                        const formData = new FormData();
+                        formData.append('title', title);
+                        formData.append('authors', document.getElementById('paper-authors').value);
+                        formData.append('year', document.getElementById('paper-year').value);
+                        formData.append('journal', document.getElementById('paper-journal').value);
+                        formData.append('doi', document.getElementById('paper-doi').value);
+                        formData.append('abstract', document.getElementById('paper-abstract').value);
+                        formData.append('tags', document.getElementById('paper-tags').value);
+                        formData.append('pdf', pdfFile);
+
+                        const response = await fetch(`${API_BASE_URL}/api/paper_database/`, {
+                            method: 'POST',
+                            headers: this.getAuthHeaders(),
+                            body: formData
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            this.closeEditModal();
+                            await this.loadPapers();
+                            await this.updateStats();
+                            alert('文献添加成功');
+                        } else {
+                            alert(result.message || '添加失败');
+                        }
                     }
                 } catch (error) {
                     console.error('保存失败:', error);
@@ -1439,6 +1572,7 @@
                     if (card.dataset.year === year) card.classList.add('active');
                 });
                 this.currentYear = year;
+                this.currentPage = 1;
                 this.loadPapers();
             },
 
@@ -1446,7 +1580,7 @@
                 document.getElementById('filter-tag').value = '';
                 document.getElementById('filter-status').value = '';
                 document.getElementById('filter-starred').value = '';
-                document.getElementById('search-input').value = '';
+                document.getElementById('paper-search-input').value = '';
                 this.currentKeyword = '';
                 this.currentTag = '';
                 this.currentStatus = '';
