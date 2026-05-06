@@ -63,6 +63,36 @@
             .file-type-default {
                 @apply text-gray-500 bg-gray-50;
             }
+            .task-card-hover {
+                @apply transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+            }
+            .task-priority {
+                @apply text-xs px-2 py-1 rounded-full font-medium;
+            }
+            .priority-high {
+                @apply bg-red-100 text-red-600;
+            }
+            .priority-middle {
+                @apply bg-yellow-100 text-yellow-600;
+            }
+            .priority-low {
+                @apply bg-green-100 text-green-600;
+            }
+            .task-status {
+                @apply text-xs px-3 py-1 rounded-full cursor-pointer transition-all hover:bg-primary hover:text-white;
+            }
+            .status-wait {
+                @apply bg-gray-100 text-gray-600;
+            }
+            .status-doing {
+                @apply bg-blue-100 text-blue-600;
+            }
+            .status-finish {
+                @apply bg-green-100 text-green-600;
+            }
+            .status-overdue {
+                @apply bg-red-100 text-red-600;
+            }
             @media (max-width: 640px) {
                 .container {
                     padding-left: 1rem;
@@ -351,128 +381,216 @@
                     </div>
                 </div>
 
-                <!-- 统计卡片（保留，位置不变） -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <!-- 统计卡片 -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div><p class="text-gray-500 text-sm">总任务数</p><h3 class="text-2xl font-bold mt-1">32</h3></div>
+                            <div><p class="text-gray-500 text-sm">总任务数</p><h3 class="text-2xl font-bold mt-1 stats-total">0</h3></div>
                             <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary"><i class="fa fa-tasks"></i></div>
                         </div>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div><p class="text-gray-500 text-sm">进行中</p><h3 class="text-2xl font-bold mt-1">14</h3></div>
+                            <div><p class="text-gray-500 text-sm">待开始</p><h3 class="text-2xl font-bold mt-1 stats-pending">0</h3></div>
+                            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600"><i class="fa fa-clock-o"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 border border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div><p class="text-gray-500 text-sm">进行中</p><h3 class="text-2xl font-bold mt-1 stats-ongoing">0</h3></div>
                             <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"><i class="fa fa-spinner"></i></div>
                         </div>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div><p class="text-gray-500 text-sm">已完成</p><h3 class="text-2xl font-bold mt-1">16</h3></div>
+                            <div><p class="text-gray-500 text-sm">已完成</p><h3 class="text-2xl font-bold mt-1 stats-completed">0</h3></div>
                             <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="fa fa-check-circle"></i></div>
                         </div>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div><p class="text-gray-500 text-sm">逾期任务</p><h3 class="text-2xl font-bold mt-1">2</h3></div>
+                            <div><p class="text-gray-500 text-sm">逾期任务</p><h3 class="text-2xl font-bold mt-1 stats-overdue">0</h3></div>
                             <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600"><i class="fa fa-exclamation-triangle"></i></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 核心修改：任务展示改成卡片网格布局（替换原来的表格） -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    <!-- 任务卡片1 -->
-                    <div class="bg-white rounded-xl shadow-sm p-5 task-card-hover border border-gray-100">
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="task-priority priority-high">高优先级</span>
-                            <span class="task-status status-doing">进行中</span>
-                        </div>
-                        <h4 class="font-semibold text-gray-800 mb-2">大模型检索增强实验设计</h4>
-                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">验证不同检索策略对生成效果的影响，完成对比实验与数据分析。</p>
-                        <div class="flex items-center justify-between text-sm">
-                            <div class="flex items-center gap-2">
-                                <img src="https://picsum.photos/id/101/200/200" class="w-6 h-6 rounded-full">
-                                <span>李华</span>
-                            </div>
-                            <span class="text-gray-400"><i class="fa fa-calendar"></i> 2025-12-20</span>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-3">
-                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i></button>
-                            <button class="text-gray-400 hover:text-yellow-500"><i class="fa fa-pencil"></i></button>
-                            <button class="text-gray-400 hover:text-red-500"><i class="fa fa-trash-o"></i></button>
-                        </div>
-                    </div>
-
-                    <!-- 任务卡片2 -->
-                    <div class="bg-white rounded-xl shadow-sm p-5 task-card-hover border border-gray-100">
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="task-priority priority-middle">中优先级</span>
-                            <span class="task-status status-wait">待开始</span>
-                        </div>
-                        <h4 class="font-semibold text-gray-800 mb-2">ACL 2024 论文调研与复现</h4>
-                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">复现3篇顶会论文并整理报告，梳理核心创新点与实验方法。</p>
-                        <div class="flex items-center justify-between text-sm">
-                            <div class="flex items-center gap-2">
-                                <img src="https://picsum.photos/id/102/200/200" class="w-6 h-6 rounded-full">
-                                <span>王明</span>
-                            </div>
-                            <span class="text-gray-400"><i class="fa fa-calendar"></i> 2025-12-30</span>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-3">
-                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i></button>
-                            <button class="text-gray-400 hover:text-yellow-500"><i class="fa fa-pencil"></i></button>
-                            <button class="text-gray-400 hover:text-red-500"><i class="fa fa-trash-o"></i></button>
-                        </div>
-                    </div>
-
-                    <!-- 任务卡片3 -->
-                    <div class="bg-white rounded-xl shadow-sm p-5 task-card-hover border border-gray-100">
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="task-priority priority-low">低优先级</span>
-                            <span class="task-status status-finish">已完成</span>
-                        </div>
-                        <h4 class="font-semibold text-gray-800 mb-2">实验数据清洗与可视化</h4>
-                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">完成所有实验数据清洗与图表生成，确保数据准确性与可视化美观度。</p>
-                        <div class="flex items-center justify-between text-sm">
-                            <div class="flex items-center gap-2">
-                                <img src="https://picsum.photos/id/103/200/200" class="w-6 h-6 rounded-full">
-                                <span>赵芳</span>
-                            </div>
-                            <span class="text-gray-400"><i class="fa fa-calendar"></i> 2025-11-10</span>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-3">
-                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i></button>
-                            <button class="text-gray-400 hover:text-yellow-500"><i class="fa fa-pencil"></i></button>
-                            <button class="text-gray-400 hover:text-red-500"><i class="fa fa-trash-o"></i></button>
-                        </div>
-                    </div>
-
-                    <!-- 任务卡片4 -->
-                    <div class="bg-white rounded-xl shadow-sm p-5 task-card-hover border border-gray-100">
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="task-priority priority-high">高优先级</span>
-                            <span class="task-status status-overdue">已逾期</span>
-                        </div>
-                        <h4 class="font-semibold text-gray-800 mb-2">多模态RAG模型调试</h4>
-                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">调试图文混合检索链路，优化多级召回与重排策略，修复接口报错问题。</p>
-                        <div class="flex items-center justify-between text-sm">
-                            <div class="flex items-center gap-2">
-                                <img src="https://picsum.photos/id/104/200/200" class="w-6 h-6 rounded-full">
-                                <span>陈宇</span>
-                            </div>
-                            <span class="text-gray-400"><i class="fa fa-calendar"></i> 2025-11-25</span>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-3">
-                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i></button>
-                            <button class="text-gray-400 hover:text-yellow-500"><i class="fa fa-pencil"></i></button>
-                            <button class="text-gray-400 hover:text-red-500"><i class="fa fa-trash-o"></i></button>
-                        </div>
-                    </div>
+                <!-- 任务卡片容器 -->
+                <div id="tasks-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <!-- 任务卡片将通过 JavaScript 动态加载 -->
                 </div>
             </div>
         </div>
         <!-- ====================== 【内容区结束】 ====================== -->
     </main>
+
+    <!-- 任务详情模态框 -->
+    <div id="task-detail-modal" class="fixed inset-0 bg-black/50 z-50 hidden modal-bg items-center justify-center">
+        <div class="bg-white rounded-xl w-full max-w-lg mx-4 p-6 relative">
+            <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fa fa-times"></i>
+            </button>
+            <h3 class="text-lg font-semibold mb-4" id="detail-task-title">任务详情</h3>
+            <div class="space-y-4">
+                <div class="flex items-start gap-3">
+                    <label class="text-gray-500 w-20">描述:</label>
+                    <p class="text-gray-800" id="detail-task-description">-</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="text-gray-500 w-20">优先级:</label>
+                    <span id="detail-task-priority">-</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="text-gray-500 w-20">状态:</label>
+                    <span id="detail-task-status">-</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="text-gray-500 w-20">进度:</label>
+                    <div class="flex-1">
+                        <div class="flex justify-between text-xs text-gray-500 mb-1">
+                            <span id="detail-task-progress">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="detail-progress-bar" class="bg-primary h-2 rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="text-gray-500 w-20">负责人:</label>
+                    <span id="detail-task-assignee">-</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="text-gray-500 w-20">创建者:</label>
+                    <span id="detail-task-creator">-</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="text-gray-500 w-20">截止日期:</label>
+                    <span id="detail-task-deadline">-</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="text-gray-500 w-20">任务类型:</label>
+                    <span id="detail-task-type">-</span>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end gap-3">
+                <button onclick="closeDetailModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">关闭</button>
+                <button onclick="closeDetailModal(); openEditTask(currentTaskId)" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">编辑</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新建任务模态框 -->
+    <div id="create-task-modal" class="fixed inset-0 bg-black/50 z-50 hidden modal-bg items-center justify-center">
+        <div class="bg-white rounded-xl w-full max-w-lg mx-4 p-6 relative">
+            <button onclick="closeCreateTaskModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fa fa-times"></i>
+            </button>
+            <h3 class="text-lg font-semibold mb-4">新建任务</h3>
+            <form id="create-task-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">任务标题 <span class="text-red-500">*</span></label>
+                    <input type="text" id="create-task-title" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="输入任务标题">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">任务描述</label>
+                    <textarea id="create-task-description" rows="3" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="输入任务描述"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">优先级</label>
+                        <select id="create-task-priority" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                            <option value="high">高优先级</option>
+                            <option value="middle" selected>中优先级</option>
+                            <option value="low">低优先级</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">截止日期</label>
+                        <input type="date" id="create-task-deadline" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                    </div>
+                </div>
+                <div id="assignee-select-container" class="hidden">
+                    <label class="block text-sm text-gray-600 mb-1">负责人</label>
+                    <select id="create-task-assignee" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                        <option value="">选择负责人</option>
+                    </select>
+                </div>
+            </form>
+            <div class="mt-6 flex justify-end gap-3">
+                <button onclick="closeCreateTaskModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">取消</button>
+                <button onclick="submitCreateTask()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑任务模态框 -->
+    <div id="edit-task-modal" class="fixed inset-0 bg-black/50 z-50 hidden modal-bg items-center justify-center">
+        <div class="bg-white rounded-xl w-full max-w-lg mx-4 p-6 relative">
+            <button onclick="closeEditTaskModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fa fa-times"></i>
+            </button>
+            <h3 class="text-lg font-semibold mb-4">编辑任务</h3>
+            <form id="edit-task-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">任务标题 <span class="text-red-500">*</span></label>
+                    <input type="text" id="edit-task-title" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="输入任务标题">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">任务描述</label>
+                    <textarea id="edit-task-description" rows="3" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="输入任务描述"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">优先级</label>
+                        <select id="edit-task-priority" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                            <option value="high">高优先级</option>
+                            <option value="middle">中优先级</option>
+                            <option value="low">低优先级</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">状态</label>
+                        <select id="edit-task-status" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                            <option value="pending">待开始</option>
+                            <option value="ongoing">进行中</option>
+                            <option value="completed">已完成</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">进度 (%)</label>
+                        <input type="number" id="edit-task-progress" min="0" max="100" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="0-100">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">截止日期</label>
+                        <input type="date" id="edit-task-deadline" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                    </div>
+                </div>
+            </form>
+            <div class="mt-6 flex justify-end gap-3">
+                <button onclick="closeEditTaskModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">取消</button>
+                <button onclick="submitEditTask()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认模态框 -->
+    <div id="delete-task-modal" class="fixed inset-0 bg-black/50 z-50 hidden modal-bg items-center justify-center">
+        <div class="bg-white rounded-xl w-full max-w-md mx-4 p-6 relative">
+            <button onclick="closeDeleteTaskModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fa fa-times"></i>
+            </button>
+            <h3 class="text-lg font-semibold mb-4 text-red-600">确认删除</h3>
+            <p class="text-gray-600 mb-2">您确定要删除以下任务吗？</p>
+            <p class="font-medium text-gray-800 mb-4" id="delete-task-title-display">-</p>
+            <p class="text-sm text-gray-500 mb-4">此操作不可撤销。</p>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeDeleteTaskModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">取消</button>
+                <button onclick="deleteTask()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">删除</button>
+            </div>
+        </div>
+    </div>
 
     <!-- 页脚 -->
     <footer class="bg-white border-t border-gray-200 py-4">
@@ -486,39 +604,69 @@
         // API基础URL配置
         const API_BASE_URL = 'http://localhost:8081';
 
+        // 任务管理变量
+        let taskCurrentPage = 1;
+        let taskCurrentStatus = '';
+        let taskCurrentPriority = '';
+        let taskCurrentAssignee = '';
+        let taskCurrentSortBy = 'deadline';
+        let taskCurrentSortOrder = 'asc';
+        let currentTaskId = null;
+        let userRole = '';
+        let membersList = [];
+
         // 认证辅助函数
         function getAuthHeaders() {
             const sessionToken = getSessionToken();
             const headers = {
                 'Content-Type': 'application/json'
             };
-
             if (sessionToken) {
                 headers['Authorization'] = `Bearer ${sessionToken}`;
             }
-
             return headers;
         }
 
-        // 获取带认证的fetch选项
         function getAuthFetchOptions(options = {}) {
             const sessionToken = getSessionToken();
             const defaultOptions = {
                 credentials: 'include'
             };
-
             if (sessionToken && !options.headers) {
                 options.headers = {};
             }
-
             if (sessionToken) {
                 options.headers['Authorization'] = `Bearer ${sessionToken}`;
             }
-
             return { ...defaultOptions, ...options };
         }
 
-        // 文件上传管理
+        function saveSessionToken(token) {
+            localStorage.setItem('session_token', token);
+        }
+
+        function getSessionToken() {
+            return localStorage.getItem('session_token');
+        }
+
+        function clearSession() {
+            localStorage.removeItem('session_token');
+            localStorage.removeItem('user_info');
+        }
+
+        function checkUrlSessionToken() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionToken = urlParams.get('session_token');
+            if (sessionToken) {
+                saveSessionToken(sessionToken);
+                const url = new URL(window.location);
+                url.searchParams.delete('session_token');
+                window.history.replaceState({}, document.title, url);
+                return true;
+            }
+            return false;
+        }
+
         // 移动端侧边栏功能
         function initMobileSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -542,13 +690,11 @@
                 sidebarClose.addEventListener('click', closeMobileSidebar);
             }
 
-            // 侧边栏菜单点击后关闭移动端侧边栏
             const sidebarItems = document.querySelectorAll('.sidebar-icon');
             sidebarItems.forEach(item => {
                 item.addEventListener('click', function() {
                     sidebarItems.forEach(i => i.classList.remove('active'));
                     this.classList.add('active');
-
                     if (window.innerWidth < 1024) {
                         closeMobileSidebar();
                     }
@@ -556,88 +702,466 @@
             });
         }
 
-        // 认证辅助函数
-        function saveSessionToken(token) {
-            localStorage.setItem('session_token', token);
-        }
+        // ====================== 任务管理功能 ======================
 
-        function getSessionToken() {
-            return localStorage.getItem('session_token');
-        }
-
-        function clearSession() {
-            localStorage.removeItem('session_token');
-            localStorage.removeItem('user_info');
-            localStorage.removeItem('remember_me');
-        }
-
-        // 页面初始化时检查URL中的session_token
-        function checkUrlSessionToken() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const sessionToken = urlParams.get('session_token');
-
-            if (sessionToken) {
-                // 保存到localStorage
-                saveSessionToken(sessionToken);
-
-                // 清理URL，移除session_token参数
-                const url = new URL(window.location);
-                url.searchParams.delete('session_token');
-                window.history.replaceState({}, document.title, url);
-
-                console.log('✅ 从URL保存session_token到localStorage');
-                return true;
+        // 加载任务统计
+        async function loadTaskStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/research_tasks/stats`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+                const result = await response.json();
+                if (result.success) {
+                    document.querySelector('.stats-total').textContent = result.data.total || 0;
+                    document.querySelector('.stats-pending').textContent = result.data.pending_count || 0;
+                    document.querySelector('.stats-ongoing').textContent = result.data.ongoing_count || 0;
+                    document.querySelector('.stats-completed').textContent = result.data.completed_count || 0;
+                    document.querySelector('.stats-overdue').textContent = result.data.overdue_count || 0;
+                }
+            } catch (e) {
+                console.error('加载任务统计失败:', e);
             }
-            return false;
         }
 
-  
-        // 初始化
+        // 加载任务列表
+        async function loadTasks() {
+            try {
+                const params = new URLSearchParams();
+                params.append('page', taskCurrentPage);
+                params.append('limit', 20);
+                if (taskCurrentStatus) params.append('status', taskCurrentStatus);
+                if (taskCurrentPriority) params.append('priority', taskCurrentPriority);
+                if (taskCurrentAssignee) params.append('assignee_id', taskCurrentAssignee);
+                params.append('sort_by', taskCurrentSortBy);
+                params.append('sort_order', taskCurrentSortOrder);
+
+                const response = await fetch(`${API_BASE_URL}/api/research_tasks?${params.toString()}`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+                const result = await response.json();
+                if (result.success) {
+                    renderTaskList(result.data.tasks, result.data.pagination);
+                } else {
+                    const container = document.getElementById('tasks-container');
+                    if (container) {
+                        container.innerHTML = `<div class="text-center py-12 text-gray-500"><p>${result.message || '加载失败'}</p></div>`;
+                    }
+                }
+            } catch (e) {
+                console.error('加载任务列表失败:', e);
+                const container = document.getElementById('tasks-container');
+                if (container) {
+                    container.innerHTML = '<div class="text-center py-12 text-gray-500"><p>网络错误，请刷新重试</p></div>';
+                }
+            }
+        }
+
+        // 渲染任务列表
+        function renderTaskList(tasks, pagination) {
+            const container = document.getElementById('tasks-container');
+            if (!container) return;
+
+            if (tasks.length === 0) {
+                container.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fa fa-tasks text-4xl mb-3"></i><p>暂无任务</p></div>';
+                return;
+            }
+
+            container.innerHTML = tasks.map(task => {
+                const priorityClass = task.priority === 'high' ? 'priority-high' : (task.priority === 'low' ? 'priority-low' : 'priority-middle');
+                const statusClass = task.display_status === 'overdue' ? 'status-overdue' :
+                    (task.display_status === 'ongoing' ? 'status-doing' :
+                    (task.display_status === 'completed' ? 'status-finish' : 'status-wait'));
+                const deadlineStr = task.deadline ? new Date(task.deadline).toLocaleDateString('zh-CN') : '无截止日期';
+
+                return `
+                <div class="bg-white rounded-xl shadow-sm p-5 task-card-hover border border-gray-100" data-task-id="${task.id}">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="task-priority ${priorityClass}">${task.priority_text}</span>
+                        <span class="task-status ${statusClass}">${task.status_text}</span>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 mb-2">${task.title}</h4>
+                    <p class="text-sm text-gray-500 mb-3 line-clamp-2">${task.description || '无描述'}</p>
+                    <div class="mb-3">
+                        <div class="flex justify-between text-xs text-gray-500 mb-1">
+                            <span>进度</span>
+                            <span>${task.progress}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-primary h-2 rounded-full transition-all" style="width: ${task.progress}%"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs">
+                                <i class="fa fa-user"></i>
+                            </div>
+                            <span>${task.assignee?.username || '未知'}</span>
+                        </div>
+                        <span class="text-gray-400"><i class="fa fa-calendar"></i> ${deadlineStr}</span>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-3">
+                        <button onclick="viewTask(${task.id})" class="text-gray-400 hover:text-primary transition-colors" title="详情"><i class="fa fa-eye"></i></button>
+                        <button onclick="openEditTask(${task.id})" class="text-gray-400 hover:text-yellow-500 transition-colors" title="编辑"><i class="fa fa-pencil"></i></button>
+                        <button onclick="confirmDeleteTask(${task.id}, '${task.title.replace(/'/g, "\\'")}')\" class="text-gray-400 hover:text-red-500 transition-colors" title="删除"><i class="fa fa-trash-o"></i></button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // 查看任务详情
+        async function viewTask(id) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/research_tasks/${id}`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showTaskDetail(result.data);
+                } else {
+                    alert(result.message || '获取任务详情失败');
+                }
+            } catch (e) {
+                console.error('获取任务详情失败:', e);
+                alert('网络错误，请重试');
+            }
+        }
+
+        // 显示任务详情
+        function showTaskDetail(task) {
+            const modal = document.getElementById('task-detail-modal');
+            if (!modal) return;
+
+            currentTaskId = task.id;
+
+            document.getElementById('detail-task-title').textContent = task.title;
+            document.getElementById('detail-task-description').textContent = task.description || '无描述';
+            document.getElementById('detail-task-priority').textContent = task.priority_text;
+            document.getElementById('detail-task-status').textContent = task.status_text;
+            document.getElementById('detail-task-progress').textContent = task.progress + '%';
+            document.getElementById('detail-task-assignee').textContent = task.assignee?.username || '未知';
+            document.getElementById('detail-task-creator').textContent = task.creator?.username || '未知';
+            document.getElementById('detail-task-deadline').textContent = task.deadline ? new Date(task.deadline).toLocaleDateString('zh-CN') : '无截止日期';
+            document.getElementById('detail-task-type').textContent = task.task_type === 'assigned' ? '导师分配' : '个人任务';
+
+            const progressBar = document.getElementById('detail-progress-bar');
+            if (progressBar) {
+                progressBar.style.width = task.progress + '%';
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // 关闭详情模态框
+        function closeDetailModal() {
+            const modal = document.getElementById('task-detail-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            currentTaskId = null;
+        }
+
+        // 打开新建任务模态框
+        function openCreateTaskModal() {
+            const modal = document.getElementById('create-task-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                // 重置表单
+                document.getElementById('create-task-title').value = '';
+                document.getElementById('create-task-description').value = '';
+                document.getElementById('create-task-priority').value = 'middle';
+                document.getElementById('create-task-deadline').value = '';
+                document.getElementById('create-task-assignee').value = '';
+                // 导师显示负责人选择
+                const assigneeContainer = document.getElementById('assignee-select-container');
+                if (assigneeContainer) {
+                    if (userRole === 'teacher' || userRole === 'admin') {
+                        assigneeContainer.classList.remove('hidden');
+                        loadMembersForAssignee();
+                    } else {
+                        assigneeContainer.classList.add('hidden');
+                    }
+                }
+            }
+        }
+
+        // 关闭新建任务模态框
+        function closeCreateTaskModal() {
+            const modal = document.getElementById('create-task-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        // 加载成员列表供选择负责人
+        async function loadMembersForAssignee() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/members`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+                const result = await response.json();
+                if (result.success) {
+                    membersList = result.data.members || [];
+                    const select = document.getElementById('create-task-assignee');
+                    if (select) {
+                        select.innerHTML = '<option value="">选择负责人</option>' +
+                            membersList.map(m => `<option value="${m.id}">${m.username}</option>`).join('');
+                    }
+                }
+            } catch (e) {
+                console.error('加载成员列表失败:', e);
+            }
+        }
+
+        // 提交新建任务
+        async function submitCreateTask() {
+            const title = document.getElementById('create-task-title').value.trim();
+            const description = document.getElementById('create-task-description').value.trim();
+            const priority = document.getElementById('create-task-priority').value;
+            const deadline = document.getElementById('create-task-deadline').value;
+            const assigneeId = document.getElementById('create-task-assignee').value;
+
+            if (!title) {
+                alert('请输入任务标题');
+                return;
+            }
+
+            const data = {
+                title: title,
+                description: description,
+                priority: priority,
+                deadline: deadline || null
+            };
+
+            // 如果导师选择了负责人，则设置
+            if (assigneeId && userRole === 'teacher') {
+                data.assignee_id = parseInt(assigneeId);
+                data.task_type = 'assigned';
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/research_tasks`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    credentials: 'include',
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('任务创建成功！');
+                    closeCreateTaskModal();
+                    loadTaskStats();
+                    loadTasks();
+                } else {
+                    alert(result.message || '创建失败');
+                }
+            } catch (e) {
+                console.error('创建任务失败:', e);
+                alert('网络错误，请重试');
+            }
+        }
+
+        // 打开编辑任务模态框
+        async function openEditTask(id) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/research_tasks/${id}`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+                const result = await response.json();
+                if (result.success) {
+                    const task = result.data;
+                    currentTaskId = task.id;
+
+                    const modal = document.getElementById('edit-task-modal');
+                    if (modal) {
+                        document.getElementById('edit-task-title').value = task.title;
+                        document.getElementById('edit-task-description').value = task.description || '';
+                        document.getElementById('edit-task-priority').value = task.priority;
+                        document.getElementById('edit-task-status').value = task.status;
+                        document.getElementById('edit-task-progress').value = task.progress;
+                        document.getElementById('edit-task-deadline').value = task.deadline ? task.deadline.split('T')[0] : '';
+
+                        modal.classList.remove('hidden');
+                        modal.classList.add('flex');
+                    }
+                } else {
+                    alert(result.message || '获取任务失败');
+                }
+            } catch (e) {
+                console.error('获取任务失败:', e);
+                alert('网络错误');
+            }
+        }
+
+        // 关闭编辑任务模态框
+        function closeEditTaskModal() {
+            const modal = document.getElementById('edit-task-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            currentTaskId = null;
+        }
+
+        // 提交编辑任务
+        async function submitEditTask() {
+            if (!currentTaskId) return;
+
+            const title = document.getElementById('edit-task-title').value.trim();
+            const description = document.getElementById('edit-task-description').value.trim();
+            const priority = document.getElementById('edit-task-priority').value;
+            const status = document.getElementById('edit-task-status').value;
+            const progress = parseInt(document.getElementById('edit-task-progress').value) || 0;
+            const deadline = document.getElementById('edit-task-deadline').value;
+
+            if (!title) {
+                alert('请输入任务标题');
+                return;
+            }
+
+            const data = {
+                title: title,
+                description: description,
+                priority: priority,
+                status: status,
+                progress: progress,
+                deadline: deadline || null
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/research_tasks/${currentTaskId}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    credentials: 'include',
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('任务更新成功！');
+                    closeEditTaskModal();
+                    closeDetailModal();
+                    loadTaskStats();
+                    loadTasks();
+                } else {
+                    alert(result.message || '更新失败');
+                }
+            } catch (e) {
+                console.error('更新任务失败:', e);
+                alert('网络错误，请重试');
+            }
+        }
+
+        // 确认删除任务
+        function confirmDeleteTask(id, title) {
+            currentTaskId = id;
+            const modal = document.getElementById('delete-task-modal');
+            if (modal) {
+                document.getElementById('delete-task-title-display').textContent = title;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        // 关闭删除确认模态框
+        function closeDeleteTaskModal() {
+            const modal = document.getElementById('delete-task-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            currentTaskId = null;
+        }
+
+        // 执行删除任务
+        async function deleteTask() {
+            if (!currentTaskId) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/research_tasks/${currentTaskId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('任务删除成功！');
+                    closeDeleteTaskModal();
+                    loadTaskStats();
+                    loadTasks();
+                } else {
+                    alert(result.message || '删除失败');
+                }
+            } catch (e) {
+                console.error('删除任务失败:', e);
+                alert('网络错误，请重试');
+            }
+        }
+
+        // 状态筛选点击
+        function filterByStatus(status) {
+            taskCurrentStatus = status;
+            taskCurrentPage = 1;
+            loadTasks();
+            // 更新筛选按钮样式
+            document.querySelectorAll('.task-status').forEach(btn => {
+                btn.classList.remove('bg-primary', 'text-white');
+            });
+        }
+
+        // ====================== 初始化 ======================
+
         document.addEventListener('DOMContentLoaded', function() {
-            // 首先检查URL中是否有session_token
             const hasUrlToken = checkUrlSessionToken();
 
             initMobileSidebar();
+
+            // 获取用户角色
+            const userInfo = localStorage.getItem('user_info');
+            if (userInfo) {
+                try {
+                    const user = JSON.parse(userInfo);
+                    userRole = user.role;
+                } catch (e) {}
+            }
+
+            // 加载任务数据
+            loadTaskStats();
+            loadTasks();
+
+            // 绑定新建任务按钮
+            const createBtn = document.querySelector('button:has(.fa-plus)');
+            if (createBtn) {
+                createBtn.addEventListener('click', openCreateTaskModal);
+            }
+
             // 登出功能
             const logoutBtn = document.getElementById('logout-btn');
             const logoutBtnMobile = document.getElementById('logout-btn-mobile');
-            // 退出登录函数
+
             async function performLogout() {
                 try {
-                    console.log('🔥 开始登出操作');
-
-                    // 调用登出API
                     const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('session_token')}`
-                        }
+                        headers: getAuthHeaders()
                     });
-
-                    const result = await response.json();
-                    console.log('📋 登出API响应:', result);
-
-                    // 清除本地存储的会话信息
                     localStorage.removeItem('session_token');
                     localStorage.removeItem('user_info');
-                    localStorage.removeItem('remember_me');
-
-                    console.log('✅ 登出成功，跳转到登录页面');
-
-                    // 跳转到登录页面
                     window.location.href = 'http://localhost:8081/login';
-
                 } catch (error) {
-                    console.error('❌ 登出过程中发生错误:', error);
-                    // 即使API调用失败，也清除本地存储并跳转
                     localStorage.removeItem('session_token');
                     localStorage.removeItem('user_info');
-                    localStorage.removeItem('remember_me');
                     window.location.href = 'http://localhost:8081/login';
                 }
             }
-            // 桌面端退出登录按钮事件
+
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', async function(e) {
                     e.preventDefault();
@@ -645,33 +1169,36 @@
                 });
             }
 
-            // 移动端退出登录按钮事件
             if (logoutBtnMobile) {
                 logoutBtnMobile.addEventListener('click', async function(e) {
                     e.preventDefault();
                     await performLogout();
                 });
             }
-            // 其他按钮事件
-            const buttons = document.querySelectorAll('button');
-            buttons.forEach(button => {
-                button.addEventListener('click', function(e) {
-                    const actionText = this.textContent.trim();
 
-                    // 如果不是上传文件按钮，处理其他操作
-                    if (!actionText.includes('上传文件')) {
-                        if (actionText.includes('下载')) {
-                            // 这里可以添加实际的下载功能
-                            console.log('下载文件功能');
-                        } else if (actionText.includes('分享')) {
-                            // 这里可以添加实际的分享功能
-                            console.log('分享文件功能');
-                        }
+            // 点击模态框背景关闭
+            document.querySelectorAll('.modal-bg').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.add('hidden');
+                        this.classList.remove('flex');
                     }
                 });
             });
 
+            // 状态筛选按钮事件
+            document.querySelectorAll('.task-status').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const statusText = this.textContent.trim();
+                    let statusValue = '';
+                    if (statusText === '待开始') statusValue = 'pending';
+                    else if (statusText === '进行中') statusValue = 'ongoing';
+                    else if (statusText === '已完成') statusValue = 'completed';
+                    else if (statusText === '已逾期') statusValue = 'overdue';
+                    filterByStatus(statusValue);
+                });
             });
+        });
     </script>
 </body>
 </html>

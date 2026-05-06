@@ -150,6 +150,31 @@ def init_db() -> None:
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_meeting_files_meeting ON meeting_files(meeting_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_meeting_files_file ON meeting_files(file_id)")
 
+        # 创建研究任务表
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS research_tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title VARCHAR(200) NOT NULL,
+                description TEXT,
+                priority VARCHAR(20) DEFAULT 'middle',
+                status VARCHAR(20) DEFAULT 'pending',
+                progress INTEGER DEFAULT 0,
+                assignee_id INTEGER NOT NULL,
+                creator_id INTEGER NOT NULL,
+                task_type VARCHAR(20) DEFAULT 'personal',
+                deadline TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (assignee_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_tasks_assignee ON research_tasks(assignee_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_tasks_creator ON research_tasks(creator_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_tasks_status ON research_tasks(status)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_tasks_deadline ON research_tasks(deadline)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_tasks_type ON research_tasks(task_type)")
+
         # 创建文件表
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS files (
