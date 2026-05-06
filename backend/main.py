@@ -19,12 +19,14 @@ from models.user import User
 from models.file import File
 from models.meeting import Meeting, MeetingPresenter, MeetingFile
 from models.task import Task
+from models.paper import Paper, Tag, PaperUserRelation
 from database.connection import get_db, DATABASE_PATH
 from services.auth import AuthService
 from services.session import session_manager
 from services.file_service import FileService
 from services.meeting_service import MeetingService
 from services.task_service import TaskService
+from services.paper_service import PaperService
 from loguru import logger
 
 # 创建FastAPI应用实例
@@ -4050,6 +4052,351 @@ async def delete_research_task(task_id: int, request: Request):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"success": False, "message": "删除任务失败", "error": "INTERNAL_ERROR"}
         )
+
+
+# ==================== 文献库API ====================
+
+@app.get("/api/paper_database/")
+async def get_papers(
+    request: Request,
+    keyword: Optional[str] = None,
+    tag: Optional[str] = None,
+    status: Optional[str] = None,
+    year: Optional[int] = None,
+    starred: Optional[bool] = None,
+    library_type: Optional[str] = None,
+    sort: str = 'newest',
+    limit: int = 20,
+    offset: int = 0
+):
+    """获取文献列表"""
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    papers = PaperService.get_papers(
+        user_id=current_user.id,
+        keyword=keyword, tag=tag, status=status,
+        year=year, starred=starred, library_type=library_type,
+        sort=sort, limit=limit, offset=offset
+    )
+    return JSONResponse(content={"success": True, "data": papers})
+
+
+@app.get("/api/paper_database/stats")
+async def get_paper_stats(request: Request):
+    """获取文献统计"""
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    stats = PaperService.get_stats(user_id=current_user.id)
+    return JSONResponse(content={"success": True, "data": stats})
+
+
+@app.get("/api/paper_database/tags")
+async def get_paper_tags(request: Request):
+    """获取标签列表"""
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    tags = PaperService.get_tags()
+    return JSONResponse(content={"success": True, "data": [t.to_dict() for t in tags]})
+
+
+@app.get("/api/paper_database/{paper_id}")
+async def get_paper_detail(paper_id: int, request: Request):
+    """获取文献详情"""
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    paper = PaperService.get_paper_by_id(paper_id, current_user.id)
+    if not paper:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"success": False, "message": "文献不存在", "error": "NOT_FOUND"}
+        )
+
+    return JSONResponse(content={"success": True, "data": paper})
+
+
+@app.post("/api/paper_database/")
+async def upload_paper(request: Request):
+    """上传新文献"""
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    try:
+        form = await request.form()
+        title = form.get("title")
+        pdf_file = form.get("pdf")
+
+        if not title:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"success": False, "message": "标题不能为空"}
+            )
+
+        if not pdf_file:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"success": False, "message": "请上传PDF文件"}
+            )
+
+        pdf_data = await pdf_file.read()
+
+        year_val = None
+        if form.get("year"):
+            try:
+                year_val = int(form.get("year"))
+            except:
+                pass
+
+        tags_str = form.get("tags", "")
+        tags_list = [t.strip() for t in tags_str.split(",") if t.strip()] if tags_str else None
+
+        paper, error = PaperService.create_paper(
+            title=title,
+            pdf_data=pdf_data,
+            original_filename=pdf_file.filename,
+            uploader_id=current_user.id,
+            authors=form.get("authors"),
+            year=year_val,
+            journal=form.get("journal"),
+            doi=form.get("doi"),
+            abstract=form.get("abstract"),
+            arxiv_link=form.get("arxiv_link"),
+            semantic_scholar_link=form.get("semantic_scholar_link"),
+            tags=tags_list,
+            library_type=form.get("library_type", "public")
+        )
+
+        if error:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"success": False, "message": error}
+            )
+
+        return JSONResponse(
+            status_code=status.HTTP_201_CREATED,
+            content={"success": True, "data": paper.to_dict(), "message": "文献上传成功"}
+        )
+
+    except Exception as e:
+        logger.error(f"上传文献失败: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": f"上传失败: {str(e)}"}
+        )
+
+
+@app.post("/api/paper_database/{paper_id}/star")
+async def toggle_paper_star(paper_id: int, request: Request):
+    """收藏/取消收藏"""
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    success = PaperService.toggle_star(paper_id, current_user.id)
+    return JSONResponse(content={"success": success})
+
+
+@app.put("/api/paper_database/{paper_id}/status")
+async def update_paper_status(paper_id: int, request: Request):
+    """更新阅读状态"""
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    try:
+        data = await request.json()
+        status_val = data.get("status")
+        if not status_val:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"success": False, "message": "状态不能为空"}
+            )
+
+        success = PaperService.update_status(paper_id, current_user.id, status_val)
+        return JSONResponse(content={"success": success})
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": str(e)}
+        )
+
+
+@app.delete("/api/paper_database/{paper_id}")
+async def delete_paper(paper_id: int, request: Request):
+    """删除文献"""
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    success = PaperService.delete_paper(paper_id, current_user.id, current_user.role)
+    return JSONResponse(content={"success": success})
+
+
+@app.post("/api/paper_database/batch/star")
+async def batch_star_papers(request: Request):
+    """批量收藏"""
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    try:
+        data = await request.json()
+        paper_ids = data.get("paper_ids", [])
+        star = data.get("star", True)
+
+        count = PaperService.batch_star(paper_ids, current_user.id, star)
+        return JSONResponse(content={"success": True, "count": count})
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": str(e)}
+        )
+
+
+@app.post("/api/paper_database/batch/tags")
+async def batch_set_paper_tags(request: Request):
+    """批量设置标签"""
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    try:
+        data = await request.json()
+        paper_ids = data.get("paper_ids", [])
+        tag = data.get("tag")
+
+        if not tag:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"success": False, "message": "标签不能为空"}
+            )
+
+        # 为每个文献添加标签
+        count = 0
+        with get_db() as conn:
+            cursor = conn.cursor()
+            # 获取或创建标签
+            cursor.execute("SELECT id FROM tags WHERE name = ?", (tag,))
+            tag_row = cursor.fetchone()
+            if tag_row:
+                tag_id = tag_row[0]
+            else:
+                cursor.execute("""
+                    INSERT INTO tags (name, tag_type, created_by, created_at)
+                    VALUES (?, 'custom', ?, ?)
+                """, (tag, current_user.id, datetime.now()))
+                cursor.execute("SELECT last_insert_rowid()")
+                tag_id = cursor.fetchone()[0]
+
+            for paper_id in paper_ids:
+                cursor.execute("""
+                    INSERT OR IGNORE INTO paper_tags (paper_id, tag_id)
+                    VALUES (?, ?)
+                """, (paper_id, tag_id))
+                count += 1
+
+        return JSONResponse(content={"success": True, "count": count})
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": str(e)}
+        )
+
+
+@app.delete("/api/paper_database/batch")
+async def batch_delete_papers(request: Request):
+    """批量删除"""
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    try:
+        data = await request.json()
+        paper_ids = data.get("paper_ids", [])
+
+        count = PaperService.batch_delete(paper_ids, current_user.id, current_user.role)
+        return JSONResponse(content={"success": True, "count": count})
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": str(e)}
+        )
+
+
+@app.get("/api/paper_database/{paper_id}/download")
+async def download_paper(paper_id: int, request: Request):
+    """下载文献PDF"""
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    paper = PaperService.get_paper_by_id(paper_id, current_user.id)
+    if not paper:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"success": False, "message": "文献不存在", "error": "NOT_FOUND"}
+        )
+
+    pdf_path = paper.get('pdf_path')
+    if not pdf_path or not os.path.exists(pdf_path):
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"success": False, "message": "PDF文件不存在"}
+        )
+
+    # 增加下载次数
+    PaperService.increment_download_count(paper_id)
+
+    from fastapi.responses import FileResponse
+    return FileResponse(
+        path=pdf_path,
+        filename=os.path.basename(pdf_path),
+        media_type='application/pdf'
+    )
 
 
 # 启动命令
