@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>共享文件 - 研究生组会文件共享系统</title>
+    <title>文献库 - 研究生组会文件共享系统</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script>
-        // 配置Tailwind自定义颜色
         tailwind.config = {
             theme: {
                 extend: {
@@ -27,90 +26,47 @@
     </script>
     <style type="text/tailwindcss">
         @layer utilities {
-            .content-auto {
-                content-visibility: auto;
-            }
             .sidebar-icon {
                 @apply flex items-center gap-3 p-3 rounded-lg transition-all duration-200 cursor-pointer;
             }
             .sidebar-icon.active {
                 @apply bg-primary/10 text-primary font-medium;
             }
-            .file-card {
-                @apply bg-white rounded-xl shadow-sm border border-gray-100 p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+            .paper-row {
+                @apply transition-all duration-200 hover:bg-gray-50;
             }
-            .file-row {
-                @apply transition-all duration-200;
+            .paper-row.selected {
+                @apply bg-blue-50 border-l-4 border-l-primary;
             }
-            .file-row:hover {
-                @apply bg-gray-50;
+            .tag-badge {
+                @apply px-2 py-1 rounded text-xs font-medium cursor-pointer transition-colors;
             }
-            .file-type-pdf {
-                @apply text-red-500 bg-red-50;
+            .tag-badge:hover {
+                @apply opacity-80;
             }
-            .file-type-doc {
-                @apply text-blue-500 bg-blue-50;
+            .year-card {
+                @apply bg-white rounded-lg p-4 border border-gray-100 cursor-pointer transition-all hover:shadow-md;
             }
-            .file-type-ppt {
-                @apply text-orange-500 bg-orange-50;
+            .year-card.active {
+                @apply border-primary bg-primary/5;
             }
-            .file-type-xls {
-                @apply text-green-500 bg-green-50;
+            .stat-card {
+                @apply bg-white rounded-lg p-4 border border-gray-100;
             }
-            .file-type-zip {
-                @apply text-purple-500 bg-purple-50;
+            .checkbox-cell {
+                @apply w-12 flex items-center justify-center;
             }
-            .file-type-default {
-                @apply text-gray-500 bg-gray-50;
+            .line-clamp-2 {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
             }
-            @media (max-width: 640px) {
-                .container {
-                    padding-left: 1rem;
-                    padding-right: 1rem;
-                }
-
-                /* 移动端表格响应式 */
-                .file-row .grid {
-                    grid-template-columns: 1fr;
-                    gap: 0.75rem;
-                }
-
-                .file-row .col-span-6 {
-                    grid-column: span 1;
-                }
-
-                .file-row .col-span-2 {
-                    grid-column: span 1;
-                    text-align: left;
-                }
-
-                .file-row .col-span-2:nth-child(3) {
-                    order: 3;
-                }
-
-                .file-row .col-span-2:nth-child(4) {
-                    order: 4;
-                }
-
-                /* 移动端表格头部隐藏 */
-                .bg-gray-50 .grid {
-                    display: none;
-                }
-
-                /* 移动端文件行布局调整 */
-                .file-row {
-                    padding: 1rem;
-                }
-
-                .file-row .flex.items-center.gap-4 {
-                    flex-direction: column;
-                    align-items: flex-start;
-                    gap: 0.5rem;
-                }
-
-                .file-row .flex.items-center.gap-2 {
-                    justify-content: flex-start;
-                }
+            .line-clamp-3 {
+                display: -webkit-box;
+                -webkit-line-clamp: 3;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
             }
         }
     </style>
@@ -333,140 +289,399 @@
         <!-- 文献库 内容区域 -->
         <!-- ====================== 【核心：文献库 内容区】 ====================== -->
         <div class="flex-1 p-4 lg:p-6 overflow-y-auto">
-            <!-- 页面标题 & 工具栏 -->
+            <!-- 页面标题 -->
             <div class="mb-6">
-                <h1 class="text-xl font-bold text-gray-800 mb-4">团队文献库</h1>
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div class="flex flex-wrap gap-2">
-                            <button class="paper-tag paper-tag-high">全部文献</button>
-                            <button class="paper-tag">Transformer</button>
-                            <button class="paper-tag">BERT</button>
-                            <button class="paper-tag">CNN</button>
-                            <button class="paper-tag">大模型</button>
+                <h1 class="text-xl font-bold text-gray-800 mb-2">团队文献库</h1>
+                <p class="text-sm text-gray-500">管理和分享团队学术文献资源</p>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">文献总数</p>
+                            <p id="stat-total" class="text-2xl font-bold text-gray-800 mt-1">128</p>
                         </div>
-                        <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2">
-                            <i class="fa fa-plus"></i><span>添加文献</span>
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fa fa-book text-primary text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">未读文献</p>
+                            <p id="stat-unread" class="text-2xl font-bold text-yellow-600 mt-1">36</p>
+                        </div>
+                        <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <i class="fa fa-eye-slash text-yellow-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">已收藏</p>
+                            <p id="stat-starred" class="text-2xl font-bold text-purple-600 mt-1">42</p>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i class="fa fa-star text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">近30天新增</p>
+                            <p id="stat-recent" class="text-2xl font-bold text-green-600 mt-1">15</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fa fa-calendar-plus-o text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 搜索和筛选区 -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-6">
+                <div class="flex flex-col lg:flex-row gap-4">
+                    <!-- 搜索框 -->
+                    <div class="flex-1">
+                        <div class="relative">
+                            <input type="text" id="search-input" placeholder="搜索文献标题、作者、关键词..."
+                                   class="w-full py-2 pl-10 pr-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                            <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                    </div>
+
+                    <!-- 筛选下拉 -->
+                    <div class="flex flex-wrap gap-3">
+                        <select id="filter-tag" class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30">
+                            <option value="">全部标签</option>
+                            <option value="transformer">Transformer</option>
+                            <option value="bert">BERT</option>
+                            <option value="cnn">CNN</option>
+                            <option value="llm">大模型</option>
+                            <option value="nlp">NLP</option>
+                            <option value="cv">计算机视觉</option>
+                        </select>
+                        <select id="filter-status" class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30">
+                            <option value="">全部状态</option>
+                            <option value="unread">未读</option>
+                            <option value="reading">在读</option>
+                            <option value="read">已读</option>
+                        </select>
+                        <select id="filter-starred" class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30">
+                            <option value="">全部收藏</option>
+                            <option value="starred">已收藏</option>
+                            <option value="unstarred">未收藏</option>
+                        </select>
+                        <button id="clear-filter-btn" class="px-3 py-2 text-sm text-gray-500 hover:text-primary transition-colors">
+                            <i class="fa fa-times mr-1"></i>清除筛选
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- 统计卡片 -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white rounded-lg p-4 border border-gray-100">
-                    <div class="flex items-center justify-between">
-                        <div><p class="text-gray-500 text-sm">文献总数</p><h3 class="text-2xl font-bold mt-1">128</h3></div>
-                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary"><i class="fa fa-book"></i></div>
+            <!-- 发表年份分类 -->
+            <div class="mb-6">
+                <h3 class="text-sm font-medium text-gray-700 mb-3">按发表年份</h3>
+                <div class="flex flex-wrap gap-3">
+                    <div class="year-card active" data-year="">
+                        <p class="text-sm text-gray-500">全部</p>
+                        <p class="text-lg font-bold text-gray-800">128</p>
                     </div>
-                </div>
-                <div class="bg-white rounded-lg p-4 border border-gray-100">
-                    <div class="flex items-center justify-between">
-                        <div><p class="text-gray-500 text-sm">未读文献</p><h3 class="text-2xl font-bold mt-1">36</h3></div>
-                        <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600"><i class="fa fa-eye"></i></div>
+                    <div class="year-card" data-year="2026">
+                        <p class="text-sm text-gray-500">2026</p>
+                        <p class="text-lg font-bold text-primary">8</p>
                     </div>
-                </div>
-                <div class="bg-white rounded-lg p-4 border border-gray-100">
-                    <div class="flex items-center justify-between">
-                        <div><p class="text-gray-500 text-sm">已收藏</p><h3 class="text-2xl font-bold mt-1">42</h3></div>
-                        <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600"><i class="fa fa-star"></i></div>
+                    <div class="year-card" data-year="2025">
+                        <p class="text-sm text-gray-500">2025</p>
+                        <p class="text-lg font-bold text-gray-800">25</p>
                     </div>
-                </div>
-                <div class="bg-white rounded-lg p-4 border border-gray-100">
-                    <div class="flex items-center justify-between">
-                        <div><p class="text-gray-500 text-sm">近30天新增</p><h3 class="text-2xl font-bold mt-1">15</h3></div>
-                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="fa fa-calendar-plus-o"></i></div>
+                    <div class="year-card" data-year="2024">
+                        <p class="text-sm text-gray-500">2024</p>
+                        <p class="text-lg font-bold text-gray-800">32</p>
+                    </div>
+                    <div class="year-card" data-year="2023">
+                        <p class="text-sm text-gray-500">2023</p>
+                        <p class="text-lg font-bold text-gray-800">18</p>
+                    </div>
+                    <div class="year-card" data-year="older">
+                        <p class="text-sm text-gray-500">更早</p>
+                        <p class="text-lg font-bold text-gray-800">45</p>
                     </div>
                 </div>
             </div>
 
+            <!-- 批量操作栏 -->
+            <div id="batch-actions-bar" class="hidden bg-primary/10 rounded-lg p-3 mb-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-sm text-primary">
+                        <i class="fa fa-check-square mr-1"></i>
+                        已选择 <span id="selected-count">0</span> 篇文献
+                    </span>
+                    <button id="select-all-btn" class="text-sm text-gray-600 hover:text-primary">
+                        全选
+                    </button>
+                    <button id="cancel-select-btn" class="text-sm text-gray-600 hover:text-primary">
+                        取消选择
+                    </button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="batch-star-btn" class="px-3 py-1 bg-white border border-gray-200 rounded text-sm hover:bg-yellow-50 hover:border-yellow-300 transition-colors">
+                        <i class="fa fa-star-o text-yellow-500 mr-1"></i>批量收藏
+                    </button>
+                    <button id="batch-unstar-btn" class="px-3 py-1 bg-white border border-gray-200 rounded text-sm hover:bg-gray-50 transition-colors">
+                        <i class="fa fa-star text-gray-400 mr-1"></i>取消收藏
+                    </button>
+                    <button id="batch-tag-btn" class="px-3 py-1 bg-white border border-gray-200 rounded text-sm hover:bg-blue-50 hover:border-blue-300 transition-colors">
+                        <i class="fa fa-tag text-blue-500 mr-1"></i>设置标签
+                    </button>
+                    <button id="batch-delete-btn" class="px-3 py-1 bg-white border border-red-200 rounded text-sm text-red-600 hover:bg-red-50 transition-colors">
+                        <i class="fa fa-trash-o mr-1"></i>批量删除
+                    </button>
+                </div>
+            </div>
+
+            <!-- 工具栏 -->
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <button id="toggle-select-mode-btn" class="px-3 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors">
+                        <i class="fa fa-check-square-o mr-1"></i>批量选择
+                    </button>
+                    <button id="add-paper-btn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                        <i class="fa fa-plus mr-1"></i>添加文献
+                    </button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <select id="sort-select" class="px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                        <option value="newest">最新发表</option>
+                        <option value="oldest">最早发表</option>
+                        <option value="title">按标题</option>
+                        <option value="starred">按收藏</option>
+                    </select>
+                </div>
+            </div>
+
             <!-- 文献列表 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                    <div class="grid grid-cols-12 gap-4 items-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <div class="col-span-6">文献信息</div>
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                <!-- 表头 -->
+                <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                    <div class="grid grid-cols-12 gap-3 items-center text-xs font-medium text-gray-500">
+                        <div class="checkbox-cell">
+                            <input type="checkbox" id="header-checkbox" class="w-4 h-4 rounded border-gray-300">
+                        </div>
+                        <div class="col-span-5">文献信息</div>
                         <div class="col-span-2 text-center">作者</div>
-                        <div class="col-span-2 text-center">发表时间</div>
+                        <div class="col-span-2 text-center">年份</div>
+                        <div class="col-span-1 text-center">状态</div>
                         <div class="col-span-2 text-center">操作</div>
                     </div>
                 </div>
 
-                <!-- 文献1 -->
-                <div class="paper-row px-6 py-4 border-b border-gray-100">
-                    <div class="grid grid-cols-12 gap-4 items-center">
-                        <div class="col-span-6 flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
-                                <i class="fa fa-file-text-o text-lg"></i>
+                <!-- 文献列表内容 -->
+                <div id="paper-list">
+                    <!-- 文献1 -->
+                    <div class="paper-row px-4 py-4 border-b border-gray-100" data-paper-id="1">
+                        <div class="grid grid-cols-12 gap-3 items-center">
+                            <div class="checkbox-cell">
+                                <input type="checkbox" class="paper-checkbox w-4 h-4 rounded border-gray-300" data-paper-id="1">
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="font-medium text-primary truncate">Attention Is All You Need</h3>
-                                <p class="text-xs text-gray-500 mt-1 line-clamp-1">Transformer 架构，完全基于自注意力机制</p>
-                                <div class="mt-2 flex gap-1">
-                                    <span class="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">Transformer</span>
-                                    <span class="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">NLP</span>
+                            <div class="col-span-5 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(1)">
+                                <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                                    <i class="fa fa-file-pdf-o text-blue-500 text-lg"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="font-medium text-primary truncate">Attention Is All You Need</h3>
+                                        <i class="fa fa-star text-yellow-500 paper-starred" title="已收藏"></i>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1 line-clamp-1">Transformer架构，完全基于自注意力机制，开创了NLP新纪元</p>
+                                    <div class="mt-2 flex gap-1">
+                                        <span class="tag-badge bg-blue-100 text-blue-700">Transformer</span>
+                                        <span class="tag-badge bg-gray-100 text-gray-600">NLP</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-span-2 text-center text-sm text-gray-600">Vaswani et al.</div>
+                            <div class="col-span-2 text-center text-sm text-gray-600">2017</div>
+                            <div class="col-span-1 text-center">
+                                <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">已读</span>
+                            </div>
+                            <div class="col-span-2 text-center">
+                                <div class="flex gap-2 justify-center">
+                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.toggleStar(1)" title="收藏">
+                                        <i class="fa fa-star text-yellow-500"></i>
+                                    </button>
+                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.downloadPaper(1)" title="下载">
+                                        <i class="fa fa-download text-gray-500"></i>
+                                    </button>
+                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.editPaper(1)" title="编辑">
+                                        <i class="fa fa-edit text-gray-500"></i>
+                                    </button>
+                                    <button class="p-2 hover:bg-red-50 rounded transition-colors" onclick="PaperManager.deletePaper(1)" title="删除">
+                                        <i class="fa fa-trash-o text-red-500"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-span-2 text-center text-sm">Vaswani</div>
-                        <div class="col-span-2 text-center text-sm">2017</div>
-                        <div class="col-span-2 text-center flex gap-2 justify-center">
-                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-download"></i></button>
-                            <button class="text-gray-400 hover:text-yellow-500"><i class="fa fa-star-o"></i></button>
-                            <button class="text-gray-400 hover:text-red-500"><i class="fa fa-trash-o"></i></button>
+                    </div>
+
+                    <!-- 文献2 -->
+                    <div class="paper-row px-4 py-4 border-b border-gray-100" data-paper-id="2">
+                        <div class="grid grid-cols-12 gap-3 items-center">
+                            <div class="checkbox-cell">
+                                <input type="checkbox" class="paper-checkbox w-4 h-4 rounded border-gray-300" data-paper-id="2">
+                            </div>
+                            <div class="col-span-5 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(2)">
+                                <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
+                                    <i class="fa fa-file-pdf-o text-purple-500 text-lg"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="font-medium text-primary truncate">BERT: Pre-training of Deep Bidirectional Transformers</h3>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1 line-clamp-1">双向预训练模型，大幅提升NLP任务效果</p>
+                                    <div class="mt-2 flex gap-1">
+                                        <span class="tag-badge bg-purple-100 text-purple-700">BERT</span>
+                                        <span class="tag-badge bg-gray-100 text-gray-600">预训练</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-span-2 text-center text-sm text-gray-600">Devlin et al.</div>
+                            <div class="col-span-2 text-center text-sm text-gray-600">2018</div>
+                            <div class="col-span-1 text-center">
+                                <span class="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">在读</span>
+                            </div>
+                            <div class="col-span-2 text-center">
+                                <div class="flex gap-2 justify-center">
+                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.toggleStar(2)" title="收藏">
+                                        <i class="fa fa-star-o text-gray-400"></i>
+                                    </button>
+                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.downloadPaper(2)" title="下载">
+                                        <i class="fa fa-download text-gray-500"></i>
+                                    </button>
+                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.editPaper(2)" title="编辑">
+                                        <i class="fa fa-edit text-gray-500"></i>
+                                    </button>
+                                    <button class="p-2 hover:bg-red-50 rounded transition-colors" onclick="PaperManager.deletePaper(2)" title="删除">
+                                        <i class="fa fa-trash-o text-red-500"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 文献3 -->
+                    <div class="paper-row px-4 py-4 border-b border-gray-100" data-paper-id="3">
+                        <div class="grid grid-cols-12 gap-3 items-center">
+                            <div class="checkbox-cell">
+                                <input type="checkbox" class="paper-checkbox w-4 h-4 rounded border-gray-300" data-paper-id="3">
+                            </div>
+                            <div class="col-span-5 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(3)">
+                                <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
+                                    <i class="fa fa-file-pdf-o text-green-500 text-lg"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="font-medium text-primary truncate">GPT-4 Technical Report</h3>
+                                        <i class="fa fa-star text-yellow-500 paper-starred" title="已收藏"></i>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1 line-clamp-1">大型多模态模型技术报告，展示GPT-4的能力与局限</p>
+                                    <div class="mt-2 flex gap-1">
+                                        <span class="tag-badge bg-red-100 text-red-700">大模型</span>
+                                        <span class="tag-badge bg-gray-100 text-gray-600">GPT</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-span-2 text-center text-sm text-gray-600">OpenAI</div>
+                            <div class="col-span-2 text-center text-sm text-gray-600">2023</div>
+                            <div class="col-span-1 text-center">
+                                <span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">未读</span>
+                            </div>
+                            <div class="col-span-2 text-center">
+                                <div class="flex gap-2 justify-center">
+                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.toggleStar(3)" title="收藏">
+                                        <i class="fa fa-star text-yellow-500"></i>
+                                    </button>
+                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.downloadPaper(3)" title="下载">
+                                        <i class="fa fa-download text-gray-500"></i>
+                                    </button>
+                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.editPaper(3)" title="编辑">
+                                        <i class="fa fa-edit text-gray-500"></i>
+                                    </button>
+                                    <button class="p-2 hover:bg-red-50 rounded transition-colors" onclick="PaperManager.deletePaper(3)" title="删除">
+                                        <i class="fa fa-trash-o text-red-500"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 文献4 -->
+                    <div class="paper-row px-4 py-4" data-paper-id="4">
+                        <div class="grid grid-cols-12 gap-3 items-center">
+                            <div class="checkbox-cell">
+                                <input type="checkbox" class="paper-checkbox w-4 h-4 rounded border-gray-300" data-paper-id="4">
+                            </div>
+                            <div class="col-span-5 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(4)">
+                                <div class="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center">
+                                    <i class="fa fa-file-pdf-o text-orange-500 text-lg"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="font-medium text-primary truncate">Deep Residual Learning for Image Recognition</h3>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1 line-clamp-1">ResNet深度残差网络，解决深层网络训练难题</p>
+                                    <div class="mt-2 flex gap-1">
+                                        <span class="tag-badge bg-orange-100 text-orange-700">CNN</span>
+                                        <span class="tag-badge bg-gray-100 text-gray-600">ResNet</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-span-2 text-center text-sm text-gray-600">He et al.</div>
+                            <div class="col-span-2 text-center text-sm text-gray-600">2016</div>
+                            <div class="col-span-1 text-center">
+                                <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">已读</span>
+                            </div>
+                            <div class="col-span-2 text-center">
+                                <div class="flex gap-2 justify-center">
+                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.toggleStar(4)" title="收藏">
+                                        <i class="fa fa-star-o text-gray-400"></i>
+                                    </button>
+                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.downloadPaper(4)" title="下载">
+                                        <i class="fa fa-download text-gray-500"></i>
+                                    </button>
+                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.editPaper(4)" title="编辑">
+                                        <i class="fa fa-edit text-gray-500"></i>
+                                    </button>
+                                    <button class="p-2 hover:bg-red-50 rounded transition-colors" onclick="PaperManager.deletePaper(4)" title="删除">
+                                        <i class="fa fa-trash-o text-red-500"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- 文献2 -->
-                <div class="paper-row px-6 py-4 border-b border-gray-100">
-                    <div class="grid grid-cols-12 gap-4 items-center">
-                        <div class="col-span-6 flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-500">
-                                <i class="fa fa-file-text-o text-lg"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="font-medium text-primary truncate">BERT: Pre-training of Deep Bidirectional Transformers</h3>
-                                <p class="text-xs text-gray-500 mt-1 line-clamp-1">双向预训练模型，大幅提升 NLP 任务效果</p>
-                                <div class="mt-2 flex gap-1">
-                                    <span class="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded">BERT</span>
-                                    <span class="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">预训练</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-span-2 text-center text-sm">Devlin</div>
-                        <div class="col-span-2 text-center text-sm">2018</div>
-                        <div class="col-span-2 text-center flex gap-2 justify-center">
-                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-download"></i></button>
-                            <button class="text-gray-400 hover:text-yellow-500"><i class="fa fa-star-o"></i></button>
-                            <button class="text-gray-400 hover:text-red-500"><i class="fa fa-trash-o"></i></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 文献3 -->
-                <div class="paper-row px-6 py-4">
-                    <div class="grid grid-cols-12 gap-4 items-center">
-                        <div class="col-span-6 flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center text-green-500">
-                                <i class="fa fa-file-text-o text-lg"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="font-medium text-primary truncate">Gradient-based learning applied to document recognition</h3>
-                                <p class="text-xs text-gray-500 mt-1 line-clamp-1">LeNet-5 卷积神经网络，奠定现代CNN基础</p>
-                                <div class="mt-2 flex gap-1">
-                                    <span class="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded">CNN</span>
-                                    <span class="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">计算机视觉</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-span-2 text-center text-sm">LeCun</div>
-                        <div class="col-span-2 text-center text-sm">1998</div>
-                        <div class="col-span-2 text-center flex gap-2 justify-center">
-                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-download"></i></button>
-                            <button class="text-gray-400 hover:text-yellow-500"><i class="fa fa-star-o"></i></button>
-                            <button class="text-gray-400 hover:text-red-500"><i class="fa fa-trash-o"></i></button>
-                        </div>
-                    </div>
+            <!-- 分页 -->
+            <div class="mt-4 flex items-center justify-between">
+                <p class="text-sm text-gray-500">显示 1-20 共 128 篇文献</p>
+                <div class="flex items-center gap-2">
+                    <button class="px-3 py-1 border border-gray-200 rounded text-sm hover:bg-gray-50 disabled:opacity-50" disabled>
+                        <i class="fa fa-chevron-left"></i>
+                    </button>
+                    <button class="px-3 py-1 bg-primary text-white rounded text-sm">1</button>
+                    <button class="px-3 py-1 border border-gray-200 rounded text-sm hover:bg-gray-50">2</button>
+                    <button class="px-3 py-1 border border-gray-200 rounded text-sm hover:bg-gray-50">3</button>
+                    <span class="text-gray-400">...</span>
+                    <button class="px-3 py-1 border border-gray-200 rounded text-sm hover:bg-gray-50">7</button>
+                    <button class="px-3 py-1 border border-gray-200 rounded text-sm hover:bg-gray-50">
+                        <i class="fa fa-chevron-right"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -476,203 +691,465 @@
 
 
     <!-- 页脚 -->
-    <footer class="bg-white border-t border-gray-200 py-4">
+    <footer class="bg-white border-t border-gray-200 py-4 mt-auto">
         <div class="container mx-auto px-4 text-center text-sm text-gray-500">
-            <p>© 2023 智能计算实验室 - 研究生组会文件共享系统</p>
+            <p>© 2026 智能计算实验室 - 研究生组会文件共享系统</p>
         </div>
     </footer>
 
+    <!-- 文献详情模态框 -->
+    <div id="paper-detail-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="font-semibold text-gray-800">文献详情</h3>
+                <button onclick="PaperManager.closeDetailModal()" class="p-2 hover:bg-gray-100 rounded-lg">
+                    <i class="fa fa-times text-gray-500"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <!-- 标题和收藏 -->
+                <div class="flex items-start gap-3 mb-4">
+                    <div class="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center">
+                        <i class="fa fa-file-pdf-o text-blue-500 text-2xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h2 id="detail-title" class="text-xl font-bold text-gray-800">Attention Is All You Need</h2>
+                        <div class="flex items-center gap-3 mt-2">
+                            <button id="detail-star-btn" onclick="PaperManager.toggleStarFromDetail()" class="text-yellow-500">
+                                <i class="fa fa-star"></i> 已收藏
+                            </button>
+                            <span id="detail-status" class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">已读</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 基本信息 -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <p class="text-sm text-gray-500 mb-1">作者</p>
+                        <p id="detail-authors" class="font-medium">Vaswani, Shazeer, Parmar et al.</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <p class="text-sm text-gray-500 mb-1">发表年份</p>
+                        <p id="detail-year" class="font-medium">2017</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <p class="text-sm text-gray-500 mb-1">期刊/会议</p>
+                        <p id="detail-journal" class="font-medium">NeurIPS 2017</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <p class="text-sm text-gray-500 mb-1">DOI</p>
+                        <p id="detail-doi" class="font-medium text-primary cursor-pointer hover:underline">10.48550/arXiv.1706.03762</p>
+                    </div>
+                </div>
+
+                <!-- 标签 -->
+                <div class="mb-6">
+                    <p class="text-sm text-gray-500 mb-2">标签</p>
+                    <div id="detail-tags" class="flex flex-wrap gap-2">
+                        <span class="tag-badge bg-blue-100 text-blue-700">Transformer</span>
+                        <span class="tag-badge bg-gray-100 text-gray-600">NLP</span>
+                        <span class="tag-badge bg-gray-100 text-gray-600">注意力机制</span>
+                    </div>
+                </div>
+
+                <!-- 摘要 -->
+                <div class="mb-6">
+                    <p class="text-sm text-gray-500 mb-2">摘要</p>
+                    <div id="detail-abstract" class="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 leading-relaxed">
+                        <p>The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely...</p>
+                    </div>
+                </div>
+
+                <!-- 链接和文件 -->
+                <div class="mb-6">
+                    <p class="text-sm text-gray-500 mb-2">相关链接</p>
+                    <div class="flex flex-wrap gap-3">
+                        <a id="detail-pdf-link" href="#" class="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">
+                            <i class="fa fa-file-pdf-o"></i> PDF全文
+                        </a>
+                        <a id="detail-arxiv-link" href="#" class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
+                            <i class="fa fa-external-link"></i> arXiv
+                        </a>
+                        <a id="detail-semanticscholar-link" href="#" class="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+                            <i class="fa fa-graduation-cap"></i> Semantic Scholar
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 添加者信息 -->
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <img id="detail-adder-avatar" src="https://picsum.photos/id/1/100/100" class="w-6 h-6 rounded-full">
+                            <span class="text-sm text-gray-600">由 <span id="detail-adder">张三</span> 添加于 <span id="detail-added-time">2025-04-20</span></p>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            <span id="detail-download-count">下载 12 次</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <select id="detail-read-status" onchange="PaperManager.updateReadStatus()" class="px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                        <option value="unread">未读</option>
+                        <option value="reading">在读</option>
+                        <option value="read">已读</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="PaperManager.editPaperFromDetail()" class="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <i class="fa fa-edit mr-1"></i>编辑
+                    </button>
+                    <button onclick="PaperManager.downloadPaper(PaperManager.currentPaperId)" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                        <i class="fa fa-download mr-1"></i>下载PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加/编辑文献模态框 -->
+    <div id="paper-edit-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 id="edit-modal-title" class="font-semibold text-gray-800">添加文献</h3>
+                <button onclick="PaperManager.closeEditModal()" class="p-2 hover:bg-gray-100 rounded-lg">
+                    <i class="fa fa-times text-gray-500"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4">
+                <!-- 导入方式 -->
+                <div class="flex items-center gap-3 mb-4">
+                    <button id="import-doi-btn" class="px-4 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors">
+                        <i class="fa fa-link mr-1"></i>DOI导入
+                    </button>
+                    <button id="import-manual-btn" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
+                        <i class="fa fa-edit mr-1"></i>手动录入
+                    </button>
+                </div>
+
+                <!-- DOI导入 -->
+                <div id="doi-import-section" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">DOI</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="doi-input" placeholder="输入DOI，如：10.48550/arXiv.1706.03762"
+                                   class="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30">
+                            <button onclick="PaperManager.fetchByDOI()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                                <i class="fa fa-search"></i>获取
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">自动从CrossRef/arXiv获取文献信息</p>
+                    </div>
+                </div>
+
+                <!-- 手动录入表单 -->
+                <div id="manual-input-section" class="hidden space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">标题 *</label>
+                        <input type="text" id="paper-title" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">作者</label>
+                        <input type="text" id="paper-authors" placeholder="多个作者用逗号分隔" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">发表年份</label>
+                            <input type="number" id="paper-year" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">期刊/会议</label>
+                            <input type="text" id="paper-journal" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">DOI</label>
+                        <input type="text" id="paper-doi" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">摘要</label>
+                        <textarea id="paper-abstract" rows="4" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">标签</label>
+                        <input type="text" id="paper-tags" placeholder="多个标签用逗号分隔" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30">
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <span class="tag-badge bg-blue-100 text-blue-700 cursor-pointer" onclick="PaperManager.addTag('Transformer')">+ Transformer</span>
+                            <span class="tag-badge bg-purple-100 text-purple-700 cursor-pointer" onclick="PaperManager.addTag('BERT')">+ BERT</span>
+                            <span class="tag-badge bg-orange-100 text-orange-700 cursor-pointer" onclick="PaperManager.addTag('CNN')">+ CNN</span>
+                            <span class="tag-badge bg-red-100 text-red-700 cursor-pointer" onclick="PaperManager.addTag('大模型')">+ 大模型</span>
+                            <span class="tag-badge bg-green-100 text-green-700 cursor-pointer" onclick="PaperManager.addTag('NLP')">+ NLP</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">PDF文件</label>
+                        <div class="flex items-center gap-2">
+                            <input type="file" id="paper-pdf" accept=".pdf" class="hidden">
+                            <button onclick="document.getElementById('paper-pdf').click()" class="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                <i class="fa fa-upload mr-1"></i>上传PDF
+                            </button>
+                            <span id="pdf-file-name" class="text-sm text-gray-500">未选择文件</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">外部链接</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="text" id="paper-arxiv" placeholder="arXiv链接" class="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30">
+                            <input type="text" id="paper-ss" placeholder="Semantic Scholar链接" class="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-200 flex items-center justify-end gap-3">
+                <button onclick="PaperManager.closeEditModal()" class="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">取消</button>
+                <button onclick="PaperManager.savePaper()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                    <i class="fa fa-check mr-1"></i>保存
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 批量设置标签模态框 -->
+    <div id="batch-tag-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="font-semibold text-gray-800">批量设置标签</h3>
+                <button onclick="PaperManager.closeBatchTagModal()" class="p-2 hover:bg-gray-100 rounded-lg">
+                    <i class="fa fa-times text-gray-500"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-gray-600 mb-4">为 <span id="batch-tag-count">0</span> 篇文献设置标签</p>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <span class="tag-badge bg-blue-100 text-blue-700 cursor-pointer" onclick="PaperManager.selectBatchTag('Transformer')">Transformer</span>
+                    <span class="tag-badge bg-purple-100 text-purple-700 cursor-pointer" onclick="PaperManager.selectBatchTag('BERT')">BERT</span>
+                    <span class="tag-badge bg-orange-100 text-orange-700 cursor-pointer" onclick="PaperManager.selectBatchTag('CNN')">CNN</span>
+                    <span class="tag-badge bg-red-100 text-red-700 cursor-pointer" onclick="PaperManager.selectBatchTag('大模型')">大模型</span>
+                    <span class="tag-badge bg-green-100 text-green-700 cursor-pointer" onclick="PaperManager.selectBatchTag('NLP')">NLP</span>
+                    <span class="tag-badge bg-gray-100 text-gray-700 cursor-pointer" onclick="PaperManager.selectBatchTag('计算机视觉')">计算机视觉</span>
+                </div>
+                <input type="text" id="batch-new-tag" placeholder="添加新标签" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30">
+            </div>
+            <div class="p-4 border-t border-gray-200 flex items-center justify-end gap-3">
+                <button onclick="PaperManager.closeBatchTagModal()" class="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50">取消</button>
+                <button onclick="PaperManager.applyBatchTag()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                    <i class="fa fa-check mr-1"></i>应用
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script>
-        // API基础URL配置
         const API_BASE_URL = 'http://localhost:8081';
 
-        // 认证辅助函数
-        function getAuthHeaders() {
-            const sessionToken = getSessionToken();
-            const headers = {
-                'Content-Type': 'application/json'
-            };
+        // 文献管理类
+        const PaperManager = {
+            currentPaperId: null,
+            selectedPapers: [],
+            selectMode: false,
+            currentYear: '',
+            papers: [
+                { id: 1, title: 'Attention Is All You Need', authors: 'Vaswani et al.', year: 2017, journal: 'NeurIPS 2017', doi: '10.48550/arXiv.1706.03762', abstract: 'The dominant sequence transduction models are based on complex recurrent or convolutional neural networks...', tags: ['Transformer', 'NLP'], starred: true, status: 'read', downloadCount: 12, arxiv: 'https://arxiv.org/abs/1706.03762', pdf: '/uploads/papers/attention.pdf', addedBy: '张三', addedTime: '2025-04-20' },
+                { id: 2, title: 'BERT: Pre-training of Deep Bidirectional Transformers', authors: 'Devlin et al.', year: 2018, journal: 'NAACL 2019', doi: '10.48550/arXiv.1810.04805', abstract: 'We introduce a new language representation model called BERT...', tags: ['BERT', '预训练'], starred: false, status: 'reading', downloadCount: 8, arxiv: 'https://arxiv.org/abs/1810.04805', pdf: '/uploads/papers/bert.pdf', addedBy: '李四', addedTime: '2025-03-15' },
+                { id: 3, title: 'GPT-4 Technical Report', authors: 'OpenAI', year: 2023, journal: 'arXiv', doi: '', abstract: 'We report the development of GPT-4, a large-scale, multimodal model...', tags: ['大模型', 'GPT'], starred: true, status: 'unread', downloadCount: 25, arxiv: 'https://arxiv.org/abs/2303.08774', pdf: '/uploads/papers/gpt4.pdf', addedBy: '王五', addedTime: '2025-05-01' },
+                { id: 4, title: 'Deep Residual Learning for Image Recognition', authors: 'He et al.', year: 2016, journal: 'CVPR 2016', doi: '10.1109/CVPR.2016.90', abstract: 'Deeper neural networks are more difficult to train. We present a residual learning framework...', tags: ['CNN', 'ResNet'], starred: false, status: 'read', downloadCount: 18, arxiv: 'https://arxiv.org/abs/1512.03385', pdf: '/uploads/papers/resnet.pdf', addedBy: '张三', addedTime: '2025-02-10' }
+            ],
 
-            if (sessionToken) {
-                headers['Authorization'] = `Bearer ${sessionToken}`;
-            }
+            init() {
+                this.setupEventListeners();
+                this.updateStats();
+            },
 
-            return headers;
-        }
+            setupEventListeners() {
+                document.getElementById('search-input').addEventListener('input', (e) => this.searchPapers(e.target.value));
+                document.getElementById('filter-tag').addEventListener('change', (e) => this.filterByTag(e.target.value));
+                document.getElementById('filter-status').addEventListener('change', (e) => this.filterByStatus(e.target.value));
+                document.getElementById('filter-starred').addEventListener('change', (e) => this.filterByStarred(e.target.value));
+                document.getElementById('clear-filter-btn').addEventListener('click', () => this.clearFilters());
+                document.querySelectorAll('.year-card').forEach(card => { card.addEventListener('click', () => this.filterByYear(card.dataset.year)); });
+                document.getElementById('sort-select').addEventListener('change', (e) => this.sortPapers(e.target.value));
+                document.getElementById('toggle-select-mode-btn').addEventListener('click', () => this.toggleSelectMode());
+                document.getElementById('select-all-btn').addEventListener('click', () => this.selectAll());
+                document.getElementById('cancel-select-btn').addEventListener('click', () => this.cancelSelection());
+                document.getElementById('batch-star-btn').addEventListener('click', () => this.batchStar(true));
+                document.getElementById('batch-unstar-btn').addEventListener('click', () => this.batchStar(false));
+                document.getElementById('batch-tag-btn').addEventListener('click', () => this.openBatchTagModal());
+                document.getElementById('batch-delete-btn').addEventListener('click', () => this.batchDelete());
+                document.getElementById('header-checkbox').addEventListener('change', (e) => { document.querySelectorAll('.paper-checkbox').forEach(cb => { cb.checked = e.target.checked; this.handleCheckboxChange(cb); }); });
+                document.querySelectorAll('.paper-checkbox').forEach(cb => { cb.addEventListener('change', () => this.handleCheckboxChange(cb)); });
+                document.getElementById('add-paper-btn').addEventListener('click', () => this.openEditModal());
+                document.getElementById('import-doi-btn').addEventListener('click', () => this.switchImportMode('doi'));
+                document.getElementById('import-manual-btn').addEventListener('click', () => this.switchImportMode('manual'));
+                document.getElementById('paper-pdf').addEventListener('change', (e) => { document.getElementById('pdf-file-name').textContent = e.target.files[0]?.name || '未选择文件'; });
+                this.setupMobileSidebar();
+            },
 
-        // 获取带认证的fetch选项
-        function getAuthFetchOptions(options = {}) {
-            const sessionToken = getSessionToken();
-            const defaultOptions = {
-                credentials: 'include'
-            };
+            setupMobileSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const toggleBtn = document.getElementById('mobile-sidebar-toggle');
+                const closeBtn = document.getElementById('mobile-sidebar-close');
+                toggleBtn?.addEventListener('click', () => sidebar.classList.remove('-translate-x-full'));
+                closeBtn?.addEventListener('click', () => sidebar.classList.add('-translate-x-full'));
+            },
 
-            if (sessionToken && !options.headers) {
-                options.headers = {};
-            }
+            openDetail(paperId) {
+                const paper = this.papers.find(p => p.id === paperId);
+                if (!paper) return;
+                this.currentPaperId = paperId;
+                document.getElementById('detail-title').textContent = paper.title;
+                document.getElementById('detail-authors').textContent = paper.authors;
+                document.getElementById('detail-year').textContent = paper.year;
+                document.getElementById('detail-journal').textContent = paper.journal;
+                document.getElementById('detail-doi').textContent = paper.doi || '无';
+                document.getElementById('detail-abstract').innerHTML = `<p>${paper.abstract}</p>`;
+                const tagsHtml = paper.tags.map(t => `<span class="tag-badge bg-gray-100 text-gray-600">${t}</span>`).join('');
+                document.getElementById('detail-tags').innerHTML = tagsHtml;
+                const starBtn = document.getElementById('detail-star-btn');
+                starBtn.innerHTML = paper.starred ? '<i class="fa fa-star text-yellow-500"></i> 已收藏' : '<i class="fa fa-star-o text-gray-400"></i> 未收藏';
+                starBtn.className = paper.starred ? 'text-yellow-500' : 'text-gray-400';
+                const statusMap = { unread: '未读', reading: '在读', read: '已读' };
+                const statusColorMap = { unread: 'bg-gray-100 text-gray-700', reading: 'bg-yellow-100 text-yellow-700', read: 'bg-green-100 text-green-700' };
+                document.getElementById('detail-status').textContent = statusMap[paper.status];
+                document.getElementById('detail-status').className = `px-2 py-1 rounded-full text-xs ${statusColorMap[paper.status]}`;
+                document.getElementById('detail-read-status').value = paper.status;
+                document.getElementById('detail-arxiv-link').href = paper.arxiv;
+                document.getElementById('detail-pdf-link').href = paper.pdf;
+                document.getElementById('detail-download-count').textContent = `下载 ${paper.downloadCount} 次`;
+                document.getElementById('detail-adder').textContent = paper.addedBy;
+                document.getElementById('detail-added-time').textContent = paper.addedTime;
+                document.getElementById('paper-detail-modal').classList.remove('hidden');
+            },
 
-            if (sessionToken) {
-                options.headers['Authorization'] = `Bearer ${sessionToken}`;
-            }
+            closeDetailModal() { document.getElementById('paper-detail-modal').classList.add('hidden'); this.currentPaperId = null; },
 
-            return { ...defaultOptions, ...options };
-        }
+            toggleStarFromDetail() { if (this.currentPaperId) { this.toggleStar(this.currentPaperId); this.openDetail(this.currentPaperId); } },
 
-        // 文件上传管理
-        // 移动端侧边栏功能
-        function initMobileSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('mobile-sidebar-toggle');
-            const sidebarClose = document.getElementById('mobile-sidebar-close');
+            updateReadStatus() { const status = document.getElementById('detail-read-status').value; console.log(`更新阅读状态: ${this.currentPaperId} -> ${status}`); this.closeDetailModal(); },
 
-            function openMobileSidebar() {
-                sidebar.classList.remove('-translate-x-full');
-                document.body.style.overflow = 'hidden';
-            }
+            toggleStar(paperId) {
+                const paper = this.papers.find(p => p.id === paperId);
+                if (!paper) return;
+                paper.starred = !paper.starred;
+                const row = document.querySelector(`.paper-row[data-paper-id="${paperId}"]`);
+                const starIcon = row.querySelector('.paper-starred');
+                const btnIcon = row.querySelector('button[onclick*="toggleStar"] i');
+                if (paper.starred) {
+                    if (!starIcon) { const titleDiv = row.querySelector('h3'); titleDiv.insertAdjacentHTML('afterend', '<i class="fa fa-star text-yellow-500 paper-starred" title="已收藏"></i>'); }
+                    btnIcon.className = 'fa fa-star text-yellow-500';
+                } else {
+                    if (starIcon) starIcon.remove();
+                    btnIcon.className = 'fa fa-star-o text-gray-400';
+                }
+                this.updateStats();
+            },
 
-            function closeMobileSidebar() {
-                sidebar.classList.add('-translate-x-full');
-                document.body.style.overflow = '';
-            }
+            downloadPaper(paperId) { const paper = this.papers.find(p => p.id === paperId); if (paper?.pdf) window.open(paper.pdf, '_blank'); else alert('PDF文件未上传'); },
 
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', openMobileSidebar);
-            }
-            if (sidebarClose) {
-                sidebarClose.addEventListener('click', closeMobileSidebar);
-            }
+            editPaper(paperId) { this.openEditModal(paperId); },
 
-            // 侧边栏菜单点击后关闭移动端侧边栏
-            const sidebarItems = document.querySelectorAll('.sidebar-icon');
-            sidebarItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    sidebarItems.forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
+            editPaperFromDetail() { this.closeDetailModal(); this.openEditModal(this.currentPaperId); },
 
-                    if (window.innerWidth < 1024) {
-                        closeMobileSidebar();
-                    }
-                });
-            });
-        }
+            deletePaper(paperId) { if (confirm('确定删除此文献吗？')) { const row = document.querySelector(`.paper-row[data-paper-id="${paperId}"]`); row?.remove(); this.updateStats(); } },
 
-        // 认证辅助函数
-        function saveSessionToken(token) {
-            localStorage.setItem('session_token', token);
-        }
+            openEditModal(paperId = null) {
+                const modal = document.getElementById('paper-edit-modal');
+                const title = document.getElementById('edit-modal-title');
+                if (paperId) {
+                    title.textContent = '编辑文献';
+                    const paper = this.papers.find(p => p.id === paperId);
+                    if (paper) { document.getElementById('paper-title').value = paper.title; document.getElementById('paper-authors').value = paper.authors; document.getElementById('paper-year').value = paper.year; document.getElementById('paper-journal').value = paper.journal; document.getElementById('paper-doi').value = paper.doi; document.getElementById('paper-abstract').value = paper.abstract; document.getElementById('paper-tags').value = paper.tags.join(', '); }
+                    this.currentPaperId = paperId;
+                } else { title.textContent = '添加文献'; this.clearEditForm(); this.currentPaperId = null; }
+                this.switchImportMode('doi');
+                modal.classList.remove('hidden');
+            },
 
-        function getSessionToken() {
-            return localStorage.getItem('session_token');
-        }
+            closeEditModal() { document.getElementById('paper-edit-modal').classList.add('hidden'); },
 
-        function clearSession() {
-            localStorage.removeItem('session_token');
-            localStorage.removeItem('user_info');
-            localStorage.removeItem('remember_me');
-        }
+            clearEditForm() { document.getElementById('paper-title').value = ''; document.getElementById('paper-authors').value = ''; document.getElementById('paper-year').value = ''; document.getElementById('paper-journal').value = ''; document.getElementById('paper-doi').value = ''; document.getElementById('paper-abstract').value = ''; document.getElementById('paper-tags').value = ''; document.getElementById('pdf-file-name').textContent = '未选择文件'; document.getElementById('doi-input').value = ''; },
 
-        // 页面初始化时检查URL中的session_token
+            switchImportMode(mode) {
+                const doiBtn = document.getElementById('import-doi-btn');
+                const manualBtn = document.getElementById('import-manual-btn');
+                const doiSection = document.getElementById('doi-import-section');
+                const manualSection = document.getElementById('manual-input-section');
+                if (mode === 'doi') { doiBtn.classList.add('bg-primary/10', 'text-primary'); doiBtn.classList.remove('bg-gray-100', 'text-gray-600'); manualBtn.classList.remove('bg-primary/10', 'text-primary'); manualBtn.classList.add('bg-gray-100', 'text-gray-600'); doiSection.classList.remove('hidden'); manualSection.classList.add('hidden'); }
+                else { manualBtn.classList.add('bg-primary/10', 'text-primary'); manualBtn.classList.remove('bg-gray-100', 'text-gray-600'); doiBtn.classList.remove('bg-primary/10', 'text-primary'); doiBtn.classList.add('bg-gray-100', 'text-gray-600'); manualSection.classList.remove('hidden'); doiSection.classList.add('hidden'); }
+            },
+
+            fetchByDOI() { const doi = document.getElementById('doi-input').value; if (!doi) { alert('请输入DOI'); return; } alert('DOI导入功能开发中，请手动录入'); this.switchImportMode('manual'); },
+
+            addTag(tag) { const input = document.getElementById('paper-tags'); const currentTags = input.value.split(',').map(t => t.trim()).filter(t => t); if (!currentTags.includes(tag)) { currentTags.push(tag); input.value = currentTags.join(', '); } },
+
+            savePaper() { const title = document.getElementById('paper-title').value; if (!title) { alert('请填写文献标题'); return; } console.log('保存文献:', { title }); this.closeEditModal(); alert('文献保存成功'); },
+
+            toggleSelectMode() {
+                this.selectMode = !this.selectMode;
+                const bar = document.getElementById('batch-actions-bar');
+                const btn = document.getElementById('toggle-select-mode-btn');
+                if (this.selectMode) { bar.classList.remove('hidden'); btn.innerHTML = '<i class="fa fa-times mr-1"></i>退出选择'; btn.classList.add('bg-red-50', 'text-red-600', 'border-red-200'); }
+                else { bar.classList.add('hidden'); btn.innerHTML = '<i class="fa fa-check-square-o mr-1"></i>批量选择'; btn.classList.remove('bg-red-50', 'text-red-600', 'border-red-200'); this.cancelSelection(); }
+            },
+
+            handleCheckboxChange(cb) {
+                const paperId = parseInt(cb.dataset.paperId);
+                const row = document.querySelector(`.paper-row[data-paper-id="${paperId}"]`);
+                if (cb.checked) { if (!this.selectedPapers.includes(paperId)) this.selectedPapers.push(paperId); row.classList.add('selected'); }
+                else { this.selectedPapers = this.selectedPapers.filter(id => id !== paperId); row.classList.remove('selected'); }
+                this.updateSelectedCount();
+            },
+
+            updateSelectedCount() { document.getElementById('selected-count').textContent = this.selectedPapers.length; },
+
+            selectAll() { document.querySelectorAll('.paper-checkbox').forEach(cb => { cb.checked = true; this.handleCheckboxChange(cb); }); },
+
+            cancelSelection() { document.querySelectorAll('.paper-checkbox').forEach(cb => { cb.checked = false; const row = document.querySelector(`.paper-row[data-paper-id="${cb.dataset.paperId}"]`); row?.classList.remove('selected'); }); this.selectedPapers = []; this.updateSelectedCount(); },
+
+            batchStar(star) { if (this.selectedPapers.length === 0) { alert('请先选择文献'); return; } this.selectedPapers.forEach(id => this.toggleStar(id)); this.cancelSelection(); },
+
+            openBatchTagModal() { if (this.selectedPapers.length === 0) { alert('请先选择文献'); return; } document.getElementById('batch-tag-count').textContent = this.selectedPapers.length; document.getElementById('batch-tag-modal').classList.remove('hidden'); },
+
+            closeBatchTagModal() { document.getElementById('batch-tag-modal').classList.add('hidden'); },
+
+            selectBatchTag(tag) { document.getElementById('batch-new-tag').value = tag; },
+
+            applyBatchTag() { const tag = document.getElementById('batch-new-tag').value; if (!tag) { alert('请选择或输入标签'); return; } console.log(`批量设置标签 "${tag}":`, this.selectedPapers); this.closeBatchTagModal(); this.cancelSelection(); alert(`已为 ${this.selectedPapers.length} 篇文献设置标签: ${tag}`); },
+
+            batchDelete() { if (this.selectedPapers.length === 0) { alert('请先选择文献'); return; } if (confirm(`确定删除 ${this.selectedPapers.length} 篇文献吗？`)) { this.selectedPapers.forEach(id => { const row = document.querySelector(`.paper-row[data-paper-id="${id}"]`); row?.remove(); }); this.cancelSelection(); this.updateStats(); } },
+
+            searchPapers(keyword) { console.log('搜索:', keyword); },
+            filterByTag(tag) { console.log('筛选标签:', tag); },
+            filterByStatus(status) { console.log('筛选状态:', status); },
+            filterByStarred(starred) { console.log('筛选收藏:', starred); },
+            filterByYear(year) { document.querySelectorAll('.year-card').forEach(card => { card.classList.remove('active'); if (card.dataset.year === year) card.classList.add('active'); }); this.currentYear = year; console.log('筛选年份:', year); },
+            clearFilters() { document.getElementById('filter-tag').value = ''; document.getElementById('filter-status').value = ''; document.getElementById('filter-starred').value = ''; document.getElementById('search-input').value = ''; this.filterByYear(''); },
+            sortPapers(sortBy) { console.log('排序:', sortBy); },
+            updateStats() { document.getElementById('stat-total').textContent = this.papers.length; document.getElementById('stat-unread').textContent = this.papers.filter(p => p.status === 'unread').length; document.getElementById('stat-starred').textContent = this.papers.filter(p => p.starred).length; }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUrlSessionToken();
+            PaperManager.init();
+            initLogout();
+        });
+
         function checkUrlSessionToken() {
             const urlParams = new URLSearchParams(window.location.search);
             const sessionToken = urlParams.get('session_token');
-
-            if (sessionToken) {
-                // 保存到localStorage
-                saveSessionToken(sessionToken);
-
-                // 清理URL，移除session_token参数
-                const url = new URL(window.location);
-                url.searchParams.delete('session_token');
-                window.history.replaceState({}, document.title, url);
-
-                console.log('✅ 从URL保存session_token到localStorage');
-                return true;
-            }
-            return false;
+            if (sessionToken) { localStorage.setItem('session_token', sessionToken); const url = new URL(window.location); url.searchParams.delete('session_token'); window.history.replaceState({}, document.title, url); }
         }
 
-  
-        // 初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            // 首先检查URL中是否有session_token
-            const hasUrlToken = checkUrlSessionToken();
-
-            initMobileSidebar();
-            // 登出功能
+        function initLogout() {
             const logoutBtn = document.getElementById('logout-btn');
             const logoutBtnMobile = document.getElementById('logout-btn-mobile');
-            // 退出登录函数
-            async function performLogout() {
-                try {
-                    console.log('🔥 开始登出操作');
-
-                    // 调用登出API
-                    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('session_token')}`
-                        }
-                    });
-
-                    const result = await response.json();
-                    console.log('📋 登出API响应:', result);
-
-                    // 清除本地存储的会话信息
-                    localStorage.removeItem('session_token');
-                    localStorage.removeItem('user_info');
-                    localStorage.removeItem('remember_me');
-
-                    console.log('✅ 登出成功，跳转到登录页面');
-
-                    // 跳转到登录页面
-                    window.location.href = 'http://localhost:8081/login';
-
-                } catch (error) {
-                    console.error('❌ 登出过程中发生错误:', error);
-                    // 即使API调用失败，也清除本地存储并跳转
-                    localStorage.removeItem('session_token');
-                    localStorage.removeItem('user_info');
-                    localStorage.removeItem('remember_me');
-                    window.location.href = 'http://localhost:8081/login';
-                }
-            }
-            // 桌面端退出登录按钮事件
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    await performLogout();
-                });
-            }
-
-            // 移动端退出登录按钮事件
-            if (logoutBtnMobile) {
-                logoutBtnMobile.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    await performLogout();
-                });
-            }
-            // 其他按钮事件
-            const buttons = document.querySelectorAll('button');
-            buttons.forEach(button => {
-                button.addEventListener('click', function(e) {
-                    const actionText = this.textContent.trim();
-
-                    // 如果不是上传文件按钮，处理其他操作
-                    if (!actionText.includes('上传文件')) {
-                        if (actionText.includes('下载')) {
-                            // 这里可以添加实际的下载功能
-                            console.log('下载文件功能');
-                        } else if (actionText.includes('分享')) {
-                            // 这里可以添加实际的分享功能
-                            console.log('分享文件功能');
-                        }
-                    }
-                });
-            });
-
-            });
+            async function performLogout() { try { await fetch(`${API_BASE_URL}/api/auth/logout`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` } }); localStorage.removeItem('session_token'); window.location.href = `${API_BASE_URL}/login`; } catch (error) { localStorage.removeItem('session_token'); window.location.href = `${API_BASE_URL}/login`; } }
+            logoutBtn?.addEventListener('click', (e) => { e.preventDefault(); performLogout(); });
+            logoutBtnMobile?.addEventListener('click', (e) => { e.preventDefault(); performLogout(); });
+        }
     </script>
 </body>
 </html>
