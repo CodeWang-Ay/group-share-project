@@ -6,6 +6,18 @@ from datetime import datetime
 from typing import Optional
 
 
+# 汇报人确认状态常量
+PRESENTER_STATUS_PENDING = 'pending'
+PRESENTER_STATUS_CONFIRMED = 'confirmed'
+PRESENTER_STATUS_COMPLETED = 'completed'
+
+# 材料提交状态常量
+MATERIAL_STATUS_PENDING = 'pending'      # 待提交
+MATERIAL_STATUS_SUBMITTED = 'submitted'  # 待审核
+MATERIAL_STATUS_APPROVED = 'approved'    # 已通过
+MATERIAL_STATUS_REJECTED = 'rejected'    # 已驳回
+
+
 def _parse_datetime(value) -> Optional[datetime]:
     """安全解析 datetime，格式错误返回 None"""
     if value is None:
@@ -92,7 +104,8 @@ class MeetingPresenter:
     presenter_type: str  # assigned, volunteered, pending
     duration_minutes: int
     material_required: bool
-    status: str  # pending, confirmed, completed
+    status: str  # pending, confirmed, completed (汇报人确认状态)
+    material_status: str  # pending, submitted, approved, rejected (材料提交状态)
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 
@@ -107,6 +120,7 @@ class MeetingPresenter:
             duration_minutes=data.get('duration_minutes', 20),
             material_required=data.get('material_required', True),
             status=data.get('status', 'pending'),
+            material_status=data.get('material_status', 'pending'),
             created_at=_parse_datetime(data.get('created_at')) or datetime.now(),
             updated_at=_parse_datetime(data.get('updated_at')) or datetime.now()
         )
@@ -121,6 +135,7 @@ class MeetingPresenter:
             'duration_minutes': self.duration_minutes,
             'material_required': self.material_required,
             'status': self.status,
+            'material_status': self.material_status,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

@@ -742,6 +742,35 @@
             return headers;
         }
 
+        // 下载组会材料文件
+        async function downloadMeetingFile(fileId, filename) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/meeting_files/${fileId}/download`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) {
+                    alert('下载失败，请检查登录状态');
+                    return;
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } catch (e) {
+                console.error('下载失败:', e);
+                alert('下载失败，请重试');
+            }
+        }
+
         // 获取带认证的fetch选项
         function getAuthFetchOptions(options = {}) {
             const sessionToken = getSessionToken();
@@ -1066,6 +1095,18 @@
                             ${m.minutes ? '<span class="text-green-600"><i class="fa fa-check-circle"></i> 已填写纪要</span>' : '<span class="text-orange-500"><i class="fa fa-exclamation-circle"></i> 待填写纪要</span>'}
                         </div>
                     </div>
+                    <!-- 汇报材料区域 -->
+                    <div class="mt-3 pt-2 border-t border-gray-50">
+                        <div class="flex justify-between items-center mb-1">
+                            <p class="text-xs text-gray-400"><i class="fa fa-file-text-o mr-1"></i>汇报材料</p>
+                            <button onclick="loadMeetingMaterials(${m.id})" class="text-xs text-primary hover:underline">
+                                加载材料
+                            </button>
+                        </div>
+                        <div id="materials-${m.id}" class="text-xs text-gray-400">
+                            点击加载查看
+                        </div>
+                    </div>
                     <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between">
                         <div class="flex items-center gap-2 text-sm text-gray-500">
                             <i class="fa fa-clock-o"></i>
@@ -1249,6 +1290,22 @@
                                 </button>
                             </div>
                             ${minutesContentHtml}
+                        </div>
+
+                        <!-- 汇报材料区域 -->
+                        <div class="bg-purple-50 rounded-lg p-4 mb-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa fa-file-powerpoint-o text-purple-600"></i>
+                                    <span class="font-medium text-gray-800">汇报材料</span>
+                                </div>
+                                <button onclick="loadDetailMaterials(${meeting.id})" class="text-sm text-primary hover:text-primary/80">
+                                    <i class="fa fa-refresh"></i> 刷新
+                                </button>
+                            </div>
+                            <div id="detail-materials-${meeting.id}">
+                                <p class="text-sm text-gray-400">点击刷新加载材料</p>
+                            </div>
                         </div>
 
                         <!-- 会议描述 -->
@@ -1515,6 +1572,144 @@
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = '<i class="fa fa-check mr-1"></i>保存纪要';
             }
+        }
+
+        // 加载组会的汇报材料
+        async function loadMeetingMaterials(meetingId) {
+            const container = document.getElementById(`materials-${meetingId}`);
+            if (!container) return;
+
+            container.innerHTML = '<p class="text-xs text-gray-400"><i class="fa fa-spinner fa-spin"></i> 加载中...</p>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/materials`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    const materials = result.data.materials;
+                    container.innerHTML = renderMaterialsPreview(materials);
+                } else {
+                    container.innerHTML = `<p class="text-xs text-red-400">${result.message}</p>`;
+                }
+            } catch (e) {
+                console.error('加载材料失败:', e);
+                container.innerHTML = '<p class="text-xs text-red-400">加载失败</p>';
+            }
+        }
+
+        // 渲染材料预览
+        function renderMaterialsPreview(materials) {
+            if (!materials || materials.length === 0) {
+                return '<p class="text-xs text-gray-400">暂无汇报材料</p>';
+            }
+
+            return materials.map(m => {
+                const statusClass = {
+                    'pending': 'text-orange-600',
+                    'submitted': 'text-yellow-600',
+                    'approved': 'text-green-600',
+                    'rejected': 'text-red-600'
+                }[m.material_status] || 'text-gray-600';
+                const statusText = {
+                    'pending': '待提交',
+                    'submitted': '待审核',
+                    'approved': '已通过',
+                    'rejected': '已驳回'
+                }[m.material_status] || '';
+
+                const filesHtml = m.files && m.files.length > 0
+                    ? m.files.map(f => `<button onclick="downloadMeetingFile(${f.id}, '${f.filename}')" class="inline-flex items-center gap-1 text-primary hover:underline mr-2">
+                        <i class="fa fa-file-o"></i>${f.filename}<i class="fa fa-download text-xs ml-1"></i>
+                      </button>`).join('')
+                    : '<span class="text-gray-400">无文件</span>';
+
+                return `<div class="flex items-center gap-2 py-1">
+                    <i class="fa fa-user-o text-gray-300"></i>
+                    <span class="font-medium">${m.real_name}</span>
+                    <span class="text-xs ${statusClass}">${statusText}</span>
+                    <span class="text-xs text-gray-300">|</span>
+                    ${filesHtml}
+                </div>`;
+            }).join('');
+        }
+
+        // 在详情模态框中加载材料
+        async function loadDetailMaterials(meetingId) {
+            const container = document.getElementById(`detail-materials-${meetingId}`);
+            if (!container) return;
+
+            container.innerHTML = '<p class="text-sm text-gray-400"><i class="fa fa-spinner fa-spin"></i> 加载中...</p>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/materials`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    const materials = result.data.materials;
+                    container.innerHTML = renderMaterialsDetail(materials);
+                } else {
+                    container.innerHTML = `<p class="text-sm text-red-400">${result.message}</p>`;
+                }
+            } catch (e) {
+                console.error('加载材料失败:', e);
+                container.innerHTML = '<p class="text-sm text-red-400">加载失败</p>';
+            }
+        }
+
+        // 渲染材料详情（用于模态框）
+        function renderMaterialsDetail(materials) {
+            if (!materials || materials.length === 0) {
+                return '<p class="text-sm text-gray-400">暂无汇报材料</p>';
+            }
+
+            return materials.map(m => {
+                const statusClass = {
+                    'pending': 'bg-orange-100 text-orange-600',
+                    'submitted': 'bg-yellow-100 text-yellow-600',
+                    'approved': 'bg-green-100 text-green-600',
+                    'rejected': 'bg-red-100 text-red-600'
+                }[m.material_status] || 'bg-gray-100 text-gray-600';
+                const statusText = {
+                    'pending': '待提交',
+                    'submitted': '待审核',
+                    'approved': '已通过',
+                    'rejected': '已驳回'
+                }[m.material_status] || '';
+
+                const filesHtml = m.files && m.files.length > 0
+                    ? m.files.map(f => `<button onclick="downloadMeetingFile(${f.id}, '${f.filename}')" class="inline-flex items-center gap-1 text-sm text-primary hover:underline mr-3">
+                        <i class="fa fa-file-o"></i>${f.filename}
+                        <i class="fa fa-download text-xs"></i>
+                        <span class="text-xs text-gray-400">(${formatFileSize(f.file_size)})</span>
+                      </button>`).join('')
+                    : '<span class="text-sm text-gray-400">暂无文件</span>';
+
+                return `<div class="flex items-start gap-3 py-2 border-b border-purple-100 last:border-0">
+                    <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                        <i class="fa fa-user-o"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-medium">${m.real_name}</span>
+                            <span class="text-xs px-2 py-0.5 rounded ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="mt-1 text-sm">${filesHtml}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + 'B';
+            if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + 'KB';
+            return Math.round(bytes / (1024 * 1024)) + 'MB';
         }
 
         // ========== 新建记录相关功能 ==========

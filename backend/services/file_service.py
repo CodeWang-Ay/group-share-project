@@ -108,7 +108,8 @@ class FileService:
     @classmethod
     def upload_file(cls, file_data: bytes, original_filename: str,
                    uploader_id: int, description: Optional[str] = None,
-                   tags: Optional[str] = None, is_public: bool = False) -> tuple[Optional[File], Optional[str]]:
+                   tags: Optional[str] = None, is_public: bool = False,
+                   skip_name_check: bool = False) -> tuple[Optional[File], Optional[str]]:
         """
         上传文件
 
@@ -119,6 +120,7 @@ class FileService:
             description: 文件描述
             tags: 标签
             is_public: 是否公开
+            skip_name_check: 是否跳过文件名重复检查（用于材料上传场景）
 
         Returns:
             tuple: (文件对象, 错误信息)，成功时错误信息为None
@@ -133,16 +135,18 @@ class FileService:
                 return None, "不支持的文件类型"
 
             # 检查是否已存在相同文件名的文件（同一用户下）
-            with get_db() as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT id, filename FROM files
-                    WHERE filename = ? AND uploader_id = ? AND status = 'active'
-                """, (original_filename, uploader_id))
+            # skip_name_check=True 时跳过此检查，直接使用时间戳前缀
+            if not skip_name_check:
+                with get_db() as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        SELECT id, filename FROM files
+                        WHERE filename = ? AND uploader_id = ? AND status = 'active'
+                    """, (original_filename, uploader_id))
 
-                existing_file = cursor.fetchone()
-                if existing_file:
-                    return None, f"文件名 '{original_filename}' 已存在，请重命名后再次上传"
+                    existing_file = cursor.fetchone()
+                    if existing_file:
+                        return None, f"文件名 '{original_filename}' 已存在，请重命名后再次上传"
 
             # 获取用户名
             username = cls.get_user_by_id(uploader_id)
@@ -153,9 +157,15 @@ class FileService:
             user_upload_dir = cls.UPLOAD_DIR / username
             user_upload_dir.mkdir(parents=True, exist_ok=True)
 
-            # 生成唯一文件名
-            unique_filename = cls.generate_unique_filename(original_filename)
-            file_path = user_upload_dir / original_filename
+            # 生成唯一文件名（skip_name_check 时强制使用时间戳前缀）
+            if skip_name_check:
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                file_path_obj = Path(original_filename)
+                unique_filename = f"{timestamp}_{file_path_obj.name}"
+            else:
+                unique_filename = cls.generate_unique_filename(original_filename)
+
+            file_path = user_upload_dir / unique_filename
 
             # 保存文件到磁盘
             with open(file_path, 'wb') as f:
@@ -167,7 +177,8 @@ class FileService:
             file_type = File.get_mime_type(original_filename)
 
             # 检查是否已存在相同文件内容的文件（通过哈希值）
-            if file_hash:
+            # skip_name_check=True 时也跳过此检查（用于材料上传场景）
+            if file_hash and not skip_name_check:
                 with get_db() as conn:
                     cursor = conn.cursor()
                     cursor.execute("""
@@ -182,13 +193,15 @@ class FileService:
                         return None, f"文件内容与已存在的文件 '{duplicate_content[1]}' 重复"
 
             # 创建文件对象
+            # 数据库存储实际保存的文件名（带时间戳前缀），这样用户能看到实际文件名
+            # skip_name_check=True 时 file_hash 设为 None，避免 UNIQUE 约束冲突
             file_obj = File(
-                filename=original_filename,
+                filename=unique_filename,
                 file_path=str(file_path),
                 file_size=file_size,
                 file_type=file_type,
                 uploader_id=uploader_id,
-                file_hash=file_hash,
+                file_hash=None if skip_name_check else file_hash,
                 description=description,
                 tags=tags,
                 is_public=is_public

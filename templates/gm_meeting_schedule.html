@@ -479,6 +479,35 @@
             localStorage.removeItem('remember_me');
         }
 
+        // 下载组会材料文件
+        async function downloadMeetingFile(fileId, filename) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/meeting_files/${fileId}/download`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) {
+                    alert('下载失败，请检查登录状态');
+                    return;
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } catch (e) {
+                console.error('下载失败:', e);
+                alert('下载失败，请重试');
+            }
+        }
+
         // 页面初始化时检查URL中的session_token
         function checkUrlSessionToken() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -579,10 +608,31 @@
                     ? `<div class="flex items-center gap-2 mt-3">
                         <i class="fa fa-users text-gray-400"></i>
                         <div class="flex flex-wrap gap-2">
-                            ${presenters.map(p => `<span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-700">
-                                <i class="fa fa-user-o"></i>${p.real_name || p.username}
-                                <span class="text-gray-400">${p.duration_minutes}分钟</span>
-                            </span>`).join('')}
+                            ${presenters.map(p => {
+                                // 材料状态显示
+                                const materialStatusText = {
+                                    'pending': '待提交',
+                                    'submitted': '待审核',
+                                    'approved': '已通过',
+                                    'rejected': '已驳回'
+                                }[p.material_status] || '待提交';
+                                const materialStatusClass = {
+                                    'pending': 'bg-orange-100 text-orange-600',
+                                    'submitted': 'bg-yellow-100 text-yellow-600',
+                                    'approved': 'bg-green-100 text-green-600',
+                                    'rejected': 'bg-red-100 text-red-600'
+                                }[p.material_status] || 'bg-gray-100 text-gray-600';
+
+                                const fileCount = p.files ? p.files.length : 0;
+
+                                return `<span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-700">
+                                    <i class="fa fa-user-o"></i>${p.real_name || p.username}
+                                    <span class="text-gray-400">${p.duration_minutes}分钟</span>
+                                    ${p.material_required ? `<span class="${materialStatusClass} px-1 rounded text-xs">
+                                        <i class="fa fa-file-text-o"></i>${materialStatusText}${fileCount > 0 ? `(${fileCount})` : ''}
+                                    </span>` : ''}
+                                </span>`;
+                            }).join('')}
                         </div>
                        </div>`
                     : '<p class="text-sm text-gray-400 mt-3"><i class="fa fa-users mr-1"></i>暂无汇报人</p>';
@@ -771,6 +821,28 @@
                             const typeText = p.presenter_type === 'assigned' ? '导师指定' : '主动报名';
                             const statusText = p.status === 'pending' ? '待确认' : (p.status === 'confirmed' ? '已确认' : '已完成');
                             const statusClass = p.status === 'pending' ? 'text-yellow-600' : (p.status === 'confirmed' ? 'text-blue-600' : 'text-green-600');
+
+                            // 材料状态
+                            const materialStatusText = {
+                                'pending': '待提交',
+                                'submitted': '待审核',
+                                'approved': '已通过',
+                                'rejected': '已驳回'
+                            }[p.material_status] || '待提交';
+                            const materialStatusClass = {
+                                'pending': 'bg-orange-50 text-orange-600',
+                                'submitted': 'bg-yellow-50 text-yellow-600',
+                                'approved': 'bg-green-50 text-green-600',
+                                'rejected': 'bg-red-50 text-red-600'
+                            }[p.material_status] || 'bg-gray-50 text-gray-600';
+
+                            // 文件列表（每个文件有独立下载按钮）
+                            const filesHtml = p.files && p.files.length > 0
+                                ? p.files.map(f => `<button onclick="downloadMeetingFile(${f.id}, '${f.filename}')" class="inline-flex items-center gap-1 text-xs text-primary hover:underline mr-2">
+                                    <i class="fa fa-file-o"></i>${f.filename}<i class="fa fa-download text-xs ml-1"></i>
+                                  </button>`).join('')
+                                : '<span class="text-xs text-gray-400">暂无文件</span>';
+
                             return `
                             <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
                                 <div class="flex items-center gap-3">
@@ -780,11 +852,15 @@
                                     <div>
                                         <p class="font-medium text-gray-800">${p.user.real_name || p.user.username}</p>
                                         <p class="text-sm text-gray-500">${p.user.research_direction || ''}</p>
+                                        ${p.files && p.files.length > 0 ? `<p class="text-xs mt-1">${filesHtml}</p>` : ''}
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <div class="text-right">
                                         <p class="text-sm ${statusClass}">${statusText}</p>
+                                        <p class="text-xs ${materialStatusClass} px-1 rounded">
+                                            <i class="fa fa-file-text-o"></i>${materialStatusText}
+                                        </p>
                                         <p class="text-xs text-gray-400">${p.duration_minutes}分钟 · ${typeText}</p>
                                     </div>
                                     <button onclick="removePresenter(${p.id})" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">

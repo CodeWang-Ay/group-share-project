@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>共享文件 - 研究生组会文件共享系统</title>
+    <title>汇报材料 - 研究生组会文件共享系统</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script>
-        // 配置Tailwind自定义颜色
         tailwind.config = {
             theme: {
                 extend: {
@@ -15,11 +14,6 @@
                         primary: '#2563eb',
                         secondary: '#10b981',
                         accent: '#6366f1',
-                        neutral: '#f3f4f6',
-                        'neutral-dark': '#4b5563',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
                     },
                 }
             }
@@ -27,90 +21,11 @@
     </script>
     <style type="text/tailwindcss">
         @layer utilities {
-            .content-auto {
-                content-visibility: auto;
-            }
             .sidebar-icon {
                 @apply flex items-center gap-3 p-3 rounded-lg transition-all duration-200 cursor-pointer;
             }
             .sidebar-icon.active {
                 @apply bg-primary/10 text-primary font-medium;
-            }
-            .file-card {
-                @apply bg-white rounded-xl shadow-sm border border-gray-100 p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-1;
-            }
-            .file-row {
-                @apply transition-all duration-200;
-            }
-            .file-row:hover {
-                @apply bg-gray-50;
-            }
-            .file-type-pdf {
-                @apply text-red-500 bg-red-50;
-            }
-            .file-type-doc {
-                @apply text-blue-500 bg-blue-50;
-            }
-            .file-type-ppt {
-                @apply text-orange-500 bg-orange-50;
-            }
-            .file-type-xls {
-                @apply text-green-500 bg-green-50;
-            }
-            .file-type-zip {
-                @apply text-purple-500 bg-purple-50;
-            }
-            .file-type-default {
-                @apply text-gray-500 bg-gray-50;
-            }
-            @media (max-width: 640px) {
-                .container {
-                    padding-left: 1rem;
-                    padding-right: 1rem;
-                }
-
-                /* 移动端表格响应式 */
-                .file-row .grid {
-                    grid-template-columns: 1fr;
-                    gap: 0.75rem;
-                }
-
-                .file-row .col-span-6 {
-                    grid-column: span 1;
-                }
-
-                .file-row .col-span-2 {
-                    grid-column: span 1;
-                    text-align: left;
-                }
-
-                .file-row .col-span-2:nth-child(3) {
-                    order: 3;
-                }
-
-                .file-row .col-span-2:nth-child(4) {
-                    order: 4;
-                }
-
-                /* 移动端表格头部隐藏 */
-                .bg-gray-50 .grid {
-                    display: none;
-                }
-
-                /* 移动端文件行布局调整 */
-                .file-row {
-                    padding: 1rem;
-                }
-
-                .file-row .flex.items-center.gap-4 {
-                    flex-direction: column;
-                    align-items: flex-start;
-                    gap: 0.5rem;
-                }
-
-                .file-row .flex.items-center.gap-2 {
-                    justify-content: flex-start;
-                }
             }
         }
     </style>
@@ -120,50 +35,36 @@
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between h-16">
-                <!-- 左侧Logo和标题 -->
                 <div class="flex items-center">
-                    <!-- 移动端侧边栏切换按钮 -->
-                    <button id="mobile-sidebar-toggle" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 mr-2 transition-colors">
+                    <button id="mobile-sidebar-toggle" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 mr-2">
                         <i class="fa fa-bars text-gray-600"></i>
                     </button>
-
                     <div class="flex-shrink-0 flex items-center gap-2">
                         <i class="fa fa-flask text-primary text-2xl"></i>
-                        <span class="hidden sm:inline-block text-xl font-semibold text-gray-800">智能计算实验室</span>
-                        <span class="sm:hidden text-lg font-semibold text-gray-800">实验室</span>
+                        <span class="hidden sm:inline-block text-xl font-semibold">智能计算实验室</span>
+                        <span class="sm:hidden text-lg font-semibold">实验室</span>
                     </div>
                 </div>
 
-                <!-- 右侧用户信息和操作 -->
                 <div class="flex items-center gap-2 sm:gap-4">
-                    <!-- 搜索框 - 移动端隐藏 -->
                     <div class="relative hidden md:block">
-                        <input type="text" id="search-input" placeholder="搜索文件..."
-                               class="py-2 pl-10 pr-4 rounded-lg bg-gray-100 border-0 focus:ring-2 focus:ring-primary/30 focus:bg-white w-48 lg:w-64 transition-all">
+                        <input type="text" id="search-input" placeholder="搜索材料..."
+                               class="py-2 pl-10 pr-4 rounded-lg bg-gray-100 border-0 focus:ring-2 focus:ring-primary/30 focus:bg-white w-48 lg:w-64">
                         <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                     </div>
 
-                    <!-- 移动端搜索按钮 -->
-                    <button class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                        <i class="fa fa-search text-gray-600"></i>
-                    </button>
-
-                    <!-- 通知 -->
-                    <div class="relative cursor-pointer p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <div class="relative cursor-pointer p-2 rounded-full hover:bg-gray-100">
                         <i class="fa fa-bell-o text-gray-600"></i>
                         <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                     </div>
 
-                    <!-- 用户信息 -->
                     <div class="relative group">
                         <div class="flex items-center gap-2 cursor-pointer">
-                            <img src="https://picsum.photos/id/{{ user.id }}/200/200" alt="{{ user.username }}头像" class="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm">
+                            <img src="https://picsum.photos/id/{{ user.id }}/200/200" alt="{{ user.username }}" class="w-8 h-8 rounded-full border-2 border-white shadow-sm">
                             <span class="hidden md:inline-block font-medium">{{ user.username }}</span>
                             <i class="fa fa-chevron-down text-xs text-gray-500"></i>
                         </div>
-
-                        <!-- 下拉菜单 -->
-                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right scale-95 group-hover:scale-100">
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                             <div class="px-4 py-2 border-b border-gray-100">
                                 <p class="font-medium">{{ user.username }}</p>
                                 <p class="text-xs text-gray-500">
@@ -172,26 +73,15 @@
                                     {% else %}学生{% endif %}
                                 </p>
                             </div>
-                            <a href="/user_profile" class="block px-4 py-2 text-sm hover:bg-gray-100">
-                                <i class="fa fa-user-o mr-2 text-gray-500"></i>个人资料
-                            </a>
-                            <a href="/edit_password" class="block px-4 py-2 text-sm hover:bg-gray-100">
-                                <i class="fa fa-key mr-2 text-gray-500"></i>修改密码
-                            </a>
-                            <a href="/settings" class="block px-4 py-2 text-sm hover:bg-gray-100">
-                                <i class="fa fa-cog mr-2 text-gray-500"></i>设置
-                            </a>
+                            <a href="/user_profile" class="block px-4 py-2 text-sm hover:bg-gray-100"><i class="fa fa-user-o mr-2"></i>个人资料</a>
+                            <a href="/edit_password" class="block px-4 py-2 text-sm hover:bg-gray-100"><i class="fa fa-key mr-2"></i>修改密码</a>
                         </div>
                     </div>
 
-                    <!-- 退出登录按钮 -->
-                    <button id="logout-btn" class="hidden sm:flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                        <i class="fa fa-sign-out"></i>
-                        <span>退出登录</span>
+                    <button id="logout-btn" class="hidden sm:flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg">
+                        <i class="fa fa-sign-out"></i><span>退出登录</span>
                     </button>
-
-                    <!-- 移动端退出登录按钮 -->
-                    <button id="logout-btn-mobile" class="sm:hidden p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors">
+                    <button id="logout-btn-mobile" class="sm:hidden p-2 rounded-lg hover:bg-red-50 text-red-600">
                         <i class="fa fa-sign-out"></i>
                     </button>
                 </div>
@@ -201,136 +91,52 @@
 
     <!-- 主内容区 -->
     <main class="flex-1 flex">
-        <!-- 侧边栏（和你现有页面完全一致） -->
-        <aside id="sidebar" class="fixed lg:sticky top-16 lg:top-16 left-0 z-40 w-64 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto">
-            <!-- 移动端关闭按钮 -->
+        <!-- 侧边栏 -->
+        <aside id="sidebar" class="fixed lg:sticky top-16 left-0 z-40 w-64 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto">
             <div class="lg:hidden sticky top-0 bg-white border-b border-gray-200 p-4 z-10">
                 <div class="flex justify-between items-center">
-                    <span class="font-semibold text-gray-800">菜单</span>
-                    <button id="mobile-sidebar-close" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                        <i class="fa fa-times text-gray-600"></i>
-                    </button>
+                    <span class="font-semibold">菜单</span>
+                    <button id="mobile-sidebar-close" class="p-2 rounded-lg hover:bg-gray-100"><i class="fa fa-times text-gray-600"></i></button>
                 </div>
             </div>
 
             <div class="p-4 overflow-y-auto h-full">
-                <!-- 角色标识 -->
                 <div class="bg-primary/10 text-primary rounded-lg p-3 mb-6">
                     <div class="flex items-center justify-between">
                         <span class="font-medium">当前角色</span>
                         <span class="text-sm bg-primary text-white px-2 py-1 rounded-full">
-                            {% if user.role == 'admin' %}管理员
-                            {% elif user.role == 'teacher' %}导师
-                            {% else %}学生{% endif %}
+                            {% if user.role == 'admin' %}管理员{% elif user.role == 'teacher' %}导师{% else %}学生{% endif %}
                         </span>
                     </div>
                 </div>
-                
-                <!-- 导航菜单 -->
+
                 <nav>
                     <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3">组会管理</p>
                     <ul class="space-y-1">
-                        <li>
-                            <a href="/" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-dashboard w-5 text-center"></i>
-                                <span>工作台</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/gm_meeting_schedule" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-calendar w-5 text-center"></i>
-                                <span>组会安排</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/gm_report_materials" class="sidebar-icon active">
-                                <i class="fa fa-file-text-o w-5 text-center"></i>
-                                <span>汇报材料</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/gm_meeting_record" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-comments-o w-5 text-center"></i>
-                                <span>组会记录</span>
-                            </a>
-                        </li>
+                        <li><a href="/" class="sidebar-icon hover:bg-gray-100"><i class="fa fa-dashboard w-5"></i><span>工作台</span></a></li>
+                        <li><a href="/gm_meeting_schedule" class="sidebar-icon hover:bg-gray-100"><i class="fa fa-calendar w-5"></i><span>组会安排</span></a></li>
+                        <li><a href="/gm_report_materials" class="sidebar-icon active"><i class="fa fa-file-text-o w-5"></i><span>汇报材料</span></a></li>
+                        <li><a href="/gm_meeting_record" class="sidebar-icon hover:bg-gray-100"><i class="fa fa-comments-o w-5"></i><span>组会记录</span></a></li>
                     </ul>
-                    
+
                     <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6">资源管理</p>
                     <ul class="space-y-1">
-                        <li>
-                            <a href="/rm_paper_database" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-book w-5 text-center"></i>
-                                <span>文献库</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/rm_share_file" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-folder-open-o w-5 text-center"></i>
-                                <span>共享文件</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/rm_research_tasks" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-tasks w-5 text-center"></i>
-                                <span>研究任务</span>
-                            </a>
-                        </li>
+                        <li><a href="/rm_paper_database" class="sidebar-icon hover:bg-gray-100"><i class="fa fa-book w-5"></i><span>文献库</span></a></li>
+                        <li><a href="/rm_share_file" class="sidebar-icon hover:bg-gray-100"><i class="fa fa-folder-open-o w-5"></i><span>共享文件</span></a></li>
+                        <li><a href="/rm_research_tasks" class="sidebar-icon hover:bg-gray-100"><i class="fa fa-tasks w-5"></i><span>研究任务</span></a></li>
                     </ul>
-                    
+
                     <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6">团队管理</p>
                     <ul class="space-y-1">
-                        <li>
-                            <a href="/tm_user_management" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-users w-5 text-center"></i>
-                                <span>成员管理</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/tm_academic_website" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-graduation-cap w-5 text-center"></i>
-                                <span>学术工具</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/tm_research_progress" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-line-chart w-5 text-center"></i>
-                                <span>研究进展</span>
-                            </a>
-                        </li>
+                        <li><a href="/tm_user_management" class="sidebar-icon hover:bg-gray-100"><i class="fa fa-users w-5"></i><span>成员管理</span></a></li>
+                        <li><a href="/tm_academic_website" class="sidebar-icon hover:bg-gray-100"><i class="fa fa-graduation-cap w-5"></i><span>学术工具</span></a></li>
+                        <li><a href="/tm_research_progress" class="sidebar-icon hover:bg-gray-100"><i class="fa fa-line-chart w-5"></i><span>研究进展</span></a></li>
                     </ul>
-                    
-                    <!-- 管理员特有菜单 -->
-                    <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6 hidden">系统管理</p>
-                    <ul class="space-y-1 hidden">
-                        <li>
-                            <a href="#" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-cog w-5 text-center"></i>
-                                <span>系统设置</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-database w-5 text-center"></i>
-                                <span>存储管理</span>
-                            </a>
-                        </li>
-                    </ul>
-                    
-                    <!-- 存储信息 -->
-                    <div class="mt-8 p-4 bg-gray-50 rounded-lg">
-                        <p class="text-sm font-medium mb-2">存储空间</p>
-                        <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
-                            <div class="bg-primary h-2 rounded-full" style="width: 65%"></div>
-                        </div>
-                        <p class="text-xs text-gray-500">已使用 6.5GB / 10GB</p>
-                    </div>
                 </nav>
             </div>
         </aside>
 
         <!-- 汇报材料内容区域 -->
-        <!-- ====================== 【核心：汇报材料 内容区域】 ====================== -->
         <div class="flex-1 p-4 lg:p-6 overflow-y-auto">
             <div class="mb-6">
                 <h1 class="text-xl font-bold text-gray-800 mb-2">汇报材料</h1>
@@ -338,16 +144,19 @@
 
                 <!-- 筛选栏 -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                         <div class="flex flex-wrap gap-2">
-                            <span class="px-3 py-1 bg-primary/10 text-primary text-sm rounded-lg">全部材料</span>
-                            <span class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 cursor-pointer">待审核</span>
-                            <span class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 cursor-pointer">已通过</span>
-                            <span class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 cursor-pointer">已驳回</span>
+                            <button onclick="filterByStatus('all')" id="filter-all" class="px-3 py-1 bg-primary text-white text-sm rounded-lg transition-colors">全部材料</button>
+                            <button onclick="filterByStatus('submitted')" id="filter-submitted" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors"><i class="fa fa-clock-o mr-1"></i>待审核</button>
+                            <button onclick="filterByStatus('approved')" id="filter-approved" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors"><i class="fa fa-check-circle mr-1 text-green-600"></i>已通过</button>
+                            <button onclick="filterByStatus('rejected')" id="filter-rejected" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors"><i class="fa fa-times-circle mr-1 text-red-600"></i>已驳回</button>
+                            <button onclick="filterByStatus('pending')" id="filter-pending" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors"><i class="fa fa-exclamation-circle mr-1 text-orange-500"></i>待提交</button>
                         </div>
-                        <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2">
-                            <i class="fa fa-upload"></i><span>上传材料</span>
-                        </button>
+                        <div class="relative w-full lg:w-64">
+                            <input type="text" id="material-search" placeholder="搜索组会、汇报人..."
+                                   class="w-full py-2 pl-10 pr-4 rounded-lg bg-gray-100 border-0 focus:ring-2 focus:ring-primary/30 focus:bg-white">
+                            <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        </div>
                     </div>
                 </div>
 
@@ -355,134 +164,36 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div><p class="text-gray-500 text-sm">材料总数</p><h3 class="text-2xl font-bold mt-1">48</h3></div>
-                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary">
-                                <i class="fa fa-file-text-o"></i>
-                            </div>
+                            <div><p class="text-gray-500 text-sm">材料总数</p><h3 class="text-2xl font-bold mt-1 stats-total">0</h3></div>
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary"><i class="fa fa-file-text-o"></i></div>
                         </div>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div><p class="text-gray-500 text-sm">待审核</p><h3 class="text-2xl font-bold mt-1">6</h3></div>
-                            <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
-                                <i class="fa fa-clock-o"></i>
-                            </div>
+                            <div><p class="text-gray-500 text-sm">待提交</p><h3 class="text-2xl font-bold mt-1 stats-pending text-orange-500">0</h3></div>
+                            <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-500"><i class="fa fa-exclamation-circle"></i></div>
                         </div>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div><p class="text-gray-500 text-sm">已通过</p><h3 class="text-2xl font-bold mt-1">40</h3></div>
-                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                                <i class="fa fa-check-circle"></i>
-                            </div>
+                            <div><p class="text-gray-500 text-sm">待审核</p><h3 class="text-2xl font-bold mt-1 stats-submitted text-yellow-600">0</h3></div>
+                            <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600"><i class="fa fa-clock-o"></i></div>
                         </div>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div><p class="text-gray-500 text-sm">文件类型</p><h3 class="text-2xl font-bold mt-1">PPT / PDF</h3></div>
-                            <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
-                                <i class="fa fa-file-powerpoint-o"></i>
-                            </div>
+                            <div><p class="text-gray-500 text-sm">已通过</p><h3 class="text-2xl font-bold mt-1 stats-approved text-green-600">0</h3></div>
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="fa fa-check-circle"></i></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 材料卡片网格布局 -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-
-                    <!-- 材料卡片1 -->
-                    <div class="bg-white rounded-xl shadow-sm p-5 material-card-hover border border-gray-100">
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="tag-pass text-xs px-2 py-0.5 rounded-full">已通过</span>
-                            <i class="fa fa-file-powerpoint-o text-orange-500 text-xl"></i>
-                        </div>
-                        <h4 class="font-semibold text-gray-800 mb-2">第12周 研究进展汇报PPT</h4>
-                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">大模型RAG实验进展、问题总结与下一步研究计划汇报</p>
-                        <div class="flex items-center justify-between text-sm text-gray-500">
-                            <div class="flex items-center gap-2">
-                                <img src="https://picsum.photos/id/101/200/200" class="w-6 h-6 rounded-full">
-                                <span>张明</span>
-                            </div>
-                            <span>2025-12-15</span>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-3">
-                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i></button>
-                            <button class="text-gray-400 hover:text-green-600"><i class="fa fa-download"></i></button>
-                            <button class="text-gray-400 hover:text-yellow-500"><i class="fa fa-pencil"></i></button>
-                        </div>
-                    </div>
-
-                    <!-- 材料卡片2 -->
-                    <div class="bg-white rounded-xl shadow-sm p-5 material-card-hover border border-gray-100">
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="tag-pending text-xs px-2 py-0.5 rounded-full">待审核</span>
-                            <i class="fa fa-file-pdf-o text-red-500 text-xl"></i>
-                        </div>
-                        <h4 class="font-semibold text-gray-800 mb-2">第12周 论文研读综述</h4>
-                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">近期顶会大模型相关论文精读、创新点梳理与总结文档</p>
-                        <div class="flex items-center justify-between text-sm text-gray-500">
-                            <div class="flex items-center gap-2">
-                                <img src="https://picsum.photos/id/102/200/200" class="w-6 h-6 rounded-full">
-                                <span>李华</span>
-                            </div>
-                            <span>2025-12-16</span>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-3">
-                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i></button>
-                            <button class="text-gray-400 hover:text-green-600"><i class="fa fa-download"></i></button>
-                            <button class="text-gray-400 hover:text-yellow-500"><i class="fa fa-pencil"></i></button>
-                        </div>
-                    </div>
-
-                    <!-- 材料卡片3 -->
-                    <div class="bg-white rounded-xl shadow-sm p-5 material-card-hover border border-gray-100">
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="tag-pass text-xs px-2 py-0.5 rounded-full">已通过</span>
-                            <i class="fa fa-file-powerpoint-o text-orange-500 text-xl"></i>
-                        </div>
-                        <h4 class="font-semibold text-gray-800 mb-2">第11周 实验结果分析汇报</h4>
-                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">模型实验数据对比、结果分析及后续优化方案</p>
-                        <div class="flex items-center justify-between text-sm text-gray-500">
-                            <div class="flex items-center gap-2">
-                                <img src="https://picsum.photos/id/103/200/200" class="w-6 h-6 rounded-full">
-                                <span>王芳</span>
-                            </div>
-                            <span>2025-12-09</span>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-3">
-                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i></button>
-                            <button class="text-gray-400 hover:text-green-600"><i class="fa fa-download"></i></button>
-                            <button class="text-gray-400 hover:text-yellow-500"><i class="fa fa-pencil"></i></button>
-                        </div>
-                    </div>
-
-                    <!-- 材料卡片4 -->
-                    <div class="bg-white rounded-xl shadow-sm p-5 material-card-hover border border-gray-100">
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="tag-reject text-xs px-2 py-0.5 rounded-full">已驳回</span>
-                            <i class="fa fa-file-powerpoint-o text-orange-500 text-xl"></i>
-                        </div>
-                        <h4 class="font-semibold text-gray-800 mb-2">第10周 中期进展汇报</h4>
-                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">学期中期研究进展总结、现存问题与计划调整</p>
-                        <div class="flex items-center justify-between text-sm text-gray-500">
-                            <div class="flex items-center gap-2">
-                                <img src="https://picsum.photos/id/104/200/200" class="w-6 h-6 rounded-full">
-                                <span>陈宇</span>
-                            </div>
-                            <span>2025-12-02</span>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-3">
-                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i></button>
-                            <button class="text-gray-400 hover:text-green-600"><i class="fa fa-download"></i></button>
-                            <button class="text-gray-400 hover:text-yellow-500"><i class="fa fa-pencil"></i></button>
-                        </div>
-                    </div>
-
+                <div id="materials-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <div class="text-center py-12 text-gray-500"><p>加载中...</p></div>
                 </div>
             </div>
         </div>
-        <!-- ====================== 【内容区结束】 ====================== -->
-
     </main>
 
     <!-- 页脚 -->
@@ -492,197 +203,469 @@
         </div>
     </footer>
 
+    <!-- 上传材料模态框 -->
+    <div id="upload-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl max-w-md w-full mx-4">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold">上传汇报材料</h2>
+                    <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-600"><i class="fa fa-times text-xl"></i></button>
+                </div>
+                <div id="upload-info" class="mb-4 p-3 bg-gray-50 rounded-lg text-sm">
+                    <p><strong>组会：</strong><span id="upload-meeting-title"></span></p>
+                    <p><strong>汇报人：</strong><span id="upload-presenter-name"></span></p>
+                </div>
+                <form id="upload-form">
+                    <input type="hidden" id="upload-presenter-id">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">选择文件</label>
+                        <input type="file" id="upload-file-input" accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        <p class="text-xs text-gray-500 mt-1">支持 PDF、PPT、DOC、XLS 格式，单个文件最大50MB</p>
+                    </div>
+                </form>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button onclick="closeUploadModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">取消</button>
+                    <button id="upload-submit-btn" onclick="submitUpload()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"><i class="fa fa-upload mr-1"></i>上传</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 材料详情模态框 -->
+    <div id="detail-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl max-w-lg w-full mx-4">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold">材料详情</h2>
+                    <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600"><i class="fa fa-times text-xl"></i></button>
+                </div>
+                <div id="detail-content"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script>
-        // API基础URL配置
         const API_BASE_URL = 'http://localhost:8081';
+        let allMaterialsCache = [];
+        let currentStatusFilter = 'all';
+        let currentSearchKeyword = '';
+        let currentUserRole = '{{ user.role }}';
+        let currentUserId = {{ user.id }};
 
-        // 认证辅助函数
         function getAuthHeaders() {
-            const sessionToken = getSessionToken();
+            const token = localStorage.getItem('session_token');
             const headers = {
                 'Content-Type': 'application/json'
             };
-
-            if (sessionToken) {
-                headers['Authorization'] = `Bearer ${sessionToken}`;
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
             }
-
             return headers;
-        }
-
-        // 获取带认证的fetch选项
-        function getAuthFetchOptions(options = {}) {
-            const sessionToken = getSessionToken();
-            const defaultOptions = {
-                credentials: 'include'
-            };
-
-            if (sessionToken && !options.headers) {
-                options.headers = {};
-            }
-
-            if (sessionToken) {
-                options.headers['Authorization'] = `Bearer ${sessionToken}`;
-            }
-
-            return { ...defaultOptions, ...options };
-        }
-
-        // 文件上传管理
-        // 移动端侧边栏功能
-        function initMobileSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('mobile-sidebar-toggle');
-            const sidebarClose = document.getElementById('mobile-sidebar-close');
-
-            function openMobileSidebar() {
-                sidebar.classList.remove('-translate-x-full');
-                document.body.style.overflow = 'hidden';
-            }
-
-            function closeMobileSidebar() {
-                sidebar.classList.add('-translate-x-full');
-                document.body.style.overflow = '';
-            }
-
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', openMobileSidebar);
-            }
-            if (sidebarClose) {
-                sidebarClose.addEventListener('click', closeMobileSidebar);
-            }
-
-            // 侧边栏菜单点击后关闭移动端侧边栏
-            const sidebarItems = document.querySelectorAll('.sidebar-icon');
-            sidebarItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    sidebarItems.forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
-
-                    if (window.innerWidth < 1024) {
-                        closeMobileSidebar();
-                    }
-                });
-            });
-        }
-
-        // 认证辅助函数
-        function saveSessionToken(token) {
-            localStorage.setItem('session_token', token);
         }
 
         function getSessionToken() {
             return localStorage.getItem('session_token');
         }
 
-        function clearSession() {
-            localStorage.removeItem('session_token');
-            localStorage.removeItem('user_info');
-            localStorage.removeItem('remember_me');
+        // 加载汇报材料列表
+        async function loadMaterials() {
+            const container = document.getElementById('materials-container');
+            container.innerHTML = '<div class="text-center py-12 text-gray-500"><p>加载中...</p></div>';
+
+            try {
+                const params = new URLSearchParams();
+                if (currentStatusFilter !== 'all') params.append('status', currentStatusFilter);
+
+                const response = await fetch(`${API_BASE_URL}/api/materials?${params.toString()}`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+
+                const result = await response.json();
+                console.log('材料列表响应:', result);
+
+                if (result.success) {
+                    allMaterialsCache = result.data.materials;
+                    updateStats(result.data.stats);
+                    applyFiltersAndRender();
+                } else {
+                    container.innerHTML = `<div class="text-center py-12 text-gray-500"><p>${result.message || '加载失败'}</p></div>`;
+                }
+            } catch (e) {
+                console.error('加载材料失败:', e);
+                container.innerHTML = '<div class="text-center py-12 text-gray-500"><p>网络错误，请刷新重试</p></div>';
+            }
         }
 
-        // 页面初始化时检查URL中的session_token
+        // 更新统计卡片
+        function updateStats(stats) {
+            document.querySelector('.stats-total').textContent = stats.total || 0;
+            document.querySelector('.stats-pending').textContent = stats.pending || 0;
+            document.querySelector('.stats-submitted').textContent = stats.submitted || 0;
+            document.querySelector('.stats-approved').textContent = stats.approved || 0;
+        }
+
+        // 应用筛选并渲染
+        function applyFiltersAndRender() {
+            let filtered = allMaterialsCache;
+
+            // 关键词搜索
+            if (currentSearchKeyword) {
+                const kw = currentSearchKeyword.toLowerCase();
+                filtered = filtered.filter(m =>
+                    (m.meeting_title && m.meeting_title.toLowerCase().includes(kw)) ||
+                    (m.username && m.username.toLowerCase().includes(kw))
+                );
+            }
+
+            renderMaterialList(filtered);
+            updateFilterButtons();
+        }
+
+        // 渲染材料列表
+        function renderMaterialList(materials) {
+            const container = document.getElementById('materials-container');
+
+            if (!materials || materials.length === 0) {
+                let msg = '暂无汇报材料';
+                if (currentSearchKeyword) msg = `未找到包含 "${currentSearchKeyword}" 的材料`;
+                container.innerHTML = `<div class="text-center py-12 text-gray-500"><p>${msg}</p></div>`;
+                return;
+            }
+
+            container.innerHTML = materials.map(m => {
+                const statusClassMap = {
+                    'pending': 'bg-orange-100 text-orange-600',
+                    'submitted': 'bg-yellow-100 text-yellow-700',
+                    'approved': 'bg-green-100 text-green-700',
+                    'rejected': 'bg-red-100 text-red-700'
+                };
+                const statusClass = statusClassMap[m.status] || 'bg-gray-100 text-gray-600';
+
+                const iconClassMap = { 'pdf': 'fa-file-pdf-o text-red-500', 'ppt': 'fa-file-powerpoint-o text-orange-500', 'pptx': 'fa-file-powerpoint-o text-orange-500', 'doc': 'fa-file-word-o text-blue-500', 'docx': 'fa-file-word-o text-blue-500' };
+                const fileType = m.files && m.files[0] ? m.files[0].file_type : 'ppt';
+                const iconClass = iconClassMap[fileType] || 'fa-file-o text-gray-500';
+
+                const meetingTypeMap = { 'regular': '常规组会', 'paper_reading': '论文研读', 'topic_discussion': '专题讨论' };
+                const meetingTypeText = meetingTypeMap[m.meeting_type] || '常规组会';
+
+                const scheduledDate = m.meeting_scheduled_at ? new Date(m.meeting_scheduled_at).toLocaleDateString('zh-CN') : '待定';
+
+                return `
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="${statusClass} text-xs px-2 py-0.5 rounded-full">${m.status_text}</span>
+                        <i class="fa ${iconClass} text-xl"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 mb-1">${m.meeting_title || '未命名组会'}</h4>
+                    <p class="text-xs text-gray-400 mb-2">${meetingTypeText} · ${scheduledDate}</p>
+                    <p class="text-sm text-gray-500 mb-4 line-clamp-2">
+                        汇报时长：${m.duration_minutes}分钟 · 类型：${m.presenter_type === 'assigned' ? '导师指定' : '主动报名'}
+                    </p>
+                    <div class="flex items-center justify-between text-sm text-gray-500 mb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fa fa-user-o"></i>
+                            <span>${m.username || '未知'}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${m.files && m.files.length > 0 ? `<i class="fa fa-paperclip"></i><span>${m.files.length}个文件</span>` : '<span class="text-orange-500">待上传</span>'}
+                        </div>
+                    </div>
+                    <!-- 文件列表 -->
+                    ${m.files && m.files.length > 0 ? `
+                    <div class="mb-3 p-2 bg-gray-50 rounded">
+                        ${m.files.map(f => `
+                            <div class="flex items-center justify-between py-1">
+                                <span class="text-sm text-gray-700"><i class="fa fa-file-o mr-1"></i>${f.filename}</span>
+                                <button onclick="downloadFile(${f.id})" class="text-xs text-primary hover:underline"><i class="fa fa-download"></i></button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ` : ''}
+                    <!-- 状态选择（仅本人、导师、管理员可见） -->
+                    ${m.user_id === currentUserId || currentUserRole === 'admin' || currentUserRole === 'teacher' ? `
+                    <div class="mt-3 pt-3 border-t border-gray-100">
+                        <label class="text-xs text-gray-500 mb-1 block">审核状态：</label>
+                        <select onchange="updateMaterialStatus(${m.id}, this.value)"
+                            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                            <option value="pending" ${m.status === 'pending' ? 'selected' : ''}>待提交</option>
+                            <option value="submitted" ${m.status === 'submitted' ? 'selected' : ''}>待审核</option>
+                            <option value="approved" ${m.status === 'approved' ? 'selected' : ''}>已通过</option>
+                            <option value="rejected" ${m.status === 'rejected' ? 'selected' : ''}>已驳回</option>
+                        </select>
+                    </div>
+                    ` : ''}
+                    <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between gap-2 flex-wrap">
+                        <button onclick="viewMaterialDetail(${m.id})" class="text-gray-400 hover:text-primary px-2"><i class="fa fa-eye"></i> 查看</button>
+                        <button onclick="openUploadModal(${m.id}, '${m.meeting_title || ''}', '${m.username || ''}')" class="text-gray-400 hover:text-primary px-2"><i class="fa fa-upload"></i> 上传</button>
+                        <button onclick="goToMeetingRecord(${m.meeting_id})" class="text-gray-400 hover:text-purple-600 px-2"><i class="fa fa-comments-o"></i> 记录</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // 状态筛选
+        function filterByStatus(status) {
+            currentStatusFilter = status;
+            currentSearchKeyword = '';
+            document.getElementById('material-search').value = '';
+            loadMaterials();
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            currentSearchKeyword = document.getElementById('material-search').value.trim();
+            applyFiltersAndRender();
+        }
+
+        // 更新筛选按钮样式
+        function updateFilterButtons() {
+            ['filter-all', 'filter-pending', 'filter-submitted', 'filter-approved', 'filter-rejected'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                if (id === `filter-${currentStatusFilter}`) {
+                    btn.className = 'px-3 py-1 bg-primary text-white text-sm rounded-lg transition-colors';
+                } else {
+                    btn.className = 'px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors';
+                }
+            });
+        }
+
+        // 查看详情
+        async function viewMaterialDetail(presenterId) {
+            const m = allMaterialsCache.find(item => item.id === presenterId);
+            if (!m) return;
+
+            const filesHtml = m.files && m.files.length > 0
+                ? m.files.map(f => `<div class="flex items-center gap-2 p-2 bg-gray-50 rounded"><i class="fa fa-file-o"></i><span>${f.filename}</span><span class="text-xs text-gray-400">${(f.file_size/1024).toFixed(1)}KB</span></div>`).join('')
+                : '<p class="text-gray-400">暂无文件</p>';
+
+            const modal = document.getElementById('detail-modal');
+            document.getElementById('detail-content').innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-1 rounded text-xs ${m.status === 'approved' ? 'bg-green-100 text-green-700' : m.status === 'submitted' ? 'bg-yellow-100 text-yellow-700' : m.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-600'}">${m.status_text}</span>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">组会标题</p>
+                        <p class="font-medium">${m.meeting_title || '未命名'}</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">汇报人</p>
+                            <p class="font-medium">${m.username || '未知'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">时长</p>
+                            <p class="font-medium">${m.duration_minutes}分钟</p>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 mb-2">关联文件</p>
+                        ${filesHtml}
+                    </div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeDetailModal() {
+            const modal = document.getElementById('detail-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // 上传材料
+        function openUploadModal(presenterId, meetingTitle, presenterName) {
+            document.getElementById('upload-presenter-id').value = presenterId;
+            document.getElementById('upload-meeting-title').textContent = meetingTitle;
+            document.getElementById('upload-presenter-name').textContent = presenterName;
+            document.getElementById('upload-file-input').value = '';
+            const modal = document.getElementById('upload-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeUploadModal() {
+            const modal = document.getElementById('upload-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function submitUpload() {
+            const presenterId = document.getElementById('upload-presenter-id').value;
+            const fileInput = document.getElementById('upload-file-input');
+            const submitBtn = document.getElementById('upload-submit-btn');
+
+            if (!fileInput.files[0]) {
+                alert('请选择文件');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (file.size > 50 * 1024 * 1024) {
+                alert('文件大小不能超过50MB');
+                return;
+            }
+
+            try {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 上传中...';
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                // 使用 cookie 认证，不需要 Authorization header
+                const token = localStorage.getItem('session_token');
+                const headers = {};
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const response = await fetch(`${API_BASE_URL}/api/materials/${presenterId}/files`, {
+                    method: 'POST',
+                    headers: headers,
+                    credentials: 'include',
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('材料上传成功');
+                    closeUploadModal();
+                    loadMaterials();
+                } else {
+                    alert(result.message || '上传失败');
+                }
+            } catch (e) {
+                console.error('上传失败:', e);
+                alert('网络错误，请重试');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa fa-upload mr-1"></i>上传';
+            }
+        }
+
+        // 更新材料审核状态
+        async function updateMaterialStatus(presenterId, newStatus) {
+            if (!newStatus) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/materials/${presenterId}/status`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    credentials: 'include',
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    loadMaterials();
+                } else {
+                    alert(result.message || '状态更新失败');
+                }
+            } catch (e) {
+                console.error('状态更新失败:', e);
+                alert('网络错误，请重试');
+            }
+        }
+
+        // 下载单个文件（使用fetch携带认证信息）
+        async function downloadFile(fileId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/meeting_files/${fileId}/download`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) {
+                    const result = await response.json();
+                    alert(result.message || '下载失败');
+                    return;
+                }
+
+                // 获取文件名
+                const disposition = response.headers.get('Content-Disposition');
+                let filename = 'download';
+                if (disposition && disposition.includes('filename=')) {
+                    filename = disposition.split('filename=')[1].replace(/"/g, '');
+                }
+
+                // 创建blob并下载
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } catch (e) {
+                console.error('下载失败:', e);
+                alert('下载失败，请重试');
+            }
+        }
+
+        // 跳转到组会记录
+        function goToMeetingRecord(meetingId) {
+            window.location.href = `${API_BASE_URL}/gm_meeting_record`;
+        }
+
+        // 移动端侧边栏
+        function initMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.getElementById('mobile-sidebar-toggle');
+            const close = document.getElementById('mobile-sidebar-close');
+
+            if (toggle) toggle.addEventListener('click', () => { sidebar.classList.remove('-translate-x-full'); document.body.style.overflow = 'hidden'; });
+            if (close) close.addEventListener('click', () => { sidebar.classList.add('-translate-x-full'); document.body.style.overflow = ''; });
+        }
+
+        // 登出
+        async function performLogout() {
+            try {
+                await fetch(`${API_BASE_URL}/api/auth/logout`, { method: 'POST', headers: getAuthHeaders(), credentials: 'include' });
+            } catch (e) {}
+            localStorage.removeItem('session_token');
+            localStorage.removeItem('user_info');
+            window.location.href = `${API_BASE_URL}/login`;
+        }
+
+        // 检查URL中的session_token
         function checkUrlSessionToken() {
             const urlParams = new URLSearchParams(window.location.search);
-            const sessionToken = urlParams.get('session_token');
-
-            if (sessionToken) {
-                // 保存到localStorage
-                saveSessionToken(sessionToken);
-
-                // 清理URL，移除session_token参数
+            const token = urlParams.get('session_token');
+            if (token) {
+                localStorage.setItem('session_token', token);
                 const url = new URL(window.location);
                 url.searchParams.delete('session_token');
                 window.history.replaceState({}, document.title, url);
-
-                console.log('✅ 从URL保存session_token到localStorage');
-                return true;
             }
-            return false;
         }
 
-  
-        // 初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 首先检查URL中是否有session_token
-            const hasUrlToken = checkUrlSessionToken();
-
+            checkUrlSessionToken();
             initMobileSidebar();
-            // 登出功能
-            const logoutBtn = document.getElementById('logout-btn');
-            const logoutBtnMobile = document.getElementById('logout-btn-mobile');
-            // 退出登录函数
-            async function performLogout() {
-                try {
-                    console.log('🔥 开始登出操作');
+            loadMaterials();
 
-                    // 调用登出API
-                    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('session_token')}`
-                        }
-                    });
-
-                    const result = await response.json();
-                    console.log('📋 登出API响应:', result);
-
-                    // 清除本地存储的会话信息
-                    localStorage.removeItem('session_token');
-                    localStorage.removeItem('user_info');
-                    localStorage.removeItem('remember_me');
-
-                    console.log('✅ 登出成功，跳转到登录页面');
-
-                    // 跳转到登录页面
-                    window.location.href = 'http://localhost:8081/login';
-
-                } catch (error) {
-                    console.error('❌ 登出过程中发生错误:', error);
-                    // 即使API调用失败，也清除本地存储并跳转
-                    localStorage.removeItem('session_token');
-                    localStorage.removeItem('user_info');
-                    localStorage.removeItem('remember_me');
-                    window.location.href = 'http://localhost:8081/login';
-                }
-            }
-            // 桌面端退出登录按钮事件
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    await performLogout();
+            // 搜索框
+            const searchInput = document.getElementById('material-search');
+            if (searchInput) {
+                let timeout;
+                searchInput.addEventListener('input', () => {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(handleSearch, 300);
                 });
             }
 
-            // 移动端退出登录按钮事件
-            if (logoutBtnMobile) {
-                logoutBtnMobile.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    await performLogout();
-                });
-            }
-            // 其他按钮事件
-            const buttons = document.querySelectorAll('button');
-            buttons.forEach(button => {
-                button.addEventListener('click', function(e) {
-                    const actionText = this.textContent.trim();
-
-                    // 如果不是上传文件按钮，处理其他操作
-                    if (!actionText.includes('上传文件')) {
-                        if (actionText.includes('下载')) {
-                            // 这里可以添加实际的下载功能
-                            console.log('下载文件功能');
-                        } else if (actionText.includes('分享')) {
-                            // 这里可以添加实际的分享功能
-                            console.log('分享文件功能');
-                        }
-                    }
-                });
-            });
-
-            });
+            // 登出按钮
+            document.getElementById('logout-btn')?.addEventListener('click', e => { e.preventDefault(); performLogout(); });
+            document.getElementById('logout-btn-mobile')?.addEventListener('click', e => { e.preventDefault(); performLogout(); });
+        });
     </script>
 </body>
 </html>

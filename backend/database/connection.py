@@ -126,6 +126,7 @@ def init_db() -> None:
                 duration_minutes INTEGER DEFAULT 20,
                 material_required BOOLEAN DEFAULT 1,
                 status VARCHAR(20) DEFAULT 'pending',
+                material_status VARCHAR(20) DEFAULT 'pending',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (meeting_id) REFERENCES meetings(id) ON DELETE CASCADE,
@@ -134,22 +135,29 @@ def init_db() -> None:
         """)
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_presenters_meeting ON meeting_presenters(meeting_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_presenters_user ON meeting_presenters(user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_presenters_material_status ON meeting_presenters(material_status)")
 
-        # 创建组会材料关联表
+        # 创建组会材料关联表（独立存储汇报材料，不依赖 files 表）
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS meeting_files (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 meeting_id INTEGER NOT NULL,
-                file_id INTEGER NOT NULL,
+                file_id INTEGER,
                 presenter_id INTEGER,
+                filename VARCHAR(255),
+                file_path VARCHAR(500),
+                file_size INTEGER,
+                file_type VARCHAR(100),
+                uploaded_by INTEGER,
+                uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (meeting_id) REFERENCES meetings(id) ON DELETE CASCADE,
-                FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE,
-                FOREIGN KEY (presenter_id) REFERENCES meeting_presenters(id) ON DELETE CASCADE
+                FOREIGN KEY (presenter_id) REFERENCES meeting_presenters(id) ON DELETE CASCADE,
+                FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL
             )
         """)
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_meeting_files_meeting ON meeting_files(meeting_id)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_meeting_files_file ON meeting_files(file_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_meeting_files_presenter ON meeting_files(presenter_id)")
 
         # 创建研究任务表
         cursor.execute("""
