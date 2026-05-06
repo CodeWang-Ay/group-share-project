@@ -1298,6 +1298,7 @@
             document.getElementById('edit-meeting-description').value = meeting.description || '';
             document.getElementById('edit-meeting-material-required').checked = meeting.material_required || false;
             document.getElementById('edit-meeting-notes').value = meeting.notes || '';
+            document.getElementById('edit-meeting-status').value = meeting.status || 'scheduled';
         }
 
         function closeEditModal() {
@@ -1337,7 +1338,8 @@
                 online_link: isOnlineCheckbox.checked ? document.getElementById('edit-meeting-online-link').value.trim() : null,
                 description: document.getElementById('edit-meeting-description').value.trim() || null,
                 material_required: document.getElementById('edit-meeting-material-required').checked,
-                notes: document.getElementById('edit-meeting-notes').value.trim() || null
+                notes: document.getElementById('edit-meeting-notes').value.trim() || null,
+                status: document.getElementById('edit-meeting-status').value
             };
 
             try {
@@ -1842,6 +1844,17 @@
                             <input type="checkbox" id="edit-meeting-material-required" name="material_required" checked class="rounded border-gray-300 text-primary focus:ring-primary">
                             <span class="text-sm text-gray-700">需要提交材料</span>
                         </label>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">组会状态</label>
+                        <select id="edit-meeting-status" name="status"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                            <option value="scheduled">待召开</option>
+                            <option value="ongoing">进行中</option>
+                            <option value="completed">已召开</option>
+                            <option value="cancelled">已废弃</option>
+                            <option value="postponed">已推迟</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
