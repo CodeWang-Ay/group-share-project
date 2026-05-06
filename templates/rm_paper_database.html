@@ -951,27 +951,149 @@
             currentPaperId: null,
             selectedPapers: [],
             selectMode: false,
+            papers: [],
+            tags: [],
+            currentKeyword: '',
+            currentTag: '',
+            currentStatus: '',
             currentYear: '',
-            papers: [
-                { id: 1, title: 'Attention Is All You Need', authors: 'Vaswani et al.', year: 2017, journal: 'NeurIPS 2017', doi: '10.48550/arXiv.1706.03762', abstract: 'The dominant sequence transduction models are based on complex recurrent or convolutional neural networks...', tags: ['Transformer', 'NLP'], starred: true, status: 'read', downloadCount: 12, arxiv: 'https://arxiv.org/abs/1706.03762', pdf: '/uploads/papers/attention.pdf', addedBy: '张三', addedTime: '2025-04-20' },
-                { id: 2, title: 'BERT: Pre-training of Deep Bidirectional Transformers', authors: 'Devlin et al.', year: 2018, journal: 'NAACL 2019', doi: '10.48550/arXiv.1810.04805', abstract: 'We introduce a new language representation model called BERT...', tags: ['BERT', '预训练'], starred: false, status: 'reading', downloadCount: 8, arxiv: 'https://arxiv.org/abs/1810.04805', pdf: '/uploads/papers/bert.pdf', addedBy: '李四', addedTime: '2025-03-15' },
-                { id: 3, title: 'GPT-4 Technical Report', authors: 'OpenAI', year: 2023, journal: 'arXiv', doi: '', abstract: 'We report the development of GPT-4, a large-scale, multimodal model...', tags: ['大模型', 'GPT'], starred: true, status: 'unread', downloadCount: 25, arxiv: 'https://arxiv.org/abs/2303.08774', pdf: '/uploads/papers/gpt4.pdf', addedBy: '王五', addedTime: '2025-05-01' },
-                { id: 4, title: 'Deep Residual Learning for Image Recognition', authors: 'He et al.', year: 2016, journal: 'CVPR 2016', doi: '10.1109/CVPR.2016.90', abstract: 'Deeper neural networks are more difficult to train. We present a residual learning framework...', tags: ['CNN', 'ResNet'], starred: false, status: 'read', downloadCount: 18, arxiv: 'https://arxiv.org/abs/1512.03385', pdf: '/uploads/papers/resnet.pdf', addedBy: '张三', addedTime: '2025-02-10' }
-            ],
+            currentStarred: null,
+            sortBy: 'newest',
 
-            init() {
+            async init() {
+                await this.loadPapers();
+                await this.loadTags();
+                await this.updateStats();
                 this.setupEventListeners();
-                this.updateStats();
+            },
+
+            async loadPapers() {
+                try {
+                    const params = new URLSearchParams();
+                    if (this.currentKeyword) params.set('keyword', this.currentKeyword);
+                    if (this.currentTag) params.set('tag', this.currentTag);
+                    if (this.currentStatus) params.set('status', this.currentStatus);
+                    if (this.currentYear) params.set('year', this.currentYear);
+                    if (this.currentStarred) params.set('starred', this.currentStarred);
+                    if (this.sortBy) params.set('sort', this.sortBy);
+
+                    const response = await fetch(`${API_BASE_URL}/api/paper_database/?${params.toString()}`, {
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        this.papers = result.data;
+                        this.renderPaperList();
+                    }
+                } catch (error) {
+                    console.error('加载文献失败:', error);
+                }
+            },
+
+            async loadTags() {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/paper_database/tags`, {
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        this.tags = result.data;
+                        this.renderTagOptions();
+                    }
+                } catch (error) {
+                    console.error('加载标签失败:', error);
+                }
+            },
+
+            async updateStats() {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/paper_database/stats`, {
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        document.getElementById('stat-total').textContent = result.data.total;
+                        document.getElementById('stat-unread').textContent = result.data.unread;
+                        document.getElementById('stat-starred').textContent = result.data.starred;
+                        document.getElementById('stat-recent').textContent = result.data.recent;
+                    }
+                } catch (error) {
+                    console.error('获取统计失败:', error);
+                }
+            },
+
+            renderPaperList() {
+                const container = document.getElementById('paper-list');
+                if (this.papers.length === 0) {
+                    container.innerHTML = '<div class="p-8 text-center text-gray-500">暂无文献数据</div>';
+                    return;
+                }
+                container.innerHTML = this.papers.map(paper => `
+                    <div class="paper-row px-4 py-4 border-b border-gray-100" data-paper-id="${paper.id}">
+                        <div class="grid grid-cols-12 gap-3 items-center">
+                            <div class="checkbox-cell">
+                                <input type="checkbox" class="paper-checkbox w-4 h-4 rounded border-gray-300" data-paper-id="${paper.id}">
+                            </div>
+                            <div class="col-span-5 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(${paper.id})">
+                                <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                                    <i class="fa fa-file-pdf-o text-blue-500 text-lg"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="font-medium text-primary truncate">${paper.title}</h3>
+                                        ${paper.is_starred ? '<i class="fa fa-star text-yellow-500 paper-starred" title="已收藏"></i>' : ''}
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1 line-clamp-1">${paper.abstract || ''}</p>
+                                    <div class="mt-2 flex gap-1">
+                                        ${(paper.tags || []).map(t => `<span class="tag-badge bg-${t.tag_type === 'system' ? 'blue' : 'gray'}-100 text-${t.tag_type === 'system' ? 'blue' : 'gray'}-700">${t.name}</span>`).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-span-2 text-center text-sm text-gray-600">${paper.authors || '-'}</div>
+                            <div class="col-span-2 text-center text-sm text-gray-600">${paper.year || '-'}</div>
+                            <div class="col-span-1 text-center">
+                                <span class="px-2 py-1 rounded-full text-xs ${this.getStatusStyle(paper.read_status)}">${this.getStatusText(paper.read_status)}</span>
+                            </div>
+                            <div class="col-span-2 text-center">
+                                <div class="flex gap-2 justify-center">
+                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.toggleStar(${paper.id})" title="收藏">
+                                        <i class="fa fa-star${paper.is_starred ? ' text-yellow-500' : '-o text-gray-400'}"></i>
+                                    </button>
+                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.downloadPaper(${paper.id})" title="下载">
+                                        <i class="fa fa-download text-gray-500"></i>
+                                    </button>
+                                    <button class="p-2 hover:bg-red-50 rounded transition-colors" onclick="PaperManager.deletePaper(${paper.id})" title="删除">
+                                        <i class="fa fa-trash-o text-red-500"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            getStatusStyle(status) {
+                return { unread: 'bg-gray-100 text-gray-700', reading: 'bg-yellow-100 text-yellow-700', read: 'bg-green-100 text-green-700' }[status] || 'bg-gray-100 text-gray-700';
+            },
+
+            getStatusText(status) {
+                return { unread: '未读', reading: '在读', read: '已读' }[status] || '未读';
+            },
+
+            renderTagOptions() {
+                const select = document.getElementById('filter-tag');
+                select.innerHTML = '<option value="">全部标签</option>' +
+                    this.tags.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
             },
 
             setupEventListeners() {
-                document.getElementById('search-input').addEventListener('input', (e) => this.searchPapers(e.target.value));
-                document.getElementById('filter-tag').addEventListener('change', (e) => this.filterByTag(e.target.value));
-                document.getElementById('filter-status').addEventListener('change', (e) => this.filterByStatus(e.target.value));
-                document.getElementById('filter-starred').addEventListener('change', (e) => this.filterByStarred(e.target.value));
+                document.getElementById('search-input').addEventListener('input', (e) => { this.currentKeyword = e.target.value; this.loadPapers(); });
+                document.getElementById('filter-tag').addEventListener('change', (e) => { this.currentTag = e.target.value; this.loadPapers(); });
+                document.getElementById('filter-status').addEventListener('change', (e) => { this.currentStatus = e.target.value; this.loadPapers(); });
+                document.getElementById('filter-starred').addEventListener('change', (e) => { this.currentStarred = e.target.value === 'starred' ? true : e.target.value === 'unstarred' ? false : null; this.loadPapers(); });
                 document.getElementById('clear-filter-btn').addEventListener('click', () => this.clearFilters());
                 document.querySelectorAll('.year-card').forEach(card => { card.addEventListener('click', () => this.filterByYear(card.dataset.year)); });
-                document.getElementById('sort-select').addEventListener('change', (e) => this.sortPapers(e.target.value));
+                document.getElementById('sort-select').addEventListener('change', (e) => { this.sortBy = e.target.value; this.loadPapers(); });
                 document.getElementById('toggle-select-mode-btn').addEventListener('click', () => this.toggleSelectMode());
                 document.getElementById('select-all-btn').addEventListener('click', () => this.selectAll());
                 document.getElementById('cancel-select-btn').addEventListener('click', () => this.cancelSelection());
@@ -980,7 +1102,6 @@
                 document.getElementById('batch-tag-btn').addEventListener('click', () => this.openBatchTagModal());
                 document.getElementById('batch-delete-btn').addEventListener('click', () => this.batchDelete());
                 document.getElementById('header-checkbox').addEventListener('change', (e) => { document.querySelectorAll('.paper-checkbox').forEach(cb => { cb.checked = e.target.checked; this.handleCheckboxChange(cb); }); });
-                document.querySelectorAll('.paper-checkbox').forEach(cb => { cb.addEventListener('change', () => this.handleCheckboxChange(cb)); });
                 document.getElementById('add-paper-btn').addEventListener('click', () => this.openEditModal());
                 document.getElementById('import-doi-btn').addEventListener('click', () => this.switchImportMode('doi'));
                 document.getElementById('import-manual-btn').addEventListener('click', () => this.switchImportMode('manual'));
@@ -1001,59 +1122,106 @@
                 if (!paper) return;
                 this.currentPaperId = paperId;
                 document.getElementById('detail-title').textContent = paper.title;
-                document.getElementById('detail-authors').textContent = paper.authors;
-                document.getElementById('detail-year').textContent = paper.year;
-                document.getElementById('detail-journal').textContent = paper.journal;
+                document.getElementById('detail-authors').textContent = paper.authors || '无';
+                document.getElementById('detail-year').textContent = paper.year || '无';
+                document.getElementById('detail-journal').textContent = paper.journal || '无';
                 document.getElementById('detail-doi').textContent = paper.doi || '无';
-                document.getElementById('detail-abstract').innerHTML = `<p>${paper.abstract}</p>`;
-                const tagsHtml = paper.tags.map(t => `<span class="tag-badge bg-gray-100 text-gray-600">${t}</span>`).join('');
+                document.getElementById('detail-abstract').innerHTML = `<p>${paper.abstract || '无摘要'}</p>`;
+                const tagsHtml = (paper.tags || []).map(t => `<span class="tag-badge bg-gray-100 text-gray-600">${t.name}</span>`).join('');
                 document.getElementById('detail-tags').innerHTML = tagsHtml;
                 const starBtn = document.getElementById('detail-star-btn');
-                starBtn.innerHTML = paper.starred ? '<i class="fa fa-star text-yellow-500"></i> 已收藏' : '<i class="fa fa-star-o text-gray-400"></i> 未收藏';
-                starBtn.className = paper.starred ? 'text-yellow-500' : 'text-gray-400';
+                starBtn.innerHTML = paper.is_starred ? '<i class="fa fa-star text-yellow-500"></i> 已收藏' : '<i class="fa fa-star-o text-gray-400"></i> 未收藏';
+                starBtn.className = paper.is_starred ? 'text-yellow-500' : 'text-gray-400';
                 const statusMap = { unread: '未读', reading: '在读', read: '已读' };
                 const statusColorMap = { unread: 'bg-gray-100 text-gray-700', reading: 'bg-yellow-100 text-yellow-700', read: 'bg-green-100 text-green-700' };
-                document.getElementById('detail-status').textContent = statusMap[paper.status];
-                document.getElementById('detail-status').className = `px-2 py-1 rounded-full text-xs ${statusColorMap[paper.status]}`;
-                document.getElementById('detail-read-status').value = paper.status;
-                document.getElementById('detail-arxiv-link').href = paper.arxiv;
-                document.getElementById('detail-pdf-link').href = paper.pdf;
-                document.getElementById('detail-download-count').textContent = `下载 ${paper.downloadCount} 次`;
-                document.getElementById('detail-adder').textContent = paper.addedBy;
-                document.getElementById('detail-added-time').textContent = paper.addedTime;
+                document.getElementById('detail-status').textContent = statusMap[paper.read_status] || '未读';
+                document.getElementById('detail-status').className = `px-2 py-1 rounded-full text-xs ${statusColorMap[paper.read_status] || 'bg-gray-100 text-gray-700'}`;
+                document.getElementById('detail-read-status').value = paper.read_status || 'unread';
+                document.getElementById('detail-arxiv-link').href = paper.arxiv_link || '#';
+                document.getElementById('detail-pdf-link').href = `${API_BASE_URL}/api/paper_database/${paperId}/download`;
+                document.getElementById('detail-download-count').textContent = `下载 ${paper.download_count || 0} 次`;
+                document.getElementById('detail-adder').textContent = paper.uploader_name || '未知';
+                document.getElementById('detail-added-time').textContent = paper.created_at ? paper.created_at.split('T')[0] : '未知';
                 document.getElementById('paper-detail-modal').classList.remove('hidden');
             },
 
             closeDetailModal() { document.getElementById('paper-detail-modal').classList.add('hidden'); this.currentPaperId = null; },
 
-            toggleStarFromDetail() { if (this.currentPaperId) { this.toggleStar(this.currentPaperId); this.openDetail(this.currentPaperId); } },
-
-            updateReadStatus() { const status = document.getElementById('detail-read-status').value; console.log(`更新阅读状态: ${this.currentPaperId} -> ${status}`); this.closeDetailModal(); },
-
-            toggleStar(paperId) {
-                const paper = this.papers.find(p => p.id === paperId);
-                if (!paper) return;
-                paper.starred = !paper.starred;
-                const row = document.querySelector(`.paper-row[data-paper-id="${paperId}"]`);
-                const starIcon = row.querySelector('.paper-starred');
-                const btnIcon = row.querySelector('button[onclick*="toggleStar"] i');
-                if (paper.starred) {
-                    if (!starIcon) { const titleDiv = row.querySelector('h3'); titleDiv.insertAdjacentHTML('afterend', '<i class="fa fa-star text-yellow-500 paper-starred" title="已收藏"></i>'); }
-                    btnIcon.className = 'fa fa-star text-yellow-500';
-                } else {
-                    if (starIcon) starIcon.remove();
-                    btnIcon.className = 'fa fa-star-o text-gray-400';
+            async toggleStarFromDetail() {
+                if (this.currentPaperId) {
+                    await this.toggleStar(this.currentPaperId);
+                    await this.loadPapers();
+                    this.openDetail(this.currentPaperId);
                 }
-                this.updateStats();
             },
 
-            downloadPaper(paperId) { const paper = this.papers.find(p => p.id === paperId); if (paper?.pdf) window.open(paper.pdf, '_blank'); else alert('PDF文件未上传'); },
+            async updateReadStatus() {
+                const status = document.getElementById('detail-read-status').value;
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/paper_database/${this.currentPaperId}/status`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('session_token')}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ status })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        this.closeDetailModal();
+                        await this.loadPapers();
+                        await this.updateStats();
+                    }
+                } catch (error) {
+                    console.error('更新状态失败:', error);
+                    alert('更新状态失败');
+                }
+            },
+
+            async toggleStar(paperId) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/paper_database/${paperId}/star`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        await this.loadPapers();
+                        await this.updateStats();
+                    }
+                } catch (error) {
+                    console.error('收藏失败:', error);
+                }
+            },
+
+            downloadPaper(paperId) {
+                window.open(`${API_BASE_URL}/api/paper_database/${paperId}/download`, '_blank');
+            },
 
             editPaper(paperId) { this.openEditModal(paperId); },
 
             editPaperFromDetail() { this.closeDetailModal(); this.openEditModal(this.currentPaperId); },
 
-            deletePaper(paperId) { if (confirm('确定删除此文献吗？')) { const row = document.querySelector(`.paper-row[data-paper-id="${paperId}"]`); row?.remove(); this.updateStats(); } },
+            async deletePaper(paperId) {
+                if (confirm('确定删除此文献吗？')) {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/api/paper_database/${paperId}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            await this.loadPapers();
+                            await this.updateStats();
+                        } else {
+                            alert('删除失败');
+                        }
+                    } catch (error) {
+                        console.error('删除失败:', error);
+                        alert('删除失败');
+                    }
+                }
+            },
 
             openEditModal(paperId = null) {
                 const modal = document.getElementById('paper-edit-modal');
@@ -1061,45 +1229,142 @@
                 if (paperId) {
                     title.textContent = '编辑文献';
                     const paper = this.papers.find(p => p.id === paperId);
-                    if (paper) { document.getElementById('paper-title').value = paper.title; document.getElementById('paper-authors').value = paper.authors; document.getElementById('paper-year').value = paper.year; document.getElementById('paper-journal').value = paper.journal; document.getElementById('paper-doi').value = paper.doi; document.getElementById('paper-abstract').value = paper.abstract; document.getElementById('paper-tags').value = paper.tags.join(', '); }
+                    if (paper) {
+                        document.getElementById('paper-title').value = paper.title;
+                        document.getElementById('paper-authors').value = paper.authors || '';
+                        document.getElementById('paper-year').value = paper.year || '';
+                        document.getElementById('paper-journal').value = paper.journal || '';
+                        document.getElementById('paper-doi').value = paper.doi || '';
+                        document.getElementById('paper-abstract').value = paper.abstract || '';
+                        document.getElementById('paper-tags').value = (paper.tags || []).map(t => t.name).join(', ');
+                    }
                     this.currentPaperId = paperId;
-                } else { title.textContent = '添加文献'; this.clearEditForm(); this.currentPaperId = null; }
-                this.switchImportMode('doi');
+                } else {
+                    title.textContent = '添加文献';
+                    this.clearEditForm();
+                    this.currentPaperId = null;
+                }
+                this.switchImportMode('manual');
                 modal.classList.remove('hidden');
             },
 
             closeEditModal() { document.getElementById('paper-edit-modal').classList.add('hidden'); },
 
-            clearEditForm() { document.getElementById('paper-title').value = ''; document.getElementById('paper-authors').value = ''; document.getElementById('paper-year').value = ''; document.getElementById('paper-journal').value = ''; document.getElementById('paper-doi').value = ''; document.getElementById('paper-abstract').value = ''; document.getElementById('paper-tags').value = ''; document.getElementById('pdf-file-name').textContent = '未选择文件'; document.getElementById('doi-input').value = ''; },
+            clearEditForm() {
+                document.getElementById('paper-title').value = '';
+                document.getElementById('paper-authors').value = '';
+                document.getElementById('paper-year').value = '';
+                document.getElementById('paper-journal').value = '';
+                document.getElementById('paper-doi').value = '';
+                document.getElementById('paper-abstract').value = '';
+                document.getElementById('paper-tags').value = '';
+                document.getElementById('pdf-file-name').textContent = '未选择文件';
+                document.getElementById('doi-input').value = '';
+            },
 
             switchImportMode(mode) {
                 const doiBtn = document.getElementById('import-doi-btn');
                 const manualBtn = document.getElementById('import-manual-btn');
                 const doiSection = document.getElementById('doi-import-section');
                 const manualSection = document.getElementById('manual-input-section');
-                if (mode === 'doi') { doiBtn.classList.add('bg-primary/10', 'text-primary'); doiBtn.classList.remove('bg-gray-100', 'text-gray-600'); manualBtn.classList.remove('bg-primary/10', 'text-primary'); manualBtn.classList.add('bg-gray-100', 'text-gray-600'); doiSection.classList.remove('hidden'); manualSection.classList.add('hidden'); }
-                else { manualBtn.classList.add('bg-primary/10', 'text-primary'); manualBtn.classList.remove('bg-gray-100', 'text-gray-600'); doiBtn.classList.remove('bg-primary/10', 'text-primary'); doiBtn.classList.add('bg-gray-100', 'text-gray-600'); manualSection.classList.remove('hidden'); doiSection.classList.add('hidden'); }
+                if (mode === 'doi') {
+                    doiBtn.classList.add('bg-primary/10', 'text-primary');
+                    doiBtn.classList.remove('bg-gray-100', 'text-gray-600');
+                    manualBtn.classList.remove('bg-primary/10', 'text-primary');
+                    manualBtn.classList.add('bg-gray-100', 'text-gray-600');
+                    doiSection.classList.remove('hidden');
+                    manualSection.classList.add('hidden');
+                } else {
+                    manualBtn.classList.add('bg-primary/10', 'text-primary');
+                    manualBtn.classList.remove('bg-gray-100', 'text-gray-600');
+                    doiBtn.classList.remove('bg-primary/10', 'text-primary');
+                    doiBtn.classList.add('bg-gray-100', 'text-gray-600');
+                    manualSection.classList.remove('hidden');
+                    doiSection.classList.add('hidden');
+                }
             },
 
-            fetchByDOI() { const doi = document.getElementById('doi-input').value; if (!doi) { alert('请输入DOI'); return; } alert('DOI导入功能开发中，请手动录入'); this.switchImportMode('manual'); },
+            fetchByDOI() {
+                const doi = document.getElementById('doi-input').value;
+                if (!doi) { alert('请输入DOI'); return; }
+                alert('DOI导入功能开发中，请手动录入');
+                this.switchImportMode('manual');
+            },
 
-            addTag(tag) { const input = document.getElementById('paper-tags'); const currentTags = input.value.split(',').map(t => t.trim()).filter(t => t); if (!currentTags.includes(tag)) { currentTags.push(tag); input.value = currentTags.join(', '); } },
+            addTag(tag) {
+                const input = document.getElementById('paper-tags');
+                const currentTags = input.value.split(',').map(t => t.trim()).filter(t => t);
+                if (!currentTags.includes(tag)) {
+                    currentTags.push(tag);
+                    input.value = currentTags.join(', ');
+                }
+            },
 
-            savePaper() { const title = document.getElementById('paper-title').value; if (!title) { alert('请填写文献标题'); return; } console.log('保存文献:', { title }); this.closeEditModal(); alert('文献保存成功'); },
+            async savePaper() {
+                const title = document.getElementById('paper-title').value;
+                if (!title) { alert('请填写文献标题'); return; }
+
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('authors', document.getElementById('paper-authors').value);
+                formData.append('year', document.getElementById('paper-year').value);
+                formData.append('journal', document.getElementById('paper-journal').value);
+                formData.append('doi', document.getElementById('paper-doi').value);
+                formData.append('abstract', document.getElementById('paper-abstract').value);
+                formData.append('tags', document.getElementById('paper-tags').value);
+
+                const pdfFile = document.getElementById('paper-pdf').files[0];
+                if (pdfFile) {
+                    formData.append('pdf', pdfFile);
+                }
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/paper_database/`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` },
+                        body: formData
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        this.closeEditModal();
+                        await this.loadPapers();
+                        await this.updateStats();
+                        alert('文献保存成功');
+                    } else {
+                        alert(result.message || '保存失败');
+                    }
+                } catch (error) {
+                    console.error('保存失败:', error);
+                    alert('保存失败');
+                }
+            },
 
             toggleSelectMode() {
                 this.selectMode = !this.selectMode;
                 const bar = document.getElementById('batch-actions-bar');
                 const btn = document.getElementById('toggle-select-mode-btn');
-                if (this.selectMode) { bar.classList.remove('hidden'); btn.innerHTML = '<i class="fa fa-times mr-1"></i>退出选择'; btn.classList.add('bg-red-50', 'text-red-600', 'border-red-200'); }
-                else { bar.classList.add('hidden'); btn.innerHTML = '<i class="fa fa-check-square-o mr-1"></i>批量选择'; btn.classList.remove('bg-red-50', 'text-red-600', 'border-red-200'); this.cancelSelection(); }
+                if (this.selectMode) {
+                    bar.classList.remove('hidden');
+                    btn.innerHTML = '<i class="fa fa-times mr-1"></i>退出选择';
+                    btn.classList.add('bg-red-50', 'text-red-600', 'border-red-200');
+                } else {
+                    bar.classList.add('hidden');
+                    btn.innerHTML = '<i class="fa fa-check-square-o mr-1"></i>批量选择';
+                    btn.classList.remove('bg-red-50', 'text-red-600', 'border-red-200');
+                    this.cancelSelection();
+                }
             },
 
             handleCheckboxChange(cb) {
                 const paperId = parseInt(cb.dataset.paperId);
                 const row = document.querySelector(`.paper-row[data-paper-id="${paperId}"]`);
-                if (cb.checked) { if (!this.selectedPapers.includes(paperId)) this.selectedPapers.push(paperId); row.classList.add('selected'); }
-                else { this.selectedPapers = this.selectedPapers.filter(id => id !== paperId); row.classList.remove('selected'); }
+                if (cb.checked) {
+                    if (!this.selectedPapers.includes(paperId)) this.selectedPapers.push(paperId);
+                    row.classList.add('selected');
+                } else {
+                    this.selectedPapers = this.selectedPapers.filter(id => id !== paperId);
+                    row.classList.remove('selected');
+                }
                 this.updateSelectedCount();
             },
 
@@ -1107,28 +1372,112 @@
 
             selectAll() { document.querySelectorAll('.paper-checkbox').forEach(cb => { cb.checked = true; this.handleCheckboxChange(cb); }); },
 
-            cancelSelection() { document.querySelectorAll('.paper-checkbox').forEach(cb => { cb.checked = false; const row = document.querySelector(`.paper-row[data-paper-id="${cb.dataset.paperId}"]`); row?.classList.remove('selected'); }); this.selectedPapers = []; this.updateSelectedCount(); },
+            cancelSelection() {
+                document.querySelectorAll('.paper-checkbox').forEach(cb => { cb.checked = false; const row = document.querySelector(`.paper-row[data-paper-id="${cb.dataset.paperId}"]`); row?.classList.remove('selected'); });
+                this.selectedPapers = [];
+                this.updateSelectedCount();
+            },
 
-            batchStar(star) { if (this.selectedPapers.length === 0) { alert('请先选择文献'); return; } this.selectedPapers.forEach(id => this.toggleStar(id)); this.cancelSelection(); },
+            async batchStar(star) {
+                if (this.selectedPapers.length === 0) { alert('请先选择文献'); return; }
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/paper_database/batch/star`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('session_token')}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ paper_ids: this.selectedPapers, star })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        this.cancelSelection();
+                        await this.loadPapers();
+                        await this.updateStats();
+                    }
+                } catch (error) {
+                    console.error('批量收藏失败:', error);
+                }
+            },
 
-            openBatchTagModal() { if (this.selectedPapers.length === 0) { alert('请先选择文献'); return; } document.getElementById('batch-tag-count').textContent = this.selectedPapers.length; document.getElementById('batch-tag-modal').classList.remove('hidden'); },
+            openBatchTagModal() {
+                if (this.selectedPapers.length === 0) { alert('请先选择文献'); return; }
+                document.getElementById('batch-tag-count').textContent = this.selectedPapers.length;
+                document.getElementById('batch-tag-modal').classList.remove('hidden');
+            },
 
             closeBatchTagModal() { document.getElementById('batch-tag-modal').classList.add('hidden'); },
 
             selectBatchTag(tag) { document.getElementById('batch-new-tag').value = tag; },
 
-            applyBatchTag() { const tag = document.getElementById('batch-new-tag').value; if (!tag) { alert('请选择或输入标签'); return; } console.log(`批量设置标签 "${tag}":`, this.selectedPapers); this.closeBatchTagModal(); this.cancelSelection(); alert(`已为 ${this.selectedPapers.length} 篇文献设置标签: ${tag}`); },
+            async applyBatchTag() {
+                const tag = document.getElementById('batch-new-tag').value;
+                if (!tag) { alert('请选择或输入标签'); return; }
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/paper_database/batch/tags`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('session_token')}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ paper_ids: this.selectedPapers, tag })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        this.closeBatchTagModal();
+                        this.cancelSelection();
+                        await this.loadPapers();
+                        alert(`已为 ${result.count} 篇文献设置标签: ${tag}`);
+                    }
+                } catch (error) {
+                    console.error('批量设置标签失败:', error);
+                }
+            },
 
-            batchDelete() { if (this.selectedPapers.length === 0) { alert('请先选择文献'); return; } if (confirm(`确定删除 ${this.selectedPapers.length} 篇文献吗？`)) { this.selectedPapers.forEach(id => { const row = document.querySelector(`.paper-row[data-paper-id="${id}"]`); row?.remove(); }); this.cancelSelection(); this.updateStats(); } },
+            async batchDelete() {
+                if (this.selectedPapers.length === 0) { alert('请先选择文献'); return; }
+                if (confirm(`确定删除 ${this.selectedPapers.length} 篇文献吗？`)) {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/api/paper_database/batch`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('session_token')}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ paper_ids: this.selectedPapers })
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            this.cancelSelection();
+                            await this.loadPapers();
+                            await this.updateStats();
+                        }
+                    } catch (error) {
+                        console.error('批量删除失败:', error);
+                    }
+                }
+            },
 
-            searchPapers(keyword) { console.log('搜索:', keyword); },
-            filterByTag(tag) { console.log('筛选标签:', tag); },
-            filterByStatus(status) { console.log('筛选状态:', status); },
-            filterByStarred(starred) { console.log('筛选收藏:', starred); },
-            filterByYear(year) { document.querySelectorAll('.year-card').forEach(card => { card.classList.remove('active'); if (card.dataset.year === year) card.classList.add('active'); }); this.currentYear = year; console.log('筛选年份:', year); },
-            clearFilters() { document.getElementById('filter-tag').value = ''; document.getElementById('filter-status').value = ''; document.getElementById('filter-starred').value = ''; document.getElementById('search-input').value = ''; this.filterByYear(''); },
-            sortPapers(sortBy) { console.log('排序:', sortBy); },
-            updateStats() { document.getElementById('stat-total').textContent = this.papers.length; document.getElementById('stat-unread').textContent = this.papers.filter(p => p.status === 'unread').length; document.getElementById('stat-starred').textContent = this.papers.filter(p => p.starred).length; }
+            filterByYear(year) {
+                document.querySelectorAll('.year-card').forEach(card => {
+                    card.classList.remove('active');
+                    if (card.dataset.year === year) card.classList.add('active');
+                });
+                this.currentYear = year;
+                this.loadPapers();
+            },
+
+            clearFilters() {
+                document.getElementById('filter-tag').value = '';
+                document.getElementById('filter-status').value = '';
+                document.getElementById('filter-starred').value = '';
+                document.getElementById('search-input').value = '';
+                this.currentKeyword = '';
+                this.currentTag = '';
+                this.currentStatus = '';
+                this.currentStarred = null;
+                this.filterByYear('');
+            }
         };
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -1140,13 +1489,30 @@
         function checkUrlSessionToken() {
             const urlParams = new URLSearchParams(window.location.search);
             const sessionToken = urlParams.get('session_token');
-            if (sessionToken) { localStorage.setItem('session_token', sessionToken); const url = new URL(window.location); url.searchParams.delete('session_token'); window.history.replaceState({}, document.title, url); }
+            if (sessionToken) {
+                localStorage.setItem('session_token', sessionToken);
+                const url = new URL(window.location);
+                url.searchParams.delete('session_token');
+                window.history.replaceState({}, document.title, url);
+            }
         }
 
         function initLogout() {
             const logoutBtn = document.getElementById('logout-btn');
             const logoutBtnMobile = document.getElementById('logout-btn-mobile');
-            async function performLogout() { try { await fetch(`${API_BASE_URL}/api/auth/logout`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` } }); localStorage.removeItem('session_token'); window.location.href = `${API_BASE_URL}/login`; } catch (error) { localStorage.removeItem('session_token'); window.location.href = `${API_BASE_URL}/login`; } }
+            async function performLogout() {
+                try {
+                    await fetch(`${API_BASE_URL}/api/auth/logout`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                    });
+                    localStorage.removeItem('session_token');
+                    window.location.href = `${API_BASE_URL}/login`;
+                } catch (error) {
+                    localStorage.removeItem('session_token');
+                    window.location.href = `${API_BASE_URL}/login`;
+                }
+            }
             logoutBtn?.addEventListener('click', (e) => { e.preventDefault(); performLogout(); });
             logoutBtnMobile?.addEventListener('click', (e) => { e.preventDefault(); performLogout(); });
         }
