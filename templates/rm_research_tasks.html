@@ -78,8 +78,11 @@
             .priority-low {
                 @apply bg-green-100 text-green-600;
             }
-            .task-status {
+            .task-status-btn {
                 @apply text-xs px-3 py-1 rounded-full cursor-pointer transition-all hover:bg-primary hover:text-white;
+            }
+            .task-status-btn.active {
+                @apply bg-primary text-white;
             }
             .status-wait {
                 @apply bg-gray-100 text-gray-600;
@@ -365,19 +368,30 @@
         <div class="flex-1 p-4 lg:p-6 overflow-y-auto">
             <div class="mb-6">
                 <h1 class="text-xl font-bold text-gray-800 mb-4">研究任务管理</h1>
-                <!-- 顶部筛选栏（保留原有筛选，微调布局，和整体统一） -->
+                <!-- 顶部筛选栏 -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div class="flex flex-wrap gap-2">
-                            <span class="task-status status-doing">全部任务</span>
-                            <span class="task-status status-wait">待开始</span>
-                            <span class="task-status status-doing">进行中</span>
-                            <span class="task-status status-finish">已完成</span>
-                            <span class="task-status status-overdue">已逾期</span>
+                            <span class="task-status-btn bg-primary text-white" data-status="">全部任务</span>
+                            <span class="task-status-btn status-wait" data-status="pending">待开始</span>
+                            <span class="task-status-btn status-doing" data-status="ongoing">进行中</span>
+                            <span class="task-status-btn status-finish" data-status="completed">已完成</span>
+                            <span class="task-status-btn status-overdue" data-status="overdue">已逾期</span>
                         </div>
-                        <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2">
-                            <i class="fa fa-plus"></i><span>新建任务</span>
-                        </button>
+                        <div class="flex items-center gap-3">
+                            <!-- 布局切换按钮组 -->
+                            <div class="bg-gray-100 rounded-lg p-1 flex">
+                                <button id="grid-view-btn" class="layout-btn px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 bg-white text-gray-900 shadow-sm" title="卡片视图">
+                                    <i class="fa fa-th-large"></i>
+                                </button>
+                                <button id="list-view-btn" class="layout-btn px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 text-gray-500 hover:text-gray-700" title="列表视图">
+                                    <i class="fa fa-list"></i>
+                                </button>
+                            </div>
+                            <button id="create-task-btn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2">
+                                <i class="fa fa-plus"></i><span>新建任务</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -415,9 +429,32 @@
                     </div>
                 </div>
 
-                <!-- 任务卡片容器 -->
-                <div id="tasks-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    <!-- 任务卡片将通过 JavaScript 动态加载 -->
+                <!-- 任务视图容器 -->
+                <div id="tasks-wrapper">
+                    <!-- 列表视图（表格布局） -->
+                    <div id="list-view" class="hidden bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <!-- 表格头部 -->
+                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                            <div class="grid grid-cols-12 gap-4 items-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <div class="col-span-4">任务标题</div>
+                                <div class="col-span-2 text-center">优先级</div>
+                                <div class="col-span-2 text-center">状态</div>
+                                <div class="col-span-2 text-center">负责人</div>
+                                <div class="col-span-2 text-center">操作</div>
+                            </div>
+                        </div>
+                        <!-- 表格内容 -->
+                        <div class="divide-y divide-gray-100" id="tasks-list-container">
+                            <!-- 任务列表将通过JavaScript动态加载 -->
+                        </div>
+                    </div>
+
+                    <!-- 网格视图（卡片布局） -->
+                    <div id="grid-view">
+                        <div id="tasks-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            <!-- 任务卡片将通过 JavaScript 动态加载 -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -614,6 +651,80 @@
         let currentTaskId = null;
         let userRole = '';
         let membersList = [];
+        let layoutManager = null;
+
+        // 布局管理器
+        class LayoutManager {
+            constructor() {
+                this.currentLayout = this.getSavedLayout() || 'grid'; // 默认卡片视图
+                this.init();
+            }
+
+            init() {
+                this.setupLayoutButtons();
+                this.applyLayout(this.currentLayout);
+            }
+
+            setupLayoutButtons() {
+                const gridBtn = document.getElementById('grid-view-btn');
+                const listBtn = document.getElementById('list-view-btn');
+
+                if (gridBtn) {
+                    gridBtn.addEventListener('click', () => this.switchToGrid());
+                }
+
+                if (listBtn) {
+                    listBtn.addEventListener('click', () => this.switchToList());
+                }
+            }
+
+            switchToGrid() {
+                this.applyLayout('grid');
+                this.saveLayout('grid');
+            }
+
+            switchToList() {
+                this.applyLayout('list');
+                this.saveLayout('list');
+            }
+
+            applyLayout(layout) {
+                const gridView = document.getElementById('grid-view');
+                const listView = document.getElementById('list-view');
+                const gridBtn = document.getElementById('grid-view-btn');
+                const listBtn = document.getElementById('list-view-btn');
+
+                if (layout === 'grid') {
+                    gridView.classList.remove('hidden');
+                    listView.classList.add('hidden');
+                    gridBtn.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+                    gridBtn.classList.remove('text-gray-500', 'hover:text-gray-700');
+                    listBtn.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+                    listBtn.classList.add('text-gray-500', 'hover:text-gray-700');
+                } else {
+                    gridView.classList.add('hidden');
+                    listView.classList.remove('hidden');
+                    listBtn.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+                    listBtn.classList.remove('text-gray-500', 'hover:text-gray-700');
+                    gridBtn.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+                    gridBtn.classList.add('text-gray-500', 'hover:text-gray-700');
+                }
+
+                this.currentLayout = layout;
+            }
+
+            saveLayout(layout) {
+                localStorage.setItem('preferred_task_layout', layout);
+            }
+
+            getSavedLayout() {
+                return localStorage.getItem('preferred_task_layout');
+            }
+
+            getCurrentLayout() {
+                return this.currentLayout;
+            }
+        }
 
         // 认证辅助函数
         function getAuthHeaders() {
@@ -744,31 +855,43 @@
                 if (result.success) {
                     renderTaskList(result.data.tasks, result.data.pagination);
                 } else {
-                    const container = document.getElementById('tasks-container');
-                    if (container) {
-                        container.innerHTML = `<div class="text-center py-12 text-gray-500"><p>${result.message || '加载失败'}</p></div>`;
+                    const gridContainer = document.getElementById('tasks-grid-container');
+                    const listContainer = document.getElementById('tasks-list-container');
+                    if (gridContainer) {
+                        gridContainer.innerHTML = `<div class="text-center py-12 text-gray-500"><p>${result.message || '加载失败'}</p></div>`;
+                    }
+                    if (listContainer) {
+                        listContainer.innerHTML = `<div class="text-center py-12 text-gray-500"><p>${result.message || '加载失败'}</p></div>`;
                     }
                 }
             } catch (e) {
                 console.error('加载任务列表失败:', e);
-                const container = document.getElementById('tasks-container');
-                if (container) {
-                    container.innerHTML = '<div class="text-center py-12 text-gray-500"><p>网络错误，请刷新重试</p></div>';
+                const gridContainer = document.getElementById('tasks-grid-container');
+                const listContainer = document.getElementById('tasks-list-container');
+                if (gridContainer) {
+                    gridContainer.innerHTML = '<div class="text-center py-12 text-gray-500"><p>网络错误，请刷新重试</p></div>';
+                }
+                if (listContainer) {
+                    listContainer.innerHTML = '<div class="text-center py-12 text-gray-500"><p>网络错误，请刷新重试</p></div>';
                 }
             }
         }
 
         // 渲染任务列表
         function renderTaskList(tasks, pagination) {
-            const container = document.getElementById('tasks-container');
-            if (!container) return;
+            const gridContainer = document.getElementById('tasks-grid-container');
+            const listContainer = document.getElementById('tasks-list-container');
+
+            if (!gridContainer || !listContainer) return;
 
             if (tasks.length === 0) {
-                container.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fa fa-tasks text-4xl mb-3"></i><p>暂无任务</p></div>';
+                gridContainer.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fa fa-tasks text-4xl mb-3"></i><p>暂无任务</p></div>';
+                listContainer.innerHTML = '<div class="text-center py-12 text-gray-500"><p>暂无任务</p></div>';
                 return;
             }
 
-            container.innerHTML = tasks.map(task => {
+            // 渲染网格视图
+            gridContainer.innerHTML = tasks.map(task => {
                 const priorityClass = task.priority === 'high' ? 'priority-high' : (task.priority === 'low' ? 'priority-low' : 'priority-middle');
                 const statusClass = task.display_status === 'overdue' ? 'status-overdue' :
                     (task.display_status === 'ongoing' ? 'status-doing' :
@@ -779,7 +902,7 @@
                 <div class="bg-white rounded-xl shadow-sm p-5 task-card-hover border border-gray-100" data-task-id="${task.id}">
                     <div class="flex justify-between items-start mb-3">
                         <span class="task-priority ${priorityClass}">${task.priority_text}</span>
-                        <span class="task-status ${statusClass}">${task.status_text}</span>
+                        <span class="task-status-btn ${statusClass}">${task.status_text}</span>
                     </div>
                     <h4 class="font-semibold text-gray-800 mb-2">${task.title}</h4>
                     <p class="text-sm text-gray-500 mb-3 line-clamp-2">${task.description || '无描述'}</p>
@@ -805,6 +928,49 @@
                         <button onclick="viewTask(${task.id})" class="text-gray-400 hover:text-primary transition-colors" title="详情"><i class="fa fa-eye"></i></button>
                         <button onclick="openEditTask(${task.id})" class="text-gray-400 hover:text-yellow-500 transition-colors" title="编辑"><i class="fa fa-pencil"></i></button>
                         <button onclick="confirmDeleteTask(${task.id}, '${task.title.replace(/'/g, "\\'")}')\" class="text-gray-400 hover:text-red-500 transition-colors" title="删除"><i class="fa fa-trash-o"></i></button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // 渲染列表视图
+            listContainer.innerHTML = tasks.map(task => {
+                const priorityClass = task.priority === 'high' ? 'priority-high' : (task.priority === 'low' ? 'priority-low' : 'priority-middle');
+                const statusClass = task.display_status === 'overdue' ? 'status-overdue' :
+                    (task.display_status === 'ongoing' ? 'status-doing' :
+                    (task.display_status === 'completed' ? 'status-finish' : 'status-wait'));
+
+                return `
+                <div class="px-6 py-4 hover:bg-gray-50 transition-colors" data-task-id="${task.id}">
+                    <div class="grid grid-cols-12 gap-4 items-center">
+                        <div class="col-span-4">
+                            <div class="flex items-center gap-3">
+                                <div>
+                                    <h4 class="font-medium text-gray-800">${task.title}</h4>
+                                    <p class="text-xs text-gray-500 line-clamp-1">${task.description || '无描述'}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-span-2 text-center">
+                            <span class="task-priority ${priorityClass}">${task.priority_text}</span>
+                        </div>
+                        <div class="col-span-2 text-center">
+                            <span class="task-status-btn ${statusClass}">${task.status_text}</span>
+                        </div>
+                        <div class="col-span-2 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs">
+                                    <i class="fa fa-user"></i>
+                                </div>
+                                <span class="text-sm">${task.assignee?.username || '未知'}</span>
+                            </div>
+                        </div>
+                        <div class="col-span-2 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="viewTask(${task.id})" class="text-gray-400 hover:text-primary transition-colors p-1" title="详情"><i class="fa fa-eye"></i></button>
+                                <button onclick="openEditTask(${task.id})" class="text-gray-400 hover:text-yellow-500 transition-colors p-1" title="编辑"><i class="fa fa-pencil"></i></button>
+                                <button onclick="confirmDeleteTask(${task.id}, '${task.title.replace(/'/g, "\\'")}')\" class="text-gray-400 hover:text-red-500 transition-colors p-1" title="删除"><i class="fa fa-trash-o"></i></button>
+                            </div>
+                        </div>
                     </div>
                 </div>`;
             }).join('');
@@ -1110,10 +1276,6 @@
             taskCurrentStatus = status;
             taskCurrentPage = 1;
             loadTasks();
-            // 更新筛选按钮样式
-            document.querySelectorAll('.task-status').forEach(btn => {
-                btn.classList.remove('bg-primary', 'text-white');
-            });
         }
 
         // ====================== 初始化 ======================
@@ -1122,6 +1284,9 @@
             const hasUrlToken = checkUrlSessionToken();
 
             initMobileSidebar();
+
+            // 初始化布局管理器
+            layoutManager = new LayoutManager();
 
             // 获取用户角色
             const userInfo = localStorage.getItem('user_info');
@@ -1137,7 +1302,7 @@
             loadTasks();
 
             // 绑定新建任务按钮
-            const createBtn = document.querySelector('button:has(.fa-plus)');
+            const createBtn = document.getElementById('create-task-btn');
             if (createBtn) {
                 createBtn.addEventListener('click', openCreateTaskModal);
             }
@@ -1187,14 +1352,16 @@
             });
 
             // 状态筛选按钮事件
-            document.querySelectorAll('.task-status').forEach(btn => {
+            document.querySelectorAll('.task-status-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const statusText = this.textContent.trim();
-                    let statusValue = '';
-                    if (statusText === '待开始') statusValue = 'pending';
-                    else if (statusText === '进行中') statusValue = 'ongoing';
-                    else if (statusText === '已完成') statusValue = 'completed';
-                    else if (statusText === '已逾期') statusValue = 'overdue';
+                    // 更新按钮样式
+                    document.querySelectorAll('.task-status-btn').forEach(b => {
+                        b.classList.remove('bg-primary', 'text-white', 'active');
+                    });
+                    this.classList.add('bg-primary', 'text-white', 'active');
+
+                    // 获取状态值并筛选
+                    const statusValue = this.dataset.status || '';
                     filterByStatus(statusValue);
                 });
             });
