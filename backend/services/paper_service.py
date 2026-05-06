@@ -424,7 +424,7 @@ class PaperService:
                     FROM paper_tags pt
                     JOIN tags t ON pt.tag_id = t.id
                     WHERE pt.paper_id = ?
-                """, (paper_id))
+                """, (paper_id,))
                 paper_dict['tags'] = [dict(t) for t in cursor.fetchall()]
                 return paper_dict
         except Exception as e:
