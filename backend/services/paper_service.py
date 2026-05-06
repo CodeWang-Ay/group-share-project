@@ -74,15 +74,36 @@ class PaperService:
                 """, (sha256_hash,))
                 duplicate = cursor.fetchone()
 
-                if duplicate and library_type == 'public':
-                    # 团队库已存在，为用户创建关联
+                if duplicate:
+                    # 文献内容已存在于系统中
                     existing_paper_id = duplicate[0]
+                    existing_title = duplicate[1]
+
+                    # 检查用户是否已关联该文献
                     cursor.execute("""
-                        INSERT OR IGNORE INTO paper_user_relations
-                        (paper_id, user_id, library_type, added_at)
-                        VALUES (?, ?, ?, ?)
+                        SELECT id FROM paper_user_relations
+                        WHERE paper_id = ? AND user_id = ?
+                    """, (existing_paper_id, uploader_id))
+                    user_rel = cursor.fetchone()
+
+                    if user_rel:
+                        return None, f"您的文献库中已有相同内容的文献：{existing_title}"
+
+                    # 为用户创建关联
+                    cursor.execute("""
+                        INSERT INTO paper_user_relations
+                        (paper_id, user_id, library_type, read_status, is_starred, added_at)
+                        VALUES (?, ?, ?, 'unread', 0, ?)
                     """, (existing_paper_id, uploader_id, library_type, datetime.now()))
-                    return None, f"文献已存在于团队库: {duplicate[1]}"
+
+                    # 获取现有文献并返回成功（非错误）
+                    cursor.execute("""
+                        SELECT * FROM papers WHERE id = ?
+                    """, (existing_paper_id,))
+                    existing_row = cursor.fetchone()
+                    existing_paper = Paper.from_dict(dict(existing_row))
+                    # 使用特殊的返回方式：(Paper对象, 关联成功消息)
+                    return existing_paper, f"文献已存在于系统，已为您关联：{existing_title}"
 
             # 生成文件名
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -167,24 +188,43 @@ class PaperService:
             with get_db() as conn:
                 cursor = conn.cursor()
 
-                # 构建筛选条件
-                base_query = """
-                    FROM papers p
-                    JOIN paper_user_relations pur ON p.id = pur.paper_id
-                    LEFT JOIN users u ON p.uploader_id = u.id
-                    WHERE pur.user_id = ?
-                """
-                base_params = [user_id]
-
-                if library_type:
-                    base_query += " AND pur.library_type = ?"
-                    base_params.append(library_type)
+                # 团队文献库(public)：所有 public 文献，LEFT JOIN 获取当前用户状态
+                # 个人文献库(private)：用户所有关联的文献（包括收藏的团队文献）
+                if library_type == 'public':
+                    # 使用子查询获取一个 public 关联作为 owner，避免因多用户关联导致重复
+                    base_query = """
+                        FROM papers p
+                        JOIN (
+                            SELECT DISTINCT paper_id FROM paper_user_relations
+                            WHERE library_type = 'public'
+                        ) public_papers ON p.id = public_papers.paper_id
+                        LEFT JOIN paper_user_relations pur_user ON p.id = pur_user.paper_id
+                            AND pur_user.user_id = ?
+                        LEFT JOIN users u ON p.uploader_id = u.id
+                        WHERE 1=1
+                    """
+                    base_params = [user_id]
+                    select_status = "COALESCE(pur_user.read_status, 'unread') as read_status, COALESCE(pur_user.is_starred, 0) as is_starred, 'public' as library_type"
+                else:
+                    # 个人库：查询用户所有关联的文献（public + private 都显示）
+                    base_query = """
+                        FROM papers p
+                        JOIN paper_user_relations pur ON p.id = pur.paper_id
+                        LEFT JOIN users u ON p.uploader_id = u.id
+                        WHERE pur.user_id = ?
+                    """
+                    base_params = [user_id]
+                    select_status = "pur.read_status, pur.is_starred, pur.library_type"
+                    # 个人库不额外筛选 library_type，显示所有
 
                 if keyword:
                     base_query += " AND (p.title LIKE ? OR p.authors LIKE ? OR p.abstract LIKE ? OR p.journal LIKE ?)"
                     base_params.extend([f"%{keyword}%"] * 4)
 
-                if status:
+                if status and library_type == 'public':
+                    base_query += " AND COALESCE(pur_user.read_status, 'unread') = ?"
+                    base_params.append(status)
+                elif status:
                     base_query += " AND pur.read_status = ?"
                     base_params.append(status)
 
@@ -192,7 +232,10 @@ class PaperService:
                     base_query += " AND p.year = ?"
                     base_params.append(year)
 
-                if starred is not None:
+                if starred is not None and library_type == 'public':
+                    base_query += " AND COALESCE(pur_user.is_starred, 0) = ?"
+                    base_params.append(1 if starred else 0)
+                elif starred is not None:
                     base_query += " AND pur.is_starred = ?"
                     base_params.append(1 if starred else 0)
 
@@ -216,10 +259,10 @@ class PaperService:
                     'newest': 'p.created_at DESC',
                     'oldest': 'p.created_at ASC',
                     'title': 'p.title ASC',
-                    'starred': 'pur.is_starred DESC'
+                    'starred': 'COALESCE(pur_user.is_starred, 0) DESC' if library_type == 'public' else 'pur.is_starred DESC'
                 }.get(sort, 'p.created_at DESC')
 
-                list_query = ("SELECT p.*, pur.read_status, pur.is_starred, pur.library_type, "
+                list_query = ("SELECT p.*, " + select_status + ", "
                               "u.username as uploader_name " + base_query
                               + f" ORDER BY {order_by} LIMIT ? OFFSET ?")
                 list_params = base_params + [limit, offset]
@@ -241,24 +284,46 @@ class PaperService:
 
         except Exception as e:
             print(f"获取文献列表失败: {str(e)}")
-            return []
+            return [], 0
 
     @classmethod
-    def get_stats(cls, user_id: int) -> Dict[str, Any]:
+    def get_stats(cls, user_id: int, library_type: Optional[str] = None) -> Dict[str, Any]:
         """获取统计数据"""
         try:
             with get_db() as conn:
                 cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT
-                        COUNT(*) as total,
-                        COUNT(CASE WHEN pur.read_status = 'unread' THEN 1 END) as unread,
-                        COUNT(CASE WHEN pur.is_starred = 1 THEN 1 END) as starred,
-                        COUNT(CASE WHEN p.created_at > datetime('now', '-30 days') THEN 1 END) as recent
-                    FROM papers p
-                    JOIN paper_user_relations pur ON p.id = pur.paper_id
-                    WHERE pur.user_id = ?
-                """, (user_id,))
+                if library_type == 'public':
+                    # 团队库：统计所有 public 文献
+                    query = """
+                        SELECT
+                            COUNT(*) as total,
+                            COUNT(CASE WHEN COALESCE(pur_user.read_status, 'unread') = 'unread' THEN 1 END) as unread,
+                            COUNT(CASE WHEN COALESCE(pur_user.is_starred, 0) = 1 THEN 1 END) as starred,
+                            COUNT(CASE WHEN p.created_at > datetime('now', '-30 days') THEN 1 END) as recent
+                        FROM papers p
+                        JOIN paper_user_relations pur_owner ON p.id = pur_owner.paper_id
+                            AND pur_owner.library_type = 'public'
+                        LEFT JOIN paper_user_relations pur_user ON p.id = pur_user.paper_id
+                            AND pur_user.user_id = ?
+                    """
+                    params = [user_id]
+                else:
+                    query = """
+                        SELECT
+                            COUNT(*) as total,
+                            COUNT(CASE WHEN pur.read_status = 'unread' THEN 1 END) as unread,
+                            COUNT(CASE WHEN pur.is_starred = 1 THEN 1 END) as starred,
+                            COUNT(CASE WHEN p.created_at > datetime('now', '-30 days') THEN 1 END) as recent
+                        FROM papers p
+                        JOIN paper_user_relations pur ON p.id = pur.paper_id
+                        WHERE pur.user_id = ?
+                    """
+                    params = [user_id]
+                    if library_type:
+                        query += " AND pur.library_type = ?"
+                        params.append(library_type)
+
+                cursor.execute(query, params)
                 result = cursor.fetchone()
                 return {
                     'total': result[0] or 0,
@@ -272,34 +337,84 @@ class PaperService:
 
     @classmethod
     def toggle_star(cls, paper_id: int, user_id: int) -> bool:
-        """切换收藏状态"""
+        """切换收藏状态（团队文献自动创建用户关联）"""
         try:
             with get_db() as conn:
                 cursor = conn.cursor()
+                # 检查用户是否已有关联记录
                 cursor.execute("""
-                    UPDATE paper_user_relations
-                    SET is_starred = NOT is_starred
+                    SELECT id FROM paper_user_relations
                     WHERE paper_id = ? AND user_id = ?
                 """, (paper_id, user_id))
-                return cursor.rowcount > 0
+                relation = cursor.fetchone()
+
+                if relation:
+                    # 已有记录，直接更新
+                    cursor.execute("""
+                        UPDATE paper_user_relations
+                        SET is_starred = NOT is_starred
+                        WHERE paper_id = ? AND user_id = ?
+                    """, (paper_id, user_id))
+                else:
+                    # 无记录，检查是否为团队文献
+                    cursor.execute("""
+                        SELECT library_type FROM paper_user_relations
+                        WHERE paper_id = ? AND library_type = 'public'
+                        LIMIT 1
+                    """, (paper_id,))
+                    public_rel = cursor.fetchone()
+                    if public_rel:
+                        # 团队文献，为用户创建关联记录
+                        cursor.execute("""
+                            INSERT INTO paper_user_relations
+                            (paper_id, user_id, library_type, read_status, is_starred, added_at)
+                            VALUES (?, ?, 'public', 'unread', 1, ?)
+                        """, (paper_id, user_id, datetime.now()))
+                    else:
+                        return False  # 非团队文献且无关联，无法操作
+                return True
         except Exception as e:
             print(f"切换收藏失败: {str(e)}")
             return False
 
     @classmethod
     def update_status(cls, paper_id: int, user_id: int, status: str) -> bool:
-        """更新阅读状态"""
+        """更新阅读状态（团队文献自动创建用户关联）"""
         if status not in ['unread', 'reading', 'read']:
             return False
         try:
             with get_db() as conn:
                 cursor = conn.cursor()
+                # 检查用户是否已有关联记录
                 cursor.execute("""
-                    UPDATE paper_user_relations
-                    SET read_status = ?, last_viewed_at = ?
+                    SELECT id FROM paper_user_relations
                     WHERE paper_id = ? AND user_id = ?
-                """, (status, datetime.now(), paper_id, user_id))
-                return cursor.rowcount > 0
+                """, (paper_id, user_id))
+                relation = cursor.fetchone()
+
+                if relation:
+                    cursor.execute("""
+                        UPDATE paper_user_relations
+                        SET read_status = ?, last_viewed_at = ?
+                        WHERE paper_id = ? AND user_id = ?
+                    """, (status, datetime.now(), paper_id, user_id))
+                else:
+                    # 无记录，检查是否为团队文献
+                    cursor.execute("""
+                        SELECT library_type FROM paper_user_relations
+                        WHERE paper_id = ? AND library_type = 'public'
+                        LIMIT 1
+                    """, (paper_id,))
+                    public_rel = cursor.fetchone()
+                    if public_rel:
+                        cursor.execute("""
+                            INSERT INTO paper_user_relations
+                            (paper_id, user_id, library_type, read_status, is_starred, added_at, last_viewed_at)
+                            VALUES (?, ?, 'public', ?, 0, ?, ?)
+                        """, (paper_id, user_id, status, datetime.now(), datetime.now()))
+                    else:
+                        return False
+                return True
         except Exception as e:
             print(f"更新状态失败: {str(e)}")
             return False
@@ -340,22 +455,157 @@ class PaperService:
 
     @classmethod
     def batch_star(cls, paper_ids: List[int], user_id: int, star: bool) -> int:
-        """批量收藏/取消收藏"""
+        """批量收藏/取消收藏（支持团队文献）"""
         if not paper_ids:
             return 0
         try:
             with get_db() as conn:
                 cursor = conn.cursor()
-                placeholders = ','.join('?' * len(paper_ids))
-                cursor.execute(f"""
-                    UPDATE paper_user_relations
-                    SET is_starred = ?
-                    WHERE paper_id IN ({placeholders}) AND user_id = ?
-                """, [1 if star else 0] + paper_ids + [user_id])
-                return cursor.rowcount
+                count = 0
+                for paper_id in paper_ids:
+                    # 检查用户是否已有关联
+                    cursor.execute("""
+                        SELECT id FROM paper_user_relations
+                        WHERE paper_id = ? AND user_id = ?
+                    """, (paper_id, user_id))
+                    relation = cursor.fetchone()
+
+                    if relation:
+                        cursor.execute("""
+                            UPDATE paper_user_relations
+                            SET is_starred = ?
+                            WHERE paper_id = ? AND user_id = ?
+                        """, (1 if star else 0, paper_id, user_id))
+                        count += 1
+                    else:
+                        # 检查是否为团队文献
+                        cursor.execute("""
+                            SELECT library_type FROM paper_user_relations
+                            WHERE paper_id = ? AND library_type = 'public'
+                            LIMIT 1
+                        """, (paper_id,))
+                        public_rel = cursor.fetchone()
+                        if public_rel:
+                            cursor.execute("""
+                                INSERT INTO paper_user_relations
+                                (paper_id, user_id, library_type, read_status, is_starred, added_at)
+                                VALUES (?, ?, 'public', 'unread', ?, ?)
+                            """, (paper_id, user_id, 1 if star else 0, datetime.now()))
+                            count += 1
+                return count
         except Exception as e:
             print(f"批量收藏失败: {str(e)}")
             return 0
+
+    @classmethod
+    def add_to_personal_library(cls, paper_id: int, user_id: int) -> Tuple[bool, Optional[str]]:
+        """将团队文献添加到个人文献库（含去重检查）"""
+        try:
+            with get_db() as conn:
+                cursor = conn.cursor()
+                # 检查用户是否已直接关联该文献
+                cursor.execute("""
+                    SELECT id, library_type FROM paper_user_relations
+                    WHERE paper_id = ? AND user_id = ?
+                """, (paper_id, user_id))
+                existing = cursor.fetchone()
+
+                if existing:
+                    return False, "该文献已在您的文献库中"
+
+                # 获取团队文献的 file_hash 和 title
+                cursor.execute("""
+                    SELECT file_hash, title FROM papers WHERE id = ?
+                """, (paper_id,))
+                paper_info = cursor.fetchone()
+                if not paper_info:
+                    return False, "文献不存在"
+
+                file_hash, title = paper_info
+
+                # 基于 file_hash 去重检查：用户是否已有相同内容的文献
+                if file_hash:
+                    cursor.execute("""
+                        SELECT p.id, p.title FROM papers p
+                        JOIN paper_user_relations pur ON p.id = pur.paper_id
+                        WHERE pur.user_id = ? AND p.file_hash = ? AND p.id != ?
+                        LIMIT 1
+                    """, (user_id, file_hash, paper_id))
+                    duplicate = cursor.fetchone()
+                    if duplicate:
+                        return False, f"您的文献库中已有相同内容的文献：{duplicate[1]}"
+
+                # 检查是否为团队文献（有 public 关联）
+                cursor.execute("""
+                    SELECT id FROM paper_user_relations
+                    WHERE paper_id = ? AND library_type = 'public'
+                    LIMIT 1
+                """, (paper_id,))
+                public_rel = cursor.fetchone()
+
+                if public_rel:
+                    # 团队文献：为用户创建关联
+                    cursor.execute("""
+                        INSERT INTO paper_user_relations
+                        (paper_id, user_id, library_type, read_status, is_starred, added_at)
+                        VALUES (?, ?, 'public', 'unread', 0, ?)
+                    """, (paper_id, user_id, datetime.now()))
+                    return True, None
+                else:
+                    return False, "文献不存在"
+        except Exception as e:
+            return False, f"添加失败: {str(e)}"
+
+    @classmethod
+    def share_to_team(cls, paper_id: int, user_id: int) -> Tuple[bool, Optional[str]]:
+        """将个人文献分享到团队文献库（含去重检查）"""
+        try:
+            with get_db() as conn:
+                cursor = conn.cursor()
+                # 检查用户是否拥有该文献关联
+                cursor.execute("""
+                    SELECT library_type FROM paper_user_relations
+                    WHERE paper_id = ? AND user_id = ?
+                """, (paper_id, user_id))
+                relation = cursor.fetchone()
+                if not relation:
+                    return False, "文献不存在或无权限"
+
+                # 获取文献的 file_hash 用于去重检查
+                cursor.execute("""
+                    SELECT file_hash, title FROM papers WHERE id = ?
+                """, (paper_id,))
+                paper_info = cursor.fetchone()
+                if not paper_info:
+                    return False, "文献不存在"
+
+                file_hash, title = paper_info
+
+                # 先检查团队库是否已有相同内容的文献（基于 file_hash）
+                if file_hash:
+                    cursor.execute("""
+                        SELECT p.id, p.title FROM papers p
+                        JOIN paper_user_relations pur ON p.id = pur.paper_id
+                        WHERE pur.library_type = 'public' AND p.file_hash = ? AND p.id != ?
+                        LIMIT 1
+                    """, (file_hash, paper_id))
+                    duplicate = cursor.fetchone()
+                    if duplicate:
+                        return False, f"团队文献库中已存在相同内容的文献：{duplicate[1]}"
+
+                # 如果该文献已是团队文献（用户的关联已经是 public）
+                if relation[0] == 'public':
+                    return True, "该文献已在团队文献库中"
+
+                # 将用户的关联改为 public
+                cursor.execute("""
+                    UPDATE paper_user_relations
+                    SET library_type = 'public'
+                    WHERE paper_id = ? AND user_id = ?
+                """, (paper_id, user_id))
+                return True, "已成功分享到团队文献库"
+        except Exception as e:
+            return False, f"分享失败: {str(e)}"
 
     @classmethod
     def batch_delete(cls, paper_ids: List[int], user_id: int, user_role: str) -> int:
@@ -372,13 +622,12 @@ class PaperService:
         try:
             with get_db() as conn:
                 cursor = conn.cursor()
-                # 检查权限
+                # 直接查询文献信息（不依赖用户关联）
                 cursor.execute("""
                     SELECT p.uploader_id, p.pdf_path
                     FROM papers p
-                    JOIN paper_user_relations pur ON p.id = pur.paper_id
-                    WHERE p.id = ? AND pur.user_id = ?
-                """, (paper_id, user_id))
+                    WHERE p.id = ?
+                """, (paper_id,))
                 row = cursor.fetchone()
                 if not row:
                     return False
@@ -403,10 +652,11 @@ class PaperService:
 
     @classmethod
     def get_paper_by_id(cls, paper_id: int, user_id: int) -> Optional[Dict[str, Any]]:
-        """获取单个文献详情"""
+        """获取单个文献详情（支持团队文献）"""
         try:
             with get_db() as conn:
                 cursor = conn.cursor()
+                # 先尝试获取用户自己的关联记录
                 cursor.execute("""
                     SELECT p.*, pur.read_status, pur.is_starred, pur.library_type,
                         u.username as uploader_name
@@ -416,11 +666,24 @@ class PaperService:
                     WHERE p.id = ? AND pur.user_id = ?
                 """, (paper_id, user_id))
                 row = cursor.fetchone()
+
+                if not row:
+                    # 检查是否为团队文献
+                    cursor.execute("""
+                        SELECT p.*, 'unread' as read_status, 0 as is_starred, 'public' as library_type,
+                            u.username as uploader_name
+                        FROM papers p
+                        JOIN paper_user_relations pur ON p.id = pur.paper_id AND pur.library_type = 'public'
+                        LEFT JOIN users u ON p.uploader_id = u.id
+                        WHERE p.id = ?
+                        LIMIT 1
+                    """, (paper_id,))
+                    row = cursor.fetchone()
+
                 if not row:
                     return None
 
                 paper_dict = dict(row)
-                # 获取标签
                 cursor.execute("""
                     SELECT t.id, t.name, t.tag_type
                     FROM paper_tags pt
@@ -444,15 +707,17 @@ class PaperService:
         try:
             with get_db() as conn:
                 cursor = conn.cursor()
-                # 检查权限
+                # 检查权限：只有上传者可以编辑
                 cursor.execute("""
                     SELECT p.uploader_id FROM papers p
-                    JOIN paper_user_relations pur ON p.id = pur.paper_id
-                    WHERE p.id = ? AND pur.user_id = ?
-                """, (paper_id, user_id))
+                    WHERE p.id = ?
+                """, (paper_id,))
                 row = cursor.fetchone()
                 if not row:
-                    return None, "文献不存在或无权限"
+                    return None, "文献不存在"
+                uploader_id = row[0]
+                if uploader_id != user_id:
+                    return None, "只有上传者可以编辑文献"
 
                 # 更新文献信息
                 update_fields = []

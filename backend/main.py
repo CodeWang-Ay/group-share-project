@@ -4087,7 +4087,7 @@ async def get_papers(
 
 
 @app.get("/api/paper_database/stats")
-async def get_paper_stats(request: Request):
+async def get_paper_stats(request: Request, library_type: Optional[str] = None):
     """获取文献统计"""
     current_user = await get_current_user(request)
     if not current_user:
@@ -4096,7 +4096,7 @@ async def get_paper_stats(request: Request):
             content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
         )
 
-    stats = PaperService.get_stats(user_id=current_user.id)
+    stats = PaperService.get_stats(user_id=current_user.id, library_type=library_type)
     return JSONResponse(content={"success": True, "data": stats})
 
 
@@ -4135,6 +4135,46 @@ async def batch_star_papers(request: Request):
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"success": False, "message": str(e)}
+        )
+
+
+@app.post("/api/paper_database/{paper_id}/add-to-personal")
+async def add_paper_to_personal(paper_id: int, request: Request):
+    """将团队文献添加到个人文献库"""
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    success, error = PaperService.add_to_personal_library(paper_id, current_user.id)
+    if success:
+        return JSONResponse(content={"success": True, "message": "已添加到个人文献库"})
+    else:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"success": False, "message": error}
+        )
+
+
+@app.post("/api/paper_database/{paper_id}/share-to-team")
+async def share_paper_to_team(paper_id: int, request: Request):
+    """将个人文献分享到团队文献库"""
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    success, message = PaperService.share_to_team(paper_id, current_user.id)
+    if success:
+        return JSONResponse(content={"success": True, "message": message or "已分享到团队文献库"})
+    else:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"success": False, "message": message}
         )
 
 
@@ -4289,15 +4329,18 @@ async def upload_paper(request: Request):
             library_type=form.get("library_type", "public")
         )
 
-        if error:
+        if paper is None and error:
+            # 实际错误（如文件大小超限、用户已有相同文献等）
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 content={"success": False, "message": error}
             )
 
+        # 成功：paper存在（可能是新建或关联已有文献）
+        message = error if paper and error else "文献上传成功"
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
-            content={"success": True, "data": paper.to_dict(), "message": "文献上传成功"}
+            content={"success": True, "data": paper.to_dict(), "message": message}
         )
 
     except Exception as e:

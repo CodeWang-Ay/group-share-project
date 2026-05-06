@@ -290,9 +290,19 @@
         <!-- ====================== 【核心：文献库 内容区】 ====================== -->
         <div class="flex-1 p-4 lg:p-6 overflow-y-auto">
             <!-- 页面标题 -->
-            <div class="mb-6">
-                <h1 class="text-xl font-bold text-gray-800 mb-2">团队文献库</h1>
-                <p class="text-sm text-gray-500">管理和分享团队学术文献资源</p>
+            <div class="mb-6 flex items-center justify-between">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-800 mb-2" id="library-title">团队文献库</h1>
+                    <p class="text-sm text-gray-500" id="library-desc">管理和分享团队学术文献资源</p>
+                </div>
+                <div class="flex gap-2">
+                    <button id="btn-team-library" onclick="PaperManager.switchLibrary('public')" class="px-4 py-2 bg-primary text-white rounded-lg text-sm transition-colors">
+                        <i class="fa fa-users mr-1"></i>团队文献库
+                    </button>
+                    <button id="btn-my-library" onclick="PaperManager.switchLibrary('private')" class="px-4 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors">
+                        <i class="fa fa-user mr-1"></i>我的文献库
+                    </button>
+                </div>
             </div>
 
             <!-- 统计卡片 -->
@@ -444,8 +454,9 @@
                             <input type="checkbox" id="header-checkbox" class="w-4 h-4 rounded border-gray-300">
                         </div>
                         <div class="col-span-4">文献信息</div>
+                        <div id="uploader-header" class="col-span-2 text-center">上传者</div>
                         <div class="col-span-2 text-center">分类信息</div>
-                        <div class="col-span-2 text-center">年份</div>
+                        <div class="col-span-1 text-center">年份</div>
                         <div class="col-span-1 text-center">状态</div>
                         <div class="col-span-2 text-center">操作</div>
                     </div>
@@ -850,6 +861,13 @@
                             <span class="tag-badge bg-green-100 text-green-700 cursor-pointer" onclick="PaperManager.addTag('NLP')">+ NLP</span>
                         </div>
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">存储位置</label>
+                        <select id="paper-library-type" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30">
+                            <option value="public">团队文献库（所有人可见）</option>
+                            <option value="private">我的文献库（仅自己可见）</option>
+                        </select>
+                    </div>
                     <div id="pdf-upload-area">
                         <label class="block text-sm font-medium text-gray-700 mb-1">PDF文件</label>
                         <div class="flex items-center gap-2">
@@ -929,6 +947,7 @@
             pageSize: 5,
             totalCount: 0,
             currentPaperPdfPath: null,
+            currentLibraryType: 'public',  // 'public' = 团队库, 'private' = 个人库
 
             getAuthHeaders() {
                 const headers = {};
@@ -947,6 +966,7 @@
             async loadPapers() {
                 try {
                     const params = new URLSearchParams();
+                    params.set('library_type', this.currentLibraryType);
                     if (this.currentKeyword) params.set('keyword', this.currentKeyword);
                     if (this.currentTag) params.set('tag', this.currentTag);
                     if (this.currentStatus) params.set('status', this.currentStatus);
@@ -988,7 +1008,9 @@
 
             async updateStats() {
                 try {
-                    const response = await fetch(`${API_BASE_URL}/api/paper_database/stats`, {
+                    const params = new URLSearchParams();
+                    if (this.currentLibraryType) params.set('library_type', this.currentLibraryType);
+                    const response = await fetch(`${API_BASE_URL}/api/paper_database/stats?${params.toString()}`, {
                         headers: this.getAuthHeaders()
                     });
                     const result = await response.json();
@@ -1009,13 +1031,14 @@
                     container.innerHTML = '<div class="p-8 text-center text-gray-500">暂无文献数据</div>';
                     return;
                 }
+                const isTeamLibrary = this.currentLibraryType === 'public';
                 container.innerHTML = this.papers.map(paper => `
                     <div class="paper-row px-4 py-4 border-b border-gray-100" data-paper-id="${paper.id}">
                         <div class="grid grid-cols-12 gap-3 items-center">
                             <div class="checkbox-cell col-span-1">
                                 <input type="checkbox" class="paper-checkbox w-4 h-4 rounded border-gray-300" data-paper-id="${paper.id}">
                             </div>
-                            <div class="col-span-4 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(${paper.id})">
+                            <div class="${isTeamLibrary ? 'col-span-3' : 'col-span-4'} flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(${paper.id})">
                                 <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
                                     <i class="fa fa-file-pdf-o text-blue-500 text-lg"></i>
                                 </div>
@@ -1027,20 +1050,22 @@
                                     <p class="text-xs text-gray-500 mt-1 line-clamp-1">${paper.abstract || ''}</p>
                                 </div>
                             </div>
+                            ${isTeamLibrary ? `<div class="col-span-2 text-center text-sm text-gray-600">${paper.uploader_name || '-'}</div>` : ''}
                             <div class="col-span-2 text-center">
                                 <div class="flex flex-wrap gap-1 justify-center">
                                     ${(paper.tags || []).map(t => `<span class="tag-badge bg-${t.tag_type === 'system' ? 'blue' : 'gray'}-100 text-${t.tag_type === 'system' ? 'blue' : 'gray'}-700">${t.name}</span>`).join('')}
                                 </div>
                             </div>
-                            <div class="col-span-2 text-center text-sm text-gray-600">${paper.year || '-'}</div>
+                            <div class="col-span-1 text-center text-sm text-gray-600">${paper.year || '-'}</div>
                             <div class="col-span-1 text-center">
                                 <span class="px-2 py-1 rounded-full text-xs ${this.getStatusStyle(paper.read_status)}">${this.getStatusText(paper.read_status)}</span>
                             </div>
                             <div class="col-span-2 text-center">
-                                <div class="flex gap-2 justify-center">
+                                <div class="flex gap-1 justify-center flex-wrap">
                                     <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.toggleStar(${paper.id})" title="收藏">
                                         <i class="fa fa-star${paper.is_starred ? ' text-yellow-500' : '-o text-gray-400'}"></i>
                                     </button>
+                                    ${isTeamLibrary ? `<button class="p-2 hover:bg-blue-50 rounded transition-colors" onclick="PaperManager.addToPersonal(${paper.id})" title="加入我的文献库"><i class="fa fa-folder-o text-blue-500"></i></button>` : `<button class="p-2 hover:bg-green-50 rounded transition-colors" onclick="PaperManager.shareToTeam(${paper.id})" title="分享到团队"><i class="fa fa-share text-green-500"></i></button>`}
                                     <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.editPaper(${paper.id})" title="编辑">
                                         <i class="fa fa-edit text-gray-500"></i>
                                     </button>
@@ -1108,6 +1133,34 @@
                 if (page < 1 || page > totalPages) return;
                 this.currentPage = page;
                 this.loadPapers();
+            },
+
+            switchLibrary(type) {
+                this.currentLibraryType = type;
+                this.currentPage = 1;
+                // 更新按钮样式
+                const teamBtn = document.getElementById('btn-team-library');
+                const myBtn = document.getElementById('btn-my-library');
+                const titleEl = document.getElementById('library-title');
+                const descEl = document.getElementById('library-desc');
+                const uploaderHeader = document.getElementById('uploader-header');
+
+                if (type === 'public') {
+                    teamBtn.className = 'px-4 py-2 bg-primary text-white rounded-lg text-sm transition-colors';
+                    myBtn.className = 'px-4 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors';
+                    titleEl.textContent = '团队文献库';
+                    descEl.textContent = '管理和分享团队学术文献资源';
+                    uploaderHeader.classList.remove('hidden');  // 团队库显示上传者列
+                } else {
+                    teamBtn.className = 'px-4 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors';
+                    myBtn.className = 'px-4 py-2 bg-primary text-white rounded-lg text-sm transition-colors';
+                    titleEl.textContent = '我的文献库';
+                    descEl.textContent = '管理个人收藏的学术文献';
+                    uploaderHeader.classList.add('hidden');  // 个人库隐藏上传者列
+                }
+
+                this.loadPapers();
+                this.updateStats();
             },
 
             getStatusStyle(status) {
@@ -1278,6 +1331,46 @@
                 }
             },
 
+            async addToPersonal(paperId) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/paper_database/${paperId}/add-to-personal`, {
+                        method: 'POST',
+                        headers: this.getAuthHeaders()
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('已添加到个人文献库');
+                        await this.loadPapers();
+                        await this.updateStats();
+                    } else {
+                        alert(result.message || '添加失败');
+                    }
+                } catch (error) {
+                    console.error('添加失败:', error);
+                    alert('添加失败');
+                }
+            },
+
+            async shareToTeam(paperId) {
+                if (!confirm('确定分享到团队文献库？所有团队成员将可见此文献。')) return;
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/paper_database/${paperId}/share-to-team`, {
+                        method: 'POST',
+                        headers: this.getAuthHeaders()
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        alert(result.message || '已分享到团队文献库');
+                        await this.loadPapers();
+                    } else {
+                        alert(result.message || '分享失败');
+                    }
+                } catch (error) {
+                    console.error('分享失败:', error);
+                    alert('分享失败');
+                }
+            },
+
             async openEditModal(paperId = null) {
                 const modal = document.getElementById('paper-edit-modal');
                 const title = document.getElementById('edit-modal-title');
@@ -1321,6 +1414,8 @@
                     this.currentPaperPdfPath = null;
                     this.clearEditForm();
                     this.currentPaperId = null;
+                    // 设置默认存储位置为当前浏览的库类型
+                    document.getElementById('paper-library-type').value = this.currentLibraryType;
                 }
                 this.switchImportMode('manual');
                 modal.classList.remove('hidden');
@@ -1424,6 +1519,7 @@
                         formData.append('doi', document.getElementById('paper-doi').value);
                         formData.append('abstract', document.getElementById('paper-abstract').value);
                         formData.append('tags', document.getElementById('paper-tags').value);
+                        formData.append('library_type', document.getElementById('paper-library-type').value);
                         formData.append('pdf', pdfFile);
 
                         const response = await fetch(`${API_BASE_URL}/api/paper_database/`, {
