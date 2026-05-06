@@ -3,7 +3,7 @@ FastAPI应用主入口
 提供用户认证系统的API服务
 """
 import bcrypt
-from fastapi import FastAPI, Request, Depends, HTTPException, status
+from fastapi import FastAPI, Request, Depends, HTTPException, Query, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
@@ -4061,7 +4061,7 @@ async def get_papers(
     request: Request,
     keyword: Optional[str] = None,
     tag: Optional[str] = None,
-    status: Optional[str] = None,
+    read_status: Optional[str] = Query(None, alias="status"),
     year: Optional[int] = None,
     starred: Optional[bool] = None,
     library_type: Optional[str] = None,
@@ -4079,7 +4079,7 @@ async def get_papers(
 
     papers = PaperService.get_papers(
         user_id=current_user.id,
-        keyword=keyword, tag=tag, status=status,
+        keyword=keyword, tag=tag, status=read_status,
         year=year, starred=starred, library_type=library_type,
         sort=sort, limit=limit, offset=offset
     )

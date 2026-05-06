@@ -384,36 +384,6 @@
                 </div>
             </div>
 
-            <!-- 发表年份分类 -->
-            <div class="mb-6">
-                <h3 class="text-sm font-medium text-gray-700 mb-3">按发表年份</h3>
-                <div class="flex flex-wrap gap-3">
-                    <div class="year-card active" data-year="">
-                        <p class="text-sm text-gray-500">全部</p>
-                        <p class="text-lg font-bold text-gray-800">128</p>
-                    </div>
-                    <div class="year-card" data-year="2026">
-                        <p class="text-sm text-gray-500">2026</p>
-                        <p class="text-lg font-bold text-primary">8</p>
-                    </div>
-                    <div class="year-card" data-year="2025">
-                        <p class="text-sm text-gray-500">2025</p>
-                        <p class="text-lg font-bold text-gray-800">25</p>
-                    </div>
-                    <div class="year-card" data-year="2024">
-                        <p class="text-sm text-gray-500">2024</p>
-                        <p class="text-lg font-bold text-gray-800">32</p>
-                    </div>
-                    <div class="year-card" data-year="2023">
-                        <p class="text-sm text-gray-500">2023</p>
-                        <p class="text-lg font-bold text-gray-800">18</p>
-                    </div>
-                    <div class="year-card" data-year="older">
-                        <p class="text-sm text-gray-500">更早</p>
-                        <p class="text-lg font-bold text-gray-800">45</p>
-                    </div>
-                </div>
-            </div>
 
             <!-- 批量操作栏 -->
             <div id="batch-actions-bar" class="hidden bg-primary/10 rounded-lg p-3 mb-4 flex items-center justify-between">
@@ -470,14 +440,13 @@
                 <!-- 表头 -->
                 <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
                     <div class="grid grid-cols-12 gap-3 items-center text-xs font-medium text-gray-500">
-                        <div class="checkbox-cell">
+                        <div class="checkbox-cell col-span-1">
                             <input type="checkbox" id="header-checkbox" class="w-4 h-4 rounded border-gray-300">
                         </div>
-                        <div class="col-span-5">文献信息</div>
-                        <div class="col-span-2 text-center">作者</div>
-                        <div class="col-span-2 text-center">年份</div>
+                        <div class="col-span-4">文献信息</div>
+                        <div class="col-span-3 text-center">年份</div>
                         <div class="col-span-1 text-center">状态</div>
-                        <div class="col-span-2 text-center">操作</div>
+                        <div class="col-span-3 text-center">操作</div>
                     </div>
                 </div>
 
@@ -486,7 +455,7 @@
                     <!-- 文献1 -->
                     <div class="paper-row px-4 py-4 border-b border-gray-100" data-paper-id="1">
                         <div class="grid grid-cols-12 gap-3 items-center">
-                            <div class="checkbox-cell">
+                            <div class="checkbox-cell col-span-1">
                                 <input type="checkbox" class="paper-checkbox w-4 h-4 rounded border-gray-300" data-paper-id="1">
                             </div>
                             <div class="col-span-5 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(1)">
@@ -532,7 +501,7 @@
                     <!-- 文献2 -->
                     <div class="paper-row px-4 py-4 border-b border-gray-100" data-paper-id="2">
                         <div class="grid grid-cols-12 gap-3 items-center">
-                            <div class="checkbox-cell">
+                            <div class="checkbox-cell col-span-1">
                                 <input type="checkbox" class="paper-checkbox w-4 h-4 rounded border-gray-300" data-paper-id="2">
                             </div>
                             <div class="col-span-5 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(2)">
@@ -577,7 +546,7 @@
                     <!-- 文献3 -->
                     <div class="paper-row px-4 py-4 border-b border-gray-100" data-paper-id="3">
                         <div class="grid grid-cols-12 gap-3 items-center">
-                            <div class="checkbox-cell">
+                            <div class="checkbox-cell col-span-1">
                                 <input type="checkbox" class="paper-checkbox w-4 h-4 rounded border-gray-300" data-paper-id="3">
                             </div>
                             <div class="col-span-5 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(3)">
@@ -623,7 +592,7 @@
                     <!-- 文献4 -->
                     <div class="paper-row px-4 py-4" data-paper-id="4">
                         <div class="grid grid-cols-12 gap-3 items-center">
-                            <div class="checkbox-cell">
+                            <div class="checkbox-cell col-span-1">
                                 <input type="checkbox" class="paper-checkbox w-4 h-4 rounded border-gray-300" data-paper-id="4">
                             </div>
                             <div class="col-span-5 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(4)">
@@ -960,6 +929,13 @@
             currentStarred: null,
             sortBy: 'newest',
 
+            getAuthHeaders() {
+                const headers = {};
+                const token = localStorage.getItem('session_token');
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                return headers;
+            },
+
             async init() {
                 await this.loadPapers();
                 await this.loadTags();
@@ -978,7 +954,7 @@
                     if (this.sortBy) params.set('sort', this.sortBy);
 
                     const response = await fetch(`${API_BASE_URL}/api/paper_database/?${params.toString()}`, {
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                        headers: this.getAuthHeaders()
                     });
                     const result = await response.json();
                     if (result.success) {
@@ -993,7 +969,7 @@
             async loadTags() {
                 try {
                     const response = await fetch(`${API_BASE_URL}/api/paper_database/tags`, {
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                        headers: this.getAuthHeaders()
                     });
                     const result = await response.json();
                     if (result.success) {
@@ -1008,7 +984,7 @@
             async updateStats() {
                 try {
                     const response = await fetch(`${API_BASE_URL}/api/paper_database/stats`, {
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                        headers: this.getAuthHeaders()
                     });
                     const result = await response.json();
                     if (result.success) {
@@ -1031,10 +1007,10 @@
                 container.innerHTML = this.papers.map(paper => `
                     <div class="paper-row px-4 py-4 border-b border-gray-100" data-paper-id="${paper.id}">
                         <div class="grid grid-cols-12 gap-3 items-center">
-                            <div class="checkbox-cell">
+                            <div class="checkbox-cell col-span-1">
                                 <input type="checkbox" class="paper-checkbox w-4 h-4 rounded border-gray-300" data-paper-id="${paper.id}">
                             </div>
-                            <div class="col-span-5 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(${paper.id})">
+                            <div class="col-span-4 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(${paper.id})">
                                 <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
                                     <i class="fa fa-file-pdf-o text-blue-500 text-lg"></i>
                                 </div>
@@ -1049,12 +1025,11 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-span-2 text-center text-sm text-gray-600">${paper.authors || '-'}</div>
-                            <div class="col-span-2 text-center text-sm text-gray-600">${paper.year || '-'}</div>
+                            <div class="col-span-3 text-center text-sm text-gray-600">${paper.year || '-'}</div>
                             <div class="col-span-1 text-center">
                                 <span class="px-2 py-1 rounded-full text-xs ${this.getStatusStyle(paper.read_status)}">${this.getStatusText(paper.read_status)}</span>
                             </div>
-                            <div class="col-span-2 text-center">
+                            <div class="col-span-3 text-center">
                                 <div class="flex gap-2 justify-center">
                                     <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.toggleStar(${paper.id})" title="收藏">
                                         <i class="fa fa-star${paper.is_starred ? ' text-yellow-500' : '-o text-gray-400'}"></i>
@@ -1161,7 +1136,7 @@
                     const response = await fetch(`${API_BASE_URL}/api/paper_database/${this.currentPaperId}/status`, {
                         method: 'PUT',
                         headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('session_token')}`,
+                            ...this.getAuthHeaders(),
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({ status })
@@ -1182,7 +1157,7 @@
                 try {
                     const response = await fetch(`${API_BASE_URL}/api/paper_database/${paperId}/star`, {
                         method: 'POST',
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                        headers: this.getAuthHeaders()
                     });
                     const result = await response.json();
                     if (result.success) {
@@ -1207,7 +1182,7 @@
                     try {
                         const response = await fetch(`${API_BASE_URL}/api/paper_database/${paperId}`, {
                             method: 'DELETE',
-                            headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                            headers: this.getAuthHeaders()
                         });
                         const result = await response.json();
                         if (result.success) {
@@ -1321,7 +1296,7 @@
                 try {
                     const response = await fetch(`${API_BASE_URL}/api/paper_database/`, {
                         method: 'POST',
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` },
+                        headers: this.getAuthHeaders(),
                         body: formData
                     });
                     const result = await response.json();
@@ -1384,7 +1359,7 @@
                     const response = await fetch(`${API_BASE_URL}/api/paper_database/batch/star`, {
                         method: 'POST',
                         headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('session_token')}`,
+                            ...this.getAuthHeaders(),
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({ paper_ids: this.selectedPapers, star })
@@ -1417,7 +1392,7 @@
                     const response = await fetch(`${API_BASE_URL}/api/paper_database/batch/tags`, {
                         method: 'POST',
                         headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('session_token')}`,
+                            ...this.getAuthHeaders(),
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({ paper_ids: this.selectedPapers, tag })
@@ -1441,7 +1416,7 @@
                         const response = await fetch(`${API_BASE_URL}/api/paper_database/batch`, {
                             method: 'DELETE',
                             headers: {
-                                'Authorization': `Bearer ${localStorage.getItem('session_token')}`,
+                                ...this.getAuthHeaders(),
                                 'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({ paper_ids: this.selectedPapers })
@@ -1504,7 +1479,7 @@
                 try {
                     await fetch(`${API_BASE_URL}/api/auth/logout`, {
                         method: 'POST',
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                        headers: this.getAuthHeaders()
                     });
                     localStorage.removeItem('session_token');
                     window.location.href = `${API_BASE_URL}/login`;
