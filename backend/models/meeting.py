@@ -30,7 +30,8 @@ class Meeting:
     duration_total: int  # 总时长（分钟）
     material_required: bool
     material_deadline: Optional[datetime]
-    notes: Optional[str]
+    notes: Optional[str]  # 备注（组会安排时填写）
+    minutes: Optional[str]  # 会议纪要（组会召开后填写）
     status: str  # scheduled, ongoing, completed
     created_by: Optional[int]
     created_at: Optional[datetime]
@@ -52,6 +53,7 @@ class Meeting:
             material_required=data.get('material_required', True),
             material_deadline=_parse_datetime(data.get('material_deadline')),
             notes=data.get('notes'),
+            minutes=data.get('minutes'),
             status=data.get('status', 'scheduled'),
             created_by=data.get('created_by'),
             created_at=_parse_datetime(data.get('created_at')) or datetime.now(),
@@ -73,6 +75,7 @@ class Meeting:
             'material_required': self.material_required,
             'material_deadline': self.material_deadline.isoformat() if self.material_deadline else None,
             'notes': self.notes,
+            'minutes': self.minutes,
             'status': self.status,
             'created_by': self.created_by,
             'created_at': self.created_at.isoformat() if self.created_at else None,

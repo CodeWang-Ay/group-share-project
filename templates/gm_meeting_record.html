@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>共享文件 - 研究生组会文件共享系统</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Markdown渲染库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script>
         // 配置Tailwind自定义颜色
@@ -111,6 +113,84 @@
                 .file-row .flex.items-center.gap-2 {
                     justify-content: flex-start;
                 }
+            }
+
+            /* Markdown预览样式 */
+            .markdown-content {
+                line-height: 1.6;
+            }
+            .markdown-content h1,
+            .markdown-content h2,
+            .markdown-content h3,
+            .markdown-content h4 {
+                font-weight: 600;
+                margin-top: 1em;
+                margin-bottom: 0.5em;
+            }
+            .markdown-content h1 { font-size: 1.5em; }
+            .markdown-content h2 { font-size: 1.25em; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.3em; }
+            .markdown-content h3 { font-size: 1.1em; }
+            .markdown-content h4 { font-size: 1em; }
+            .markdown-content p { margin: 0.5em 0; }
+            .markdown-content ul,
+            .markdown-content ol {
+                margin: 0.5em 0;
+                padding-left: 1.5em;
+            }
+            .markdown-content li { margin: 0.25em 0; }
+            .markdown-content li.task-list-item {
+                list-style: none;
+                margin-left: -1.5em;
+            }
+            .markdown-content code {
+                background: #f3f4f6;
+                padding: 0.125em 0.25em;
+                border-radius: 3px;
+                font-size: 0.9em;
+            }
+            .markdown-content pre {
+                background: #f3f4f6;
+                padding: 0.75em;
+                border-radius: 6px;
+                overflow-x: auto;
+            }
+            .markdown-content pre code {
+                background: none;
+                padding: 0;
+            }
+            .markdown-content blockquote {
+                border-left: 3px solid #2563eb;
+                margin: 0.5em 0;
+                padding-left: 1em;
+                color: #6b7280;
+            }
+            .markdown-content a {
+                color: #2563eb;
+                text-decoration: underline;
+            }
+            .markdown-content strong { font-weight: 600; }
+            .markdown-content em { font-style: italic; }
+            /* Markdown表格样式 */
+            .markdown-content table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 1em 0;
+            }
+            .markdown-content table th,
+            .markdown-content table td {
+                border: 1px solid #e5e7eb;
+                padding: 0.5em 0.75em;
+                text-align: left;
+            }
+            .markdown-content table th {
+                background: #f9fafb;
+                font-weight: 600;
+            }
+            .markdown-content table tr:nth-child(even) td {
+                background: #f9fafb;
+            }
+            .markdown-content table tr:hover td {
+                background: #f3f4f6;
             }
         }
     </style>
@@ -338,13 +418,29 @@
 
                 <!-- 顶部工具栏 -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div class="flex flex-wrap gap-2">
-                            <span class="px-3 py-1 bg-primary/10 text-primary text-sm rounded-lg">全部记录</span>
-                            <span class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 cursor-pointer">本月</span>
-                            <span class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 cursor-pointer">本学期</span>
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                        <!-- 左侧：搜索框 -->
+                        <div class="relative w-full lg:w-64">
+                            <input type="text" id="record-search-input" placeholder="搜索组会标题、纪要内容..."
+                                   class="w-full py-2 pl-10 pr-4 rounded-lg bg-gray-100 border-0 focus:ring-2 focus:ring-primary/30 focus:bg-white transition-all">
+                            <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                         </div>
-                        <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2">
+
+                        <!-- 中间：筛选标签 -->
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="filterByMinutes('all')" id="filter-all" class="px-3 py-1 bg-primary text-white text-sm rounded-lg transition-colors">
+                                全部记录
+                            </button>
+                            <button onclick="filterByMinutes('filled')" id="filter-filled" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors">
+                                <i class="fa fa-check-circle text-green-600 mr-1"></i>已填写纪要
+                            </button>
+                            <button onclick="filterByMinutes('empty')" id="filter-empty" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors">
+                                <i class="fa fa-exclamation-circle text-orange-500 mr-1"></i>待填写纪要
+                            </button>
+                        </div>
+
+                        <!-- 右侧：新建按钮 -->
+                        <button id="create-record-btn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2 transition-colors">
                             <i class="fa fa-plus"></i><span>新建记录</span>
                         </button>
                     </div>
@@ -356,7 +452,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-500 text-sm">总记录数</p>
-                                <h3 class="text-2xl font-bold mt-1">36</h3>
+                                <h3 class="text-2xl font-bold mt-1 stats-total">0</h3>
                             </div>
                             <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary">
                                 <i class="fa fa-file-text-o"></i>
@@ -366,145 +462,49 @@
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-gray-500 text-sm">本学期记录</p>
-                                <h3 class="text-2xl font-bold mt-1">12</h3>
+                                <p class="text-gray-500 text-sm">已填写纪要</p>
+                                <h3 class="text-2xl font-bold mt-1 stats-filled text-green-600">0</h3>
                             </div>
                             <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                                <i class="fa fa-calendar-check-o"></i>
+                                <i class="fa fa-check-circle"></i>
                             </div>
                         </div>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-gray-500 text-sm">附件总数</p>
-                                <h3 class="text-2xl font-bold mt-1">89</h3>
+                                <p class="text-gray-500 text-sm">待填写纪要</p>
+                                <h3 class="text-2xl font-bold mt-1 stats-empty text-orange-500">0</h3>
                             </div>
-                            <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
-                                <i class="fa fa-paperclip"></i>
+                            <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-500">
+                                <i class="fa fa-exclamation-circle"></i>
                             </div>
                         </div>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-gray-500 text-sm">记录人</p>
-                                <h3 class="text-2xl font-bold mt-1">6</h3>
+                                <p class="text-gray-500 text-sm">汇报人总数</p>
+                                <h3 class="text-2xl font-bold mt-1 stats-presenters">0</h3>
                             </div>
                             <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
-                                <i class="fa fa-user-o"></i>
+                                <i class="fa fa-users"></i>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 组会记录列表（卡片布局） -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    
-                    <!-- 记录卡片 1 -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 record-card">
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded">第12周组会</span>
-                            <span class="text-gray-400 text-sm">2025-12-17</span>
-                        </div>
-                        <h3 class="font-semibold text-gray-800 mb-2">论文研读与进展汇报</h3>
-                        <p class="text-sm text-gray-500 line-clamp-2 mb-4">
-                            本次组会主要汇报近期论文研读情况，讨论模型改进方向，导师提出下一步实验重点与注意事项。
-                        </p>
-                        <div class="flex items-center justify-between text-sm text-gray-500">
-                            <div class="flex items-center gap-2">
-                                <i class="fa fa-pencil"></i>
-                                <span>记录人：张明</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="fa fa-paperclip"></i>
-                                <span>3个附件</span>
-                            </div>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-3">
-                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i> 查看</button>
-                            <button class="text-gray-400 hover:text-green-600"><i class="fa fa-download"></i> 导出</button>
-                        </div>
+                <div id="records-container" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <!-- 记录卡片将通过JavaScript动态渲染 -->
+                    <div class="text-center py-12 text-gray-500">
+                        <p>加载中...</p>
                     </div>
+                </div>
 
-                    <!-- 记录卡片 2 -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 record-card">
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded">第11周组会</span>
-                            <span class="text-gray-400 text-sm">2025-12-10</span>
-                        </div>
-                        <h3 class="font-semibold text-gray-800 mb-2">实验结果分析与问题讨论</h3>
-                        <p class="text-sm text-gray-500 line-clamp-2 mb-4">
-                            汇报实验数据结果，分析模型波动原因，确定下一步优化方案，明确各成员分工与时间节点。
-                        </p>
-                        <div class="flex items-center justify-between text-sm text-gray-500">
-                            <div class="flex items-center gap-2">
-                                <i class="fa fa-pencil"></i>
-                                <span>记录人：李华</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="fa fa-paperclip"></i>
-                                <span>5个附件</span>
-                            </div>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-3">
-                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i> 查看</button>
-                            <button class="text-gray-400 hover:text-green-600"><i class="fa fa-download"></i> 导出</button>
-                        </div>
-                    </div>
-
-                    <!-- 记录卡片 3 -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 record-card">
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded">第10周组会</span>
-                            <span class="text-gray-400 text-sm">2025-12-03</span>
-                        </div>
-                        <h3 class="font-semibold text-gray-800 mb-2">中期进展总结与计划调整</h3>
-                        <p class="text-sm text-gray-500 line-clamp-2 mb-4">
-                            总结前半学期研究进展，梳理遇到的技术难点，导师指导调整研究方向与实验计划。
-                        </p>
-                        <div class="flex items-center justify-between text-sm text-gray-500">
-                            <div class="flex items-center gap-2">
-                                <i class="fa fa-pencil"></i>
-                                <span>记录人：王芳</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="fa fa-paperclip"></i>
-                                <span>4个附件</span>
-                            </div>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-3">
-                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i> 查看</button>
-                            <button class="text-gray-400 hover:text-green-600"><i class="fa fa-download"></i> 导出</button>
-                        </div>
-                    </div>
-
-                    <!-- 记录卡片 4 -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 record-card">
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded">第9周组会</span>
-                            <span class="text-gray-400 text-sm">2025-11-26</span>
-                        </div>
-                        <h3 class="font-semibold text-gray-800 mb-2">文献阅读与方法调研</h3>
-                        <p class="text-sm text-gray-500 line-clamp-2 mb-4">
-                            分享最新相关领域文献，讨论主流方法优缺点，确定后续研究技术路线。
-                        </p>
-                        <div class="flex items-center justify-between text-sm text-gray-500">
-                            <div class="flex items-center gap-2">
-                                <i class="fa fa-pencil"></i>
-                                <span>记录人：陈宇</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="fa fa-paperclip"></i>
-                                <span>2个附件</span>
-                            </div>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-3">
-                            <button class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i> 查看</button>
-                            <button class="text-gray-400 hover:text-green-600"><i class="fa fa-download"></i> 导出</button>
-                        </div>
-                    </div>
-
+                <!-- 分页区域 -->
+                <div id="pagination-container" class="flex justify-center items-center gap-2 mt-6">
+                    <!-- 分页将通过JavaScript动态渲染 -->
                 </div>
             </div>
         </div>
@@ -518,6 +518,210 @@
             <p>© 2023 智能计算实验室 - 研究生组会文件共享系统</p>
         </div>
     </footer>
+
+    <!-- 新建记录模态框 -->
+    <div id="create-record-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-gray-800">新建组会记录</h2>
+                    <button onclick="closeCreateRecordModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <form id="create-record-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">组会标题 *</label>
+                        <input type="text" id="record-title" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                               placeholder="例如：第12周组会 论文研读">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">组会类型</label>
+                        <select id="record-type"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                            <option value="regular">常规组会</option>
+                            <option value="paper_reading">论文研读</option>
+                            <option value="topic_discussion">专题讨论</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">会议时间 *</label>
+                        <input type="datetime-local" id="record-time" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">会议地点</label>
+                        <input type="text" id="record-location"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                               placeholder="例如：实验室会议室">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">会议时长（分钟）</label>
+                        <input type="number" id="record-duration" value="60" min="10" max="300"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">会议描述</label>
+                        <textarea id="record-description" rows="3"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                                  placeholder="简要描述本次组会的主要内容"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">会议纪要（可选）</label>
+                        <textarea id="record-minutes" rows="6"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary font-mono text-sm"
+                                  placeholder="详细记录组会纪要，支持Markdown格式"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">备注（可选）</label>
+                        <textarea id="record-notes" rows="2"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                                  placeholder="其他补充信息"></textarea>
+                    </div>
+                </form>
+
+                <div class="mt-6 pt-4 border-t border-gray-100 flex justify-end gap-3">
+                    <button onclick="closeCreateRecordModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">取消</button>
+                    <button id="submit-record-btn" onclick="submitCreateRecord()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                        <i class="fa fa-check mr-1"></i>保存记录
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑会议纪要模态框 -->
+    <div id="edit-minutes-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl max-w-3xl w-full mx-4 max-h-[85vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-gray-800">编辑会议纪要</h2>
+                    <button onclick="closeEditMinutesModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <div class="mb-4">
+                    <p class="text-sm text-gray-600">组会：<span id="edit-minutes-title" class="font-medium text-gray-800"></span></p>
+                </div>
+
+                <!-- 编辑/预览切换 -->
+                <div class="flex items-center gap-2 mb-3">
+                    <button id="edit-mode-btn" onclick="switchEditMode('edit')" class="px-3 py-1 text-sm bg-primary text-white rounded-lg">
+                        <i class="fa fa-edit mr-1"></i>编辑
+                    </button>
+                    <button id="preview-mode-btn" onclick="switchEditMode('preview')" class="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">
+                        <i class="fa fa-eye mr-1"></i>预览
+                    </button>
+                    <button id="split-mode-btn" onclick="switchEditMode('split')" class="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">
+                        <i class="fa fa-columns mr-1"></i>分屏
+                    </button>
+                    <span class="text-xs text-gray-400 ml-2">支持Markdown格式</span>
+                </div>
+
+                <!-- Markdown工具栏 -->
+                <div id="markdown-toolbar" class="flex items-center gap-1 mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                    <button onclick="insertMarkdown('heading')" class="p-1.5 text-gray-600 hover:bg-gray-200 rounded" title="标题">
+                        <i class="fa fa-header"></i>
+                    </button>
+                    <button onclick="insertMarkdown('bold')" class="p-1.5 text-gray-600 hover:bg-gray-200 rounded" title="粗体">
+                        <i class="fa fa-bold"></i>
+                    </button>
+                    <button onclick="insertMarkdown('italic')" class="p-1.5 text-gray-600 hover:bg-gray-200 rounded" title="斜体">
+                        <i class="fa fa-italic"></i>
+                    </button>
+                    <span class="text-gray-300 mx-1">|</span>
+                    <button onclick="insertMarkdown('list')" class="p-1.5 text-gray-600 hover:bg-gray-200 rounded" title="无序列表">
+                        <i class="fa fa-list-ul"></i>
+                    </button>
+                    <button onclick="insertMarkdown('list-number')" class="p-1.5 text-gray-600 hover:bg-gray-200 rounded" title="有序列表">
+                        <i class="fa fa-list-ol"></i>
+                    </button>
+                    <span class="text-gray-300 mx-1">|</span>
+                    <button onclick="insertMarkdown('quote')" class="p-1.5 text-gray-600 hover:bg-gray-200 rounded" title="引用">
+                        <i class="fa fa-quote-left"></i>
+                    </button>
+                    <button onclick="insertMarkdown('code')" class="p-1.5 text-gray-600 hover:bg-gray-200 rounded" title="代码">
+                        <i class="fa fa-code"></i>
+                    </button>
+                    <button onclick="insertMarkdown('link')" class="p-1.5 text-gray-600 hover:bg-gray-200 rounded" title="链接">
+                        <i class="fa fa-link"></i>
+                    </button>
+                    <span class="text-gray-300 mx-1">|</span>
+                    <button onclick="insertMarkdown('checkbox')" class="p-1.5 text-gray-600 hover:bg-gray-200 rounded" title="待办事项">
+                        <i class="fa fa-check-square-o"></i>
+                    </button>
+                    <button onclick="insertMarkdown('table')" class="p-1.5 text-gray-600 hover:bg-gray-200 rounded" title="表格">
+                        <i class="fa fa-table"></i>
+                    </button>
+                </div>
+
+                <!-- 编辑区域 -->
+                <div id="edit-container" class="mb-4">
+                    <!-- 编辑模式 -->
+                    <div id="edit-area" class="">
+                        <textarea id="edit-minutes-content" rows="12"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary font-mono text-sm"
+                                  placeholder="请填写会议纪要，支持Markdown格式。例如：
+
+## 会议主要内容
+- 汇报人A：汇报了XXX进展
+- 汇报人B：介绍了YYY方法
+
+## 讨论要点
+| 问题 | 建议 | 状态 |
+|------|------|------|
+| 问题1 | 建议1 | 已解决 |
+| 问题2 | 建议2 | 待处理 |
+
+## 下一步计划
+- [ ] 完成XXX任务
+- [ ] 准备YYY材料"></textarea>
+                    </div>
+
+                    <!-- 预览区域 -->
+                    <div id="preview-area" class="hidden">
+                        <div id="markdown-preview" class="w-full min-h-[300px] px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 prose prose-sm max-w-none">
+                            <p class="text-gray-400">预览区域</p>
+                        </div>
+                    </div>
+
+                    <!-- 分屏模式 -->
+                    <div id="split-area" class="hidden grid grid-cols-2 gap-4">
+                        <textarea id="edit-minutes-content-split" rows="12"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary font-mono text-sm"
+                                  placeholder="编辑区域"></textarea>
+                        <div id="markdown-preview-split" class="w-full min-h-[300px] px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 prose prose-sm max-w-none overflow-y-auto">
+                            <p class="text-gray-400">预览区域</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 提示信息 -->
+                <div class="bg-blue-50 rounded-lg p-3 mb-4">
+                    <p class="text-sm text-gray-600"><i class="fa fa-info-circle text-primary mr-1"></i>
+                        Markdown格式：<strong>**粗体**</strong>、<em>*斜体*</em>、`代码`、[链接](url)、- 列表、> 引用、## 标题、<span class="text-primary">表格</span></p>
+                    <p class="text-xs text-gray-500 mt-1">表格语法：| 列1 | 列2 | 用 | 分隔列，第二行用 |---| 定义表头</p>
+                </div>
+
+                <div class="pt-4 border-t border-gray-100 flex justify-end gap-3">
+                    <button onclick="closeEditMinutesModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">取消</button>
+                    <button id="save-minutes-btn" onclick="saveMinutes()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                        <i class="fa fa-check mr-1"></i>保存纪要
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- JavaScript -->
     <script>
@@ -629,13 +833,807 @@
             return false;
         }
 
-  
+        // ========== 组会记录页面专用功能 ==========
+        let recordCurrentPage = 1;
+        const recordPageSize = 8;
+        let currentMinutesFilter = 'all';  // 纪要筛选状态：all, filled, empty
+        let currentSearchKeyword = '';     // 搜索关键词
+        let allRecordsCache = [];          // 缓存所有记录用于本地筛选
+
+        // 加载组会统计信息
+        async function loadRecordStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/meetings/stats`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+                const result = await response.json();
+                console.log('组会统计响应:', result);
+
+                if (result.success) {
+                    const stats = result.data;
+                    // 已召开的组会作为总记录数
+                    document.querySelector('.stats-total').textContent = stats.completed_count || 0;
+                }
+
+                // 从缓存计算详细统计（纪要填写情况）
+                if (allRecordsCache.length > 0) {
+                    updateDetailedStats();
+                }
+            } catch (e) {
+                console.error('加载组会统计失败:', e);
+            }
+        }
+
+        // 更新详细统计（从缓存计算）
+        function updateDetailedStats() {
+            const total = allRecordsCache.length;
+            const filled = allRecordsCache.filter(m => m.minutes && m.minutes.trim()).length;
+            const empty = total - filled;
+
+            // 统计汇报人总数
+            let presenterCount = 0;
+            allRecordsCache.forEach(m => {
+                if (m.presenters) {
+                    presenterCount += m.presenters.length;
+                }
+            });
+
+            document.querySelector('.stats-total').textContent = total;
+            document.querySelector('.stats-filled').textContent = filled;
+            document.querySelector('.stats-empty').textContent = empty;
+            document.querySelector('.stats-presenters').textContent = presenterCount;
+        }
+
+        // 加载组会记录列表（已召开的组会）
+        async function loadRecords() {
+            const container = document.getElementById('records-container');
+            if (!container) return;
+
+            container.innerHTML = '<div class="text-center py-12 text-gray-500"><p>加载中...</p></div>';
+
+            try {
+                // 加载所有已召开的组会（用于本地筛选）
+                const params = new URLSearchParams();
+                params.append('status', 'completed');
+                params.append('limit', 100);  // 加载足够多的记录
+
+                const response = await fetch(`${API_BASE_URL}/api/meetings?${params.toString()}`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+                const result = await response.json();
+                console.log('组会记录列表响应:', result);
+
+                if (result.success) {
+                    // 缓存所有记录
+                    allRecordsCache = result.data.meetings || [];
+                    // 更新详细统计
+                    updateDetailedStats();
+                    // 应用筛选后渲染
+                    applyFiltersAndRender();
+                } else {
+                    container.innerHTML = `<div class="text-center py-12 text-gray-500"><p>${result.message || '加载失败'}</p></div>`;
+                }
+            } catch (e) {
+                console.error('加载组会记录失败:', e);
+                container.innerHTML = '<div class="text-center py-12 text-gray-500"><p>网络错误，请刷新重试</p></div>';
+            }
+        }
+
+        // 应用筛选条件并渲染
+        function applyFiltersAndRender() {
+            let filteredRecords = allRecordsCache;
+
+            // 1. 按纪要状态筛选
+            if (currentMinutesFilter === 'filled') {
+                filteredRecords = filteredRecords.filter(m => m.minutes && m.minutes.trim());
+            } else if (currentMinutesFilter === 'empty') {
+                filteredRecords = filteredRecords.filter(m => !m.minutes || !m.minutes.trim());
+            }
+
+            // 2. 按关键词搜索
+            if (currentSearchKeyword) {
+                const keyword = currentSearchKeyword.toLowerCase();
+                filteredRecords = filteredRecords.filter(m => {
+                    const titleMatch = m.title && m.title.toLowerCase().includes(keyword);
+                    const minutesMatch = m.minutes && m.minutes.toLowerCase().includes(keyword);
+                    const descMatch = m.description && m.description.toLowerCase().includes(keyword);
+                    return titleMatch || minutesMatch || descMatch;
+                });
+            }
+
+            // 3. 计算分页
+            const total = filteredRecords.length;
+            const totalPages = Math.ceil(total / recordPageSize) || 1;
+            const startIndex = (recordCurrentPage - 1) * recordPageSize;
+            const endIndex = startIndex + recordPageSize;
+            const pageRecords = filteredRecords.slice(startIndex, endIndex);
+
+            // 4. 渲染
+            const pagination = {
+                current_page: recordCurrentPage,
+                total_pages: totalPages,
+                total: total,
+                has_next: recordCurrentPage < totalPages,
+                has_prev: recordCurrentPage > 1
+            };
+
+            renderRecordList(pageRecords, pagination);
+
+            // 5. 更新筛选按钮状态
+            updateFilterButtons();
+        }
+
+        // 纪要状态筛选
+        function filterByMinutes(status) {
+            currentMinutesFilter = status;
+            recordCurrentPage = 1;  // 重置页码
+            applyFiltersAndRender();
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const input = document.getElementById('record-search-input');
+            currentSearchKeyword = input.value.trim();
+            recordCurrentPage = 1;  // 重置页码
+            applyFiltersAndRender();
+        }
+
+        // 更新筛选按钮样式
+        function updateFilterButtons() {
+            const buttons = ['filter-all', 'filter-filled', 'filter-empty'];
+            buttons.forEach(id => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+
+                if (id === `filter-${currentMinutesFilter}`) {
+                    btn.className = 'px-3 py-1 bg-primary text-white text-sm rounded-lg transition-colors';
+                } else {
+                    btn.className = 'px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors';
+                }
+            });
+        }
+
+        // 重置筛选条件
+        function resetFilters() {
+            currentMinutesFilter = 'all';
+            currentSearchKeyword = '';
+            recordCurrentPage = 1;
+            // 清空搜索框
+            const searchInput = document.getElementById('record-search-input');
+            if (searchInput) searchInput.value = '';
+            applyFiltersAndRender();
+        }
+
+        // 渲染组会记录列表
+        function renderRecordList(meetings, pagination) {
+            const container = document.getElementById('records-container');
+            if (!container) return;
+
+            if (!meetings || meetings.length === 0) {
+                let emptyMessage = '暂无组会记录';
+                if (currentSearchKeyword) {
+                    emptyMessage = `未找到包含 "${currentSearchKeyword}" 的记录`;
+                } else if (currentMinutesFilter === 'filled') {
+                    emptyMessage = '暂无已填写纪要的记录';
+                } else if (currentMinutesFilter === 'empty') {
+                    emptyMessage = '暂无待填写纪要的记录';
+                }
+                container.innerHTML = `<div class="text-center py-12 text-gray-500">
+                    <p><i class="fa fa-folder-open-o text-4xl mb-4 block"></i>${emptyMessage}</p>
+                    <button onclick="resetFilters()" class="mt-4 text-primary hover:underline text-sm">查看全部记录</button>
+                </div>`;
+                return;
+            }
+
+            const typeTextMap = {
+                'regular': '常规组会',
+                'paper_reading': '论文研读',
+                'topic_discussion': '专题讨论'
+            };
+
+            container.innerHTML = meetings.map(m => {
+                const typeText = typeTextMap[m.meeting_type] || '常规组会';
+                const date = new Date(m.scheduled_at);
+                const formattedDate = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+
+                // 汇报人信息
+                const presenters = m.presenters || [];
+                const presentersNames = presenters.length > 0
+                    ? presenters.map(p => p.real_name || p.username).join('、')
+                    : '暂无';
+
+                // 计算周数（根据日期推算）
+                const weekNum = getWeekNumber(date);
+
+                return `
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 record-card">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded">第${weekNum}周组会 · ${typeText}</span>
+                        <span class="text-gray-400 text-sm">${formattedDate}</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-2">${m.title}</h3>
+                    <p class="text-sm text-gray-500 line-clamp-2 mb-4">
+                        ${m.minutes || m.description || '暂无会议纪要'}
+                    </p>
+                    <div class="flex items-center justify-between text-sm text-gray-500 mb-2">
+                        <div class="flex items-center gap-2">
+                            <i class="fa fa-users"></i>
+                            <span>汇报人：${presentersNames}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${m.minutes ? '<span class="text-green-600"><i class="fa fa-check-circle"></i> 已填写纪要</span>' : '<span class="text-orange-500"><i class="fa fa-exclamation-circle"></i> 待填写纪要</span>'}
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between">
+                        <div class="flex items-center gap-2 text-sm text-gray-500">
+                            <i class="fa fa-clock-o"></i>
+                            <span>${m.duration_total}分钟</span>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="viewRecordDetail(${m.id})" class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i> 查看</button>
+                            <button onclick="openEditMinutesById(${m.id})" class="text-gray-400 hover:text-green-600"><i class="fa fa-edit"></i> 编辑纪要</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // 渲染分页
+            renderPagination(pagination);
+        }
+
+        // 计算周数（简单算法：按月计算）
+        function getWeekNumber(date) {
+            const dayOfMonth = date.getDate();
+            return Math.ceil(dayOfMonth / 7);
+        }
+
+        // 渲染分页
+        function renderPagination(pagination) {
+            const container = document.getElementById('pagination-container');
+            if (!container || !pagination) return;
+
+            if (pagination.total_pages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+
+            // 上一页按钮
+            if (pagination.has_prev) {
+                html += `<button onclick="goToRecordPage(${pagination.current_page - 1})" class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"><i class="fa fa-chevron-left"></i> 上一页</button>`;
+            }
+
+            // 页码
+            const totalPages = pagination.total_pages;
+            const currentPage = pagination.current_page;
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === currentPage) {
+                    html += `<span class="px-3 py-1 text-sm bg-primary text-white rounded-lg">${i}</span>`;
+                } else {
+                    html += `<button onclick="goToRecordPage(${i})" class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">${i}</button>`;
+                }
+            }
+
+            // 下一页按钮
+            if (pagination.has_next) {
+                html += `<button onclick="goToRecordPage(${pagination.current_page + 1})" class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">下一页 <i class="fa fa-chevron-right"></i></button>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // 切换页码
+        function goToRecordPage(page) {
+            recordCurrentPage = page;
+            loadRecords();
+        }
+
+        // 查看记录详情
+        async function viewRecordDetail(meetingId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showRecordDetailModal(result.data);
+                } else {
+                    alert(result.message || '获取详情失败');
+                }
+            } catch (e) {
+                console.error('获取记录详情失败:', e);
+                alert('网络错误，请重试');
+            }
+        }
+
+        // 显示记录详情模态框
+        function showRecordDetailModal(meeting) {
+            const typeTextMap = {
+                'regular': '常规组会',
+                'paper_reading': '论文研读',
+                'topic_discussion': '专题讨论'
+            };
+
+            const typeText = typeTextMap[meeting.meeting_type] || '常规组会';
+            const date = new Date(meeting.scheduled_at);
+            const formattedDate = `${date.getFullYear()}年${date.getMonth()+1}月${date.getDate()}日 ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+
+            const presenters = meeting.presenters || [];
+            const presentersHtml = presenters.length > 0
+                ? presenters.map(p => `<span class="inline-block px-2 py-1 bg-gray-100 rounded text-sm mr-2">${p.real_name || p.username} (${p.duration_minutes}分钟)</span>`).join('')
+                : '<span class="text-gray-400">暂无汇报人</span>';
+
+            // 会议纪要状态
+            const hasMinutes = meeting.minutes && meeting.minutes.trim();
+            const minutesStatusHtml = hasMinutes
+                ? '<span class="text-green-600 text-xs"><i class="fa fa-check-circle"></i> 已填写</span>'
+                : '<span class="text-orange-500 text-xs"><i class="fa fa-exclamation-circle"></i> 待填写</span>';
+
+            // 渲染Markdown内容
+            let minutesContentHtml = '';
+            if (hasMinutes) {
+                marked.setOptions({ breaks: true, gfm: true });
+                minutesContentHtml = `<div class="markdown-content prose prose-sm max-w-none">${marked.parse(meeting.minutes)}</div>`;
+            } else {
+                minutesContentHtml = '<span class="text-gray-400 italic">暂无会议纪要，点击"编辑"按钮填写</span>';
+            }
+
+            // 转义内容用于onclick参数
+            const escapedMinutesForClick = (meeting.minutes || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+            const escapedTitleForClick = meeting.title.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+
+            // 创建模态框
+            const modalHtml = `
+            <div id="record-detail-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div class="bg-white rounded-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full font-medium">已召开</span>
+                                <span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full font-medium ml-2">${typeText}</span>
+                            </div>
+                            <button onclick="closeRecordDetailModal()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fa fa-times text-xl"></i>
+                            </button>
+                        </div>
+
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">${meeting.title}</h2>
+
+                        <!-- 基本信息 -->
+                        <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa fa-calendar text-gray-400 w-5"></i>
+                                    <span>${formattedDate}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa fa-clock-o text-gray-400 w-5"></i>
+                                    <span>${meeting.duration_total}分钟</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa fa-map-marker text-gray-400 w-5"></i>
+                                    <span>${meeting.location || '待定'}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa fa-users text-gray-400 w-5"></i>
+                                    <span>${presenters.length} 位汇报人</span>
+                                </div>
+                            </div>
+                            ${presenters.length > 0 ? `
+                            <div class="mt-3 pt-3 border-t border-gray-200">
+                                <div class="text-sm text-gray-600 mb-1">汇报人：</div>
+                                <div>${presentersHtml}</div>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- 会议纪要（核心内容） -->
+                        <div class="bg-blue-50 rounded-lg p-4 mb-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa fa-file-text-o text-primary"></i>
+                                    <span class="font-medium text-gray-800">会议纪要</span>
+                                    ${minutesStatusHtml}
+                                </div>
+                                <button onclick="openEditMinutes(${meeting.id}, '${escapedMinutesForClick}', '${escapedTitleForClick}')"
+                                        class="text-sm text-primary hover:text-primary/80">
+                                    <i class="fa fa-edit"></i> 编辑
+                                </button>
+                            </div>
+                            ${minutesContentHtml}
+                        </div>
+
+                        <!-- 会议描述 -->
+                        <div class="border-t border-gray-100 pt-4">
+                            <p class="text-gray-600 font-medium mb-2">会议描述：</p>
+                            <p class="text-gray-800">${meeting.description || '无描述'}</p>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-gray-100 flex justify-end gap-3">
+                            <button onclick="closeRecordDetailModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">关闭</button>
+                            <button onclick="openEditMinutes(${meeting.id}, '${escapedMinutesForClick}', '${escapedTitleForClick}')"
+                                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                                <i class="fa fa-edit mr-1"></i>编辑纪要
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+            // 添加到页面
+            const existingModal = document.getElementById('record-detail-modal');
+            if (existingModal) existingModal.remove();
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        // 关闭详情模态框
+        function closeRecordDetailModal() {
+            const modal = document.getElementById('record-detail-modal');
+            if (modal) modal.remove();
+        }
+
+        // ========== 编辑会议纪要功能 ==========
+
+        // 当前编辑的组会ID
+        let currentEditMeetingId = null;
+
+        // 从列表卡片打开编辑纪要（先获取数据）
+        async function openEditMinutesById(meetingId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    const meeting = result.data;
+                    openEditMinutes(meetingId, meeting.minutes || '', meeting.title);
+                } else {
+                    alert(result.message || '获取组会信息失败');
+                }
+            } catch (e) {
+                console.error('获取组会信息失败:', e);
+                alert('网络错误，请重试');
+            }
+        }
+
+        // 打开编辑纪要模态框
+        function openEditMinutes(meetingId, currentMinutes, meetingTitle) {
+            currentEditMeetingId = meetingId;
+            closeRecordDetailModal();
+
+            const modal = document.getElementById('edit-minutes-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+
+                // 设置标题和当前内容
+                document.getElementById('edit-minutes-title').textContent = meetingTitle;
+                document.getElementById('edit-minutes-content').value = currentMinutes || '';
+                document.getElementById('edit-minutes-content-split').value = currentMinutes || '';
+
+                // 默认编辑模式
+                switchEditMode('edit');
+
+                // 绑定实时预览事件
+                const textarea = document.getElementById('edit-minutes-content');
+                const textareaSplit = document.getElementById('edit-minutes-content-split');
+
+                textarea.addEventListener('input', updatePreview);
+                textareaSplit.addEventListener('input', function() {
+                    document.getElementById('edit-minutes-content').value = this.value;
+                    updatePreview();
+                });
+            }
+        }
+
+        // 当前编辑模式
+        let currentEditMode = 'edit';
+
+        // 切换编辑模式
+        function switchEditMode(mode) {
+            currentEditMode = mode;
+
+            const editArea = document.getElementById('edit-area');
+            const previewArea = document.getElementById('preview-area');
+            const splitArea = document.getElementById('split-area');
+            const toolbar = document.getElementById('markdown-toolbar');
+
+            const editBtn = document.getElementById('edit-mode-btn');
+            const previewBtn = document.getElementById('preview-mode-btn');
+            const splitBtn = document.getElementById('split-mode-btn');
+
+            // 重置按钮样式
+            editBtn.className = 'px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200';
+            previewBtn.className = 'px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200';
+            splitBtn.className = 'px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200';
+
+            // 隐藏所有区域
+            editArea.classList.add('hidden');
+            previewArea.classList.add('hidden');
+            splitArea.classList.add('hidden');
+
+            if (mode === 'edit') {
+                editArea.classList.remove('hidden');
+                toolbar.classList.remove('hidden');
+                editBtn.className = 'px-3 py-1 text-sm bg-primary text-white rounded-lg';
+            } else if (mode === 'preview') {
+                previewArea.classList.remove('hidden');
+                toolbar.classList.add('hidden');
+                previewBtn.className = 'px-3 py-1 text-sm bg-primary text-white rounded-lg';
+                updatePreview();
+            } else if (mode === 'split') {
+                splitArea.classList.remove('hidden');
+                toolbar.classList.remove('hidden');
+                splitBtn.className = 'px-3 py-1 text-sm bg-primary text-white rounded-lg';
+                // 同步内容
+                document.getElementById('edit-minutes-content-split').value = document.getElementById('edit-minutes-content').value;
+                updatePreview();
+            }
+        }
+
+        // 更新预览
+        function updatePreview() {
+            const content = document.getElementById('edit-minutes-content').value;
+
+            // 配置marked选项
+            marked.setOptions({
+                breaks: true,
+                gfm: true
+            });
+
+            const htmlContent = marked.parse(content || '');
+
+            // 更新预览区域
+            const previewEl = document.getElementById('markdown-preview');
+            const previewSplitEl = document.getElementById('markdown-preview-split');
+
+            if (previewEl) {
+                previewEl.innerHTML = htmlContent || '<p class="text-gray-400 italic">暂无内容</p>';
+            }
+            if (previewSplitEl) {
+                previewSplitEl.innerHTML = htmlContent || '<p class="text-gray-400 italic">暂无内容</p>';
+            }
+        }
+
+        // Markdown工具栏插入功能
+        function insertMarkdown(type) {
+            const textarea = currentEditMode === 'split'
+                ? document.getElementById('edit-minutes-content-split')
+                : document.getElementById('edit-minutes-content');
+
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            let insertText = '';
+
+            switch (type) {
+                case 'heading':
+                    insertText = selectedText ? `## ${selectedText}` : '## 标题';
+                    break;
+                case 'bold':
+                    insertText = selectedText ? `**${selectedText}**` : '**粗体文本**';
+                    break;
+                case 'italic':
+                    insertText = selectedText ? `*${selectedText}*` : '*斜体文本*';
+                    break;
+                case 'list':
+                    insertText = selectedText ? `- ${selectedText}` : '- 列表项';
+                    break;
+                case 'list-number':
+                    insertText = selectedText ? `1. ${selectedText}` : '1. 列表项';
+                    break;
+                case 'quote':
+                    insertText = selectedText ? `> ${selectedText}` : '> 引用内容';
+                    break;
+                case 'code':
+                    insertText = selectedText ? `\`${selectedText}\`` : '`代码`';
+                    break;
+                case 'link':
+                    insertText = selectedText ? `[${selectedText}](url)` : '[链接文字](url)';
+                    break;
+                case 'checkbox':
+                    insertText = selectedText ? `- [ ] ${selectedText}` : '- [ ] 待办事项';
+                    break;
+                case 'table':
+                    insertText = `| 列1 | 列2 | 列3 |\n|-----|-----|-----|\n| 内容1 | 内容2 | 内容3 |\n| 内容4 | 内容5 | 内容6 |`;
+                    break;
+            }
+
+            // 插入文本
+            textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
+
+            // 同步到主编辑框
+            if (currentEditMode === 'split') {
+                document.getElementById('edit-minutes-content').value = textarea.value;
+            }
+
+            // 设置光标位置
+            const newPos = start + insertText.length;
+            textarea.setSelectionRange(newPos, newPos);
+            textarea.focus();
+
+            // 更新预览
+            updatePreview();
+        }
+
+        // 关闭编辑纪要模态框
+        function closeEditMinutesModal() {
+            const modal = document.getElementById('edit-minutes-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            currentEditMeetingId = null;
+        }
+
+        // 保存会议纪要
+        async function saveMinutes() {
+            if (!currentEditMeetingId) return;
+
+            const content = document.getElementById('edit-minutes-content').value.trim();
+            const saveBtn = document.getElementById('save-minutes-btn');
+
+            try {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 保存中...';
+
+                const response = await fetch(`${API_BASE_URL}/api/meetings/${currentEditMeetingId}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        minutes: content
+                    })
+                });
+
+                const result = await response.json();
+                console.log('保存纪要响应:', result);
+
+                if (result.success) {
+                    alert('会议纪要保存成功');
+                    closeEditMinutesModal();
+                    // 刷新列表
+                    loadRecords();
+                } else {
+                    alert(result.message || '保存失败');
+                }
+            } catch (e) {
+                console.error('保存纪要失败:', e);
+                alert('网络错误，请重试');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fa fa-check mr-1"></i>保存纪要';
+            }
+        }
+
+        // ========== 新建记录相关功能 ==========
+
+        // 打开新建记录模态框
+        function openCreateRecordModal() {
+            const modal = document.getElementById('create-record-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+
+                // 设置默认时间为当前时间
+                const now = new Date();
+                const formattedNow = now.toISOString().slice(0, 16);
+                document.getElementById('record-time').value = formattedNow;
+            }
+        }
+
+        // 关闭新建记录模态框
+        function closeCreateRecordModal() {
+            const modal = document.getElementById('create-record-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            // 清空表单
+            document.getElementById('create-record-form').reset();
+        }
+
+        // 提交新建记录
+        async function submitCreateRecord() {
+            const submitBtn = document.getElementById('submit-record-btn');
+            const title = document.getElementById('record-title').value.trim();
+            const time = document.getElementById('record-time').value;
+
+            if (!title || !time) {
+                alert('请填写组会标题和会议时间');
+                return;
+            }
+
+            try {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 保存中...';
+
+                const data = {
+                    title: title,
+                    meeting_type: document.getElementById('record-type').value,
+                    scheduled_at: time,
+                    location: document.getElementById('record-location').value.trim() || null,
+                    duration_total: parseInt(document.getElementById('record-duration').value) || 60,
+                    description: document.getElementById('record-description').value.trim() || null,
+                    minutes: document.getElementById('record-minutes').value.trim() || null,
+                    notes: document.getElementById('record-notes').value.trim() || null,
+                    status: 'completed' // 直接创建为已召开状态
+                };
+
+                const response = await fetch(`${API_BASE_URL}/api/meetings`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    credentials: 'include',
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                console.log('创建记录响应:', result);
+
+                if (result.success) {
+                    alert('组会记录创建成功');
+                    closeCreateRecordModal();
+                    // 刷新数据
+                    loadRecordStats();
+                    loadRecords();
+                } else {
+                    alert(result.message || '创建失败');
+                }
+            } catch (e) {
+                console.error('创建记录失败:', e);
+                alert('网络错误，请重试');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa fa-check mr-1"></i>保存记录';
+            }
+        }
+
+
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
             // 首先检查URL中是否有session_token
             const hasUrlToken = checkUrlSessionToken();
 
             initMobileSidebar();
+
+            // 加载组会记录数据
+            loadRecordStats();
+            loadRecords();
+
+            // 搜索框事件 - 实时搜索
+            const searchInput = document.getElementById('record-search-input');
+            if (searchInput) {
+                // 输入时实时搜索（带延迟）
+                let searchTimeout = null;
+                searchInput.addEventListener('input', function() {
+                    if (searchTimeout) clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(handleSearch, 300);
+                });
+                // 按回车立即搜索
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        if (searchTimeout) clearTimeout(searchTimeout);
+                        handleSearch();
+                    }
+                });
+            }
+
+            // 新建记录按钮事件
+            const createRecordBtn = document.getElementById('create-record-btn');
+            if (createRecordBtn) {
+                createRecordBtn.addEventListener('click', openCreateRecordModal);
+            }
             // 登出功能
             const logoutBtn = document.getElementById('logout-btn');
             const logoutBtnMobile = document.getElementById('logout-btn-mobile');

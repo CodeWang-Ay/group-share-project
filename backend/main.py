@@ -3152,7 +3152,8 @@ async def create_meeting(request: Request):
             duration_total=data.get("duration_total", 60),
             material_required=data.get("material_required", True),
             material_deadline=material_deadline,
-            notes=data.get("notes")
+            notes=data.get("notes"),
+            minutes=data.get("minutes")
         )
 
         logger.info(f"创建组会成功: {meeting.title} (ID: {meeting.id})")
@@ -3206,7 +3207,7 @@ async def get_meeting_stats(request: Request):
 @app.get("/api/meetings/{meeting_id}")
 async def get_meeting_detail(meeting_id: int, request: Request):
     """
-    获取组会详情API
+    获取组会详情API，包含汇报人信息
     """
     current_user = await get_current_user(request)
     if not current_user:
@@ -3223,11 +3224,40 @@ async def get_meeting_detail(meeting_id: int, request: Request):
                 content={"success": False, "message": "组会不存在", "error": "MEETING_NOT_FOUND"}
             )
 
+        # 获取汇报人信息
+        meeting_dict = meeting.to_dict()
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT mp.id, mp.user_id, mp.presenter_type, mp.duration_minutes, mp.status,
+                   u.username, u.role
+            FROM meeting_presenters mp
+            LEFT JOIN users u ON mp.user_id = u.id
+            WHERE mp.meeting_id = ?
+            ORDER BY mp.created_at ASC
+        """, (meeting_id,))
+
+        presenters = []
+        for row in cursor.fetchall():
+            presenters.append({
+                "id": row[0],
+                "user_id": row[1],
+                "presenter_type": row[2],
+                "duration_minutes": row[3],
+                "status": row[4],
+                "username": row[5],
+                "real_name": row[5],
+                "user_role": row[6]
+            })
+
+        meeting_dict["presenters"] = presenters
+        conn.close()
+
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
                 "success": True,
-                "data": meeting.to_dict()
+                "data": meeting_dict
             }
         )
     except Exception as e:
@@ -3278,7 +3308,7 @@ async def update_meeting(meeting_id: int, request: Request):
 
         # 其他字段
         for field in ['title', 'meeting_type', 'description', 'location', 'is_online',
-                       'online_link', 'duration_total', 'material_required', 'notes', 'status']:
+                       'online_link', 'duration_total', 'material_required', 'notes', 'minutes', 'status']:
             if field in data:
                 update_data[field] = data[field]
 

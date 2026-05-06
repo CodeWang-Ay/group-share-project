@@ -104,6 +104,7 @@ def init_db() -> None:
                 material_required BOOLEAN DEFAULT 1,
                 material_deadline TIMESTAMP,
                 notes TEXT,
+                minutes TEXT,
                 status VARCHAR(20) DEFAULT 'scheduled',
                 created_by INTEGER NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

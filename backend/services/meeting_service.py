@@ -44,7 +44,8 @@ class MeetingService:
         duration_total: int = 60,
         material_required: bool = True,
         material_deadline: Optional[datetime] = None,
-        notes: Optional[str] = None
+        notes: Optional[str] = None,
+        minutes: Optional[str] = None
     ) -> Meeting:
         """创建组会"""
         with get_db() as conn:
@@ -54,13 +55,13 @@ class MeetingService:
                 INSERT INTO meetings (
                     title, meeting_type, description, location, is_online, online_link,
                     scheduled_at, duration_total, material_required, material_deadline,
-                    notes, status, created_by, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'scheduled', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    notes, minutes, status, created_by, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'scheduled', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
             """, (
                 title, meeting_type, description, location, is_online, online_link,
                 scheduled_at.isoformat(), duration_total, material_required,
                 material_deadline.isoformat() if material_deadline else None,
-                notes, created_by
+                notes, minutes, created_by
             ))
 
             meeting_id = cursor.lastrowid
@@ -78,6 +79,7 @@ class MeetingService:
                 material_required=material_required,
                 material_deadline=material_deadline,
                 notes=notes,
+                minutes=minutes,
                 status='scheduled',
                 created_by=created_by,
                 created_at=datetime.now(),
@@ -92,7 +94,7 @@ class MeetingService:
             cursor.execute("""
                 SELECT id, title, meeting_type, description, location, is_online, online_link,
                        scheduled_at, duration_total, material_required, material_deadline,
-                       notes, status, created_by, created_at, updated_at
+                       notes, minutes, status, created_by, created_at, updated_at
                 FROM meetings WHERE id = ?
             """, (meeting_id,))
 
@@ -133,7 +135,7 @@ class MeetingService:
             query = f"""
                 SELECT id, title, meeting_type, description, location, is_online, online_link,
                        scheduled_at, duration_total, material_required, material_deadline,
-                       notes, status, created_by, created_at, updated_at
+                       notes, minutes, status, created_by, created_at, updated_at
                 FROM meetings
                 {where_clause}
                 ORDER BY scheduled_at DESC
@@ -183,7 +185,7 @@ class MeetingService:
         allowed_fields = [
             'title', 'meeting_type', 'description', 'location', 'is_online',
             'online_link', 'scheduled_at', 'duration_total', 'material_required',
-            'material_deadline', 'notes', 'status'
+            'material_deadline', 'notes', 'minutes', 'status'
         ]
 
         update_data = {}
