@@ -4678,8 +4678,9 @@ async def batch_star_papers(request: Request):
         data = await request.json()
         paper_ids = data.get("paper_ids", [])
         star = data.get("star", True)
+        library_type = data.get("library_type", "public")
 
-        count = PaperService.batch_star(paper_ids, current_user.id, star)
+        count = PaperService.batch_star(paper_ids, current_user.id, star, library_type)
         return JSONResponse(content={"success": True, "count": count})
     except Exception as e:
         return JSONResponse(
@@ -4742,6 +4743,7 @@ async def batch_set_paper_tags(request: Request):
         data = await request.json()
         paper_ids = data.get("paper_ids", [])
         tag = data.get("tag")
+        library_type = data.get("library_type", "public")
 
         if not tag:
             return JSONResponse(
@@ -4753,6 +4755,16 @@ async def batch_set_paper_tags(request: Request):
         count = 0
         with get_db() as conn:
             cursor = conn.cursor()
+
+            # 确保个人文献标签表存在
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS personal_paper_tags (
+                    personal_paper_id INTEGER NOT NULL,
+                    tag_id INTEGER NOT NULL,
+                    PRIMARY KEY (personal_paper_id, tag_id)
+                )
+            """)
+
             # 获取或创建标签
             cursor.execute("SELECT id FROM tags WHERE name = ?", (tag,))
             tag_row = cursor.fetchone()
@@ -4767,10 +4779,16 @@ async def batch_set_paper_tags(request: Request):
                 tag_id = cursor.fetchone()[0]
 
             for paper_id in paper_ids:
-                cursor.execute("""
-                    INSERT OR IGNORE INTO paper_tags (paper_id, tag_id)
-                    VALUES (?, ?)
-                """, (paper_id, tag_id))
+                if library_type == 'public':
+                    cursor.execute("""
+                        INSERT OR IGNORE INTO paper_tags (paper_id, tag_id)
+                        VALUES (?, ?)
+                    """, (paper_id, tag_id))
+                else:
+                    cursor.execute("""
+                        INSERT OR IGNORE INTO personal_paper_tags (personal_paper_id, tag_id)
+                        VALUES (?, ?)
+                    """, (paper_id, tag_id))
                 count += 1
 
         return JSONResponse(content={"success": True, "count": count})
@@ -4794,8 +4812,9 @@ async def batch_delete_papers(request: Request):
     try:
         data = await request.json()
         paper_ids = data.get("paper_ids", [])
+        library_type = data.get("library_type", "public")
 
-        count = PaperService.batch_delete(paper_ids, current_user.id, current_user.role)
+        count = PaperService.batch_delete(paper_ids, current_user.id, current_user.role, library_type)
         return JSONResponse(content={"success": True, "count": count})
     except Exception as e:
         return JSONResponse(
@@ -4805,7 +4824,7 @@ async def batch_delete_papers(request: Request):
 
 
 @app.get("/api/paper_database/{paper_id}")
-async def get_paper_detail(paper_id: int, request: Request):
+async def get_paper_detail(paper_id: int, request: Request, library_type: str = 'public'):
     """获取文献详情"""
     current_user = await get_current_user(request)
     if not current_user:
@@ -4814,7 +4833,7 @@ async def get_paper_detail(paper_id: int, request: Request):
             content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
         )
 
-    paper = PaperService.get_paper_by_id(paper_id, current_user.id)
+    paper = PaperService.get_paper_by_id(paper_id, current_user.id, library_type)
     if not paper:
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -4838,6 +4857,7 @@ async def upload_paper(request: Request):
         form = await request.form()
         title = form.get("title")
         pdf_file = form.get("pdf")
+        library_type = form.get("library_type", "public")
 
         if not title:
             return JSONResponse(
@@ -4876,7 +4896,7 @@ async def upload_paper(request: Request):
             arxiv_link=form.get("arxiv_link"),
             semantic_scholar_link=form.get("semantic_scholar_link"),
             tags=tags_list,
-            library_type=form.get("library_type", "public")
+            library_type=library_type
         )
 
         if paper is None and error:
@@ -4886,11 +4906,10 @@ async def upload_paper(request: Request):
                 content={"success": False, "message": error}
             )
 
-        # 成功：paper存在（可能是新建或关联已有文献）
-        message = error if paper and error else "文献上传成功"
+        # 成功：返回 paper dict
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
-            content={"success": True, "data": paper.to_dict(), "message": message}
+            content={"success": True, "data": paper, "message": error if error else "文献上传成功"}
         )
 
     except Exception as e:
@@ -4913,6 +4932,8 @@ async def update_paper_info(paper_id: int, request: Request):
 
     try:
         data = await request.json()
+        library_type = data.get("library_type", "public")
+
         year_val = None
         if data.get("year"):
             try:
@@ -4934,7 +4955,8 @@ async def update_paper_info(paper_id: int, request: Request):
             abstract=data.get("abstract"),
             arxiv_link=data.get("arxiv_link"),
             semantic_scholar_link=data.get("semantic_scholar_link"),
-            tags=tags_list
+            tags=tags_list,
+            library_type=library_type
         )
 
         if error:
@@ -4962,7 +4984,13 @@ async def toggle_paper_star(paper_id: int, request: Request):
             content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
         )
 
-    success = PaperService.toggle_star(paper_id, current_user.id)
+    try:
+        data = await request.json() if request.method == "POST" else {}
+        library_type = data.get("library_type", "public") if data else "public"
+    except:
+        library_type = "public"
+
+    success = PaperService.toggle_star(paper_id, current_user.id, library_type)
     return JSONResponse(content={"success": success})
 
 
@@ -4979,13 +5007,15 @@ async def update_paper_status(paper_id: int, request: Request):
     try:
         data = await request.json()
         status_val = data.get("status")
+        library_type = data.get("library_type", "public")
+
         if not status_val:
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 content={"success": False, "message": "状态不能为空"}
             )
 
-        success = PaperService.update_status(paper_id, current_user.id, status_val)
+        success = PaperService.update_status(paper_id, current_user.id, status_val, library_type)
         return JSONResponse(content={"success": success})
     except Exception as e:
         return JSONResponse(
@@ -5004,12 +5034,18 @@ async def delete_paper(paper_id: int, request: Request):
             content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
         )
 
-    success = PaperService.delete_paper(paper_id, current_user.id, current_user.role)
+    try:
+        data = await request.json() if request.headers.get("content-type") == "application/json" else {}
+        library_type = data.get("library_type", "public") if data else "public"
+    except:
+        library_type = "public"
+
+    success = PaperService.delete_paper(paper_id, current_user.id, current_user.role, library_type)
     return JSONResponse(content={"success": success})
 
 
 @app.get("/api/paper_database/{paper_id}/download")
-async def download_paper(paper_id: int, request: Request):
+async def download_paper(paper_id: int, request: Request, library_type: str = 'public'):
     """下载文献PDF"""
     current_user = await get_current_user(request)
     if not current_user:
@@ -5018,7 +5054,7 @@ async def download_paper(paper_id: int, request: Request):
             content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
         )
 
-    paper = PaperService.get_paper_by_id(paper_id, current_user.id)
+    paper = PaperService.get_paper_by_id(paper_id, current_user.id, library_type)
     if not paper:
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,

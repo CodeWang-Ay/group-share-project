@@ -201,6 +201,8 @@ def init_db() -> None:
                 semantic_scholar_link TEXT,
                 download_count INTEGER DEFAULT 0,
                 uploader_id INTEGER NOT NULL,
+                team_library INTEGER DEFAULT 1,
+                is_deleted INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (uploader_id) REFERENCES users(id) ON DELETE CASCADE
@@ -209,6 +211,7 @@ def init_db() -> None:
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_papers_hash ON papers(file_hash)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_papers_uploader ON papers(uploader_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_papers_year ON papers(year)")
+        # team_library 和 is_deleted 索引在迁移后创建
 
         # 创建标签表
         cursor.execute("""
@@ -223,24 +226,61 @@ def init_db() -> None:
         """)
         cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_tags_name ON tags(name)")
 
+        # 创建个人文献表（物理隔离）- 先创建，因为 paper_user_relations 有外键引用
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS personal_papers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                authors TEXT,
+                year INTEGER,
+                journal TEXT,
+                doi TEXT,
+                abstract TEXT,
+                pdf_path TEXT,
+                pdf_size INTEGER,
+                file_hash TEXT,
+                arxiv_link TEXT,
+                semantic_scholar_link TEXT,
+                download_count INTEGER DEFAULT 0,
+                owner_user_id INTEGER NOT NULL,
+                source_type TEXT DEFAULT 'uploaded',
+                source_paper_id INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (source_paper_id) REFERENCES papers(id) ON DELETE SET NULL
+            )
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_personal_papers_hash ON personal_papers(file_hash)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_personal_papers_owner ON personal_papers(owner_user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_personal_papers_doi ON personal_papers(doi)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_personal_papers_year ON personal_papers(year)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_personal_papers_source ON personal_papers(source_paper_id)")
+
         # 创建文献-用户关系表
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS paper_user_relations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                paper_id INTEGER NOT NULL,
+                paper_id INTEGER,                    -- 允许 NULL（个人文献不需要）
                 user_id INTEGER NOT NULL,
                 read_status TEXT DEFAULT 'unread',
                 is_starred INTEGER DEFAULT 0,
                 library_type TEXT DEFAULT 'public',
                 added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 last_viewed_at TIMESTAMP,
+                personal_paper_id INTEGER,           -- 个人文献关联
+                relation_type TEXT DEFAULT 'team_view',
                 FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (personal_paper_id) REFERENCES personal_papers(id) ON DELETE CASCADE
             )
         """)
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_paper_user_paper ON paper_user_relations(paper_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_paper_user_user ON paper_user_relations(user_id)")
-        cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_paper_user_unique ON paper_user_relations(paper_id, user_id)")
+        # 唯一索引：团队文献用 (paper_id, user_id)，个人文献用 (personal_paper_id, user_id)
+        cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_paper_user_unique ON paper_user_relations(paper_id, user_id) WHERE paper_id IS NOT NULL")
+        cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_personal_user_unique ON paper_user_relations(personal_paper_id, user_id) WHERE personal_paper_id IS NOT NULL")
+        # personal_paper_id 索引在迁移后创建
 
         # 创建文献-标签关联表
         cursor.execute("""
@@ -313,6 +353,84 @@ def init_db() -> None:
                     (tag_name, 'system')
                 )
             print(f"✅ 已创建 {len(system_tags)} 个系统标签")
+
+        # === 数据迁移：为已存在的表添加新字段 ===
+        # 检查 papers 表是否有 team_library 列
+        cursor.execute("PRAGMA table_info(papers)")
+        papers_columns = [col[1] for col in cursor.fetchall()]
+        if 'team_library' not in papers_columns:
+            cursor.execute("ALTER TABLE papers ADD COLUMN team_library INTEGER DEFAULT 1")
+            print("✅ 已为 papers 表添加 team_library 列")
+        if 'is_deleted' not in papers_columns:
+            cursor.execute("ALTER TABLE papers ADD COLUMN is_deleted INTEGER DEFAULT 0")
+            print("✅ 已为 papers 表添加 is_deleted 列")
+
+        # 检查 paper_user_relations 表的 paper_id 是否有 NOT NULL 约束
+        cursor.execute("PRAGMA table_info(paper_user_relations)")
+        relations_info = cursor.fetchall()
+        relations_columns = {col[1]: col[3] for col in relations_info}  # col[3] 是 notnull 标志
+
+        # 如果 paper_id 有 NOT NULL 约束（col[3]=1），需要重建表
+        if relations_columns.get('paper_id', 0) == 1:
+            # 重建 paper_user_relations 表，移除 paper_id 的 NOT NULL 约束
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS paper_user_relations_new (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    paper_id INTEGER,
+                    user_id INTEGER NOT NULL,
+                    read_status TEXT DEFAULT 'unread',
+                    is_starred INTEGER DEFAULT 0,
+                    library_type TEXT DEFAULT 'public',
+                    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_viewed_at TIMESTAMP,
+                    personal_paper_id INTEGER,
+                    relation_type TEXT DEFAULT 'team_view',
+                    FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                    FOREIGN KEY (personal_paper_id) REFERENCES personal_papers(id) ON DELETE CASCADE
+                )
+            """)
+            # 复制数据
+            cursor.execute("""
+                INSERT INTO paper_user_relations_new
+                SELECT id, paper_id, user_id, read_status, is_starred, library_type, added_at, last_viewed_at,
+                       personal_paper_id, relation_type
+                FROM paper_user_relations
+            """)
+            # 删除旧表
+            cursor.execute("DROP TABLE paper_user_relations")
+            # 重命名新表
+            cursor.execute("ALTER TABLE paper_user_relations_new RENAME TO paper_user_relations")
+            print("✅ 已重建 paper_user_relations 表，移除 paper_id 的 NOT NULL 约束")
+
+        # 检查是否缺少新列
+        cursor.execute("PRAGMA table_info(paper_user_relations)")
+        relations_columns = [col[1] for col in cursor.fetchall()]
+        if 'personal_paper_id' not in relations_columns:
+            cursor.execute("ALTER TABLE paper_user_relations ADD COLUMN personal_paper_id INTEGER")
+            print("✅ 已为 paper_user_relations 表添加 personal_paper_id 列")
+        if 'relation_type' not in relations_columns:
+            cursor.execute("ALTER TABLE paper_user_relations ADD COLUMN relation_type TEXT DEFAULT 'team_view'")
+            print("✅ 已为 paper_user_relations 表添加 relation_type 列")
+
+        # 迁移现有数据：标记为团队文献和团队视图
+        cursor.execute("UPDATE papers SET team_library = 1 WHERE team_library IS NULL")
+        cursor.execute("UPDATE paper_user_relations SET relation_type = 'team_view' WHERE relation_type IS NULL")
+
+        # 创建新字段的索引（迁移后）
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_papers_team_library ON papers(team_library)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_papers_doi ON papers(doi)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_papers_deleted ON papers(is_deleted)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_paper_user_personal ON paper_user_relations(personal_paper_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_paper_user_paper ON paper_user_relations(paper_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_paper_user_user ON paper_user_relations(user_id)")
+        # 唯一索引：分开处理团队和个人文献
+        cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_paper_user_unique ON paper_user_relations(paper_id, user_id) WHERE paper_id IS NOT NULL")
+        cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_personal_user_unique ON paper_user_relations(personal_paper_id, user_id) WHERE personal_paper_id IS NOT NULL")
+        print("✅ 已完成现有数据迁移")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_papers_deleted ON papers(is_deleted)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_paper_user_personal ON paper_user_relations(personal_paper_id)")
+        print("✅ 已完成现有数据迁移")
 
 
 def close_db() -> None:
