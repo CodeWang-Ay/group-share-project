@@ -1013,27 +1013,48 @@ class PaperService:
 
     @classmethod
     def batch_delete(cls, paper_ids: List[int], user_id: int, user_role: str,
-                     library_type: str = 'public') -> int:
+                     library_type: str = 'public') -> dict:
         """
         批量删除文献
 
         Args:
             library_type: 'public' (团队库) 或 'private' (个人库)
+
+        Returns:
+            dict: {'success': bool, 'deleted_count': int, 'failed_messages': list}
         """
-        count = 0
+        deleted_count = 0
+        failed_messages = []
         for paper_id in paper_ids:
-            if cls.delete_paper(paper_id, user_id, user_role, library_type):
-                count += 1
-        return count
+            result = cls.delete_paper(paper_id, user_id, user_role, library_type)
+            if result['success']:
+                deleted_count += 1
+            else:
+                failed_messages.append(f"文献ID {paper_id}: {result['message']}")
+
+        if deleted_count == len(paper_ids):
+            return {'success': True, 'deleted_count': deleted_count, 'message': f'成功删除 {deleted_count} 篇文献'}
+        elif deleted_count == 0:
+            return {'success': False, 'deleted_count': 0, 'message': '删除失败', 'failed_messages': failed_messages}
+        else:
+            return {
+                'success': True,
+                'deleted_count': deleted_count,
+                'message': f'成功删除 {deleted_count} 篇，失败 {len(paper_ids) - deleted_count} 篇',
+                'failed_messages': failed_messages
+            }
 
     @classmethod
     def delete_paper(cls, paper_id: int, user_id: int, user_role: str,
-                     library_type: str = 'public') -> bool:
+                     library_type: str = 'public') -> dict:
         """
         删除文献（根据库类型调用不同删除逻辑）
 
         Args:
             library_type: 'public' (团队库) 或 'private' (个人库)
+
+        Returns:
+            dict: {'success': bool, 'message': str}
         """
         if library_type == 'public':
             return cls.delete_team_paper(paper_id, user_id, user_role)
@@ -1041,11 +1062,14 @@ class PaperService:
             return cls.delete_personal_paper(paper_id, user_id)
 
     @classmethod
-    def delete_team_paper(cls, paper_id: int, user_id: int, user_role: str) -> bool:
+    def delete_team_paper(cls, paper_id: int, user_id: int, user_role: str) -> dict:
         """
         删除团队文献（不影响个人库副本）
 
         权限：上传者或管理员
+
+        Returns:
+            dict: {'success': bool, 'message': str}
         """
         try:
             with get_db() as conn:
@@ -1059,13 +1083,13 @@ class PaperService:
                 """, (paper_id,))
                 row = cursor.fetchone()
                 if not row:
-                    return False
+                    return {'success': False, 'message': '删除失败：文献不存在'}
 
                 uploader_id, pdf_path, title = row
 
                 # 2. 权限校验：只有上传者和管理员可以删除
                 if uploader_id != user_id and user_role != 'admin':
-                    return False
+                    return {'success': False, 'message': '删除失败：您暂无该操作权限，仅能删除自己创建的文献'}
 
                 # 3. 检查个人库副本数量（可选提示）
                 cursor.execute("""
@@ -1086,18 +1110,21 @@ class PaperService:
                 cursor.execute("DELETE FROM paper_user_relations WHERE paper_id = ?", (paper_id,))
                 cursor.execute("DELETE FROM papers WHERE id = ?", (paper_id,))
 
-                return True
+                return {'success': True, 'message': '删除成功'}
 
         except Exception as e:
             print(f"删除团队文献失败: {str(e)}")
-            return False
+            return {'success': False, 'message': f'删除失败：{str(e)}'}
 
     @classmethod
-    def delete_personal_paper(cls, personal_paper_id: int, user_id: int) -> bool:
+    def delete_personal_paper(cls, personal_paper_id: int, user_id: int) -> dict:
         """
         删除个人文献（不影响团队库源文献）
 
         权限：仅拥有者
+
+        Returns:
+            dict: {'success': bool, 'message': str}
         """
         try:
             with get_db() as conn:
@@ -1111,7 +1138,7 @@ class PaperService:
                 """, (personal_paper_id, user_id))
                 row = cursor.fetchone()
                 if not row:
-                    return False
+                    return {'success': False, 'message': '删除失败：文献不存在或无权限'}
 
                 pdf_path, source_paper_id = row
 
@@ -1133,11 +1160,11 @@ class PaperService:
 
                 # 4. 不影响源团队文献（如果有 source_paper_id）
 
-                return True
+                return {'success': True, 'message': '删除成功'}
 
         except Exception as e:
             print(f"删除个人文献失败: {str(e)}")
-            return False
+            return {'success': False, 'message': f'删除失败：{str(e)}'}
 
     @classmethod
     def get_paper_by_id(cls, paper_id: int, user_id: int,
@@ -1223,12 +1250,14 @@ class PaperService:
                      abstract: Optional[str] = None, arxiv_link: Optional[str] = None,
                      semantic_scholar_link: Optional[str] = None,
                      tags: Optional[List[str]] = None,
+                     read_status: Optional[str] = None,
                      library_type: str = 'public') -> Tuple[Optional[Dict], Optional[str]]:
         """
         更新文献元数据（不含PDF）
 
         Args:
             library_type: 'public' (团队库) 或 'private' (个人库)
+            read_status: 阅读状态 'unread' / 'reading' / 'read'
         """
         try:
             with get_db() as conn:
@@ -1371,6 +1400,45 @@ class PaperService:
                                 cursor.execute("SELECT last_insert_rowid()")
                                 tag_id = cursor.fetchone()[0]
                             cursor.execute("INSERT OR IGNORE INTO personal_paper_tags (personal_paper_id, tag_id) VALUES (?, ?)", (paper_id, tag_id))
+
+                # 更新阅读状态
+                if read_status is not None:
+                    if library_type == 'public':
+                        # 团队文献：更新 paper_user_relations
+                        cursor.execute("""
+                            SELECT id FROM paper_user_relations
+                            WHERE paper_id = ? AND user_id = ?
+                        """, (paper_id, user_id))
+                        relation = cursor.fetchone()
+                        if relation:
+                            cursor.execute("""
+                                UPDATE paper_user_relations SET read_status = ?
+                                WHERE paper_id = ? AND user_id = ?
+                            """, (read_status, paper_id, user_id))
+                        else:
+                            cursor.execute("""
+                                INSERT INTO paper_user_relations
+                                (paper_id, user_id, library_type, relation_type, read_status, added_at)
+                                VALUES (?, ?, 'public', 'team_view', ?, ?)
+                            """, (paper_id, user_id, read_status, datetime.now()))
+                    else:
+                        # 个人文献：更新 paper_user_relations
+                        cursor.execute("""
+                            SELECT id FROM paper_user_relations
+                            WHERE personal_paper_id = ? AND user_id = ?
+                        """, (paper_id, user_id))
+                        relation = cursor.fetchone()
+                        if relation:
+                            cursor.execute("""
+                                UPDATE paper_user_relations SET read_status = ?
+                                WHERE personal_paper_id = ? AND user_id = ?
+                            """, (read_status, paper_id, user_id))
+                        else:
+                            cursor.execute("""
+                                INSERT INTO paper_user_relations
+                                (user_id, personal_paper_id, library_type, relation_type, read_status, added_at)
+                                VALUES (?, ?, 'private', 'personal_owner', ?, ?)
+                            """, (user_id, paper_id, read_status, datetime.now()))
 
                 # 返回更新后的文献信息
                 return cls.get_paper_by_id(paper_id, user_id, library_type), None

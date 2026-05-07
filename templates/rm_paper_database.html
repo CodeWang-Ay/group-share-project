@@ -72,6 +72,9 @@
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 min-h-screen flex flex-col">
+    <!-- Toast 提示容器 -->
+    <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 items-center"></div>
+
     <!-- 顶部导航栏 -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div class="container mx-auto px-4">
@@ -454,23 +457,24 @@
                             <input type="checkbox" id="header-checkbox" class="w-4 h-4 rounded border-gray-300">
                         </div>
                         <div class="col-span-4">文献信息</div>
-                        <div id="uploader-header" class="col-span-2 text-center">上传者</div>
-                        <div class="col-span-2 text-center">分类信息</div>
+                        <div id="uploader-header" class="col-span-1 text-center">上传者</div>
+                        <div class="col-span-1 text-center">分类</div>
                         <div class="col-span-1 text-center">年份</div>
                         <div class="col-span-1 text-center">状态</div>
+                        <div class="col-span-1 text-center">上传时间</div>
                         <div class="col-span-2 text-center">操作</div>
                     </div>
                 </div>
 
                 <!-- 文献列表内容 -->
                 <div id="paper-list">
-                    <!-- 文献1 -->
+                    <!-- 文献1 - 示例数据 -->
                     <div class="paper-row px-4 py-4 border-b border-gray-100" data-paper-id="1">
                         <div class="grid grid-cols-12 gap-3 items-center">
                             <div class="checkbox-cell col-span-1">
                                 <input type="checkbox" class="paper-checkbox w-4 h-4 rounded border-gray-300" data-paper-id="1">
                             </div>
-                            <div class="col-span-5 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(1)">
+                            <div class="col-span-4 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(1)">
                                 <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
                                     <i class="fa fa-file-pdf-o text-blue-500 text-lg"></i>
                                 </div>
@@ -479,30 +483,27 @@
                                         <h3 class="font-medium text-primary truncate">Attention Is All You Need</h3>
                                         <i class="fa fa-star text-yellow-500 paper-starred" title="已收藏"></i>
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-1 line-clamp-1">Transformer架构，完全基于自注意力机制，开创了NLP新纪元</p>
-                                    <div class="mt-2 flex gap-1">
-                                        <span class="tag-badge bg-blue-100 text-blue-700">Transformer</span>
-                                        <span class="tag-badge bg-gray-100 text-gray-600">NLP</span>
-                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1 line-clamp-1">Transformer架构</p>
                                 </div>
                             </div>
-                            <div class="col-span-2 text-center text-sm text-gray-600">Vaswani et al.</div>
-                            <div class="col-span-2 text-center text-sm text-gray-600">2017</div>
+                            <div class="col-span-1 text-center text-sm text-gray-600">张三</div>
+                            <div class="col-span-1 text-center text-sm">
+                                <span class="tag-badge bg-blue-100 text-blue-700">NLP</span>
+                            </div>
+                            <div class="col-span-1 text-center text-sm text-gray-600">2017</div>
                             <div class="col-span-1 text-center">
                                 <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">已读</span>
                             </div>
+                            <div class="col-span-1 text-center text-xs text-gray-500">2025-04-20</div>
                             <div class="col-span-2 text-center">
-                                <div class="flex gap-2 justify-center">
-                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.toggleStar(1)" title="收藏">
+                                <div class="flex gap-1 justify-center">
+                                    <button class="p-1 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.toggleStar(1)" title="收藏">
                                         <i class="fa fa-star text-yellow-500"></i>
                                     </button>
-                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.downloadPaper(1)" title="下载">
+                                    <button class="p-1 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.downloadPaper(1)" title="下载">
                                         <i class="fa fa-download text-gray-500"></i>
                                     </button>
-                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.editPaper(1)" title="编辑">
-                                        <i class="fa fa-edit text-gray-500"></i>
-                                    </button>
-                                    <button class="p-2 hover:bg-red-50 rounded transition-colors" onclick="PaperManager.deletePaper(1)" title="删除">
+                                    <button class="p-1 hover:bg-red-50 rounded transition-colors" onclick="PaperManager.deletePaper(1)" title="删除">
                                         <i class="fa fa-trash-o text-red-500"></i>
                                     </button>
                                 </div>
@@ -510,44 +511,39 @@
                         </div>
                     </div>
 
-                    <!-- 文献2 -->
+                    <!-- 文献2 - 示例数据 -->
                     <div class="paper-row px-4 py-4 border-b border-gray-100" data-paper-id="2">
                         <div class="grid grid-cols-12 gap-3 items-center">
                             <div class="checkbox-cell col-span-1">
                                 <input type="checkbox" class="paper-checkbox w-4 h-4 rounded border-gray-300" data-paper-id="2">
                             </div>
-                            <div class="col-span-5 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(2)">
+                            <div class="col-span-4 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(2)">
                                 <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
                                     <i class="fa fa-file-pdf-o text-purple-500 text-lg"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="font-medium text-primary truncate">BERT: Pre-training of Deep Bidirectional Transformers</h3>
-                                    </div>
-                                    <p class="text-xs text-gray-500 mt-1 line-clamp-1">双向预训练模型，大幅提升NLP任务效果</p>
-                                    <div class="mt-2 flex gap-1">
-                                        <span class="tag-badge bg-purple-100 text-purple-700">BERT</span>
-                                        <span class="tag-badge bg-gray-100 text-gray-600">预训练</span>
-                                    </div>
+                                    <h3 class="font-medium text-primary truncate">BERT: Pre-training of Deep Bidirectional Transformers</h3>
+                                    <p class="text-xs text-gray-500 mt-1 line-clamp-1">双向预训练模型</p>
                                 </div>
                             </div>
-                            <div class="col-span-2 text-center text-sm text-gray-600">Devlin et al.</div>
-                            <div class="col-span-2 text-center text-sm text-gray-600">2018</div>
+                            <div class="col-span-1 text-center text-sm text-gray-600">李四</div>
+                            <div class="col-span-1 text-center text-sm">
+                                <span class="tag-badge bg-purple-100 text-purple-700">BERT</span>
+                            </div>
+                            <div class="col-span-1 text-center text-sm text-gray-600">2018</div>
                             <div class="col-span-1 text-center">
                                 <span class="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">在读</span>
                             </div>
+                            <div class="col-span-1 text-center text-xs text-gray-500">2025-04-15</div>
                             <div class="col-span-2 text-center">
-                                <div class="flex gap-2 justify-center">
-                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.toggleStar(2)" title="收藏">
+                                <div class="flex gap-1 justify-center">
+                                    <button class="p-1 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.toggleStar(2)" title="收藏">
                                         <i class="fa fa-star-o text-gray-400"></i>
                                     </button>
-                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.downloadPaper(2)" title="下载">
+                                    <button class="p-1 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.downloadPaper(2)" title="下载">
                                         <i class="fa fa-download text-gray-500"></i>
                                     </button>
-                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.editPaper(2)" title="编辑">
-                                        <i class="fa fa-edit text-gray-500"></i>
-                                    </button>
-                                    <button class="p-2 hover:bg-red-50 rounded transition-colors" onclick="PaperManager.deletePaper(2)" title="删除">
+                                    <button class="p-1 hover:bg-red-50 rounded transition-colors" onclick="PaperManager.deletePaper(2)" title="删除">
                                         <i class="fa fa-trash-o text-red-500"></i>
                                     </button>
                                 </div>
@@ -555,45 +551,42 @@
                         </div>
                     </div>
 
-                    <!-- 文献3 -->
+                    <!-- 文献3 - 示例数据 -->
                     <div class="paper-row px-4 py-4 border-b border-gray-100" data-paper-id="3">
                         <div class="grid grid-cols-12 gap-3 items-center">
                             <div class="checkbox-cell col-span-1">
                                 <input type="checkbox" class="paper-checkbox w-4 h-4 rounded border-gray-300" data-paper-id="3">
                             </div>
-                            <div class="col-span-5 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(3)">
-                                <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-                                    <i class="fa fa-file-pdf-o text-green-500 text-lg"></i>
+                            <div class="col-span-4 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(3)">
+                                <div class="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
+                                    <i class="fa fa-file-pdf-o text-red-500 text-lg"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2">
                                         <h3 class="font-medium text-primary truncate">GPT-4 Technical Report</h3>
                                         <i class="fa fa-star text-yellow-500 paper-starred" title="已收藏"></i>
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-1 line-clamp-1">大型多模态模型技术报告，展示GPT-4的能力与局限</p>
-                                    <div class="mt-2 flex gap-1">
-                                        <span class="tag-badge bg-red-100 text-red-700">大模型</span>
-                                        <span class="tag-badge bg-gray-100 text-gray-600">GPT</span>
-                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1 line-clamp-1">大型多模态模型</p>
                                 </div>
                             </div>
-                            <div class="col-span-2 text-center text-sm text-gray-600">OpenAI</div>
-                            <div class="col-span-2 text-center text-sm text-gray-600">2023</div>
+                            <div class="col-span-1 text-center text-sm text-gray-600">王五</div>
+                            <div class="col-span-1 text-center text-sm">
+                                <span class="tag-badge bg-red-100 text-red-700">大模型</span>
+                            </div>
+                            <div class="col-span-1 text-center text-sm text-gray-600">2023</div>
                             <div class="col-span-1 text-center">
                                 <span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">未读</span>
                             </div>
+                            <div class="col-span-1 text-center text-xs text-gray-500">2025-04-10</div>
                             <div class="col-span-2 text-center">
-                                <div class="flex gap-2 justify-center">
-                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.toggleStar(3)" title="收藏">
+                                <div class="flex gap-1 justify-center">
+                                    <button class="p-1 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.toggleStar(3)" title="收藏">
                                         <i class="fa fa-star text-yellow-500"></i>
                                     </button>
-                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.downloadPaper(3)" title="下载">
+                                    <button class="p-1 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.downloadPaper(3)" title="下载">
                                         <i class="fa fa-download text-gray-500"></i>
                                     </button>
-                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.editPaper(3)" title="编辑">
-                                        <i class="fa fa-edit text-gray-500"></i>
-                                    </button>
-                                    <button class="p-2 hover:bg-red-50 rounded transition-colors" onclick="PaperManager.deletePaper(3)" title="删除">
+                                    <button class="p-1 hover:bg-red-50 rounded transition-colors" onclick="PaperManager.deletePaper(3)" title="删除">
                                         <i class="fa fa-trash-o text-red-500"></i>
                                     </button>
                                 </div>
@@ -601,44 +594,39 @@
                         </div>
                     </div>
 
-                    <!-- 文献4 -->
+                    <!-- 文献4 - 示例数据 -->
                     <div class="paper-row px-4 py-4" data-paper-id="4">
                         <div class="grid grid-cols-12 gap-3 items-center">
                             <div class="checkbox-cell col-span-1">
                                 <input type="checkbox" class="paper-checkbox w-4 h-4 rounded border-gray-300" data-paper-id="4">
                             </div>
-                            <div class="col-span-5 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(4)">
+                            <div class="col-span-4 flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(4)">
                                 <div class="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center">
                                     <i class="fa fa-file-pdf-o text-orange-500 text-lg"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="font-medium text-primary truncate">Deep Residual Learning for Image Recognition</h3>
-                                    </div>
-                                    <p class="text-xs text-gray-500 mt-1 line-clamp-1">ResNet深度残差网络，解决深层网络训练难题</p>
-                                    <div class="mt-2 flex gap-1">
-                                        <span class="tag-badge bg-orange-100 text-orange-700">CNN</span>
-                                        <span class="tag-badge bg-gray-100 text-gray-600">ResNet</span>
-                                    </div>
+                                    <h3 class="font-medium text-primary truncate">Deep Residual Learning for Image Recognition</h3>
+                                    <p class="text-xs text-gray-500 mt-1 line-clamp-1">ResNet深度残差网络</p>
                                 </div>
                             </div>
-                            <div class="col-span-2 text-center text-sm text-gray-600">He et al.</div>
-                            <div class="col-span-2 text-center text-sm text-gray-600">2016</div>
+                            <div class="col-span-1 text-center text-sm text-gray-600">赵六</div>
+                            <div class="col-span-1 text-center text-sm">
+                                <span class="tag-badge bg-orange-100 text-orange-700">CNN</span>
+                            </div>
+                            <div class="col-span-1 text-center text-sm text-gray-600">2016</div>
                             <div class="col-span-1 text-center">
                                 <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">已读</span>
                             </div>
+                            <div class="col-span-1 text-center text-xs text-gray-500">2025-03-20</div>
                             <div class="col-span-2 text-center">
-                                <div class="flex gap-2 justify-center">
-                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.toggleStar(4)" title="收藏">
+                                <div class="flex gap-1 justify-center">
+                                    <button class="p-1 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.toggleStar(4)" title="收藏">
                                         <i class="fa fa-star-o text-gray-400"></i>
                                     </button>
-                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.downloadPaper(4)" title="下载">
+                                    <button class="p-1 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.downloadPaper(4)" title="下载">
                                         <i class="fa fa-download text-gray-500"></i>
                                     </button>
-                                    <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.editPaper(4)" title="编辑">
-                                        <i class="fa fa-edit text-gray-500"></i>
-                                    </button>
-                                    <button class="p-2 hover:bg-red-50 rounded transition-colors" onclick="PaperManager.deletePaper(4)" title="删除">
+                                    <button class="p-1 hover:bg-red-50 rounded transition-colors" onclick="PaperManager.deletePaper(4)" title="删除">
                                         <i class="fa fa-trash-o text-red-500"></i>
                                     </button>
                                 </div>
@@ -868,6 +856,14 @@
                             <option value="private">我的文献库（仅自己可见）</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">阅读状态</label>
+                        <select id="paper-read-status" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30">
+                            <option value="unread">未读</option>
+                            <option value="reading">在读</option>
+                            <option value="read">已读</option>
+                        </select>
+                    </div>
                     <div id="pdf-upload-area">
                         <label class="block text-sm font-medium text-gray-700 mb-1">PDF文件</label>
                         <div class="flex items-center gap-2">
@@ -948,6 +944,29 @@
             totalCount: 0,
             currentPaperPdfPath: null,
             currentLibraryType: 'public',  // 'public' = 团队库, 'private' = 个人库
+
+            // Toast 提示函数
+            showToast(message, type = 'success') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+                const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : 'fa-info-circle';
+
+                toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transform -translate-y-full opacity-0 transition-all duration-300`;
+                toast.innerHTML = `<i class="fa ${icon}"></i><span>${message}</span>`;
+                container.appendChild(toast);
+
+                // 动画显示（从上方滑入）
+                setTimeout(() => {
+                    toast.classList.remove('-translate-y-full', 'opacity-0');
+                }, 10);
+
+                // 3秒后消失（向上滑出）
+                setTimeout(() => {
+                    toast.classList.add('-translate-y-full', 'opacity-0');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            },
 
             getAuthHeaders() {
                 const headers = {};
@@ -1038,7 +1057,7 @@
                             <div class="checkbox-cell col-span-1">
                                 <input type="checkbox" class="paper-checkbox w-4 h-4 rounded border-gray-300" data-paper-id="${paper.id}">
                             </div>
-                            <div class="${isTeamLibrary ? 'col-span-3' : 'col-span-4'} flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(${paper.id})">
+                            <div class="${isTeamLibrary ? 'col-span-4' : 'col-span-5'} flex items-center gap-3 cursor-pointer" onclick="PaperManager.openDetail(${paper.id})">
                                 <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
                                     <i class="fa fa-file-pdf-o text-blue-500 text-lg"></i>
                                 </div>
@@ -1050,8 +1069,8 @@
                                     <p class="text-xs text-gray-500 mt-1 line-clamp-1">${paper.abstract || ''}</p>
                                 </div>
                             </div>
-                            ${isTeamLibrary ? `<div class="col-span-2 text-center text-sm text-gray-600">${paper.uploader_name || '-'}</div>` : ''}
-                            <div class="col-span-2 text-center">
+                            ${isTeamLibrary ? `<div class="col-span-1 text-center text-sm text-gray-600">${paper.uploader_name || '-'}</div>` : ''}
+                            <div class="col-span-1 text-center">
                                 <div class="flex flex-wrap gap-1 justify-center">
                                     ${(paper.tags || []).map(t => `<span class="tag-badge bg-${t.tag_type === 'system' ? 'blue' : 'gray'}-100 text-${t.tag_type === 'system' ? 'blue' : 'gray'}-700">${t.name}</span>`).join('')}
                                 </div>
@@ -1060,6 +1079,7 @@
                             <div class="col-span-1 text-center">
                                 <span class="px-2 py-1 rounded-full text-xs ${this.getStatusStyle(paper.read_status)}">${this.getStatusText(paper.read_status)}</span>
                             </div>
+                            ${isTeamLibrary ? `<div class="col-span-1 text-center text-sm text-gray-600">${paper.created_at ? paper.created_at.split('.')[0].replace('T', ' ') : '-'}</div>` : ''}
                             <div class="col-span-2 text-center">
                                 <div class="flex gap-1 justify-center flex-wrap">
                                     <button class="p-2 hover:bg-gray-100 rounded transition-colors" onclick="PaperManager.toggleStar(${paper.id})" title="收藏">
@@ -1245,7 +1265,7 @@
                 document.getElementById('detail-pdf-link').href = `${API_BASE_URL}/api/paper_database/${paperId}/download?library_type=${this.currentLibraryType}`;
                 document.getElementById('detail-download-count').textContent = `下载 ${paper.download_count || 0} 次`;
                 document.getElementById('detail-adder').textContent = paper.uploader_name || '未知';
-                document.getElementById('detail-added-time').textContent = paper.created_at ? paper.created_at.split('T')[0] : '未知';
+                document.getElementById('detail-added-time').textContent = paper.created_at ? paper.created_at.split('.')[0].replace('T', ' ') : '未知';
                 document.getElementById('paper-detail-modal').classList.remove('hidden');
             },
 
@@ -1278,7 +1298,7 @@
                     }
                 } catch (error) {
                     console.error('更新状态失败:', error);
-                    alert('更新状态失败');
+                    this.showToast('更新状态失败', 'error');
                 }
             },
 
@@ -1328,14 +1348,15 @@
                         });
                         const result = await response.json();
                         if (result.success) {
+                            this.showToast(result.message || '删除成功', 'success');
                             await this.loadPapers();
                             await this.updateStats();
                         } else {
-                            alert(result.message || '删除失败');
+                            this.showToast(result.message || '删除失败', 'error');
                         }
                     } catch (error) {
                         console.error('删除失败:', error);
-                        alert('删除失败');
+                        this.showToast('删除失败', 'error');
                     }
                 }
             },
@@ -1348,15 +1369,15 @@
                     });
                     const result = await response.json();
                     if (result.success) {
-                        alert('已添加到个人文献库');
+                        this.showToast('已添加到个人文献库', 'success');
                         await this.loadPapers();
                         await this.updateStats();
                     } else {
-                        alert(result.message || '添加失败');
+                        this.showToast(result.message || '添加失败', 'error');
                     }
                 } catch (error) {
                     console.error('添加失败:', error);
-                    alert('添加失败');
+                    this.showToast('添加失败', 'error');
                 }
             },
 
@@ -1369,14 +1390,14 @@
                     });
                     const result = await response.json();
                     if (result.success) {
-                        alert(result.message || '已分享到团队文献库');
+                        this.showToast(result.message || '已分享到团队文献库', 'success');
                         await this.loadPapers();
                     } else {
-                        alert(result.message || '分享失败');
+                        this.showToast(result.message || '分享失败', 'error');
                     }
                 } catch (error) {
                     console.error('分享失败:', error);
-                    alert('分享失败');
+                    this.showToast('分享失败', 'error');
                 }
             },
 
@@ -1404,6 +1425,7 @@
                             document.getElementById('paper-doi').value = paper.doi || '';
                             document.getElementById('paper-abstract').value = paper.abstract || '';
                             document.getElementById('paper-tags').value = (paper.tags || []).map(t => t.name).join(', ');
+                            document.getElementById('paper-read-status').value = paper.read_status || 'unread';
                             // 显示已有PDF文件名
                             if (paper.pdf_path) {
                                 const fileName = paper.pdf_path.split('/').pop().replace(/^\d+_/, '');
@@ -1411,11 +1433,11 @@
                             }
                             this.currentPaperPdfPath = paper.pdf_path;
                         } else {
-                            alert(result.message || '获取文献详情失败');
+                            this.showToast(result.message || '获取文献详情失败', 'error');
                         }
                     } catch (e) {
                         console.error('加载文献详情失败:', e);
-                        alert('加载文献详情失败');
+                        this.showToast('加载文献详情失败', 'error');
                     }
                     this.currentPaperId = paperId;
                 } else {
@@ -1443,6 +1465,7 @@
                 document.getElementById('paper-doi').value = '';
                 document.getElementById('paper-abstract').value = '';
                 document.getElementById('paper-tags').value = '';
+                document.getElementById('paper-read-status').value = 'unread';
                 document.getElementById('pdf-file-name').textContent = '未选择文件';
                 document.getElementById('paper-pdf').value = '';
                 document.getElementById('doi-input').value = '';
@@ -1472,8 +1495,8 @@
 
             fetchByDOI() {
                 const doi = document.getElementById('doi-input').value;
-                if (!doi) { alert('请输入DOI'); return; }
-                alert('DOI导入功能开发中，请手动录入');
+                if (!doi) { this.showToast('请输入DOI', 'error'); return; }
+                this.showToast('DOI导入功能开发中，请手动录入', 'info');
                 this.switchImportMode('manual');
             },
 
@@ -1488,7 +1511,7 @@
 
             async savePaper() {
                 const title = document.getElementById('paper-title').value;
-                if (!title) { alert('请填写文献标题'); return; }
+                if (!title) { this.showToast('请填写文献标题', 'error'); return; }
 
                 try {
                     if (this.currentPaperId) {
@@ -1507,6 +1530,7 @@
                                 doi: document.getElementById('paper-doi').value,
                                 abstract: document.getElementById('paper-abstract').value,
                                 tags: document.getElementById('paper-tags').value,
+                                read_status: document.getElementById('paper-read-status').value,
                                 library_type: this.currentLibraryType
                             })
                         });
@@ -1515,14 +1539,14 @@
                             this.closeEditModal();
                             await this.loadPapers();
                             await this.updateStats();
-                            alert('文献更新成功');
+                            this.showToast('文献更新成功', 'success');
                         } else {
-                            alert(result.message || '更新失败');
+                            this.showToast(result.message || '更新失败', 'error');
                         }
                     } else {
                         // 添加模式：使用 POST API 上传新文献
                         const pdfFile = document.getElementById('paper-pdf').files[0];
-                        if (!pdfFile) { alert('请上传PDF文件'); return; }
+                        if (!pdfFile) { this.showToast('请上传PDF文件', 'error'); return; }
 
                         const formData = new FormData();
                         formData.append('title', title);
@@ -1545,14 +1569,14 @@
                             this.closeEditModal();
                             await this.loadPapers();
                             await this.updateStats();
-                            alert('文献添加成功');
+                            this.showToast('文献添加成功', 'success');
                         } else {
-                            alert(result.message || '添加失败');
+                            this.showToast(result.message || '添加失败', 'error');
                         }
                     }
                 } catch (error) {
                     console.error('保存失败:', error);
-                    alert('保存失败');
+                    this.showToast('保存失败', 'error');
                 }
             },
 
@@ -1596,7 +1620,7 @@
             },
 
             async batchStar(star) {
-                if (this.selectedPapers.length === 0) { alert('请先选择文献'); return; }
+                if (this.selectedPapers.length === 0) { this.showToast('请先选择文献', 'error'); return; }
                 try {
                     const response = await fetch(`${API_BASE_URL}/api/paper_database/batch/star`, {
                         method: 'POST',
@@ -1604,21 +1628,23 @@
                             ...this.getAuthHeaders(),
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ paper_ids: this.selectedPapers, star })
+                        body: JSON.stringify({ paper_ids: this.selectedPapers, star, library_type: this.currentLibraryType })
                     });
                     const result = await response.json();
                     if (result.success) {
                         this.cancelSelection();
                         await this.loadPapers();
                         await this.updateStats();
+                        this.showToast(`已批量${star ? '收藏' : '取消收藏'} ${result.count || this.selectedPapers.length} 篇文献`, 'success');
                     }
                 } catch (error) {
                     console.error('批量收藏失败:', error);
+                    this.showToast('批量收藏失败', 'error');
                 }
             },
 
             openBatchTagModal() {
-                if (this.selectedPapers.length === 0) { alert('请先选择文献'); return; }
+                if (this.selectedPapers.length === 0) { this.showToast('请先选择文献', 'error'); return; }
                 document.getElementById('batch-tag-count').textContent = this.selectedPapers.length;
                 document.getElementById('batch-tag-modal').classList.remove('hidden');
             },
@@ -1629,7 +1655,7 @@
 
             async applyBatchTag() {
                 const tag = document.getElementById('batch-new-tag').value;
-                if (!tag) { alert('请选择或输入标签'); return; }
+                if (!tag) { this.showToast('请选择或输入标签', 'error'); return; }
                 try {
                     const response = await fetch(`${API_BASE_URL}/api/paper_database/batch/tags`, {
                         method: 'POST',
@@ -1637,22 +1663,23 @@
                             ...this.getAuthHeaders(),
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ paper_ids: this.selectedPapers, tag })
+                        body: JSON.stringify({ paper_ids: this.selectedPapers, tag, library_type: this.currentLibraryType })
                     });
                     const result = await response.json();
                     if (result.success) {
                         this.closeBatchTagModal();
                         this.cancelSelection();
                         await this.loadPapers();
-                        alert(`已为 ${result.count} 篇文献设置标签: ${tag}`);
+                        this.showToast(`已为 ${result.count} 篇文献设置标签: ${tag}`, 'success');
                     }
                 } catch (error) {
                     console.error('批量设置标签失败:', error);
+                    this.showToast('批量设置标签失败', 'error');
                 }
             },
 
             async batchDelete() {
-                if (this.selectedPapers.length === 0) { alert('请先选择文献'); return; }
+                if (this.selectedPapers.length === 0) { this.showToast('请先选择文献', 'error'); return; }
                 if (confirm(`确定删除 ${this.selectedPapers.length} 篇文献吗？`)) {
                     try {
                         const response = await fetch(`${API_BASE_URL}/api/paper_database/batch`, {
@@ -1668,15 +1695,16 @@
                         });
                         const result = await response.json();
                         if (result.success) {
+                            this.showToast(result.message || '批量删除成功', 'success');
                             this.cancelSelection();
                             await this.loadPapers();
                             await this.updateStats();
                         } else {
-                            alert(result.message || '批量删除失败');
+                            this.showToast(result.message || '批量删除失败', 'error');
                         }
                     } catch (error) {
                         console.error('批量删除失败:', error);
-                        alert('批量删除失败');
+                        this.showToast('批量删除失败', 'error');
                     }
                 }
             },

@@ -4814,8 +4814,8 @@ async def batch_delete_papers(request: Request):
         paper_ids = data.get("paper_ids", [])
         library_type = data.get("library_type", "public")
 
-        count = PaperService.batch_delete(paper_ids, current_user.id, current_user.role, library_type)
-        return JSONResponse(content={"success": True, "count": count})
+        result = PaperService.batch_delete(paper_ids, current_user.id, current_user.role, library_type)
+        return JSONResponse(content=result)
     except Exception as e:
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -4956,6 +4956,7 @@ async def update_paper_info(paper_id: int, request: Request):
             arxiv_link=data.get("arxiv_link"),
             semantic_scholar_link=data.get("semantic_scholar_link"),
             tags=tags_list,
+            read_status=data.get("read_status"),
             library_type=library_type
         )
 
@@ -5040,8 +5041,8 @@ async def delete_paper(paper_id: int, request: Request):
     except:
         library_type = "public"
 
-    success = PaperService.delete_paper(paper_id, current_user.id, current_user.role, library_type)
-    return JSONResponse(content={"success": success})
+    result = PaperService.delete_paper(paper_id, current_user.id, current_user.role, library_type)
+    return JSONResponse(content=result)
 
 
 @app.get("/api/paper_database/{paper_id}/download")
