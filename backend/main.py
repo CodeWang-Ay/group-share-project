@@ -5175,96 +5175,6 @@ async def submit_progress(request: Request):
         )
 
 
-@app.get("/api/research_progress/{progress_id}")
-async def get_progress_detail(progress_id: int, request: Request):
-    """查看进展详情"""
-    current_user = await get_current_user(request)
-    if not current_user:
-        return JSONResponse(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
-        )
-
-    progress = ResearchProgressService.get_progress_by_id(progress_id)
-    if not progress:
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND,
-            content={"success": False, "message": "进展不存在", "error": "NOT_FOUND"}
-        )
-
-    # 权限校验：学生只能看自己的，导师和管理员可以看所有
-    if current_user.role == 'student' and progress.user_id != current_user.id:
-        return JSONResponse(
-            status_code=status.HTTP_403_FORBIDDEN,
-            content={"success": False, "message": "无权查看此进展", "error": "FORBIDDEN"}
-        )
-
-    # 获取提交者信息
-    with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, username, research_direction FROM users WHERE id = ?", (progress.user_id,))
-        user_row = cursor.fetchone()
-
-    result = progress.to_dict()
-    if user_row:
-        result["user_info"] = {
-            "id": user_row[0],
-            "username": user_row[1],
-            "research_direction": user_row[2]
-        }
-
-    return JSONResponse(content={
-        "success": True,
-        "data": result
-    })
-
-
-@app.put("/api/research_progress/{progress_id}")
-async def update_progress(progress_id: int, request: Request):
-    """编辑已提交的进展（仅限本周）"""
-    current_user = await get_current_user(request)
-    if not current_user:
-        return JSONResponse(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
-        )
-
-    try:
-        data = await request.json()
-
-        progress = ResearchProgressService.update_progress(
-            progress_id=progress_id,
-            user_id=current_user.id,
-            research_direction=data.get("research_direction"),
-            weekly_progress=data.get("weekly_progress"),
-            next_goal=data.get("next_goal"),
-            difficulties=data.get("difficulties"),
-            completion_rate=data.get("completion_rate"),
-            attachments=data.get("attachments")
-        )
-
-        if not progress:
-            return JSONResponse(
-                status_code=status.HTTP_403_FORBIDDEN,
-                content={"success": False, "message": "无权编辑此进展或已超过编辑时限", "error": "FORBIDDEN"}
-            )
-
-        logger.info(f"用户 {current_user.username} 更新了研究进展 {progress_id}")
-
-        return JSONResponse(content={
-            "success": True,
-            "message": "进展更新成功",
-            "data": progress.to_dict()
-        })
-
-    except Exception as e:
-        logger.error(f"更新进展失败: {str(e)}")
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"success": False, "message": f"更新失败: {str(e)}", "error": "SERVER_ERROR"}
-        )
-
-
 @app.get("/api/research_progress/settings")
 async def get_my_settings(request: Request):
     """获取自己的提交周期设置"""
@@ -5367,61 +5277,6 @@ async def get_progress_stats(request: Request):
         "success": True,
         "data": stats
     })
-
-
-@app.post("/api/research_progress/{progress_id}/feedback")
-async def add_feedback(progress_id: int, request: Request):
-    """发送导师反馈/沟通"""
-    current_user = await get_current_user(request)
-    if not current_user:
-        return JSONResponse(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
-        )
-
-    # 权限校验：只有导师和管理员可以发送反馈
-    if current_user.role not in ['teacher', 'admin']:
-        return JSONResponse(
-            status_code=status.HTTP_403_FORBIDDEN,
-            content={"success": False, "message": "只有导师和管理员可以发送反馈", "error": "FORBIDDEN"}
-        )
-
-    try:
-        data = await request.json()
-        feedback = data.get("feedback")
-
-        if not feedback:
-            return JSONResponse(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                content={"success": False, "message": "反馈内容不能为空", "error": "VALIDATION_ERROR"}
-            )
-
-        progress = ResearchProgressService.add_supervisor_feedback(
-            progress_id=progress_id,
-            feedback=feedback,
-            supervisor_id=current_user.id
-        )
-
-        if not progress:
-            return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content={"success": False, "message": "进展不存在", "error": "NOT_FOUND"}
-            )
-
-        logger.info(f"导师 {current_user.username} 对进展 {progress_id} 发送了反馈")
-
-        return JSONResponse(content={
-            "success": True,
-            "message": "反馈发送成功",
-            "data": progress.to_dict()
-        })
-
-    except Exception as e:
-        logger.error(f"发送反馈失败: {str(e)}")
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"success": False, "message": f"发送失败: {str(e)}", "error": "SERVER_ERROR"}
-        )
 
 
 @app.put("/api/research_progress/settings/{user_id}")
@@ -5527,6 +5382,151 @@ async def batch_set_settings(request: Request):
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"success": False, "message": f"设置失败: {str(e)}", "error": "SERVER_ERROR"}
+        )
+
+
+@app.get("/api/research_progress/{progress_id}")
+async def get_progress_detail(progress_id: int, request: Request):
+    """查看进展详情"""
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    progress = ResearchProgressService.get_progress_by_id(progress_id)
+    if not progress:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"success": False, "message": "进展不存在", "error": "NOT_FOUND"}
+        )
+
+    # 权限校验：学生只能看自己的，导师和管理员可以看所有
+    if current_user.role == 'student' and progress.user_id != current_user.id:
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"success": False, "message": "无权查看此进展", "error": "FORBIDDEN"}
+        )
+
+    # 获取提交者信息
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, username, research_direction FROM users WHERE id = ?", (progress.user_id,))
+        user_row = cursor.fetchone()
+
+    result = progress.to_dict()
+    if user_row:
+        result["user_info"] = {
+            "id": user_row[0],
+            "username": user_row[1],
+            "research_direction": user_row[2]
+        }
+
+    return JSONResponse(content={
+        "success": True,
+        "data": result
+    })
+
+
+@app.put("/api/research_progress/{progress_id}")
+async def update_progress(progress_id: int, request: Request):
+    """编辑已提交的进展（仅限本周）"""
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    try:
+        data = await request.json()
+
+        progress = ResearchProgressService.update_progress(
+            progress_id=progress_id,
+            user_id=current_user.id,
+            research_direction=data.get("research_direction"),
+            weekly_progress=data.get("weekly_progress"),
+            next_goal=data.get("next_goal"),
+            difficulties=data.get("difficulties"),
+            completion_rate=data.get("completion_rate"),
+            attachments=data.get("attachments")
+        )
+
+        if not progress:
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={"success": False, "message": "无权编辑此进展或已超过编辑时限", "error": "FORBIDDEN"}
+            )
+
+        logger.info(f"用户 {current_user.username} 更新了研究进展 {progress_id}")
+
+        return JSONResponse(content={
+            "success": True,
+            "message": "进展更新成功",
+            "data": progress.to_dict()
+        })
+
+    except Exception as e:
+        logger.error(f"更新进展失败: {str(e)}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": f"更新失败: {str(e)}", "error": "SERVER_ERROR"}
+        )
+
+
+@app.post("/api/research_progress/{progress_id}/feedback")
+async def add_feedback(progress_id: int, request: Request):
+    """发送导师反馈/沟通"""
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    # 权限校验：只有导师和管理员可以发送反馈
+    if current_user.role not in ['teacher', 'admin']:
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"success": False, "message": "只有导师和管理员可以发送反馈", "error": "FORBIDDEN"}
+        )
+
+    try:
+        data = await request.json()
+        feedback = data.get("feedback")
+
+        if not feedback:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"success": False, "message": "反馈内容不能为空", "error": "VALIDATION_ERROR"}
+            )
+
+        progress = ResearchProgressService.add_supervisor_feedback(
+            progress_id=progress_id,
+            feedback=feedback,
+            supervisor_id=current_user.id
+        )
+
+        if not progress:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"success": False, "message": "进展不存在", "error": "NOT_FOUND"}
+            )
+
+        logger.info(f"导师 {current_user.username} 对进展 {progress_id} 发送了反馈")
+
+        return JSONResponse(content={
+            "success": True,
+            "message": "反馈发送成功",
+            "data": progress.to_dict()
+        })
+
+    except Exception as e:
+        logger.error(f"发送反馈失败: {str(e)}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": f"发送失败: {str(e)}", "error": "SERVER_ERROR"}
         )
 
 
