@@ -264,29 +264,156 @@
                 <!-- 学生端内容 -->
                 {% if user.role == 'student' %}
                 <div id="student-view">
-                    <!-- 提交周期信息 -->
+                    <!-- 标签切换 -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div id="period-info">
-                                <p class="text-gray-600">当前周期：<span id="period-type" class="font-medium text-primary">每周提交</span></p>
-                                <p class="text-gray-500 text-sm">下次截止时间：<span id="next-deadline">--</span></p>
-                            </div>
-                            <button id="submit-progress-btn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2 transition-colors">
-                                <i class="fa fa-plus"></i><span>提交本周进展</span>
-                            </button>
+                        <div class="flex gap-4">
+                            <button id="tab-my-progress" class="px-4 py-2 bg-primary text-white rounded-lg font-medium transition-colors">我的进展</button>
+                            <button id="tab-team-progress" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">团队进展</button>
                         </div>
                     </div>
 
-                    <!-- 我的进展历史 -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">我的进展历史</h3>
-                        <div id="my-progress-list">
-                            <!-- 动态加载 -->
+                    <!-- 我的进展区域 -->
+                    <div id="my-progress-section">
+                        <!-- 提交周期信息 -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <div id="period-info">
+                                    <p class="text-gray-600">当前周期：<span id="period-type" class="font-medium text-primary">每周提交</span></p>
+                                    <p class="text-gray-500 text-sm">下次截止时间：<span id="next-deadline">--</span></p>
+                                </div>
+                                <button id="submit-progress-btn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2 transition-colors">
+                                    <i class="fa fa-plus"></i><span>提交本周进展</span>
+                                </button>
+                            </div>
                         </div>
-                        <div id="no-progress" class="text-center text-gray-500 py-8 hidden">
-                            <i class="fa fa-inbox text-4xl mb-4"></i>
-                            <p>暂无进展记录</p>
-                            <p class="text-sm">点击上方按钮开始提交你的研究进展</p>
+
+                        <!-- 我的进展历史 -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">我的进展历史</h3>
+                            <div id="my-progress-list">
+                                <!-- 动态加载 -->
+                            </div>
+                            <div id="no-progress" class="text-center text-gray-500 py-8 hidden">
+                                <i class="fa fa-inbox text-4xl mb-4"></i>
+                                <p>暂无进展记录</p>
+                                <p class="text-sm">点击上方按钮开始提交你的研究进展</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 团队进展区域（学生可查看） -->
+                    <div id="team-progress-section" class="hidden">
+                        <!-- 筛选工具栏 -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <!-- 学生类型 -->
+                                <div>
+                                    <label class="text-sm text-gray-600 mb-1 block">学生类型</label>
+                                    <select id="filter-degree-type-student" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                        <option value="">全部类型</option>
+                                        <option value="doctoral">博士生</option>
+                                        <option value="master">硕士生</option>
+                                        <option value="undergraduate">本科生</option>
+                                    </select>
+                                </div>
+                                <!-- 年级 -->
+                                <div>
+                                    <label class="text-sm text-gray-600 mb-1 block">年级</label>
+                                    <select id="filter-grade-student" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                        <option value="">全部年级</option>
+                                        <option value="1">一年级</option>
+                                        <option value="2">二年级</option>
+                                        <option value="3">三年级</option>
+                                        <option value="4">四年级</option>
+                                        <option value="5">五年级</option>
+                                        <option value="6">六年级+</option>
+                                    </select>
+                                </div>
+                                <!-- 研究方向 -->
+                                <div>
+                                    <label class="text-sm text-gray-600 mb-1 block">研究方向</label>
+                                    <select id="filter-direction-student" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                        <option value="">全部方向</option>
+                                        <option value="多模态学习">多模态学习</option>
+                                        <option value="自然语言处理">自然语言处理</option>
+                                        <option value="计算机视觉">计算机视觉</option>
+                                        <option value="推荐系统">推荐系统</option>
+                                        <option value="知识图谱">知识图谱</option>
+                                        <option value="机器学习">机器学习</option>
+                                        <option value="深度学习">深度学习</option>
+                                        <option value="强化学习">强化学习</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex gap-2">
+                                <button id="apply-filter-student" class="bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary/90 transition-colors">
+                                    <i class="fa fa-filter mr-1"></i>应用筛选
+                                </button>
+                                <button id="clear-filter-student" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+                                    <i class="fa fa-times mr-1"></i>清除筛选
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 统计卡片 -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-white rounded-lg p-4 border border-gray-100">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-gray-500 text-sm">总人数</p><h3 id="stats-total-student" class="text-2xl font-bold mt-1">--</h3></div>
+                                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary">
+                                        <i class="fa fa-users"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-gray-100">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-gray-500 text-sm">进度正常</p><h3 id="stats-normal-student" class="text-2xl font-bold mt-1 text-green-600">--</h3></div>
+                                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                        <i class="fa fa-check-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-gray-100">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-gray-500 text-sm">进度滞后</p><h3 id="stats-delayed-student" class="text-2xl font-bold mt-1 text-yellow-600">--</h3></div>
+                                    <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+                                        <i class="fa fa-exclamation-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-gray-100">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-gray-500 text-sm">未更新本周</p><h3 id="stats-not_updated-student" class="text-2xl font-bold mt-1 text-gray-600">--</h3></div>
+                                    <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
+                                        <i class="fa fa-times-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 团队进展表格 -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div class="p-6 border-b border-gray-100">
+                                <h3 class="text-lg font-semibold text-gray-800">团队研究进展</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-gray-50 text-left text-sm text-gray-500">
+                                        <tr>
+                                            <th class="px-6 py-4 font-medium">学生</th>
+                                            <th class="px-6 py-4 font-medium">研究方向</th>
+                                            <th class="px-6 py-4 font-medium">最近进展</th>
+                                            <th class="px-6 py-4 font-medium">下周目标</th>
+                                            <th class="px-6 py-4 font-medium">完成度</th>
+                                            <th class="px-6 py-4 font-medium">状态</th>
+                                            <th class="px-6 py-4 font-medium">最后更新</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="team-progress-table-student" class="divide-y divide-gray-100 text-sm">
+                                        <!-- 动态加载 -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -485,7 +612,33 @@
         </div>
     </div>
 
+    <!-- Toast 提示容器 -->
+    <div id="toast-container" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2">
+    </div>
+
     <script>
+        // Toast 提示函数
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            const bgColor = type === 'success' ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300';
+            const textColor = type === 'success' ? 'text-green-700' : 'text-red-700';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+
+            toast.className = `${bgColor} ${textColor} px-4 py-3 rounded-lg shadow-sm border flex items-center gap-2 animate-fade-in`;
+            toast.innerHTML = `<i class="fa ${icon}"></i><span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            // 3秒后移除
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
         // API基础URL
         let API_BASE_URL = '';
         if (window.location.hostname === 'localhost') {
@@ -500,6 +653,19 @@
         const USER_ROLE = '{{ user.role }}';
         const USER_ID = {{ user.id }};
         const USER_RESEARCH_DIRECTION = '{{ user.research_direction or "" }}';
+
+        // 获取认证 headers（只在有 token 时才添加 Authorization）
+        function getAuthHeaders(includeContentType = false) {
+            const token = localStorage.getItem('session_token');
+            const headers = {};
+            if (includeContentType) {
+                headers['Content-Type'] = 'application/json';
+            }
+            if (token && token !== 'null') {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            return headers;
+        }
 
         // 移动端侧边栏
         function initMobileSidebar() {
@@ -544,7 +710,8 @@
         async function fetchStats() {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/research_progress/stats`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
                 });
                 const result = await response.json();
                 if (result.success) {
@@ -555,6 +722,97 @@
                 }
             } catch (error) {
                 console.error('获取统计数据失败:', error);
+            }
+        }
+
+        // 学生端获取统计数据
+        async function fetchStudentTeamStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/research_progress/stats`, {
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('stats-total-student').textContent = result.data.total;
+                    document.getElementById('stats-normal-student').textContent = result.data.normal;
+                    document.getElementById('stats-delayed-student').textContent = result.data.delayed;
+                    document.getElementById('stats-not_updated-student').textContent = result.data.not_updated;
+                }
+            } catch (error) {
+                console.error('获取统计数据失败:', error);
+            }
+        }
+
+        // 学生端获取团队进展列表
+        async function fetchStudentTeamProgress(filters = {}) {
+            try {
+                // 构建查询参数
+                const params = new URLSearchParams();
+                if (filters.degree_type) params.append('student_type', filters.degree_type);
+                if (filters.grade) params.append('grade', filters.grade);
+                if (filters.research_direction) params.append('research_direction', filters.research_direction);
+
+                const response = await fetch(`${API_BASE_URL}/api/research_progress/team?${params}`, {
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+                const result = await response.json();
+
+                const tbody = document.getElementById('team-progress-table-student');
+                if (result.success && result.data.length > 0) {
+                    tbody.innerHTML = result.data.map(item => {
+                        const statusClass = {
+                            'normal': 'text-green-600 bg-green-100',
+                            'delayed': 'text-yellow-600 bg-yellow-100',
+                            'warning': 'text-red-600 bg-red-100',
+                            'not_updated': 'text-gray-600 bg-gray-100'
+                        }[item.computed_status] || 'text-green-600 bg-green-100';
+
+                        const statusText = {
+                            'normal': '进度正常',
+                            'delayed': '进度滞后',
+                            'warning': '进度预警',
+                            'not_updated': '未更新'
+                        }[item.computed_status] || '进度正常';
+
+                        const lastUpdate = item.submission_date ?
+                            new Date(item.submission_date).toLocaleDateString('zh-CN') : '暂无记录';
+
+                        return `
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <img src="https://picsum.photos/id/${item.user_id}/200/200" class="w-10 h-10 rounded-full">
+                                        <div>
+                                            <div class="font-medium text-gray-800">${item.username}</div>
+                                            <div class="text-gray-500 text-xs">${item.degree_type || '学生'}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-gray-700">${item.research_direction || item.user_research_direction || '未设置'}</td>
+                                <td class="px-6 py-4 text-gray-600 max-w-xs truncate">${item.weekly_progress || '暂无进展'}</td>
+                                <td class="px-6 py-4 text-gray-600 max-w-xs truncate">${item.next_goal || '暂无目标'}</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-16 bg-gray-200 rounded-full h-2">
+                                            <div class="bg-primary h-2 rounded-full" style="width: ${item.completion_rate || 0}%"></div>
+                                        </div>
+                                        <span class="text-sm">${item.completion_rate || 0}%</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-1 rounded-full text-xs ${statusClass}">${statusText}</span>
+                                </td>
+                                <td class="px-6 py-4 text-gray-500">${lastUpdate}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">暂无符合条件的团队成员进展数据</td></tr>';
+                }
+            } catch (error) {
+                console.error('获取团队进展失败:', error);
             }
         }
 
@@ -575,7 +833,8 @@
                 if (statusFilter) params.append('status', statusFilter);
 
                 const response = await fetch(`${API_BASE_URL}/api/research_progress/team?${params}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
                 });
                 const result = await response.json();
 
@@ -650,7 +909,8 @@
         async function fetchMyProgress() {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/research_progress/my`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
                 });
                 const result = await response.json();
 
@@ -707,7 +967,8 @@
         async function fetchMySettings() {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/research_progress/settings`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
                 });
                 const result = await response.json();
                 if (result.success) {
@@ -727,24 +988,22 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/api/research_progress/submit`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('session_token')}`
-                    },
+                    headers: getAuthHeaders(true),
+                    credentials: 'include',
                     body: JSON.stringify(formData)
                 });
                 const result = await response.json();
                 if (result.success) {
-                    alert('进展提交成功！');
+                    showToast('进展提交成功！');
                     closeSubmitModal();
                     fetchMyProgress();
                     fetchMySettings();
                 } else {
-                    alert(result.message || '提交失败');
+                    showToast(result.message || '提交失败', 'error');
                 }
             } catch (error) {
                 console.error('提交进展失败:', error);
-                alert('提交失败，请稍后重试');
+                showToast('提交失败，请稍后重试', 'error');
             }
         }
 
@@ -752,7 +1011,8 @@
         async function viewProgressDetail(progressId, isTeacher = false) {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/research_progress/${progressId}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
                 });
                 const result = await response.json();
 
@@ -786,11 +1046,11 @@
 
                     openDetailModal();
                 } else {
-                    alert(result.message || '获取详情失败');
+                    showToast(result.message || '获取详情失败', 'error');
                 }
             } catch (error) {
                 console.error('获取详情失败:', error);
-                alert('获取详情失败，请稍后重试');
+                showToast('获取详情失败，请稍后重试', 'error');
             }
         }
 
@@ -799,23 +1059,21 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/api/research_progress/${progressId}/feedback`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('session_token')}`
-                    },
+                    headers: getAuthHeaders(true),
+                    credentials: 'include',
                     body: JSON.stringify({ feedback })
                 });
                 const result = await response.json();
                 if (result.success) {
-                    alert('反馈发送成功！');
+                    showToast('反馈发送成功！');
                     closeDetailModal();
                     fetchTeamProgress();
                 } else {
-                    alert(result.message || '发送失败');
+                    showToast(result.message || '发送失败', 'error');
                 }
             } catch (error) {
                 console.error('发送反馈失败:', error);
-                alert('发送失败，请稍后重试');
+                showToast('发送失败，请稍后重试', 'error');
             }
         }
 
@@ -851,7 +1109,8 @@
         async function loadStudentListForBatch() {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/research_progress/team`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
                 });
                 const result = await response.json();
 
@@ -873,7 +1132,7 @@
         async function batchSetSettings() {
             const selectedIds = Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb => parseInt(cb.value));
             if (selectedIds.length === 0) {
-                alert('请选择要设置的学生');
+                showToast('请选择要设置的学生', 'error');
                 return;
             }
 
@@ -883,10 +1142,8 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/api/research_progress/settings/batch`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('session_token')}`
-                    },
+                    headers: getAuthHeaders(true),
+                    credentials: 'include',
                     body: JSON.stringify({
                         user_ids: selectedIds,
                         period_type: periodType,
@@ -895,14 +1152,14 @@
                 });
                 const result = await response.json();
                 if (result.success) {
-                    alert(`成功设置 ${selectedIds.length} 个学生的提交周期`);
+                    showToast(`成功设置 ${selectedIds.length} 个学生的提交周期`);
                     closeBatchModal();
                 } else {
-                    alert(result.message || '设置失败');
+                    showToast(result.message || '设置失败', 'error');
                 }
             } catch (error) {
                 console.error('批量设置失败:', error);
-                alert('设置失败，请稍后重试');
+                showToast('设置失败，请稍后重试', 'error');
             }
         }
 
@@ -921,19 +1178,71 @@
                 window.history.replaceState({}, '', url.toString());
             }
 
-            // 检查是否已登录
-            const sessionToken = localStorage.getItem('session_token');
-            if (!sessionToken) {
-                // 未登录，跳转到登录页面
-                alert('请先登录');
-                window.location.href = `${API_BASE_URL}/login`;
-                return;
+            // 从 cookie 获取 session_token
+            function getCookie(name) {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return parts.pop().split(';').shift();
+                return null;
             }
+
+            // 检查是否已登录（同时检查 localStorage 和 cookie）
+            let sessionToken = localStorage.getItem('session_token');
+            if (!sessionToken) {
+                // localStorage 没有，尝试从 cookie 获取
+                sessionToken = getCookie('session_token');
+                if (sessionToken) {
+                    // cookie 有 token，复制到 localStorage
+                    localStorage.setItem('session_token', sessionToken);
+                }
+            }
+
+            // 如果都没有 token，但用户信息已渲染（说明后端已验证登录），则不跳转
+            // 只在真正未登录时才跳转（这里我们信任后端的登录验证）
 
             // 根据角色加载不同内容
             if (USER_ROLE === 'student') {
                 fetchMyProgress();
                 fetchMySettings();
+
+                // 标签切换
+                document.getElementById('tab-my-progress').addEventListener('click', function() {
+                    document.getElementById('tab-my-progress').classList.add('bg-primary', 'text-white');
+                    document.getElementById('tab-my-progress').classList.remove('bg-gray-100', 'text-gray-600');
+                    document.getElementById('tab-team-progress').classList.remove('bg-primary', 'text-white');
+                    document.getElementById('tab-team-progress').classList.add('bg-gray-100', 'text-gray-600');
+                    document.getElementById('my-progress-section').classList.remove('hidden');
+                    document.getElementById('team-progress-section').classList.add('hidden');
+                });
+
+                document.getElementById('tab-team-progress').addEventListener('click', function() {
+                    document.getElementById('tab-team-progress').classList.add('bg-primary', 'text-white');
+                    document.getElementById('tab-team-progress').classList.remove('bg-gray-100', 'text-gray-600');
+                    document.getElementById('tab-my-progress').classList.remove('bg-primary', 'text-white');
+                    document.getElementById('tab-my-progress').classList.add('bg-gray-100', 'text-gray-600');
+                    document.getElementById('team-progress-section').classList.remove('hidden');
+                    document.getElementById('my-progress-section').classList.add('hidden');
+                    // 加载团队进展数据
+                    fetchStudentTeamProgress();
+                    fetchStudentTeamStats();
+                });
+
+                // 学生端筛选按钮
+                document.getElementById('apply-filter-student').addEventListener('click', function() {
+                    const filters = {
+                        degree_type: document.getElementById('filter-degree-type-student').value,
+                        grade: document.getElementById('filter-grade-student').value,
+                        research_direction: document.getElementById('filter-direction-student').value
+                    };
+                    fetchStudentTeamProgress(filters);
+                });
+
+                document.getElementById('clear-filter-student').addEventListener('click', function() {
+                    document.getElementById('filter-degree-type-student').value = '';
+                    document.getElementById('filter-grade-student').value = '';
+                    document.getElementById('filter-direction-student').value = '';
+                    fetchStudentTeamProgress({});
+                });
 
                 // 提交进展按钮
                 document.getElementById('submit-progress-btn').addEventListener('click', openSubmitModal);
@@ -956,11 +1265,6 @@
                         completion_rate: parseInt(document.getElementById('completion-rate').value)
                     };
                     submitProgress(formData);
-                });
-
-                // 查看详情
-                document.querySelectorAll('.view-my-detail-btn').forEach(btn => {
-                    btn.addEventListener('click', () => viewProgressDetail(parseInt(btn.dataset.id), false));
                 });
 
             } else {
@@ -990,7 +1294,7 @@
                         } else {
                             // 如果没有进展记录，跳转到设置周期
                             const userId = parseInt(e.target.dataset.userId);
-                            alert('该学生暂无进展记录，可以为其设置提交周期');
+                            showToast('该学生暂无进展记录，可以为其设置提交周期', 'error');
                         }
                     }
                     if (e.target.classList.contains('communicate-btn')) {
@@ -1007,7 +1311,7 @@
                     const progressId = parseInt(document.getElementById('feedback-section').dataset.progressId);
                     const feedback = document.getElementById('feedback-input').value;
                     if (!feedback) {
-                        alert('请输入反馈内容');
+                        showToast('请输入反馈内容', 'error');
                         return;
                     }
                     sendFeedback(progressId, feedback);
@@ -1030,10 +1334,8 @@
                 try {
                     const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('session_token')}`
-                        }
+                        headers: getAuthHeaders(true),
+                        credentials: 'include'
                     });
                     localStorage.removeItem('session_token');
                     localStorage.removeItem('user_info');

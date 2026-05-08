@@ -156,7 +156,7 @@ async def get_current_user(request: Request) -> Optional[User]:
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT id, username, password_hash, role, created_at, updated_at "
+                "SELECT id, username, password_hash, role, email, phone, student_id, research_direction, status, created_at, updated_at "
                 "FROM users WHERE id = ?",
                 (session["user_id"],)
             )
@@ -5228,13 +5228,7 @@ async def get_team_progress(
             content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
         )
 
-    # 权限校验：只有导师和管理员可以查看团队进展
-    if current_user.role not in ['teacher', 'admin']:
-        return JSONResponse(
-            status_code=status.HTTP_403_FORBIDDEN,
-            content={"success": False, "message": "只有导师和管理员可以查看团队进展", "error": "FORBIDDEN"}
-        )
-
+    # 所有用户都可以查看团队进展（学生只能查看，导师/管理员可以操作）
     progress_list = ResearchProgressService.get_team_progress_list(
         user_role=current_user.role,
         student_type=student_type,
@@ -5264,13 +5258,7 @@ async def get_progress_stats(request: Request):
             content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
         )
 
-    # 权限校验：只有导师和管理员可以查看统计数据
-    if current_user.role not in ['teacher', 'admin']:
-        return JSONResponse(
-            status_code=status.HTTP_403_FORBIDDEN,
-            content={"success": False, "message": "只有导师和管理员可以查看统计数据", "error": "FORBIDDEN"}
-        )
-
+    # 所有用户都可以查看统计数据
     stats = ResearchProgressService.get_progress_stats()
 
     return JSONResponse(content={

@@ -19,6 +19,11 @@ class User:
         username: 用户名（唯一）
         password_hash: 密码哈希值
         role: 用户角色（admin/teacher/student）
+        email: 邮箱
+        phone: 电话
+        student_id: 学号
+        research_direction: 研究方向
+        status: 状态
         created_at: 创建时间
         updated_at: 更新时间
     """
@@ -26,6 +31,11 @@ class User:
     username: str = ""
     password_hash: str = ""
     role: str = ""
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    student_id: Optional[str] = None
+    research_direction: Optional[str] = None
+    status: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -140,6 +150,11 @@ class User:
             "id": self.id,
             "username": self.username,
             "role": self.role,
+            "email": self.email,
+            "phone": self.phone,
+            "student_id": self.student_id,
+            "research_direction": self.research_direction,
+            "status": self.status,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }
@@ -175,6 +190,11 @@ class User:
             username=data.get("username", ""),
             password_hash=data.get("password_hash", ""),
             role=data.get("role", ""),
+            email=data.get("email"),
+            phone=data.get("phone"),
+            student_id=data.get("student_id"),
+            research_direction=data.get("research_direction"),
+            status=data.get("status"),
             created_at=created_at,
             updated_at=updated_at
         )
