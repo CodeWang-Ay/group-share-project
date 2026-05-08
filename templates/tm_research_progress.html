@@ -910,6 +910,26 @@
         document.addEventListener('DOMContentLoaded', function() {
             initMobileSidebar();
 
+            // 处理URL中的session_token（登录后跳转）
+            const url = new URL(window.location.href);
+            const urlParams = new URLSearchParams(url.search);
+            const sessionTokenFromUrl = urlParams.get('session_token');
+            if (sessionTokenFromUrl) {
+                localStorage.setItem('session_token', sessionTokenFromUrl);
+                // 清除URL中的session_token参数
+                url.searchParams.delete('session_token');
+                window.history.replaceState({}, '', url.toString());
+            }
+
+            // 检查是否已登录
+            const sessionToken = localStorage.getItem('session_token');
+            if (!sessionToken) {
+                // 未登录，跳转到登录页面
+                alert('请先登录');
+                window.location.href = `${API_BASE_URL}/login`;
+                return;
+            }
+
             // 根据角色加载不同内容
             if (USER_ROLE === 'student') {
                 fetchMyProgress();
