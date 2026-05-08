@@ -322,6 +322,53 @@ def init_db() -> None:
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_files_status ON files(status)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_files_upload_time ON files(upload_time)")
 
+        # === 研究进展相关表 ===
+        # 创建研究进展表
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS research_progress (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                research_direction TEXT NOT NULL,
+                weekly_progress TEXT NOT NULL,
+                next_goal TEXT NOT NULL,
+                difficulties TEXT,
+                completion_rate INTEGER DEFAULT 0,
+                attachments TEXT,
+                submission_period TEXT DEFAULT 'weekly',
+                submission_date DATETIME,
+                period_start DATETIME,
+                period_end DATETIME,
+                status TEXT DEFAULT 'normal',
+                supervisor_feedback TEXT,
+                feedback_at DATETIME,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_progress_user ON research_progress(user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_progress_status ON research_progress(status)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_progress_submission ON research_progress(submission_date)")
+
+        # 创建提交周期设置表
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS progress_settings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL UNIQUE,
+                period_type TEXT DEFAULT 'weekly',
+                reminder_enabled INTEGER DEFAULT 1,
+                reminder_days INTEGER DEFAULT 1,
+                next_deadline DATETIME,
+                created_by INTEGER NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_settings_user ON progress_settings(user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_settings_deadline ON progress_settings(next_deadline)")
+
         # 检查是否已存在admin用户
         cursor.execute("SELECT id FROM users WHERE username = 'admin'")
         admin_exists = cursor.fetchone()

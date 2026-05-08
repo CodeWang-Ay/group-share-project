@@ -8,5 +8,10 @@ from .file import File
 from .meeting import Meeting, MeetingPresenter, MeetingFile
 from .task import Task
 from .paper import Paper, Tag, PaperUserRelation
+from .research_progress import ResearchProgress, ProgressSetting
 
-__all__ = ["User", "File", "Meeting", "MeetingPresenter", "MeetingFile", "Task", "Paper", "Tag", "PaperUserRelation"]
+__all__ = [
+    "User", "File", "Meeting", "MeetingPresenter", "MeetingFile",
+    "Task", "Paper", "Tag", "PaperUserRelation",
+    "ResearchProgress", "ProgressSetting"
+]

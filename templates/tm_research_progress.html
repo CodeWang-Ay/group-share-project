@@ -39,55 +39,25 @@
             .member-card {
                 @apply bg-white rounded-xl shadow-sm border border-gray-100 p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-1;
             }
-            .member-row {
-                @apply transition-all duration-200;
+            .progress-item {
+                @apply bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4 transition-all duration-200;
             }
-            .member-row:hover {
-                @apply bg-gray-50;
-            }
-            .status-active {
+            .status-normal {
                 @apply text-green-600 bg-green-100;
             }
-            .status-inactive {
+            .status-delayed {
+                @apply text-yellow-600 bg-yellow-100;
+            }
+            .status-warning {
                 @apply text-red-600 bg-red-100;
             }
-            .role-admin {
-                @apply text-purple-600 bg-purple-100;
-            }
-            .role-teacher {
-                @apply text-blue-600 bg-blue-100;
-            }
-            .role-student {
-                @apply text-orange-600 bg-orange-100;
+            .status-not_updated {
+                @apply text-gray-600 bg-gray-100;
             }
             @media (max-width: 640px) {
                 .container {
                     padding-left: 1rem;
                     padding-right: 1rem;
-                }
-
-                /* 移动端表格响应式 */
-                .member-row .grid {
-                    grid-template-columns: 1fr;
-                    gap: 0.75rem;
-                }
-
-                .member-row .col-span-5 {
-                    grid-column: span 1;
-                }
-
-                .member-row .col-span-2 {
-                    grid-column: span 1;
-                    text-align: left;
-                }
-
-                .member-row .col-span-1 {
-                    grid-column: span 1;
-                }
-
-                /* 移动端表格头部隐藏 */
-                .bg-gray-50 .grid {
-                    display: none;
                 }
             }
         }
@@ -113,66 +83,53 @@
                 </div>
             </div>
 
-                <div class="flex items-center gap-2 sm:gap-4">
-                    <!-- 搜索框 - 移动端隐藏 -->
-                    <div class="relative hidden md:block">
-                        <input type="text" id="search-input" placeholder="搜索研究进展..."
-                               class="py-2 pl-10 pr-4 rounded-lg bg-gray-100 border-0 focus:ring-2 focus:ring-primary/30 focus:bg-white w-48 lg:w-64 transition-all">
-                        <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                    </div>
-
-                    <!-- 移动端搜索按钮 -->
-                    <button class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                        <i class="fa fa-search text-gray-600"></i>
-                    </button>
-
-                    <!-- 通知 -->
-                    <div class="relative cursor-pointer p-2 rounded-full hover:bg-gray-100 transition-colors">
-                        <i class="fa fa-bell-o text-gray-600"></i>
-                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                    </div>
-
-                    <!-- 用户信息 -->
-                    <div class="relative group">
-                        <div class="flex items-center gap-2 cursor-pointer">
-                            <img src="https://picsum.photos/id/{{ user.id }}/200/200" alt="{{ user.username }}头像" class="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm">
-                            <span class="hidden md:inline-block font-medium">{{ user.username }}</span>
-                            <i class="fa fa-chevron-down text-xs text-gray-500"></i>
-                        </div>
-
-                        <!-- 下拉菜单 -->
-                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right scale-95 group-hover:scale-100">
-                            <div class="px-4 py-2 border-b border-gray-100">
-                                <p class="font-medium">{{ user.username }}</p>
-                                <p class="text-xs text-gray-500">
-                                    {% if user.role == 'admin' %}管理员
-                                    {% elif user.role == 'teacher' %}导师
-                                    {% else %}学生{% endif %}
-                                </p>
-                            </div>
-                            <a href="/user_profile" class="block px-4 py-2 text-sm hover:bg-gray-100">
-                                <i class="fa fa-user-o mr-2 text-gray-500"></i>个人资料
-                            </a>
-                            <a href="/edit_password" class="block px-4 py-2 text-sm hover:bg-gray-100">
-                                <i class="fa fa-key mr-2 text-gray-500"></i>修改密码
-                            </a>
-                            <a href="/settings" class="block px-4 py-2 text-sm hover:bg-gray-100">
-                                <i class="fa fa-cog mr-2 text-gray-500"></i>设置
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- 退出登录按钮 -->
-                    <button id="logout-btn" class="hidden sm:flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                        <i class="fa fa-sign-out"></i>
-                        <span>退出登录</span>
-                    </button>
-
-                    <!-- 移动端退出登录按钮 -->
-                    <button id="logout-btn-mobile" class="sm:hidden p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors">
-                        <i class="fa fa-sign-out"></i>
-                    </button>
+            <div class="flex items-center gap-2 sm:gap-4">
+                <!-- 通知 -->
+                <div class="relative cursor-pointer p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <i class="fa fa-bell-o text-gray-600"></i>
+                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                 </div>
+
+                <!-- 用户信息 -->
+                <div class="relative group">
+                    <div class="flex items-center gap-2 cursor-pointer">
+                        <img src="https://picsum.photos/id/{{ user.id }}/200/200" alt="{{ user.username }}头像" class="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm">
+                        <span class="hidden md:inline-block font-medium">{{ user.username }}</span>
+                        <i class="fa fa-chevron-down text-xs text-gray-500"></i>
+                    </div>
+
+                    <!-- 下拉菜单 -->
+                    <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right scale-95 group-hover:scale-100">
+                        <div class="px-4 py-2 border-b border-gray-100">
+                            <p class="font-medium">{{ user.username }}</p>
+                            <p class="text-xs text-gray-500">
+                                {% if user.role == 'admin' %}管理员
+                                {% elif user.role == 'teacher' %}导师
+                                {% else %}学生{% endif %}
+                            </p>
+                        </div>
+                        <a href="/user_profile" class="block px-4 py-2 text-sm hover:bg-gray-100">
+                            <i class="fa fa-user-o mr-2 text-gray-500"></i>个人资料
+                        </a>
+                        <a href="/edit_password" class="block px-4 py-2 text-sm hover:bg-gray-100">
+                            <i class="fa fa-key mr-2 text-gray-500"></i>修改密码
+                        </a>
+                        <a href="/settings" class="block px-4 py-2 text-sm hover:bg-gray-100">
+                            <i class="fa fa-cog mr-2 text-gray-500"></i>设置
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 退出登录按钮 -->
+                <button id="logout-btn" class="hidden sm:flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                    <i class="fa fa-sign-out"></i>
+                    <span>退出登录</span>
+                </button>
+
+                <!-- 移动端退出登录按钮 -->
+                <button id="logout-btn-mobile" class="sm:hidden p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors">
+                    <i class="fa fa-sign-out"></i>
+                </button>
             </div>
         </div>
     </header>
@@ -192,7 +149,7 @@
 
             <div class="p-4 overflow-y-auto h-full">
                 <!-- 角色标识 -->
-               <div class="bg-primary/10 text-primary rounded-lg p-3 mb-6">
+                <div class="bg-primary/10 text-primary rounded-lg p-3 mb-6">
                     <div class="flex items-center justify-between">
                         <span class="font-medium">当前角色</span>
                         <span class="text-sm bg-primary text-white px-2 py-1 rounded-full">
@@ -258,7 +215,7 @@
                     <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6">团队管理</p>
                     <ul class="space-y-1">
                         <li>
-                            <a href="/tm_user_management" class="sidebar-icon hover:bg-gray-100 ">
+                            <a href="/tm_user_management" class="sidebar-icon hover:bg-gray-100">
                                 <i class="fa fa-users w-5 text-center"></i>
                                 <span>成员管理</span>
                             </a>
@@ -276,23 +233,7 @@
                             </a>
                         </li>
                     </ul>
-                    <!-- 管理员特有菜单 -->
-                    <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6 hidden">系统管理</p>
-                    <ul class="space-y-1 hidden">
-                        <li>
-                            <a href="#" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-cog w-5 text-center"></i>
-                                <span>系统设置</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="sidebar-icon hover:bg-gray-100">
-                                <i class="fa fa-database w-5 text-center"></i>
-                                <span>存储管理</span>
-                            </a>
-                        </li>
-                    </ul>
-                    
+
                     <!-- 存储信息 -->
                     <div class="mt-8 p-4 bg-gray-50 rounded-lg">
                         <p class="text-sm font-medium mb-2">存储空间</p>
@@ -305,173 +246,247 @@
             </div>
         </aside>
 
-        <!-- 研究进展 主内容区域 -->
-        <!-- ====================== 【核心: 研究进展 内容区】 ====================== -->
+        <!-- 主内容区域 -->
         <div class="flex-1 lg:ml-0 overflow-hidden">
             <div class="container mx-auto px-4 py-6">
                 <!-- 页面标题 -->
                 <div class="mb-6">
-                    <h1 class="text-2xl font-bold text-gray-800">研究进展</h1>
-                    <p class="text-gray-500">跟踪和管理团队成员的研究进展</p>
+                    <h1 class="text-2xl font-bold text-gray-800">
+                        {% if user.role == 'student' %}我的研究进展
+                        {% else %}研究进展管理{% endif %}
+                    </h1>
+                    <p class="text-gray-500">
+                        {% if user.role == 'student' %}记录和追踪你的研究进度
+                        {% else %}跟踪和管理团队成员的研究进展{% endif %}
+                    </p>
                 </div>
 
-                <!-- 内容区域 -->
-                <div class="flex-1 p-4 lg:p-6 overflow-y-auto">
-                    <div class="mb-6">
-                        <h1 class="text-xl font-bold text-gray-800 mb-2">研究进展</h1>
-                        <p class="text-gray-500 mb-6">查看各成员研究方向、阶段进度与科研完成情况</p>
-
-                        <!-- 筛选工具栏 -->
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="px-3 py-1 bg-primary/10 text-primary text-sm rounded-lg">全部成员</span>
-                                    <span class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 cursor-pointer">博士生</span>
-                                    <span class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 cursor-pointer">硕士生</span>
-                                    <span class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 cursor-pointer">进度预警</span>
-                                </div>
-                                <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2">
-                                    <i class="fa fa-plus"></i><span>提交个人进展</span>
-                                </button>
+                <!-- 学生端内容 -->
+                {% if user.role == 'student' %}
+                <div id="student-view">
+                    <!-- 提交周期信息 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div id="period-info">
+                                <p class="text-gray-600">当前周期：<span id="period-type" class="font-medium text-primary">每周提交</span></p>
+                                <p class="text-gray-500 text-sm">下次截止时间：<span id="next-deadline">--</span></p>
                             </div>
+                            <button id="submit-progress-btn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2 transition-colors">
+                                <i class="fa fa-plus"></i><span>提交本周进展</span>
+                            </button>
                         </div>
+                    </div>
 
-                        <!-- 统计卡片 -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                            <div class="bg-white rounded-lg p-4 border border-gray-100">
-                                <div class="flex items-center justify-between">
-                                    <div><p class="text-gray-500 text-sm">总人数</p><h3 class="text-2xl font-bold mt-1">18</h3></div>
-                                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary">
-                                        <i class="fa fa-users"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-white rounded-lg p-4 border border-gray-100">
-                                <div class="flex items-center justify-between">
-                                    <div><p class="text-gray-500 text-sm">进度正常</p><h3 class="text-2xl font-bold mt-1">12</h3></div>
-                                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-secondary">
-                                        <i class="fa fa-check-circle"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-white rounded-lg p-4 border border-gray-100">
-                                <div class="flex items-center justify-between">
-                                    <div><p class="text-gray-500 text-sm">进度滞后</p><h3 class="text-2xl font-bold mt-1">4</h3></div>
-                                    <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-warning">
-                                        <i class="fa fa-exclamation-circle"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-white rounded-lg p-4 border border-gray-100">
-                                <div class="flex items-center justify-between">
-                                    <div><p class="text-gray-500 text-sm">未更新本周</p><h3 class="text-2xl font-bold mt-1">2</h3></div>
-                                    <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-danger">
-                                        <i class="fa fa-times-circle"></i>
-                                    </div>
-                                </div>
-                            </div>
+                    <!-- 我的进展历史 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">我的进展历史</h3>
+                        <div id="my-progress-list">
+                            <!-- 动态加载 -->
                         </div>
-
-                        <!-- 按你截图的表格样式实现 -->
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div class="p-6 border-b border-gray-100">
-                                <h3 class="text-lg font-semibold text-gray-800">学生研究进展</h3>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full">
-                                    <thead class="bg-gray-50 text-left text-sm text-gray-500">
-                                        <tr>
-                                            <th class="px-6 py-4 font-medium">学生</th>
-                                            <th class="px-6 py-4 font-medium">研究方向</th>
-                                            <th class="px-6 py-4 font-medium">最近进展</th>
-                                            <th class="px-6 py-4 font-medium">下次目标</th>
-                                            <th class="px-6 py-4 font-medium">最后更新</th>
-                                            <th class="px-6 py-4 font-medium">操作</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-100 text-sm">
-                                        <!-- 张明 -->
-                                        <tr class="hover:bg-gray-50">
-                                            <td class="px-6 py-4">
-                                                <div class="flex items-center gap-3">
-                                                    <img src="https://picsum.photos/id/101/200/200" class="w-10 h-10 rounded-full">
-                                                    <div>
-                                                        <div class="font-medium text-gray-800">张明</div>
-                                                        <div class="text-gray-500">博士2年级</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 text-gray-700">多模态学习与生成模型</td>
-                                            <td class="px-6 py-4 text-gray-600">完成了跨模态注意力机制设计，初步实验结果显示较基线模型提升3.2%</td>
-                                            <td class="px-6 py-4 text-gray-600">准备数据集扩展和 ablation study，计划下周完成</td>
-                                            <td class="px-6 py-4 text-gray-500">2023-11-12</td>
-                                            <td class="px-6 py-4">
-                                                <div class="flex gap-3">
-                                                    <a href="#" class="text-primary hover:underline">详情</a>
-                                                    <button class="bg-blue-50 text-primary px-3 py-1 rounded hover:bg-blue-100">沟通</button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <!-- 李华 -->
-                                        <tr class="hover:bg-gray-50">
-                                            <td class="px-6 py-4">
-                                                <div class="flex items-center gap-3">
-                                                    <img src="https://picsum.photos/id/102/200/200" class="w-10 h-10 rounded-full">
-                                                    <div>
-                                                        <div class="font-medium text-gray-800">李华</div>
-                                                        <div class="text-gray-500">硕士3年级</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 text-gray-700">低资源场景下的文本分类</td>
-                                            <td class="px-6 py-4 text-gray-600">完成了基于对比学习的预训练模型微调，在多个低资源数据集上进行了验证</td>
-                                            <td class="px-6 py-4 text-gray-600">撰写研究论文，计划月底前完成初稿</td>
-                                            <td class="px-6 py-4 text-gray-500">2023-11-10</td>
-                                            <td class="px-6 py-4">
-                                                <div class="flex gap-3">
-                                                    <a href="#" class="text-primary hover:underline">详情</a>
-                                                    <button class="bg-blue-50 text-primary px-3 py-1 rounded hover:bg-blue-100">沟通</button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <!-- 王芳 -->
-                                        <tr class="hover:bg-gray-50">
-                                            <td class="px-6 py-4">
-                                                <div class="flex items-center gap-3">
-                                                    <img src="https://picsum.photos/id/103/200/200" class="w-10 h-10 rounded-full">
-                                                    <div>
-                                                        <div class="font-medium text-gray-800">王芳</div>
-                                                        <div class="text-gray-500">硕士2年级</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 text-gray-700">可解释性AI与模型可信度</td>
-                                            <td class="px-6 py-4 text-gray-600">设计了基于注意力权重的模型解释方法，正在进行有效性验证实验</td>
-                                            <td class="px-6 py-4 text-gray-600">完成用户研究实验设计，招募受试者进行评估</td>
-                                            <td class="px-6 py-4 text-gray-500">2023-11-08</td>
-                                            <td class="px-6 py-4">
-                                                <div class="flex gap-3">
-                                                    <a href="#" class="text-primary hover:underline">详情</a>
-                                                    <button class="bg-blue-50 text-primary px-3 py-1 rounded hover:bg-blue-100">沟通</button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="p-4 text-center border-t border-gray-100">
-                                <a href="#" class="text-primary hover:underline">查看所有学生进展</a>
-                            </div>
+                        <div id="no-progress" class="text-center text-gray-500 py-8 hidden">
+                            <i class="fa fa-inbox text-4xl mb-4"></i>
+                            <p>暂无进展记录</p>
+                            <p class="text-sm">点击上方按钮开始提交你的研究进展</p>
                         </div>
                     </div>
                 </div>
+
+                <!-- 导师/管理员端内容 -->
+                {% else %}
+                <div id="teacher-view">
+                    <!-- 筛选工具栏 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div class="flex flex-wrap gap-2">
+                                <button class="filter-btn px-3 py-1 bg-primary/10 text-primary text-sm rounded-lg active" data-filter="all">全部成员</button>
+                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="doctoral">博士生</button>
+                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="master">硕士生</button>
+                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="undergraduate">本科生</button>
+                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="not_updated">进度预警</button>
+                            </div>
+                            {% if user.role == 'admin' %}
+                            <button id="batch-settings-btn" class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary/90 flex items-center gap-2 transition-colors">
+                                <i class="fa fa-cog"></i><span>批量设置周期</span>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- 统计卡片 -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white rounded-lg p-4 border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div><p class="text-gray-500 text-sm">总人数</p><h3 id="stats-total" class="text-2xl font-bold mt-1">--</h3></div>
+                                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary">
+                                    <i class="fa fa-users"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div><p class="text-gray-500 text-sm">进度正常</p><h3 id="stats-normal" class="text-2xl font-bold mt-1 text-green-600">--</h3></div>
+                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                    <i class="fa fa-check-circle"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div><p class="text-gray-500 text-sm">进度滞后</p><h3 id="stats-delayed" class="text-2xl font-bold mt-1 text-yellow-600">--</h3></div>
+                                <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+                                    <i class="fa fa-exclamation-circle"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div><p class="text-gray-500 text-sm">未更新本周</p><h3 id="stats-not_updated" class="text-2xl font-bold mt-1 text-gray-600">--</h3></div>
+                                <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
+                                    <i class="fa fa-times-circle"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 学生研究进展表格 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="p-6 border-b border-gray-100">
+                            <h3 class="text-lg font-semibold text-gray-800">学生研究进展</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50 text-left text-sm text-gray-500">
+                                    <tr>
+                                        <th class="px-6 py-4 font-medium">学生</th>
+                                        <th class="px-6 py-4 font-medium">研究方向</th>
+                                        <th class="px-6 py-4 font-medium">最近进展</th>
+                                        <th class="px-6 py-4 font-medium">下周目标</th>
+                                        <th class="px-6 py-4 font-medium">完成度</th>
+                                        <th class="px-6 py-4 font-medium">状态</th>
+                                        <th class="px-6 py-4 font-medium">最后更新</th>
+                                        <th class="px-6 py-4 font-medium">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="team-progress-table" class="divide-y divide-gray-100 text-sm">
+                                    <!-- 动态加载 -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="no-team-progress" class="p-6 text-center text-gray-500 hidden">
+                            <i class="fa fa-inbox text-4xl mb-4"></i>
+                            <p>暂无学生进展数据</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
-        <!-- ====================== 【内容区结束】 ====================== -->
     </main>
 
+    <!-- 提交进展弹窗 -->
+    <div id="submit-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800">提交研究进展</h3>
+                <button id="close-submit-modal" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <i class="fa fa-times text-gray-500"></i>
+                </button>
+            </div>
+            <form id="submit-form" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">研究方向</label>
+                    <input type="text" id="research-direction" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="请输入研究方向">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">本周进展内容 <span class="text-red-500">*</span></label>
+                    <textarea id="weekly-progress" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="请描述本周完成的工作和进展" required></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">下周目标 <span class="text-red-500">*</span></label>
+                    <textarea id="next-goal" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="请描述下周计划完成的工作" required></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">遇到的问题/困难</label>
+                    <textarea id="difficulties" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="如有问题或困难请在此描述（可选）"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">完成度</label>
+                    <div class="flex items-center gap-4">
+                        <input type="range" id="completion-rate" min="0" max="100" value="50" class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <span id="completion-value" class="text-lg font-medium text-primary">50%</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">附件（可选）</label>
+                    <input type="file" id="attachments" multiple class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                    <p class="text-xs text-gray-500 mt-1">支持上传多个文件</p>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" id="cancel-submit" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">取消</button>
+                    <button type="submit" class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">提交</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 详情弹窗 -->
+    <div id="detail-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 id="detail-title" class="text-lg font-semibold text-gray-800">进展详情</h3>
+                <button id="close-detail-modal" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <i class="fa fa-times text-gray-500"></i>
+                </button>
+            </div>
+            <div id="detail-content" class="p-6 space-y-4">
+                <!-- 动态内容 -->
+            </div>
+            <div id="feedback-section" class="p-6 border-t border-gray-100 hidden">
+                <h4 class="text-sm font-medium text-gray-700 mb-2">导师反馈</h4>
+                <textarea id="feedback-input" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="请输入反馈内容"></textarea>
+                <button id="send-feedback-btn" class="mt-3 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">发送反馈</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 批量设置弹窗 -->
+    <div id="batch-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800">批量设置提交周期</h3>
+                <button id="close-batch-modal" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <i class="fa fa-times text-gray-500"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">选择学生</label>
+                    <div id="student-select-list" class="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3">
+                        <!-- 动态加载学生列表 -->
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">提交周期</label>
+                    <select id="batch-period-type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                        <option value="weekly">每周提交</option>
+                        <option value="biweekly">每两周提交</option>
+                        <option value="monthly">每月提交</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">提前提醒天数</label>
+                    <input type="number" id="batch-reminder-days" min="1" max="7" value="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button id="cancel-batch" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">取消</button>
+                    <button id="confirm-batch" class="flex-1 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors">确认设置</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // API基础URL - 根据当前环境自动检测
+        // API基础URL
         let API_BASE_URL = '';
         if (window.location.hostname === 'localhost') {
             if (window.location.port === '8081' || window.location.port === '8000') {
@@ -481,21 +496,22 @@
             }
         }
 
-        // 移动端侧边栏功能
+        // 用户角色
+        const USER_ROLE = '{{ user.role }}';
+        const USER_ID = {{ user.id }};
+        const USER_RESEARCH_DIRECTION = '{{ user.research_direction or "" }}';
+
+        // 移动端侧边栏
         function initMobileSidebar() {
             const sidebar = document.getElementById('sidebar');
             const sidebarToggle = document.getElementById('mobile-sidebar-toggle');
             const sidebarClose = document.getElementById('mobile-sidebar-close');
-            const sidebarOverlay = document.getElementById('sidebar-overlay');
 
-            // 创建遮罩层（如果不存在）
             if (!sidebarOverlay) {
                 const overlay = document.createElement('div');
                 overlay.id = 'sidebar-overlay';
                 overlay.className = 'fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden hidden';
                 document.body.appendChild(overlay);
-
-                // 点击遮罩层关闭侧边栏
                 overlay.addEventListener('click', closeMobileSidebar);
             }
 
@@ -511,43 +527,486 @@
                 document.body.style.overflow = '';
             }
 
-            // 绑定事件
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', openMobileSidebar);
-            }
-            if (sidebarClose) {
-                sidebarClose.addEventListener('click', closeMobileSidebar);
-            }
+            if (sidebarToggle) sidebarToggle.addEventListener('click', openMobileSidebar);
+            if (sidebarClose) sidebarClose.addEventListener('click', closeMobileSidebar);
 
-            // 侧边栏菜单点击后关闭移动端侧边栏
-            const sidebarItems = document.querySelectorAll('.sidebar-icon');
-            sidebarItems.forEach(item => {
+            document.querySelectorAll('.sidebar-icon').forEach(item => {
                 item.addEventListener('click', function() {
-                    sidebarItems.forEach(i => i.classList.remove('active'));
+                    document.querySelectorAll('.sidebar-icon').forEach(i => i.classList.remove('active'));
                     this.classList.add('active');
-
-                    // 移动端点击后关闭侧边栏
-                    if (window.innerWidth < 1024) {
-                        closeMobileSidebar();
-                    }
+                    if (window.innerWidth < 1024) closeMobileSidebar();
                 });
             });
         }
 
+        // 获取统计数据
+        async function fetchStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/research_progress/stats`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('stats-total').textContent = result.data.total;
+                    document.getElementById('stats-normal').textContent = result.data.normal;
+                    document.getElementById('stats-delayed').textContent = result.data.delayed;
+                    document.getElementById('stats-not_updated').textContent = result.data.not_updated;
+                }
+            } catch (error) {
+                console.error('获取统计数据失败:', error);
+            }
+        }
+
+        // 获取团队进展列表
+        async function fetchTeamProgress(filter = 'all') {
+            try {
+                let statusFilter = '';
+                let studentType = '';
+
+                if (filter === 'not_updated') {
+                    statusFilter = 'not_updated';
+                } else if (filter !== 'all') {
+                    studentType = filter;
+                }
+
+                const params = new URLSearchParams();
+                if (studentType) params.append('student_type', studentType);
+                if (statusFilter) params.append('status', statusFilter);
+
+                const response = await fetch(`${API_BASE_URL}/api/research_progress/team?${params}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                });
+                const result = await response.json();
+
+                const tbody = document.getElementById('team-progress-table');
+                const noData = document.getElementById('no-team-progress');
+
+                if (result.success && result.data.length > 0) {
+                    noData.classList.add('hidden');
+                    tbody.innerHTML = result.data.map(item => {
+                        const statusClass = {
+                            'normal': 'status-normal',
+                            'delayed': 'status-delayed',
+                            'warning': 'status-warning',
+                            'not_updated': 'status-not_updated'
+                        }[item.computed_status] || 'status-normal';
+
+                        const statusText = {
+                            'normal': '进度正常',
+                            'delayed': '进度滞后',
+                            'warning': '进度预警',
+                            'not_updated': '未更新'
+                        }[item.computed_status] || '进度正常';
+
+                        const lastUpdate = item.submission_date ?
+                            new Date(item.submission_date).toLocaleDateString('zh-CN') : '暂无记录';
+
+                        return `
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <img src="https://picsum.photos/id/${item.user_id}/200/200" class="w-10 h-10 rounded-full">
+                                        <div>
+                                            <div class="font-medium text-gray-800">${item.username}</div>
+                                            <div class="text-gray-500 text-xs">${item.degree_type || '学生'}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-gray-700">${item.research_direction || item.user_research_direction || '未设置'}</td>
+                                <td class="px-6 py-4 text-gray-600 max-w-xs truncate">${item.weekly_progress || '暂无进展'}</td>
+                                <td class="px-6 py-4 text-gray-600 max-w-xs truncate">${item.next_goal || '暂无目标'}</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-16 bg-gray-200 rounded-full h-2">
+                                            <div class="bg-primary h-2 rounded-full" style="width: ${item.completion_rate || 0}%"></div>
+                                        </div>
+                                        <span class="text-sm">${item.completion_rate || 0}%</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-1 rounded-full text-xs ${statusClass}">${statusText}</span>
+                                </td>
+                                <td class="px-6 py-4 text-gray-500">${lastUpdate}</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex gap-2">
+                                        <button class="text-primary hover:underline view-detail-btn" data-id="${item.progress_id}" data-user-id="${item.user_id}">详情</button>
+                                        <button class="bg-blue-50 text-primary px-2 py-1 rounded hover:bg-blue-100 communicate-btn" data-id="${item.progress_id}">沟通</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = '';
+                    noData.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('获取团队进展失败:', error);
+            }
+        }
+
+        // 获取个人进展列表
+        async function fetchMyProgress() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/research_progress/my`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                });
+                const result = await response.json();
+
+                const listContainer = document.getElementById('my-progress-list');
+                const noData = document.getElementById('no-progress');
+
+                if (result.success && result.data.length > 0) {
+                    noData.classList.add('hidden');
+                    listContainer.innerHTML = result.data.map(item => {
+                        const statusClass = {
+                            'normal': 'status-normal',
+                            'delayed': 'status-delayed',
+                            'warning': 'status-warning'
+                        }[item.status] || 'status-normal';
+
+                        const statusText = {
+                            'normal': '进度正常',
+                            'delayed': '进度滞后',
+                            'warning': '进度预警'
+                        }[item.status] || '进度正常';
+
+                        const date = new Date(item.submission_date).toLocaleDateString('zh-CN');
+
+                        return `
+                            <div class="progress-item">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div>
+                                        <span class="text-gray-500 text-sm">${date}</span>
+                                        <span class="px-2 py-1 rounded-full text-xs ml-2 ${statusClass}">${statusText}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm text-gray-600">完成度: ${item.completion_rate}%</span>
+                                        <button class="text-primary hover:underline text-sm edit-progress-btn" data-id="${item.id}">编辑</button>
+                                        <button class="text-primary hover:underline text-sm view-my-detail-btn" data-id="${item.id}">查看详情</button>
+                                    </div>
+                                </div>
+                                <p class="text-gray-700 font-medium mb-2">研究方向：${item.research_direction}</p>
+                                <p class="text-gray-600 mb-2"><strong>本周进展：</strong>${item.weekly_progress}</p>
+                                <p class="text-gray-600"><strong>下周目标：</strong>${item.next_goal}</p>
+                                ${item.supervisor_feedback ? `<div class="mt-3 p-3 bg-blue-50 rounded-lg"><p class="text-sm text-gray-500">导师反馈：</p><p class="text-gray-700">${item.supervisor_feedback}</p></div>` : ''}
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    listContainer.innerHTML = '';
+                    noData.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('获取个人进展失败:', error);
+            }
+        }
+
+        // 获取周期设置
+        async function fetchMySettings() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/research_progress/settings`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('period-type').textContent = result.data.period_text;
+                    if (result.data.next_deadline) {
+                        document.getElementById('next-deadline').textContent =
+                            new Date(result.data.next_deadline).toLocaleDateString('zh-CN');
+                    }
+                }
+            } catch (error) {
+                console.error('获取周期设置失败:', error);
+            }
+        }
+
+        // 提交进展
+        async function submitProgress(formData) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/research_progress/submit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('session_token')}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('进展提交成功！');
+                    closeSubmitModal();
+                    fetchMyProgress();
+                    fetchMySettings();
+                } else {
+                    alert(result.message || '提交失败');
+                }
+            } catch (error) {
+                console.error('提交进展失败:', error);
+                alert('提交失败，请稍后重试');
+            }
+        }
+
+        // 查看详情
+        async function viewProgressDetail(progressId, isTeacher = false) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/research_progress/${progressId}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    const data = result.data;
+                    document.getElementById('detail-title').textContent =
+                        `进展详情 - ${data.user_info?.username || '我'} (${new Date(data.submission_date).toLocaleDateString('zh-CN')})`;
+
+                    document.getElementById('detail-content').innerHTML = `
+                        <div class="space-y-3">
+                            <p class="text-gray-700"><strong>研究方向：</strong>${data.research_direction}</p>
+                            <p class="text-gray-700"><strong>本周进展：</strong>${data.weekly_progress}</p>
+                            <p class="text-gray-700"><strong>下周目标：</strong>${data.next_goal}</p>
+                            <p class="text-gray-700"><strong>问题困难：</strong>${data.difficulties || '无'}</p>
+                            <p class="text-gray-700"><strong>完成度：</strong>${data.completion_rate}%</p>
+                            ${data.attachments && data.attachments.length > 0 ?
+                                `<p class="text-gray-700"><strong>附件：</strong>${data.attachments.join(', ')}</p>` : ''}
+                            ${data.supervisor_feedback ?
+                                `<div class="p-3 bg-blue-50 rounded-lg"><p class="text-sm text-gray-500 mb-1">导师反馈：</p><p class="text-gray-700">${data.supervisor_feedback}</p></div>` : ''}
+                        </div>
+                    `;
+
+                    // 导师可以发送反馈
+                    const feedbackSection = document.getElementById('feedback-section');
+                    if (isTeacher) {
+                        feedbackSection.classList.remove('hidden');
+                        feedbackSection.dataset.progressId = progressId;
+                    } else {
+                        feedbackSection.classList.add('hidden');
+                    }
+
+                    openDetailModal();
+                } else {
+                    alert(result.message || '获取详情失败');
+                }
+            } catch (error) {
+                console.error('获取详情失败:', error);
+                alert('获取详情失败，请稍后重试');
+            }
+        }
+
+        // 发送反馈
+        async function sendFeedback(progressId, feedback) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/research_progress/${progressId}/feedback`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('session_token')}`
+                    },
+                    body: JSON.stringify({ feedback })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('反馈发送成功！');
+                    closeDetailModal();
+                    fetchTeamProgress();
+                } else {
+                    alert(result.message || '发送失败');
+                }
+            } catch (error) {
+                console.error('发送反馈失败:', error);
+                alert('发送失败，请稍后重试');
+            }
+        }
+
+        // 弹窗控制
+        function openSubmitModal() {
+            document.getElementById('submit-modal').classList.remove('hidden');
+            document.getElementById('research-direction').value = USER_RESEARCH_DIRECTION;
+        }
+
+        function closeSubmitModal() {
+            document.getElementById('submit-modal').classList.add('hidden');
+            document.getElementById('submit-form').reset();
+        }
+
+        function openDetailModal() {
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+
+        function openBatchModal() {
+            document.getElementById('batch-modal').classList.remove('hidden');
+            loadStudentListForBatch();
+        }
+
+        function closeBatchModal() {
+            document.getElementById('batch-modal').classList.add('hidden');
+        }
+
+        // 加载学生列表（批量设置用）
+        async function loadStudentListForBatch() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/research_progress/team`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` }
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    const container = document.getElementById('student-select-list');
+                    container.innerHTML = result.data.map(item => `
+                        <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                            <input type="checkbox" class="student-checkbox" value="${item.user_id}">
+                            <span class="text-gray-700">${item.username} (${item.degree_type || '学生'})</span>
+                        </label>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('加载学生列表失败:', error);
+            }
+        }
+
+        // 批量设置周期
+        async function batchSetSettings() {
+            const selectedIds = Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb => parseInt(cb.value));
+            if (selectedIds.length === 0) {
+                alert('请选择要设置的学生');
+                return;
+            }
+
+            const periodType = document.getElementById('batch-period-type').value;
+            const reminderDays = parseInt(document.getElementById('batch-reminder-days').value);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/research_progress/settings/batch`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('session_token')}`
+                    },
+                    body: JSON.stringify({
+                        user_ids: selectedIds,
+                        period_type: periodType,
+                        reminder_days: reminderDays
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert(`成功设置 ${selectedIds.length} 个学生的提交周期`);
+                    closeBatchModal();
+                } else {
+                    alert(result.message || '设置失败');
+                }
+            } catch (error) {
+                console.error('批量设置失败:', error);
+                alert('设置失败，请稍后重试');
+            }
+        }
+
+        // 初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 初始化移动端侧边栏
             initMobileSidebar();
 
-            // 登出功能
+            // 根据角色加载不同内容
+            if (USER_ROLE === 'student') {
+                fetchMyProgress();
+                fetchMySettings();
+
+                // 提交进展按钮
+                document.getElementById('submit-progress-btn').addEventListener('click', openSubmitModal);
+                document.getElementById('close-submit-modal').addEventListener('click', closeSubmitModal);
+                document.getElementById('cancel-submit').addEventListener('click', closeSubmitModal);
+
+                // 完成度滑块
+                document.getElementById('completion-rate').addEventListener('input', function() {
+                    document.getElementById('completion-value').textContent = this.value + '%';
+                });
+
+                // 提交表单
+                document.getElementById('submit-form').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const formData = {
+                        research_direction: document.getElementById('research-direction').value,
+                        weekly_progress: document.getElementById('weekly-progress').value,
+                        next_goal: document.getElementById('next-goal').value,
+                        difficulties: document.getElementById('difficulties').value,
+                        completion_rate: parseInt(document.getElementById('completion-rate').value)
+                    };
+                    submitProgress(formData);
+                });
+
+                // 查看详情
+                document.querySelectorAll('.view-my-detail-btn').forEach(btn => {
+                    btn.addEventListener('click', () => viewProgressDetail(parseInt(btn.dataset.id), false));
+                });
+
+            } else {
+                // 导师/管理员
+                fetchStats();
+                fetchTeamProgress();
+
+                // 筛选按钮
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        document.querySelectorAll('.filter-btn').forEach(b => {
+                            b.classList.remove('active', 'bg-primary/10', 'text-primary');
+                            b.classList.add('bg-gray-100', 'text-gray-600');
+                        });
+                        this.classList.add('active', 'bg-primary/10', 'text-primary');
+                        this.classList.remove('bg-gray-100', 'text-gray-600');
+                        fetchTeamProgress(this.dataset.filter);
+                    });
+                });
+
+                // 查看详情
+                document.getElementById('team-progress-table').addEventListener('click', function(e) {
+                    if (e.target.classList.contains('view-detail-btn')) {
+                        const progressId = parseInt(e.target.dataset.id);
+                        if (progressId) {
+                            viewProgressDetail(progressId, true);
+                        } else {
+                            // 如果没有进展记录，跳转到设置周期
+                            const userId = parseInt(e.target.dataset.userId);
+                            alert('该学生暂无进展记录，可以为其设置提交周期');
+                        }
+                    }
+                    if (e.target.classList.contains('communicate-btn')) {
+                        const progressId = parseInt(e.target.dataset.id);
+                        if (progressId) {
+                            viewProgressDetail(progressId, true);
+                        }
+                    }
+                });
+
+                // 详情弹窗
+                document.getElementById('close-detail-modal').addEventListener('click', closeDetailModal);
+                document.getElementById('send-feedback-btn').addEventListener('click', function() {
+                    const progressId = parseInt(document.getElementById('feedback-section').dataset.progressId);
+                    const feedback = document.getElementById('feedback-input').value;
+                    if (!feedback) {
+                        alert('请输入反馈内容');
+                        return;
+                    }
+                    sendFeedback(progressId, feedback);
+                });
+
+                // 批量设置（管理员）
+                if (USER_ROLE === 'admin') {
+                    document.getElementById('batch-settings-btn').addEventListener('click', openBatchModal);
+                    document.getElementById('close-batch-modal').addEventListener('click', closeBatchModal);
+                    document.getElementById('cancel-batch').addEventListener('click', closeBatchModal);
+                    document.getElementById('confirm-batch').addEventListener('click', batchSetSettings);
+                }
+            }
+
+            // 登出
             const logoutBtn = document.getElementById('logout-btn');
             const logoutBtnMobile = document.getElementById('logout-btn-mobile');
 
-            // 退出登录函数
             async function performLogout() {
                 try {
-                    console.log('🔥 开始登出操作');
-
-                    // 调用登出API
                     const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
                         method: 'POST',
                         headers: {
@@ -555,46 +1014,21 @@
                             'Authorization': `Bearer ${localStorage.getItem('session_token')}`
                         }
                     });
-
-                    const result = await response.json();
-                    console.log('📋 登出API响应:', result);
-
-                    // 清除本地存储的会话信息
                     localStorage.removeItem('session_token');
                     localStorage.removeItem('user_info');
                     localStorage.removeItem('remember_me');
-
-                    console.log('✅ 登出成功，跳转到登录页面');
-
-                    // 跳转到登录页面
-                    window.location.href = 'http://localhost:8081/login';
-
+                    window.location.href = `${API_BASE_URL}/login`;
                 } catch (error) {
-                    console.error('❌ 登出过程中发生错误:', error);
-                    // 即使API调用失败，也清除本地存储并跳转
+                    console.error('登出失败:', error);
                     localStorage.removeItem('session_token');
                     localStorage.removeItem('user_info');
-                    localStorage.removeItem('remember_me');
-                    window.location.href = 'http://localhost:8081/login';
+                    window.location.href = `${API_BASE_URL}/login`;
                 }
             }
 
-            // 桌面端退出登录按钮事件
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    await performLogout();
-                });
-            }
-
-            // 移动端退出登录按钮事件
-            if (logoutBtnMobile) {
-                logoutBtnMobile.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    await performLogout();
-                });
-            }
-        })
+            if (logoutBtn) logoutBtn.addEventListener('click', async e => { e.preventDefault(); await performLogout(); });
+            if (logoutBtnMobile) logoutBtnMobile.addEventListener('click', async e => { e.preventDefault(); await performLogout(); });
+        });
     </script>
 </body>
 </html>
