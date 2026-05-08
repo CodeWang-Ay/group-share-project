@@ -4185,6 +4185,7 @@ async def get_research_tasks(request: Request):
         priority_filter = request.query_params.get("priority")
         assignee_filter = request.query_params.get("assignee_id")
         type_filter = request.query_params.get("task_type")
+        keyword_filter = request.query_params.get("keyword")
         sort_by = request.query_params.get("sort_by", "deadline")
         sort_order = request.query_params.get("sort_order", "asc")
 
@@ -4198,6 +4199,7 @@ async def get_research_tasks(request: Request):
             priority=priority_filter,
             assignee_id=int(assignee_filter) if assignee_filter else None,
             task_type=type_filter,
+            keyword=keyword_filter,
             sort_by=sort_by,
             sort_order=sort_order,
             limit=limit,
@@ -4211,7 +4213,8 @@ async def get_research_tasks(request: Request):
             status=status_filter,
             priority=priority_filter,
             assignee_id=int(assignee_filter) if assignee_filter else None,
-            task_type=type_filter
+            task_type=type_filter,
+            keyword=keyword_filter
         )
 
         # 计算分页信息

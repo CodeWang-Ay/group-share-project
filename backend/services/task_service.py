@@ -95,6 +95,7 @@ class TaskService:
         priority: Optional[str] = None,
         assignee_id: Optional[int] = None,
         task_type: Optional[str] = None,
+        keyword: Optional[str] = None,
         sort_by: str = 'deadline',
         sort_order: str = 'asc',
         limit: int = 10,
@@ -110,6 +111,7 @@ class TaskService:
             priority: 优先级筛选
             assignee_id: 负责人筛选
             task_type: 任务类型筛选
+            keyword: 搜索关键词（标题模糊匹配）
             sort_by: 排序字段
             sort_order: 排序方向
             limit: 返回数量
@@ -128,9 +130,14 @@ class TaskService:
                 where_conditions.append("(assignee_id = ? OR creator_id = ?)")
                 params.extend([user_id, user_id])
 
+            # 状态筛选：特殊处理 overdue（逾期）
             if status:
-                where_conditions.append("status = ?")
-                params.append(status)
+                if status == 'overdue':
+                    # 逾期状态：未完成 + 截止日期已过期
+                    where_conditions.append("status != 'completed' AND deadline IS NOT NULL AND deadline < CURRENT_TIMESTAMP")
+                else:
+                    where_conditions.append("status = ?")
+                    params.append(status)
 
             if priority:
                 where_conditions.append("priority = ?")
@@ -143,6 +150,10 @@ class TaskService:
             if task_type:
                 where_conditions.append("task_type = ?")
                 params.append(task_type)
+
+            if keyword:
+                where_conditions.append("title LIKE ?")
+                params.append(f"%{keyword}%")
 
             where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
 
@@ -186,7 +197,8 @@ class TaskService:
         status: Optional[str] = None,
         priority: Optional[str] = None,
         assignee_id: Optional[int] = None,
-        task_type: Optional[str] = None
+        task_type: Optional[str] = None,
+        keyword: Optional[str] = None
     ) -> int:
         """获取任务总数"""
         with get_db() as conn:
@@ -200,9 +212,14 @@ class TaskService:
                 where_conditions.append("(assignee_id = ? OR creator_id = ?)")
                 params.extend([user_id, user_id])
 
+            # 状态筛选：特殊处理 overdue（逾期）
             if status:
-                where_conditions.append("status = ?")
-                params.append(status)
+                if status == 'overdue':
+                    # 逾期状态：未完成 + 截止日期已过期
+                    where_conditions.append("status != 'completed' AND deadline IS NOT NULL AND deadline < CURRENT_TIMESTAMP")
+                else:
+                    where_conditions.append("status = ?")
+                    params.append(status)
 
             if priority:
                 where_conditions.append("priority = ?")
@@ -215,6 +232,10 @@ class TaskService:
             if task_type:
                 where_conditions.append("task_type = ?")
                 params.append(task_type)
+
+            if keyword:
+                where_conditions.append("title LIKE ?")
+                params.append(f"%{keyword}%")
 
             where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
 

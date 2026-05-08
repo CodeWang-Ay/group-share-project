@@ -149,6 +149,9 @@
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 min-h-screen flex flex-col">
+    <!-- Toast 提示容器 -->
+    <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 items-center"></div>
+
     <!-- 顶部导航栏 -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div class="container mx-auto px-4">
@@ -371,12 +374,18 @@
                 <!-- 顶部筛选栏 -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div class="flex flex-wrap gap-2">
+                        <div class="flex flex-wrap gap-2 items-center">
                             <span class="task-status-btn bg-primary text-white" data-status="">全部任务</span>
                             <span class="task-status-btn status-wait" data-status="pending">待开始</span>
                             <span class="task-status-btn status-doing" data-status="ongoing">进行中</span>
                             <span class="task-status-btn status-finish" data-status="completed">已完成</span>
                             <span class="task-status-btn status-overdue" data-status="overdue">已逾期</span>
+                            <!-- 搜索框 -->
+                            <div class="relative ml-2">
+                                <input type="text" id="task-search-input" placeholder="搜索任务标题..."
+                                       class="py-2 pl-10 pr-4 rounded-lg bg-gray-100 border-0 focus:ring-2 focus:ring-primary/30 focus:bg-white w-40 lg:w-56 transition-all text-sm">
+                                <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            </div>
                         </div>
                         <div class="flex items-center gap-3">
                             <!-- 布局切换按钮组 -->
@@ -437,7 +446,8 @@
                         <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
                             <div class="grid grid-cols-12 gap-4 items-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 <div class="col-span-4">任务标题</div>
-                                <div class="col-span-2 text-center">优先级</div>
+                                <div class="col-span-1 text-center">优先级</div>
+                                <div class="col-span-1 text-center">进度</div>
                                 <div class="col-span-2 text-center">状态</div>
                                 <div class="col-span-2 text-center">负责人</div>
                                 <div class="col-span-2 text-center">操作</div>
@@ -641,11 +651,35 @@
         // API基础URL配置
         const API_BASE_URL = 'http://localhost:8081';
 
+        // Toast 提示函数
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+            const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : 'fa-info-circle';
+
+            toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transform -translate-y-full opacity-0 transition-all duration-300`;
+            toast.innerHTML = `<i class="fa ${icon}"></i><span>${message}</span>`;
+            container.appendChild(toast);
+
+            // 动画显示（从上方滑入）
+            setTimeout(() => {
+                toast.classList.remove('-translate-y-full', 'opacity-0');
+            }, 10);
+
+            // 3秒后消失（向上滑出）
+            setTimeout(() => {
+                toast.classList.add('-translate-y-full', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
         // 任务管理变量
         let taskCurrentPage = 1;
         let taskCurrentStatus = '';
         let taskCurrentPriority = '';
         let taskCurrentAssignee = '';
+        let taskCurrentKeyword = '';
         let taskCurrentSortBy = 'deadline';
         let taskCurrentSortOrder = 'asc';
         let currentTaskId = null;
@@ -844,6 +878,7 @@
                 if (taskCurrentStatus) params.append('status', taskCurrentStatus);
                 if (taskCurrentPriority) params.append('priority', taskCurrentPriority);
                 if (taskCurrentAssignee) params.append('assignee_id', taskCurrentAssignee);
+                if (taskCurrentKeyword) params.append('keyword', taskCurrentKeyword);
                 params.append('sort_by', taskCurrentSortBy);
                 params.append('sort_order', taskCurrentSortOrder);
 
@@ -950,8 +985,11 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-span-2 text-center">
+                        <div class="col-span-1 text-center">
                             <span class="task-priority ${priorityClass}">${task.priority_text}</span>
+                        </div>
+                        <div class="col-span-1 text-center text-sm text-gray-600">
+                            ${task.progress}%
                         </div>
                         <div class="col-span-2 text-center">
                             <span class="task-status-btn ${statusClass}">${task.status_text}</span>
@@ -987,11 +1025,11 @@
                 if (result.success) {
                     showTaskDetail(result.data);
                 } else {
-                    alert(result.message || '获取任务详情失败');
+                    showToast(result.message || '获取任务详情失败', 'error');
                 }
             } catch (e) {
                 console.error('获取任务详情失败:', e);
-                alert('网络错误，请重试');
+                showToast('网络错误，请重试', 'error');
             }
         }
 
@@ -1095,7 +1133,7 @@
             const assigneeId = document.getElementById('create-task-assignee').value;
 
             if (!title) {
-                alert('请输入任务标题');
+                showToast('请输入任务标题', 'error');
                 return;
             }
 
@@ -1121,16 +1159,16 @@
                 });
                 const result = await response.json();
                 if (result.success) {
-                    alert('任务创建成功！');
+                    showToast('任务创建成功！', 'success');
                     closeCreateTaskModal();
                     loadTaskStats();
                     loadTasks();
                 } else {
-                    alert(result.message || '创建失败');
+                    showToast(result.message || '创建失败', 'error');
                 }
             } catch (e) {
                 console.error('创建任务失败:', e);
-                alert('网络错误，请重试');
+                showToast('网络错误，请重试', 'error');
             }
         }
 
@@ -1159,11 +1197,11 @@
                         modal.classList.add('flex');
                     }
                 } else {
-                    alert(result.message || '获取任务失败');
+                    showToast(result.message || '获取任务失败', 'error');
                 }
             } catch (e) {
                 console.error('获取任务失败:', e);
-                alert('网络错误');
+                showToast('网络错误', 'error');
             }
         }
 
@@ -1189,7 +1227,7 @@
             const deadline = document.getElementById('edit-task-deadline').value;
 
             if (!title) {
-                alert('请输入任务标题');
+                showToast('请输入任务标题', 'error');
                 return;
             }
 
@@ -1211,17 +1249,17 @@
                 });
                 const result = await response.json();
                 if (result.success) {
-                    alert('任务更新成功！');
+                    showToast('任务更新成功！', 'success');
                     closeEditTaskModal();
                     closeDetailModal();
                     loadTaskStats();
                     loadTasks();
                 } else {
-                    alert(result.message || '更新失败');
+                    showToast(result.message || '更新失败', 'error');
                 }
             } catch (e) {
                 console.error('更新任务失败:', e);
-                alert('网络错误，请重试');
+                showToast('网络错误，请重试', 'error');
             }
         }
 
@@ -1258,16 +1296,16 @@
                 });
                 const result = await response.json();
                 if (result.success) {
-                    alert('任务删除成功！');
+                    showToast('任务删除成功！', 'success');
                     closeDeleteTaskModal();
                     loadTaskStats();
                     loadTasks();
                 } else {
-                    alert(result.message || '删除失败');
+                    showToast(result.message || '删除失败', 'error');
                 }
             } catch (e) {
                 console.error('删除任务失败:', e);
-                alert('网络错误，请重试');
+                showToast('网络错误，请重试', 'error');
             }
         }
 
@@ -1365,6 +1403,30 @@
                     filterByStatus(statusValue);
                 });
             });
+
+            // 搜索框事件
+            const searchInput = document.getElementById('task-search-input');
+            if (searchInput) {
+                // 实时搜索（带延迟）
+                let searchTimeout;
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        taskCurrentKeyword = this.value.trim();
+                        taskCurrentPage = 1;
+                        loadTasks();
+                    }, 300);
+                });
+                // 回车搜索
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        clearTimeout(searchTimeout);
+                        taskCurrentKeyword = this.value.trim();
+                        taskCurrentPage = 1;
+                        loadTasks();
+                    }
+                });
+            }
         });
     </script>
 </body>
