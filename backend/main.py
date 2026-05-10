@@ -2688,6 +2688,462 @@ async def delete_member(member_id: int, request: Request):
         )
 
 
+# API端点：批量修改成员角色
+@app.post("/api/users/batch-update-role")
+async def batch_update_user_role(request: Request):
+    """
+    批量修改成员角色API端点
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    # 只有管理员可以批量修改角色
+    if current_user.role != "admin":
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={
+                "success": False,
+                "message": "没有权限批量修改成员角色",
+                "error": "ACCESS_DENIED"
+            }
+        )
+
+    try:
+        data = await request.json()
+        user_ids = data.get("user_ids", [])
+        role = data.get("role")
+
+        if not user_ids or not role:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "缺少必要参数",
+                    "error": "MISSING_PARAMS"
+                }
+            )
+
+        if role not in ["admin", "teacher", "student"]:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "角色必须是admin、teacher或student",
+                    "error": "INVALID_ROLE"
+                }
+            )
+
+        with get_db() as conn:
+            cursor = conn.cursor()
+            updated_count = 0
+            for user_id in user_ids:
+                cursor.execute(
+                    "UPDATE users SET role = ?, updated_at = ? WHERE id = ?",
+                    (role, datetime.now().isoformat(), user_id)
+                )
+                if cursor.rowcount > 0:
+                    updated_count += 1
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": f"成功更新 {updated_count} 个成员的角色",
+                "updated_count": updated_count
+            }
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "批量修改角色失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
+# API端点：批量修改成员状态
+@app.post("/api/users/batch-update-status")
+async def batch_update_user_status(request: Request):
+    """
+    批量修改成员状态API端点
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    # 只有管理员可以批量修改状态
+    if current_user.role != "admin":
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={
+                "success": False,
+                "message": "没有权限批量修改成员状态",
+                "error": "ACCESS_DENIED"
+            }
+        )
+
+    try:
+        data = await request.json()
+        user_ids = data.get("user_ids", [])
+        status_value = data.get("status")
+
+        if not user_ids or not status_value:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "缺少必要参数",
+                    "error": "MISSING_PARAMS"
+                }
+            )
+
+        if status_value not in ["active", "inactive"]:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "状态必须是active或inactive",
+                    "error": "INVALID_STATUS"
+                }
+            )
+
+        with get_db() as conn:
+            cursor = conn.cursor()
+            updated_count = 0
+            for user_id in user_ids:
+                cursor.execute(
+                    "UPDATE users SET status = ?, updated_at = ? WHERE id = ?",
+                    (status_value, datetime.now().isoformat(), user_id)
+                )
+                if cursor.rowcount > 0:
+                    updated_count += 1
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": f"成功更新 {updated_count} 个成员的状态",
+                "updated_count": updated_count
+            }
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "批量修改状态失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
+# API端点：批量删除成员
+@app.post("/api/users/batch-delete")
+async def batch_delete_users(request: Request):
+    """
+    批量删除成员API端点
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    # 只有管理员可以批量删除成员
+    if current_user.role != "admin":
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={
+                "success": False,
+                "message": "没有权限批量删除成员",
+                "error": "ACCESS_DENIED"
+            }
+        )
+
+    try:
+        data = await request.json()
+        user_ids = data.get("user_ids", [])
+
+        if not user_ids:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "缺少要删除的成员ID",
+                    "error": "MISSING_USER_IDS"
+                }
+            )
+
+        with get_db() as conn:
+            cursor = conn.cursor()
+            deleted_count = 0
+            for user_id in user_ids:
+                cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+                if cursor.rowcount > 0:
+                    deleted_count += 1
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": f"成功删除 {deleted_count} 个成员",
+                "deleted_count": deleted_count
+            }
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "批量删除失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
+# API端点：留言
+@app.post("/api/messages/send")
+async def send_message(request: Request):
+    """
+    留言API端点
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        data = await request.json()
+        receiver_id = data.get("receiver_id")
+        title = data.get("title")
+        content = data.get("content")
+
+        if not receiver_id or not title or not content:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "缺少必要参数",
+                    "error": "MISSING_PARAMS"
+                }
+            )
+
+        # 检查接收者是否存在
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, username FROM users WHERE id = ? AND status = 'active'", (receiver_id,))
+            receiver = cursor.fetchone()
+
+            if not receiver:
+                return JSONResponse(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    content={
+                        "success": False,
+                        "message": "接收者不存在或已被禁用",
+                        "error": "RECEIVER_NOT_FOUND"
+                    }
+                )
+
+            # 不能给自己留言
+            if receiver_id == current_user.id:
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    content={
+                        "success": False,
+                        "message": "不能给自己留言",
+                        "error": "SELF_MESSAGE_NOT_ALLOWED"
+                    }
+                )
+
+            # 插入留言
+            cursor.execute(
+                "INSERT INTO messages (sender_id, receiver_id, title, content) VALUES (?, ?, ?, ?)",
+                (current_user.id, receiver_id, title, content)
+            )
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": "留言成功"
+            }
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "发送消息失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
+# API端点：获取消息列表
+@app.get("/api/messages")
+async def get_messages(request: Request):
+    """
+    获取用户消息列表API端点
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # 获取用户收到的消息
+            cursor.execute("""
+                SELECT m.id, m.title, m.content, m.is_read, m.created_at,
+                       u.id as sender_id, u.username as sender_name
+                FROM messages m
+                JOIN users u ON m.sender_id = u.id
+                WHERE m.receiver_id = ?
+                ORDER BY m.created_at DESC
+            """, (current_user.id,))
+
+            messages = []
+            for row in cursor.fetchall():
+                messages.append({
+                    "id": row["id"],
+                    "title": row["title"],
+                    "content": row["content"],
+                    "is_read": row["is_read"],
+                    "created_at": row["created_at"],
+                    "sender": {
+                        "id": row["sender_id"],
+                        "username": row["sender_name"]
+                    }
+                })
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "messages": messages
+            }
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "获取留言失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
+# API端点：标记留言已读
+@app.put("/api/messages/{message_id}/read")
+async def mark_message_read(message_id: int, request: Request):
+    """
+    标记留言已读API端点
+    """
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # 检查留言是否存在且属于当前用户
+            cursor.execute(
+                "SELECT id FROM messages WHERE id = ? AND receiver_id = ?",
+                (message_id, current_user.id)
+            )
+            message = cursor.fetchone()
+
+            if not message:
+                return JSONResponse(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    content={
+                        "success": False,
+                        "message": "留言不存在",
+                        "error": "MESSAGE_NOT_FOUND"
+                    }
+                )
+
+            # 标记为已读
+            cursor.execute(
+                "UPDATE messages SET is_read = 1, read_at = ? WHERE id = ?",
+                (datetime.now().isoformat(), message_id)
+            )
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": "已标记为已读"
+            }
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": "操作失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
 # API端点：重置成员密码
 @app.put("/api/members/{member_id}/reset-password")
 async def reset_member_password(member_id: int, request: Request):

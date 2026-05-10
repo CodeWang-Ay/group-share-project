@@ -369,6 +369,25 @@ def init_db() -> None:
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_settings_user ON progress_settings(user_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_settings_deadline ON progress_settings(next_deadline)")
 
+        # 创建消息表
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sender_id INTEGER NOT NULL,
+                receiver_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                is_read INTEGER DEFAULT 0,
+                read_at DATETIME,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_messages_receiver ON messages(receiver_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_messages_read ON messages(is_read)")
+
         # 检查是否已存在admin用户
         cursor.execute("SELECT id FROM users WHERE username = 'admin'")
         admin_exists = cursor.fetchone()

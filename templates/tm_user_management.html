@@ -120,10 +120,10 @@
                     <i class="fa fa-search text-gray-600"></i>
                 </button>
 
-                <!-- 通知 -->
-                <div class="relative cursor-pointer p-2 rounded-full hover:bg-gray-100 transition-colors">
-                    <i class="fa fa-bell-o text-gray-600"></i>
-                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                <!-- 留言 -->
+                <div id="messages-btn" class="relative cursor-pointer p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <i class="fa fa-comment-o text-gray-600"></i>
+                    <span id="unread-badge" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full hidden"></span>
                 </div>
 
                 <!-- 用户信息 -->
@@ -413,21 +413,62 @@
                         </div>
                     </div>
 
+                    <!-- 批量操作工具栏 -->
+                    <div id="batch-toolbar" class="hidden bg-blue-50 px-6 py-3 border-b border-blue-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <span class="text-sm text-blue-700">
+                                    已选择 <span id="selected-count">0</span> 个成员
+                                </span>
+                                <button onclick="selectAll()" class="text-sm text-blue-600 hover:text-blue-800">
+                                    全选
+                                </button>
+                                <button onclick="deselectAll()" class="text-sm text-blue-600 hover:text-blue-800">
+                                    取消全选
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="batchEditRole()" class="px-3 py-1.5 text-sm bg-white text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors">
+                                    <i class="fa fa-users mr-1"></i>批量修改角色
+                                </button>
+                                <button onclick="batchEditStatus()" class="px-3 py-1.5 text-sm bg-white text-green-600 border border-green-300 rounded-lg hover:bg-green-50 transition-colors">
+                                    <i class="fa fa-power-off mr-1"></i>批量修改状态
+                                </button>
+                                <button onclick="batchDelete()" class="px-3 py-1.5 text-sm bg-white text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors">
+                                    <i class="fa fa-trash mr-1"></i>批量删除
+                                </button>
+                                <button onclick="cancelBatch()" class="px-3 py-1.5 text-sm bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition-colors">
+                                    取消
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- 表格视图 -->
                     <div id="list-view" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                         <!-- 表格头部 -->
                         <div class="bg-gray-50 px-6 py-3 border-b border-gray-200">
-                            <div class="grid grid-cols-12 gap-4 items-center">
-                                <div class="col-span-3">
-                                    <span class="text-sm font-medium text-gray-700">成员信息</span>
+                            <div class="grid grid-cols-10 gap-4 items-center">
+                                <div class="col-span-1 flex items-center gap-2">
+                                    <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll()" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                    <span class="text-sm font-medium text-gray-700">选择</span>
                                 </div>
-                                <div class="col-span-2">
-                                    <span class="text-sm font-medium text-gray-700">手机号码</span>
+                                <div class="col-span-1">
+                                    <span class="text-sm font-medium text-gray-700">用户名</span>
                                 </div>
-                                <div class="col-span-2">
+                                <div class="col-span-1">
+                                    <span class="text-sm font-medium text-gray-700">学号</span>
+                                </div>
+                                <div class="col-span-1">
+                                    <span class="text-sm font-medium text-gray-700">手机号</span>
+                                </div>
+                                <div class="col-span-1">
+                                    <span class="text-sm font-medium text-gray-700">学位</span>
+                                </div>
+                                <div class="col-span-1">
                                     <span class="text-sm font-medium text-gray-700">研究方向</span>
                                 </div>
-                                <div class="col-span-2">
+                                <div class="col-span-1">
                                     <span class="text-sm font-medium text-gray-700">角色</span>
                                 </div>
                                 <div class="col-span-1">
@@ -692,6 +733,180 @@
         </div>
     </div>
 
+    <!-- 查看成员详情模态框 -->
+    <div id="view-member-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+                <!-- 模态框头部 -->
+                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-800">成员详情</h3>
+                    <button onclick="closeViewMemberModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- 模态框内容 -->
+                <div class="p-6">
+                    <!-- 头像和基本信息 -->
+                    <div class="flex items-center gap-4 mb-6">
+                        <img id="view-member-avatar" src="" alt="头像" class="w-16 h-16 rounded-full object-cover border-2 border-gray-200">
+                        <div>
+                            <h4 id="view-member-username" class="text-xl font-semibold text-gray-800"></h4>
+                            <p id="view-member-role" class="text-sm text-gray-500"></p>
+                        </div>
+                    </div>
+
+                    <!-- 详细信息 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-sm text-gray-500">学号/工号</label>
+                                <p id="view-member-student-id" class="text-base font-medium text-gray-800"></p>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-500">手机号</label>
+                                <p id="view-member-phone" class="text-base font-medium text-gray-800"></p>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-500">邮箱</label>
+                                <p id="view-member-email" class="text-base font-medium text-gray-800"></p>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-500">学位类型</label>
+                                <p id="view-member-degree" class="text-base font-medium text-gray-800"></p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-sm text-gray-500">研究方向</label>
+                                <p id="view-member-research" class="text-base font-medium text-gray-800"></p>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-500">状态</label>
+                                <p id="view-member-status" class="text-base font-medium text-gray-800"></p>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-500">加入时间</label>
+                                <p id="view-member-created" class="text-base font-medium text-gray-800"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 关闭按钮 -->
+                    <div class="mt-6 flex justify-end">
+                        <button onclick="closeViewMemberModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                            关闭
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 留言模态框 -->
+    <div id="send-message-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl max-w-md w-full">
+                <!-- 模态框头部 -->
+                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-800">留言</h3>
+                    <button onclick="closeSendMessageModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- 模态框内容 -->
+                <div class="p-6">
+                    <form id="send-message-form" class="space-y-4">
+                        <input type="hidden" name="receiver_id" id="message-receiver-id">
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">接收者</label>
+                            <p id="message-receiver-name" class="text-base font-medium text-gray-800"></p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">留言标题 *</label>
+                            <input type="text" name="title" required placeholder="请输入留言标题" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">留言内容 *</label>
+                            <textarea name="content" required rows="4" placeholder="请输入留言内容" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"></textarea>
+                        </div>
+
+                        <div class="flex justify-end gap-3">
+                            <button type="button" onclick="closeSendMessageModal()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                                取消
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                                <i class="fa fa-comment mr-1"></i>提交留言
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 留言列表模态框 -->
+    <div id="messages-list-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+                <!-- 模态框头部 -->
+                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-800">我的留言</h3>
+                    <button onclick="closeMessagesListModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- 模态框内容 -->
+                <div class="p-6 overflow-y-auto max-h-[60vh]">
+                    <div id="messages-list-container">
+                        <!-- 留言列表将通过JavaScript动态加载 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 留言详情模态框 -->
+    <div id="message-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl max-w-md w-full">
+                <!-- 模态框头部 -->
+                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <h3 id="message-detail-title" class="text-lg font-semibold text-gray-800"></h3>
+                    <button onclick="closeMessageDetailModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- 模态框内容 -->
+                <div class="p-6">
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-500">发送者</p>
+                        <p id="message-detail-sender" class="text-base font-medium text-gray-800"></p>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-500">发送时间</p>
+                        <p id="message-detail-time" class="text-base text-gray-600"></p>
+                    </div>
+                    <div class="mb-6">
+                        <p class="text-sm text-gray-500 mb-2">留言内容</p>
+                        <p id="message-detail-content" class="text-base text-gray-800 whitespace-pre-wrap"></p>
+                    </div>
+                    <div class="flex justify-end">
+                        <button onclick="closeMessageDetailModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                            关闭
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 删除确认模态框 -->
     <div id="delete-member-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
         <div class="flex items-center justify-center min-h-screen p-4">
@@ -895,24 +1110,28 @@
             const container = document.getElementById('members-list-container');
 
             container.innerHTML = filteredMembers.map(member => `
-                <div class="member-row px-6 py-4 border-b border-gray-100 last:border-b-0">
-                    <div class="grid grid-cols-12 gap-4 items-center">
-                        <div class="col-span-3">
-                            <div class="flex items-center gap-3">
-                                <img src="${member.avatar}" alt="${member.username}" class="w-10 h-10 rounded-full object-cover">
-                                <div>
-                                    <p class="font-medium text-gray-800">${member.username}</p>
-                                    <p class="text-sm text-gray-500">${member.student_id}</p>
-                                </div>
-                            </div>
+                <div class="member-row px-6 py-4 border-b border-gray-100 last:border-b-0 cursor-pointer hover:bg-blue-50" onclick="toggleRowCheckbox(event, ${member.id})">
+                    <div class="grid grid-cols-10 gap-4 items-center">
+                        <div class="col-span-1">
+                            <input type="checkbox" class="member-checkbox w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" data-member-id="${member.id}" onchange="updateSelectedCount()" onclick="event.stopPropagation()">
                         </div>
-                        <div class="col-span-2">
+                        <div class="col-span-1 flex items-center gap-2">
+                            <img src="${member.avatar}" alt="${member.username}" class="w-8 h-8 rounded-full object-cover">
+                            <p class="font-medium text-gray-800 truncate">${member.username}</p>
+                        </div>
+                        <div class="col-span-1">
+                            <p class="text-sm text-gray-600">${member.student_id || '未设置'}</p>
+                        </div>
+                        <div class="col-span-1">
                             <p class="text-sm text-gray-600">${member.phone || '未设置'}</p>
                         </div>
-                        <div class="col-span-2">
-                            <p class="text-sm text-gray-600 truncate" title="${member.research_direction || '未设置研究方向'}">${member.research_direction || '未设置研究方向'}</p>
+                        <div class="col-span-1">
+                            <p class="text-sm text-gray-600">${member.degree_type || '未设置'}</p>
                         </div>
-                        <div class="col-span-2">
+                        <div class="col-span-1">
+                            <p class="text-sm text-gray-600 truncate" title="${member.research_direction || '未设置研究方向'}">${member.research_direction || '未设置'}</p>
+                        </div>
+                        <div class="col-span-1">
                             <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full ${getRoleClass(member.role)}">
                                 ${getRoleLabel(member.role)}
                             </span>
@@ -925,36 +1144,29 @@
                         <div class="col-span-1">
                             <p class="text-sm text-gray-600">${formatDate(member.created_at)}</p>
                         </div>
-                        <div class="col-span-1">
+                        <div class="col-span-1" onclick="event.stopPropagation()">
                             <div class="flex items-center justify-center gap-2">
-                                <button onclick="editMember(${member.id})" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors">
-                                    <i class="fa fa-edit"></i>
-                                </button>
                                 ${currentUserRole === 'admin' ? `
+                                    <button onclick="editMember(${member.id})" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="编辑">
+                                        <i class="fa fa-edit"></i>
+                                    </button>
                                     <button onclick="quickResetPassword(${member.id})" class="p-1 text-orange-600 hover:bg-orange-50 rounded transition-colors" title="重置密码">
                                         <i class="fa fa-key"></i>
                                     </button>
-                                    <button onclick="toggleMemberStatus(${member.id})" class="p-1 ${member.status === 'active' ? 'text-gray-600 hover:bg-gray-50' : 'text-green-600 hover:bg-green-50'} rounded transition-colors">
+                                    <button onclick="toggleMemberStatus(${member.id})" class="p-1 ${member.status === 'active' ? 'text-gray-600 hover:bg-gray-50' : 'text-green-600 hover:bg-green-50'} rounded transition-colors" title="${member.status === 'active' ? '禁用' : '启用'}">
                                         <i class="fa fa-${member.status === 'active' ? 'ban' : 'check-circle'}"></i>
                                     </button>
-                                    <button onclick="deleteMember(${member.id})" class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors">
+                                    <button onclick="deleteMember(${member.id})" class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors" title="删除">
                                         <i class="fa fa-trash"></i>
                                     </button>
-                                ` : ''}
-                                <div class="relative">
-                                    <button onclick="toggleMemberMenu(${member.id})" class="p-1 text-gray-600 hover:bg-gray-50 rounded transition-colors">
-                                        <i class="fa fa-ellipsis-v"></i>
+                                ` : `
+                                    <button onclick="viewMemberDetail(${member.id})" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="查看详情">
+                                        <i class="fa fa-eye"></i>
                                     </button>
-                                    <div id="member-menu-${member.id}" class="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 hidden z-10">
-                                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">查看详情</a>
-                                        ${currentUserRole === 'admin' ? `
-                                            <a href="#" onclick="quickResetPassword(${member.id})" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                                <i class="fa fa-key mr-2 text-yellow-500"></i>重置密码
-                                            </a>
-                                        ` : ''}
-                                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">发送消息</a>
-                                    </div>
-                                </div>
+                                    <button onclick="openSendMessageModalById(${member.id})" class="p-1 text-green-600 hover:bg-green-50 rounded transition-colors" title="留言">
+                                        <i class="fa fa-comment"></i>
+                                    </button>
+                                `}
                             </div>
                         </div>
                     </div>
@@ -1077,6 +1289,416 @@
         function filterMembers() {
             currentPage = 1;
             fetchMembers();
+        }
+
+        // 批量操作函数
+        let selectedMembers = [];
+
+        // 点击行切换复选框
+        function toggleRowCheckbox(event, memberId) {
+            const checkbox = document.querySelector(`.member-checkbox[data-member-id="${memberId}"]`);
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                updateSelectedCount();
+            }
+        }
+
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('.member-checkbox:checked');
+            selectedMembers = Array.from(checkboxes).map(cb => parseInt(cb.dataset.memberId));
+            const count = selectedMembers.length;
+
+            document.getElementById('selected-count').textContent = count;
+
+            const toolbar = document.getElementById('batch-toolbar');
+            if (count > 0) {
+                toolbar.classList.remove('hidden');
+            } else {
+                toolbar.classList.add('hidden');
+            }
+
+            // 更新全选复选框状态
+            const allCheckbox = document.getElementById('select-all-checkbox');
+            const allCheckboxes = document.querySelectorAll('.member-checkbox');
+            allCheckbox.checked = count > 0 && count === allCheckboxes.length;
+        }
+
+        function toggleSelectAll() {
+            const allCheckbox = document.getElementById('select-all-checkbox');
+            const checkboxes = document.querySelectorAll('.member-checkbox');
+
+            checkboxes.forEach(cb => {
+                cb.checked = allCheckbox.checked;
+            });
+
+            updateSelectedCount();
+        }
+
+        function selectAll() {
+            const checkboxes = document.querySelectorAll('.member-checkbox');
+            checkboxes.forEach(cb => cb.checked = true);
+            document.getElementById('select-all-checkbox').checked = true;
+            updateSelectedCount();
+        }
+
+        function deselectAll() {
+            const checkboxes = document.querySelectorAll('.member-checkbox');
+            checkboxes.forEach(cb => cb.checked = false);
+            document.getElementById('select-all-checkbox').checked = false;
+            updateSelectedCount();
+        }
+
+        function cancelBatch() {
+            deselectAll();
+        }
+
+        async function batchEditRole() {
+            if (selectedMembers.length === 0) {
+                alert('请先选择要操作的成员');
+                return;
+            }
+
+            const role = prompt('请输入新角色（admin/teacher/student）：');
+            if (!role || !['admin', 'teacher', 'student'].includes(role)) {
+                alert('角色必须是 admin、teacher 或 student');
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('session_token');
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const response = await fetch('/api/users/batch-update-role', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        user_ids: selectedMembers,
+                        role: role
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert(`成功更新 ${result.updated_count} 个成员的角色`);
+                    fetchMembers();
+                } else {
+                    alert(result.message || '操作失败');
+                }
+            } catch (error) {
+                alert('网络错误，请稍后重试');
+            }
+        }
+
+        async function batchEditStatus() {
+            if (selectedMembers.length === 0) {
+                alert('请先选择要操作的成员');
+                return;
+            }
+
+            const status = prompt('请输入新状态（active/inactive）：');
+            if (!status || !['active', 'inactive'].includes(status)) {
+                alert('状态必须是 active 或 inactive');
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('session_token');
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const response = await fetch('/api/users/batch-update-status', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        user_ids: selectedMembers,
+                        status: status
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert(`成功更新 ${result.updated_count} 个成员的状态`);
+                    fetchMembers();
+                } else {
+                    alert(result.message || '操作失败');
+                }
+            } catch (error) {
+                alert('网络错误，请稍后重试');
+            }
+        }
+
+        async function batchDelete() {
+            if (selectedMembers.length === 0) {
+                alert('请先选择要删除的成员');
+                return;
+            }
+
+            if (!confirm(`确定要删除选中的 ${selectedMembers.length} 个成员吗？此操作不可撤销！`)) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('session_token');
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const response = await fetch('/api/users/batch-delete', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        user_ids: selectedMembers
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert(`成功删除 ${result.deleted_count} 个成员`);
+                    fetchMembers();
+                } else {
+                    alert(result.message || '操作失败');
+                }
+            } catch (error) {
+                alert('网络错误，请稍后重试');
+            }
+        }
+
+        // 查看成员详情（普通用户）
+        let currentViewMember = null;
+
+        function viewMemberDetail(memberId) {
+            const member = members.find(m => m.id === memberId);
+            if (!member) {
+                alert('成员不存在');
+                return;
+            }
+
+            currentViewMember = member;
+
+            // 填充详情信息（只读）
+            document.getElementById('view-member-avatar').src = member.avatar;
+            document.getElementById('view-member-username').textContent = member.username;
+            document.getElementById('view-member-student-id').textContent = member.student_id || '未设置';
+            document.getElementById('view-member-phone').textContent = member.phone || '未设置';
+            document.getElementById('view-member-email').textContent = member.email || '未设置';
+            document.getElementById('view-member-degree').textContent = member.degree_type || '未设置';
+            document.getElementById('view-member-research').textContent = member.research_direction || '未设置';
+            document.getElementById('view-member-role').textContent = getRoleLabel(member.role);
+            document.getElementById('view-member-status').textContent = getStatusLabel(member.status);
+            document.getElementById('view-member-created').textContent = formatDate(member.created_at);
+
+            // 打开详情模态框
+            document.getElementById('view-member-modal').classList.remove('hidden');
+        }
+
+        function closeViewMemberModal() {
+            document.getElementById('view-member-modal').classList.add('hidden');
+        }
+
+        // 发送消息相关函数
+        function openSendMessageModalById(memberId) {
+            const member = members.find(m => m.id === memberId);
+            if (!member) {
+                alert('成员不存在');
+                return;
+            }
+
+            document.getElementById('message-receiver-id').value = member.id;
+            document.getElementById('message-receiver-name').textContent = member.username;
+            document.getElementById('send-message-modal').classList.remove('hidden');
+        }
+
+        function openSendMessageModal() {
+            if (!currentViewMember) {
+                alert('请先选择要留言的成员');
+                return;
+            }
+
+            document.getElementById('message-receiver-id').value = currentViewMember.id;
+            document.getElementById('message-receiver-name').textContent = currentViewMember.username;
+
+            closeViewMemberModal();
+            document.getElementById('send-message-modal').classList.remove('hidden');
+        }
+
+        function closeSendMessageModal() {
+            document.getElementById('send-message-modal').classList.add('hidden');
+            document.getElementById('send-message-form').reset();
+        }
+
+        async function sendMessage(event) {
+            event.preventDefault();
+
+            const form = document.getElementById('send-message-form');
+            const formData = new FormData(form);
+            const receiverId = formData.get('receiver_id');
+            const title = formData.get('title');
+            const content = formData.get('content');
+
+            if (!title || !content) {
+                alert('请填写留言标题和内容');
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('session_token');
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const response = await fetch('/api/messages/send', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        receiver_id: parseInt(receiverId),
+                        title: title,
+                        content: content
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert('留言成功');
+                    closeSendMessageModal();
+                } else {
+                    alert(result.message || '留言失败');
+                }
+            } catch (error) {
+                alert('网络错误，请稍后重试');
+            }
+        }
+
+        // 留言列表相关函数
+        async function fetchMessages() {
+            try {
+                const token = localStorage.getItem('session_token');
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const response = await fetch('/api/messages', {
+                    method: 'GET',
+                    headers: headers
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    renderMessagesList(result.messages);
+                    updateUnreadBadge(result.messages);
+                } else {
+                    console.error('获取留言失败:', result.message);
+                }
+            } catch (error) {
+                console.error('网络错误:', error);
+            }
+        }
+
+        function renderMessagesList(messages) {
+            const container = document.getElementById('messages-list-container');
+
+            if (!messages || messages.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fa fa-comment-o text-4xl mb-3"></i>
+                        <p>暂无留言</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = messages.map(msg => `
+                <div class="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors" onclick="viewMessageDetail(${JSON.stringify(msg).replace(/"/g, '&quot;')})">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                ${!msg.is_read ? '<span class="w-2 h-2 bg-red-500 rounded-full"></span>' : ''}
+                                <h4 class="font-medium text-gray-800 ${!msg.is_read ? '' : 'text-gray-600'}">${msg.title}</h4>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-1">来自: ${msg.sender.username}</p>
+                            <p class="text-xs text-gray-400">${formatDate(msg.created_at)}</p>
+                        </div>
+                        <i class="fa fa-chevron-right text-gray-400"></i>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateUnreadBadge(messages) {
+            const unreadCount = messages.filter(m => !m.is_read).length;
+            const badge = document.getElementById('unread-badge');
+            if (unreadCount > 0) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function openMessagesListModal() {
+            fetchMessages();
+            document.getElementById('messages-list-modal').classList.remove('hidden');
+        }
+
+        function closeMessagesListModal() {
+            document.getElementById('messages-list-modal').classList.add('hidden');
+        }
+
+        function viewMessageDetail(msg) {
+            document.getElementById('message-detail-title').textContent = msg.title;
+            document.getElementById('message-detail-sender').textContent = msg.sender.username;
+            document.getElementById('message-detail-time').textContent = formatDate(msg.created_at);
+            document.getElementById('message-detail-content').textContent = msg.content;
+
+            // 标记为已读
+            if (!msg.is_read) {
+                markMessageAsRead(msg.id);
+            }
+
+            closeMessagesListModal();
+            document.getElementById('message-detail-modal').classList.remove('hidden');
+        }
+
+        function closeMessageDetailModal() {
+            document.getElementById('message-detail-modal').classList.add('hidden');
+        }
+
+        async function markMessageAsRead(messageId) {
+            try {
+                const token = localStorage.getItem('session_token');
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                await fetch(`/api/messages/${messageId}/read`, {
+                    method: 'PUT',
+                    headers: headers
+                });
+
+                // 更新未读徽章
+                fetchMessages();
+            } catch (error) {
+                console.error('标记已读失败:', error);
+            }
         }
 
         // 成员操作函数
@@ -1580,8 +2202,26 @@
 
         // 事件监听器
         document.addEventListener('DOMContentLoaded', function() {
+            // 从URL获取session_token并保存到localStorage
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionToken = urlParams.get('session_token');
+            if (sessionToken) {
+                localStorage.setItem('session_token', sessionToken);
+                console.log('✅ 从URL保存session_token到localStorage');
+                // 清理URL，移除session_token参数
+                const url = new URL(window.location.href);
+                url.searchParams.delete('session_token');
+                window.history.replaceState({}, document.title, url.toString());
+            }
+
             // 初始化数据
             fetchMembers();
+            // 加载留言数量
+            fetchMessages();
+
+            // 留言按钮点击事件
+            document.getElementById('messages-btn').addEventListener('click', openMessagesListModal);
+
             // 登出功能
             const logoutBtn = document.getElementById('logout-btn');
             const logoutBtnMobile = document.getElementById('logout-btn-mobile');
@@ -1786,6 +2426,9 @@
                     showErrorToast('网络错误，请稍后重试');
                 }
             });
+
+            // 发送消息模态框
+            document.getElementById('send-message-form').addEventListener('submit', sendMessage);
 
             // 导出功能
             document.getElementById('export-members-btn').addEventListener('click', () => {
