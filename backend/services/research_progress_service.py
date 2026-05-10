@@ -603,6 +603,7 @@ class ProgressSettingService:
                         next_deadline = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE user_id = ?
                 """, (period_type, int(reminder_enabled), reminder_days, next_deadline, user_id))
+                setting_id = existing[0]
             else:
                 # 创建
                 cursor.execute("""
@@ -611,8 +612,19 @@ class ProgressSettingService:
                         next_deadline, created_by, created_at, updated_at
                     ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                 """, (user_id, period_type, int(reminder_enabled), reminder_days, next_deadline, created_by))
+                setting_id = cursor.lastrowid
 
-            return ProgressSettingService.get_setting_by_user(user_id)
+            # 从同一连接查询，确保能看到刚插入的数据
+            cursor.execute("""
+                SELECT id, user_id, period_type, reminder_enabled, reminder_days,
+                       next_deadline, created_by, created_at, updated_at
+                FROM progress_settings WHERE id = ?
+            """, (setting_id,))
+            row = cursor.fetchone()
+
+            if row:
+                return ProgressSetting.from_dict(dict(row))
+            return setting  # 返回原始对象作为备用
 
     @staticmethod
     def batch_create_settings(

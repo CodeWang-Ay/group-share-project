@@ -5865,7 +5865,7 @@ async def set_user_settings(user_id: int, request: Request):
 
 @app.post("/api/research_progress/settings/batch")
 async def batch_set_settings(request: Request):
-    """批量设置学生提交周期（管理员）"""
+    """批量设置学生提交周期（管理员/导师）"""
     current_user = await get_current_user(request)
     if not current_user:
         return JSONResponse(
@@ -5873,11 +5873,11 @@ async def batch_set_settings(request: Request):
             content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
         )
 
-    # 权限校验：只有管理员可以批量设置
-    if current_user.role != 'admin':
+    # 权限校验：管理员和导师可以批量设置
+    if current_user.role not in ['admin', 'teacher']:
         return JSONResponse(
             status_code=status.HTTP_403_FORBIDDEN,
-            content={"success": False, "message": "只有管理员可以批量设置提交周期", "error": "FORBIDDEN"}
+            content={"success": False, "message": "只有管理员或导师可以批量设置提交周期", "error": "FORBIDDEN"}
         )
 
     try:
@@ -5899,7 +5899,7 @@ async def batch_set_settings(request: Request):
             created_by=current_user.id
         )
 
-        logger.info(f"管理员 {current_user.username} 批量设置了 {len(settings)} 个学生的提交周期")
+        logger.info(f"{current_user.role} {current_user.username} 批量设置了 {len(settings)} 个学生的提交周期")
 
         return JSONResponse(content={
             "success": True,

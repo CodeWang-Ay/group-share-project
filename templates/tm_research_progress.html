@@ -328,45 +328,44 @@
                     </div>
 
 
-                    <!-- 统计卡片 -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-white rounded-lg p-4 border border-gray-100">
-                            <div class="flex items-center justify-between">
-                                <div><p class="text-gray-500 text-sm">总人数</p><h3 id="stats-total-student" class="text-2xl font-bold mt-1">--</h3></div>
-                                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary">
-                                    <i class="fa fa-users"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-white rounded-lg p-4 border border-gray-100">
-                            <div class="flex items-center justify-between">
-                                <div><p class="text-gray-500 text-sm">进度正常</p><h3 id="stats-normal-student" class="text-2xl font-bold mt-1 text-green-600">--</h3></div>
-                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                                    <i class="fa fa-check-circle"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-white rounded-lg p-4 border border-gray-100">
-                            <div class="flex items-center justify-between">
-                                <div><p class="text-gray-500 text-sm">进度滞后</p><h3 id="stats-delayed-student" class="text-2xl font-bold mt-1 text-yellow-600">--</h3></div>
-                                <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
-                                    <i class="fa fa-exclamation-circle"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-white rounded-lg p-4 border border-gray-100">
-                            <div class="flex items-center justify-between">
-                                <div><p class="text-gray-500 text-sm">未更新本周</p><h3 id="stats-not_updated-student" class="text-2xl font-bold mt-1 text-gray-600">--</h3></div>
-                                <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                                    <i class="fa fa-times-circle"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-
                     <!-- 团队进展区域（学生可查看） -->
                     <div id="team-progress-section" class="hidden">
+                        <!-- 统计卡片 -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-white rounded-lg p-4 border border-gray-100">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-gray-500 text-sm">总人数</p><h3 id="stats-total-student" class="text-2xl font-bold mt-1">--</h3></div>
+                                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary">
+                                        <i class="fa fa-users"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-gray-100">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-gray-500 text-sm">进度正常</p><h3 id="stats-normal-student" class="text-2xl font-bold mt-1 text-green-600">--</h3></div>
+                                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                        <i class="fa fa-check-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-gray-100">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-gray-500 text-sm">进度滞后</p><h3 id="stats-delayed-student" class="text-2xl font-bold mt-1 text-yellow-600">--</h3></div>
+                                    <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+                                        <i class="fa fa-exclamation-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-gray-100">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-gray-500 text-sm">未更新本周</p><h3 id="stats-not_updated-student" class="text-2xl font-bold mt-1 text-gray-600">--</h3></div>
+                                    <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
+                                        <i class="fa fa-times-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- 筛选工具栏 -->
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
                             <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
@@ -471,7 +470,7 @@
                                 <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="normal">进度正常</button>
                                 <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="not_updated">进度预警</button>
                             </div>
-                            {% if user.role == 'admin' %}
+                            {% if user.role == 'admin' or user.role == 'teacher' %}
                             <button id="batch-settings-btn" class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary/90 flex items-center gap-2 transition-colors">
                                 <i class="fa fa-cog"></i><span>批量设置周期</span>
                             </button>
@@ -1728,8 +1727,8 @@
                     sendFeedback(progressId, feedback);
                 });
 
-                // 批量设置（管理员）
-                if (USER_ROLE === 'admin') {
+                // 批量设置（管理员/导师）
+                if (USER_ROLE === 'admin' || USER_ROLE === 'teacher') {
                     document.getElementById('batch-settings-btn').addEventListener('click', openBatchModal);
                     document.getElementById('close-batch-modal').addEventListener('click', closeBatchModal);
                     document.getElementById('cancel-batch').addEventListener('click', closeBatchModal);
