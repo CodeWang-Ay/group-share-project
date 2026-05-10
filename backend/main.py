@@ -2290,7 +2290,7 @@ async def update_member_info(member_id: int, request: Request):
         allowed_fields = [
             'username', 'email', 'phone', 'student_id', 'role',
             'research_direction', 'personal_bio', 'gender',
-            'id_card', 'bank_card', 'status'
+            'id_card', 'bank_card', 'status', 'degree_type'
         ]
 
         # 过滤出允许更新的字段
