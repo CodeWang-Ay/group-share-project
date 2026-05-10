@@ -626,9 +626,20 @@
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
 
-            const bgColor = type === 'success' ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300';
-            const textColor = type === 'success' ? 'text-green-700' : 'text-red-700';
-            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            let bgColor, textColor, icon;
+            if (type === 'success') {
+                bgColor = 'bg-green-100 border-green-300';
+                textColor = 'text-green-700';
+                icon = 'fa-check-circle';
+            } else if (type === 'info') {
+                bgColor = 'bg-blue-100 border-blue-300';
+                textColor = 'text-blue-700';
+                icon = 'fa-info-circle';
+            } else {
+                bgColor = 'bg-red-100 border-red-300';
+                textColor = 'text-red-700';
+                icon = 'fa-exclamation-circle';
+            }
 
             toast.className = `${bgColor} ${textColor} px-4 py-3 rounded-lg shadow-sm border flex items-center gap-2 animate-fade-in`;
             toast.innerHTML = `<i class="fa ${icon}"></i><span>${message}</span>`;
@@ -660,6 +671,7 @@
 
         // 当前编辑的进展ID（null表示新增模式）
         let currentEditingId = null;
+        let existingAttachments = [];  // 编辑时保存现有附件列表
 
         // 存储原始数据用于搜索过滤
         let allMyProgressData = [];
@@ -1235,6 +1247,9 @@
                     const data = result.data;
                     currentEditingId = progressId;
 
+                    // 保存现有附件
+                    existingAttachments = data.attachments || [];
+
                     // 填充表单
                     document.getElementById('research-direction').value = data.research_direction || '';
                     document.getElementById('weekly-progress').value = data.weekly_progress || '';
@@ -1242,6 +1257,15 @@
                     document.getElementById('difficulties').value = data.difficulties || '';
                     document.getElementById('completion-rate').value = data.completion_rate || 50;
                     document.getElementById('completion-value').textContent = (data.completion_rate || 50) + '%';
+
+                    // 显示现有附件提示
+                    const attachmentsInput = document.getElementById('attachments');
+                    const attachmentsLabel = attachmentsInput.previousElementSibling;
+                    if (existingAttachments.length > 0) {
+                        attachmentsLabel.innerHTML = `附件（已有: ${existingAttachments.join(', ')}）<br><span class="text-xs text-gray-500">选择新文件将替换现有附件</span>`;
+                    } else {
+                        attachmentsLabel.innerHTML = '附件（可选）';
+                    }
 
                     // 更新弹窗标题
                     const modalTitle = document.querySelector('#submit-modal h3');
@@ -1279,7 +1303,9 @@
                             <p class="text-gray-700"><strong>问题困难：</strong>${data.difficulties || '无'}</p>
                             <p class="text-gray-700"><strong>完成度：</strong>${data.completion_rate}%</p>
                             ${data.attachments && data.attachments.length > 0 ?
-                                `<p class="text-gray-700"><strong>附件：</strong>${data.attachments.join(', ')}</p>` : ''}
+                                `<div class="text-gray-700"><strong>附件：</strong><div class="mt-1 flex flex-wrap gap-2">${data.attachments.map(filename =>
+                                    `<a href="${API_BASE_URL}/api/files/download/${encodeURIComponent(filename)}" target="_blank" class="inline-flex items-center px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm text-primary transition-colors"><i class="fa fa-file-o mr-2"></i>${filename}</a>`
+                                ).join('')}</div></div>` : ''}
                             ${data.supervisor_feedback ?
                                 `<div class="p-3 bg-blue-50 rounded-lg"><p class="text-sm text-gray-500 mb-1">导师反馈${data.feedback_by_name ? `（${data.feedback_by_name}）` : ''}：</p><p class="text-gray-700">${data.supervisor_feedback}</p></div>` : ''}
                         </div>
@@ -1345,6 +1371,11 @@
             document.getElementById('submit-modal').classList.add('hidden');
             document.getElementById('submit-form').reset();
             currentEditingId = null;  // 重置编辑状态
+            existingAttachments = [];  // 重置现有附件
+            // 重置附件标签为默认状态
+            const attachmentsInput = document.getElementById('attachments');
+            const attachmentsLabel = attachmentsInput.previousElementSibling;
+            attachmentsLabel.innerHTML = '附件（可选）';
         }
 
         function openDetailModal() {
@@ -1540,14 +1571,53 @@
                 });
 
                 // 提交表单
-                document.getElementById('submit-form').addEventListener('submit', function(e) {
+                document.getElementById('submit-form').addEventListener('submit', async function(e) {
                     e.preventDefault();
+
+                    // 获取附件文件
+                    const attachmentsInput = document.getElementById('attachments');
+                    const files = attachmentsInput.files;
+                    let attachmentNames = [];
+
+                    // 如果有文件，先上传
+                    if (files && files.length > 0) {
+                        showToast('正在上传附件...', 'info');
+
+                        for (let i = 0; i < files.length; i++) {
+                            const file = files[i];
+                            const uploadFormData = new FormData();
+                            uploadFormData.append('file', file);
+
+                            try {
+                                const uploadResponse = await fetch(`${API_BASE_URL}/api/files/upload`, {
+                                    method: 'POST',
+                                    headers: getAuthHeaders(),
+                                    credentials: 'include',
+                                    body: uploadFormData
+                                });
+                                const uploadResult = await uploadResponse.json();
+                                if (uploadResult.success) {
+                                    attachmentNames.push(uploadResult.data.filename);
+                                } else {
+                                    showToast(`文件 ${file.name} 上传失败: ${uploadResult.message}`, 'error');
+                                    return; // 如果上传失败，停止提交
+                                }
+                            } catch (uploadError) {
+                                console.error('文件上传失败:', uploadError);
+                                showToast(`文件 ${file.name} 上传失败`, 'error');
+                                return;
+                            }
+                        }
+                    }
+
                     const formData = {
                         research_direction: document.getElementById('research-direction').value,
                         weekly_progress: document.getElementById('weekly-progress').value,
                         next_goal: document.getElementById('next-goal').value,
                         difficulties: document.getElementById('difficulties').value,
-                        completion_rate: parseInt(document.getElementById('completion-rate').value)
+                        completion_rate: parseInt(document.getElementById('completion-rate').value),
+                        // 如果上传了新文件则使用新文件，否则在编辑模式下保留现有附件
+                        attachments: attachmentNames.length > 0 ? attachmentNames : (currentEditingId ? existingAttachments : [])
                     };
 
                     if (currentEditingId) {

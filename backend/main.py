@@ -1377,6 +1377,90 @@ async def upload_file(request: Request):
         )
 
 
+# API端点：下载文件（根据文件名）
+@app.get("/api/files/download/{filename}")
+async def download_file_by_name(filename: str, request: Request):
+    """
+    根据文件名下载文件API端点
+    用于研究进展附件下载
+    """
+    import urllib.parse
+    # URL解码文件名
+    decoded_filename = urllib.parse.unquote(filename)
+
+    logger.info(f"下载文件请求: {decoded_filename}")
+
+    # 检查用户登录状态
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        # 在数据库中查找文件
+        from database.connection import get_db
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, filename, file_path, file_type, uploader_id
+                FROM files
+                WHERE filename = ? AND status = 'active'
+            """, (decoded_filename,))
+            file_row = cursor.fetchone()
+
+            if not file_row:
+                logger.error(f"文件不存在: {decoded_filename}")
+                return JSONResponse(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    content={
+                        "success": False,
+                        "message": "文件不存在",
+                        "error": "FILE_NOT_FOUND"
+                    }
+                )
+
+            file_id, stored_filename, file_path, file_type, uploader_id = file_row
+
+        # 检查文件是否存在
+        import os
+        from pathlib import Path
+        if not os.path.exists(file_path):
+            logger.error(f"物理文件不存在: {file_path}")
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={
+                    "success": False,
+                    "message": "文件不存在",
+                    "error": "FILE_NOT_FOUND"
+                }
+            )
+
+        # 返回文件
+        from fastapi.responses import FileResponse
+        return FileResponse(
+            path=file_path,
+            filename=stored_filename,
+            media_type=file_type or 'application/octet-stream'
+        )
+
+    except Exception as e:
+        logger.error(f"文件下载错误: {str(e)}", exc_info=True)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": f"文件下载失败: {str(e)}",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
 # API端点：获取文件列表
 @app.get("/api/files")
 async def get_files(request: Request):
