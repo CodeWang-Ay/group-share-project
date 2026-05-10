@@ -703,21 +703,31 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">学位类型</label>
                                 <select name="degree_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
                                     <option value="">请选择学位类型</option>
-                                    <option value="本科">本科</option>
-                                    <option value="硕士">硕士</option>
-                                    <option value="博士">博士</option>
+                                    <option value="博士生">博士生</option>
+                                    <option value="硕士生">硕士生</option>
+                                    <option value="本科生">本科生</option>
                                     <option value="博士后">博士后</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">研究方向</label>
-                                <input type="text" name="research_direction" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">性别</label>
+                                <select name="gender" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                    <option value="">请选择性别</option>
+                                    <option value="male">男</option>
+                                    <option value="female">女</option>
+                                </select>
                             </div>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">个人简介</label>
-                            <textarea name="personal_bio" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary"></textarea>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">研究方向</label>
+                                <input type="text" name="research_direction" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">个人简介</label>
+                                <input type="text" name="personal_bio" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -786,6 +796,10 @@
                             <div>
                                 <label class="text-sm text-gray-500">学位类型</label>
                                 <p id="view-member-degree" class="text-base font-medium text-gray-800"></p>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-500">性别</label>
+                                <p id="view-member-gender" class="text-base font-medium text-gray-800"></p>
                             </div>
                         </div>
                         <div class="space-y-4">
@@ -1110,6 +1124,14 @@
 
         function getStatusClass(status) {
             return status === 'active' ? 'status-active' : 'status-inactive';
+        }
+
+        function getGenderLabel(gender) {
+            const genderMap = {
+                'male': '男',
+                'female': '女'
+            };
+            return genderMap[gender] || gender || '未设置';
         }
 
         function formatDate(dateString) {
@@ -1506,6 +1528,7 @@
             document.getElementById('view-member-phone').textContent = member.phone || '未设置';
             document.getElementById('view-member-email').textContent = member.email || '未设置';
             document.getElementById('view-member-degree').textContent = member.degree_type || '未设置';
+            document.getElementById('view-member-gender').textContent = getGenderLabel(member.gender);
             document.getElementById('view-member-research').textContent = member.research_direction || '未设置';
             document.getElementById('view-member-role').textContent = getRoleLabel(member.role);
             document.getElementById('view-member-status').textContent = getStatusLabel(member.status);
@@ -2062,6 +2085,7 @@
             form.elements['role'].value = member.role;
             form.elements['status'].value = member.status;
             form.elements['degree_type'].value = member.degree_type || '';
+            form.elements['gender'].value = member.gender || '';
             form.elements['research_direction'].value = member.research_direction || '';
             form.elements['personal_bio'].value = member.personal_bio || '';
             form.elements['id_card'].value = member.id_card || '';
