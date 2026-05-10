@@ -53,7 +53,7 @@ class User:
             raise ValueError("角色必须是admin、teacher或student之一")
 
     @classmethod
-    def create_user(cls, username: str, password: str, role: str) -> "User":
+    def create_user(cls, username: str, password: str, role: str, email: str = None) -> "User":
         """
         创建新用户实例，自动处理密码哈希
 
@@ -61,6 +61,7 @@ class User:
             username: 用户名
             password: 明文密码
             role: 用户角色
+            email: 电子邮箱（可选）
 
         Returns:
             User: 用户实例
@@ -84,6 +85,7 @@ class User:
             username=username,
             password_hash=password_hash.decode('utf-8'),
             role=role,
+            email=email,
             created_at=datetime.now(),
             updated_at=datetime.now()
         )

@@ -670,8 +670,9 @@ async def register(request: Request):
         username = data.get("username")
         password = data.get("password")
         role = data.get("role")
+        email = data.get("email")  # 获取邮箱字段
 
-        print(f"接收到注册数据: username={username}, password={'***' if password else 'None'}, role={role}")
+        print(f"接收到注册数据: username={username}, password={'***' if password else 'None'}, role={role}, email={email}")
 
         # 验证输入
         if not username or not password or not role:
@@ -733,14 +734,15 @@ async def register(request: Request):
                 )
 
             # 创建新用户
-            new_user = User.create_user(username, password, role)
+            new_user = User.create_user(username, password, role, email)
 
             cursor.execute(
-                "INSERT INTO users (username, password_hash, role, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO users (username, password_hash, role, email, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
                 (
                     new_user.username,
                     new_user.password_hash,
                     new_user.role,
+                    email,  # 保存邮箱
                     new_user.created_at,
                     new_user.updated_at
                 )

@@ -287,11 +287,37 @@
                             </div>
                         </div>
 
-                        <!-- 我的进展历史 -->
+                        <!-- 最新进展 -->
+                        <div id="latest-progress-section" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6 hidden">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800">
+                                    <i class="fa fa-star text-yellow-500 mr-2"></i>最新进展
+                                </h3>
+                                <button id="update-latest-btn" class="text-primary hover:bg-primary/10 px-3 py-1 rounded-lg text-sm transition-colors">
+                                    <i class="fa fa-edit mr-1"></i>更新进展
+                                </button>
+                            </div>
+                            <div id="latest-progress-content">
+                                <!-- 动态加载最新进展 -->
+                            </div>
+                        </div>
+
+                        <!-- 历史进展 -->
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4">我的进展历史</h3>
-                            <div id="my-progress-list">
-                                <!-- 动态加载 -->
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800">历史进展记录</h3>
+                                <div class="flex items-center gap-2 w-full sm:w-auto">
+                                    <div class="relative flex-1 sm:flex-initial">
+                                        <input type="text" id="search-my-progress" class="w-full sm:w-64 px-4 py-2 pl-10 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="搜索进展内容...">
+                                        <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                    </div>
+                                    <button id="clear-my-search" class="bg-gray-100 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors hidden">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="history-progress-list">
+                                <!-- 动态加载历史进展 -->
                             </div>
                             <div id="no-progress" class="text-center text-gray-500 py-8 hidden">
                                 <i class="fa fa-inbox text-4xl mb-4"></i>
@@ -305,6 +331,14 @@
                     <div id="team-progress-section" class="hidden">
                         <!-- 筛选工具栏 -->
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+                            <!-- 搜索框 -->
+                            <div class="mb-4">
+                                <div class="relative">
+                                    <input type="text" id="search-team-student" class="w-full px-4 py-2 pl-10 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="搜索学生姓名、研究方向...">
+                                    <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                </div>
+                            </div>
+                            <!-- 筛选下拉 -->
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <!-- 学生类型 -->
                                 <div>
@@ -423,6 +457,13 @@
                 <div id="teacher-view">
                     <!-- 筛选工具栏 -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+                        <!-- 搜索框 -->
+                        <div class="mb-4">
+                            <div class="relative">
+                                <input type="text" id="search-team-teacher" class="w-full px-4 py-2 pl-10 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="搜索学生姓名、研究方向、进展内容...">
+                                <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                             <div class="flex flex-wrap gap-2">
                                 <button class="filter-btn px-3 py-1 bg-primary/10 text-primary text-sm rounded-lg active" data-filter="all">全部成员</button>
@@ -654,6 +695,14 @@
         const USER_ID = {{ user.id }};
         const USER_RESEARCH_DIRECTION = '{{ user.research_direction or "" }}';
 
+        // 当前编辑的进展ID（null表示新增模式）
+        let currentEditingId = null;
+
+        // 存储原始数据用于搜索过滤
+        let allMyProgressData = [];
+        let allStudentTeamData = [];
+        let allTeacherTeamData = [];
+
         // 获取认证 headers（只在有 token 时才添加 Authorization）
         function getAuthHeaders(includeContentType = false) {
             const token = localStorage.getItem('session_token');
@@ -752,6 +801,7 @@
                 if (filters.degree_type) params.append('student_type', filters.degree_type);
                 if (filters.grade) params.append('grade', filters.grade);
                 if (filters.research_direction) params.append('research_direction', filters.research_direction);
+                if (filters.search) params.append('search', filters.search);
 
                 const response = await fetch(`${API_BASE_URL}/api/research_progress/team?${params}`, {
                     headers: getAuthHeaders(),
@@ -759,65 +809,88 @@
                 });
                 const result = await response.json();
 
-                const tbody = document.getElementById('team-progress-table-student');
-                if (result.success && result.data.length > 0) {
-                    tbody.innerHTML = result.data.map(item => {
-                        const statusClass = {
-                            'normal': 'text-green-600 bg-green-100',
-                            'delayed': 'text-yellow-600 bg-yellow-100',
-                            'warning': 'text-red-600 bg-red-100',
-                            'not_updated': 'text-gray-600 bg-gray-100'
-                        }[item.computed_status] || 'text-green-600 bg-green-100';
+                // 存储原始数据
+                allStudentTeamData = result.success ? result.data : [];
 
-                        const statusText = {
-                            'normal': '进度正常',
-                            'delayed': '进度滞后',
-                            'warning': '进度预警',
-                            'not_updated': '未更新'
-                        }[item.computed_status] || '进度正常';
-
-                        const lastUpdate = item.submission_date ?
-                            new Date(item.submission_date).toLocaleDateString('zh-CN') : '暂无记录';
-
-                        return `
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <img src="https://picsum.photos/id/${item.user_id}/200/200" class="w-10 h-10 rounded-full">
-                                        <div>
-                                            <div class="font-medium text-gray-800">${item.username}</div>
-                                            <div class="text-gray-500 text-xs">${item.degree_type || '学生'}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-gray-700">${item.research_direction || item.user_research_direction || '未设置'}</td>
-                                <td class="px-6 py-4 text-gray-600 max-w-xs truncate">${item.weekly_progress || '暂无进展'}</td>
-                                <td class="px-6 py-4 text-gray-600 max-w-xs truncate">${item.next_goal || '暂无目标'}</td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-16 bg-gray-200 rounded-full h-2">
-                                            <div class="bg-primary h-2 rounded-full" style="width: ${item.completion_rate || 0}%"></div>
-                                        </div>
-                                        <span class="text-sm">${item.completion_rate || 0}%</span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="px-2 py-1 rounded-full text-xs ${statusClass}">${statusText}</span>
-                                </td>
-                                <td class="px-6 py-4 text-gray-500">${lastUpdate}</td>
-                            </tr>
-                        `;
-                    }).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">暂无符合条件的团队成员进展数据</td></tr>';
-                }
+                renderStudentTeamProgress(allStudentTeamData, filters.search);
             } catch (error) {
                 console.error('获取团队进展失败:', error);
             }
         }
 
-        // 获取团队进展列表
-        async function fetchTeamProgress(filter = 'all') {
+        // 渲染学生端团队进展（支持搜索过滤）
+        function renderStudentTeamProgress(data, searchTerm = '') {
+            const tbody = document.getElementById('team-progress-table-student');
+
+            // 前端搜索过滤（如果后端不支持搜索参数）
+            let filteredData = data;
+            if (searchTerm && data.length > 0) {
+                const term = searchTerm.toLowerCase();
+                filteredData = data.filter(item =>
+                    (item.username && item.username.toLowerCase().includes(term)) ||
+                    (item.research_direction && item.research_direction.toLowerCase().includes(term)) ||
+                    (item.user_research_direction && item.user_research_direction.toLowerCase().includes(term)) ||
+                    (item.degree_type && item.degree_type.toLowerCase().includes(term)) ||
+                    (item.weekly_progress && item.weekly_progress.toLowerCase().includes(term)) ||
+                    (item.next_goal && item.next_goal.toLowerCase().includes(term))
+                );
+            }
+
+            if (filteredData.length > 0) {
+                tbody.innerHTML = filteredData.map(item => {
+                    const statusClass = {
+                        'normal': 'text-green-600 bg-green-100',
+                        'delayed': 'text-yellow-600 bg-yellow-100',
+                        'warning': 'text-red-600 bg-red-100',
+                        'not_updated': 'text-gray-600 bg-gray-100'
+                    }[item.computed_status] || 'text-green-600 bg-green-100';
+
+                    const statusText = {
+                        'normal': '进度正常',
+                        'delayed': '进度滞后',
+                        'warning': '进度预警',
+                        'not_updated': '未更新'
+                    }[item.computed_status] || '进度正常';
+
+                    const lastUpdate = item.submission_date ?
+                        new Date(item.submission_date).toLocaleDateString('zh-CN') : '暂无记录';
+
+                    return `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <img src="https://picsum.photos/id/${item.user_id}/200/200" class="w-10 h-10 rounded-full">
+                                    <div>
+                                        <div class="font-medium text-gray-800">${item.username}</div>
+                                        <div class="text-gray-500 text-xs">${item.degree_type || '学生'}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-gray-700">${item.research_direction || item.user_research_direction || '未设置'}</td>
+                            <td class="px-6 py-4 text-gray-600 max-w-xs truncate">${item.weekly_progress || '暂无进展'}</td>
+                            <td class="px-6 py-4 text-gray-600 max-w-xs truncate">${item.next_goal || '暂无目标'}</td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-16 bg-gray-200 rounded-full h-2">
+                                        <div class="bg-primary h-2 rounded-full" style="width: ${item.completion_rate || 0}%"></div>
+                                    </div>
+                                    <span class="text-sm">${item.completion_rate || 0}%</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 rounded-full text-xs ${statusClass}">${statusText}</span>
+                            </td>
+                            <td class="px-6 py-4 text-gray-500">${lastUpdate}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">' + (searchTerm ? '未找到匹配的结果' : '暂无符合条件的团队成员进展数据') + '</td></tr>';
+            }
+        }
+
+        // 获取团队进展列表（导师端）
+        async function fetchTeamProgress(filter = 'all', searchTerm = '') {
             try {
                 let statusFilter = '';
                 let studentType = '';
@@ -831,6 +904,7 @@
                 const params = new URLSearchParams();
                 if (studentType) params.append('student_type', studentType);
                 if (statusFilter) params.append('status', statusFilter);
+                if (searchTerm) params.append('search', searchTerm);
 
                 const response = await fetch(`${API_BASE_URL}/api/research_progress/team?${params}`, {
                     headers: getAuthHeaders(),
@@ -838,70 +912,97 @@
                 });
                 const result = await response.json();
 
-                const tbody = document.getElementById('team-progress-table');
-                const noData = document.getElementById('no-team-progress');
+                // 存储原始数据
+                allTeacherTeamData = result.success ? result.data : [];
 
-                if (result.success && result.data.length > 0) {
-                    noData.classList.add('hidden');
-                    tbody.innerHTML = result.data.map(item => {
-                        const statusClass = {
-                            'normal': 'status-normal',
-                            'delayed': 'status-delayed',
-                            'warning': 'status-warning',
-                            'not_updated': 'status-not_updated'
-                        }[item.computed_status] || 'status-normal';
-
-                        const statusText = {
-                            'normal': '进度正常',
-                            'delayed': '进度滞后',
-                            'warning': '进度预警',
-                            'not_updated': '未更新'
-                        }[item.computed_status] || '进度正常';
-
-                        const lastUpdate = item.submission_date ?
-                            new Date(item.submission_date).toLocaleDateString('zh-CN') : '暂无记录';
-
-                        return `
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <img src="https://picsum.photos/id/${item.user_id}/200/200" class="w-10 h-10 rounded-full">
-                                        <div>
-                                            <div class="font-medium text-gray-800">${item.username}</div>
-                                            <div class="text-gray-500 text-xs">${item.degree_type || '学生'}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-gray-700">${item.research_direction || item.user_research_direction || '未设置'}</td>
-                                <td class="px-6 py-4 text-gray-600 max-w-xs truncate">${item.weekly_progress || '暂无进展'}</td>
-                                <td class="px-6 py-4 text-gray-600 max-w-xs truncate">${item.next_goal || '暂无目标'}</td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-16 bg-gray-200 rounded-full h-2">
-                                            <div class="bg-primary h-2 rounded-full" style="width: ${item.completion_rate || 0}%"></div>
-                                        </div>
-                                        <span class="text-sm">${item.completion_rate || 0}%</span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="px-2 py-1 rounded-full text-xs ${statusClass}">${statusText}</span>
-                                </td>
-                                <td class="px-6 py-4 text-gray-500">${lastUpdate}</td>
-                                <td class="px-6 py-4">
-                                    <div class="flex gap-2">
-                                        <button class="text-primary hover:underline view-detail-btn" data-id="${item.progress_id}" data-user-id="${item.user_id}">详情</button>
-                                        <button class="bg-blue-50 text-primary px-2 py-1 rounded hover:bg-blue-100 communicate-btn" data-id="${item.progress_id}">沟通</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                    }).join('');
-                } else {
-                    tbody.innerHTML = '';
-                    noData.classList.remove('hidden');
-                }
+                renderTeamProgress(allTeacherTeamData, searchTerm);
             } catch (error) {
                 console.error('获取团队进展失败:', error);
+            }
+        }
+
+        // 渲染团队进展（导师端，支持搜索过滤）
+        function renderTeamProgress(data, searchTerm = '') {
+            const tbody = document.getElementById('team-progress-table');
+            const noData = document.getElementById('no-team-progress');
+
+            // 前端搜索过滤（如果后端不支持搜索参数）
+            let filteredData = data;
+            if (searchTerm && data.length > 0) {
+                const term = searchTerm.toLowerCase();
+                filteredData = data.filter(item =>
+                    (item.username && item.username.toLowerCase().includes(term)) ||
+                    (item.research_direction && item.research_direction.toLowerCase().includes(term)) ||
+                    (item.user_research_direction && item.user_research_direction.toLowerCase().includes(term)) ||
+                    (item.degree_type && item.degree_type.toLowerCase().includes(term)) ||
+                    (item.weekly_progress && item.weekly_progress.toLowerCase().includes(term)) ||
+                    (item.next_goal && item.next_goal.toLowerCase().includes(term))
+                );
+            }
+
+            if (filteredData.length > 0) {
+                noData.classList.add('hidden');
+                tbody.innerHTML = filteredData.map(item => {
+                    const statusClass = {
+                        'normal': 'status-normal',
+                        'delayed': 'status-delayed',
+                        'warning': 'status-warning',
+                        'not_updated': 'status-not_updated'
+                    }[item.computed_status] || 'status-normal';
+
+                    const statusText = {
+                        'normal': '进度正常',
+                        'delayed': '进度滞后',
+                        'warning': '进度预警',
+                        'not_updated': '未更新'
+                    }[item.computed_status] || '进度正常';
+
+                    const lastUpdate = item.submission_date ?
+                        new Date(item.submission_date).toLocaleDateString('zh-CN') : '暂无记录';
+
+                    return `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <img src="https://picsum.photos/id/${item.user_id}/200/200" class="w-10 h-10 rounded-full">
+                                    <div>
+                                        <div class="font-medium text-gray-800">${item.username}</div>
+                                        <div class="text-gray-500 text-xs">${item.degree_type || '学生'}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-gray-700">${item.research_direction || item.user_research_direction || '未设置'}</td>
+                            <td class="px-6 py-4 text-gray-600 max-w-xs truncate">${item.weekly_progress || '暂无进展'}</td>
+                            <td class="px-6 py-4 text-gray-600 max-w-xs truncate">${item.next_goal || '暂无目标'}</td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-16 bg-gray-200 rounded-full h-2">
+                                        <div class="bg-primary h-2 rounded-full" style="width: ${item.completion_rate || 0}%"></div>
+                                    </div>
+                                    <span class="text-sm">${item.completion_rate || 0}%</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 rounded-full text-xs ${statusClass}">${statusText}</span>
+                            </td>
+                            <td class="px-6 py-4 text-gray-500">${lastUpdate}</td>
+                            <td class="px-6 py-4">
+                                <div class="flex gap-2">
+                                    <button class="text-primary hover:underline view-detail-btn" data-id="${item.progress_id}" data-user-id="${item.user_id}">详情</button>
+                                    <button class="bg-blue-50 text-primary px-2 py-1 rounded hover:bg-blue-100 communicate-btn" data-id="${item.progress_id}">沟通</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                tbody.innerHTML = '';
+                noData.classList.remove('hidden');
+                if (searchTerm) {
+                    noData.innerHTML = '<i class="fa fa-search text-4xl mb-4"></i><p>未找到匹配"' + searchTerm + '"的结果</p>';
+                } else {
+                    noData.innerHTML = '<i class="fa fa-inbox text-4xl mb-4"></i><p>暂无学生进展数据</p>';
+                }
             }
         }
 
@@ -914,53 +1015,145 @@
                 });
                 const result = await response.json();
 
-                const listContainer = document.getElementById('my-progress-list');
-                const noData = document.getElementById('no-progress');
+                // 存储原始数据
+                allMyProgressData = result.success ? result.data : [];
 
-                if (result.success && result.data.length > 0) {
-                    noData.classList.add('hidden');
-                    listContainer.innerHTML = result.data.map(item => {
-                        const statusClass = {
-                            'normal': 'status-normal',
-                            'delayed': 'status-delayed',
-                            'warning': 'status-warning'
-                        }[item.status] || 'status-normal';
-
-                        const statusText = {
-                            'normal': '进度正常',
-                            'delayed': '进度滞后',
-                            'warning': '进度预警'
-                        }[item.status] || '进度正常';
-
-                        const date = new Date(item.submission_date).toLocaleDateString('zh-CN');
-
-                        return `
-                            <div class="progress-item">
-                                <div class="flex justify-between items-start mb-3">
-                                    <div>
-                                        <span class="text-gray-500 text-sm">${date}</span>
-                                        <span class="px-2 py-1 rounded-full text-xs ml-2 ${statusClass}">${statusText}</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-sm text-gray-600">完成度: ${item.completion_rate}%</span>
-                                        <button class="text-primary hover:underline text-sm edit-progress-btn" data-id="${item.id}">编辑</button>
-                                        <button class="text-primary hover:underline text-sm view-my-detail-btn" data-id="${item.id}">查看详情</button>
-                                    </div>
-                                </div>
-                                <p class="text-gray-700 font-medium mb-2">研究方向：${item.research_direction}</p>
-                                <p class="text-gray-600 mb-2"><strong>本周进展：</strong>${item.weekly_progress}</p>
-                                <p class="text-gray-600"><strong>下周目标：</strong>${item.next_goal}</p>
-                                ${item.supervisor_feedback ? `<div class="mt-3 p-3 bg-blue-50 rounded-lg"><p class="text-sm text-gray-500">导师反馈：</p><p class="text-gray-700">${item.supervisor_feedback}</p></div>` : ''}
-                            </div>
-                        `;
-                    }).join('');
-                } else {
-                    listContainer.innerHTML = '';
-                    noData.classList.remove('hidden');
-                }
+                renderMyProgress(allMyProgressData);
             } catch (error) {
                 console.error('获取个人进展失败:', error);
             }
+        }
+
+        // 渲染个人进展（支持搜索过滤）
+        function renderMyProgress(data, searchTerm = '') {
+            const latestSection = document.getElementById('latest-progress-section');
+            const latestContent = document.getElementById('latest-progress-content');
+            const historyList = document.getElementById('history-progress-list');
+            const noData = document.getElementById('no-progress');
+            const clearBtn = document.getElementById('clear-my-search');
+
+            // 搜索过滤
+            let filteredData = data;
+            if (searchTerm) {
+                const term = searchTerm.toLowerCase();
+                filteredData = data.filter(item =>
+                    (item.research_direction && item.research_direction.toLowerCase().includes(term)) ||
+                    (item.weekly_progress && item.weekly_progress.toLowerCase().includes(term)) ||
+                    (item.next_goal && item.next_goal.toLowerCase().includes(term)) ||
+                    (item.difficulties && item.difficulties.toLowerCase().includes(term)) ||
+                    (item.supervisor_feedback && item.supervisor_feedback.toLowerCase().includes(term))
+                );
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+                if (filteredData.length > 0) {
+                    noData.classList.add('hidden');
+
+                    // 最新进展（第一条）
+                    const latest = filteredData[0];
+                    const latestStatusClass = {
+                        'normal': 'status-normal',
+                        'delayed': 'status-delayed',
+                        'warning': 'status-warning'
+                    }[latest.status] || 'status-normal';
+
+                    const latestStatusText = {
+                        'normal': '进度正常',
+                        'delayed': '进度滞后',
+                        'warning': '进度预警'
+                    }[latest.status] || '进度正常';
+
+                    const latestDate = new Date(latest.submission_date).toLocaleDateString('zh-CN');
+
+                    latestSection.classList.remove('hidden');
+                    latestContent.innerHTML = `
+                        <div class="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg p-4">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <span class="text-gray-500 text-sm">${latestDate}</span>
+                                    <span class="px-2 py-1 rounded-full text-xs ml-2 ${latestStatusClass}">${latestStatusText}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm text-gray-600">完成度: ${latest.completion_rate}%</span>
+                                    <button class="text-primary hover:underline text-sm edit-progress-btn" data-id="${latest.id}">编辑</button>
+                                    <button class="text-primary hover:underline text-sm view-my-detail-btn" data-id="${latest.id}">查看详情</button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-gray-500 mb-1">研究方向</p>
+                                    <p class="text-gray-800 font-medium">${latest.research_direction}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500 mb-1">本周进展</p>
+                                    <p class="text-gray-700">${latest.weekly_progress}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500 mb-1">下周目标</p>
+                                    <p class="text-gray-700">${latest.next_goal}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500 mb-1">遇到问题</p>
+                                    <p class="text-gray-700">${latest.difficulties || '暂无'}</p>
+                                </div>
+                            </div>
+                            ${latest.supervisor_feedback ? `
+                                <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                    <p class="text-sm text-blue-600 font-medium mb-1"><i class="fa fa-comment-o mr-1"></i>导师反馈</p>
+                                    <p class="text-gray-700">${latest.supervisor_feedback}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+
+                    // 历史进展（其余记录）
+                    if (filteredData.length > 1) {
+                        const history = filteredData.slice(1);
+                        historyList.innerHTML = history.map(item => {
+                            const statusClass = {
+                                'normal': 'status-normal',
+                                'delayed': 'status-delayed',
+                                'warning': 'status-warning'
+                            }[item.status] || 'status-normal';
+
+                            const statusText = {
+                                'normal': '进度正常',
+                                'delayed': '进度滞后',
+                                'warning': '进度预警'
+                            }[item.status] || '进度正常';
+
+                            const date = new Date(item.submission_date).toLocaleDateString('zh-CN');
+
+                            return `
+                                <div class="progress-item">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <div>
+                                            <span class="text-gray-500 text-sm">${date}</span>
+                                            <span class="px-2 py-1 rounded-full text-xs ml-2 ${statusClass}">${statusText}</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm text-gray-600">完成度: ${item.completion_rate}%</span>
+                                            <button class="text-primary hover:underline text-sm edit-progress-btn" data-id="${item.id}">编辑</button>
+                                            <button class="text-primary hover:underline text-sm view-my-detail-btn" data-id="${item.id}">查看详情</button>
+                                        </div>
+                                    </div>
+                                    <p class="text-gray-700 font-medium mb-2">研究方向：${item.research_direction}</p>
+                                    <p class="text-gray-600 mb-2"><strong>本周进展：</strong>${item.weekly_progress}</p>
+                                    <p class="text-gray-600"><strong>下周目标：</strong>${item.next_goal}</p>
+                                    ${item.supervisor_feedback ? `<div class="mt-3 p-3 bg-blue-50 rounded-lg"><p class="text-sm text-gray-500">导师反馈：</p><p class="text-gray-700">${item.supervisor_feedback}</p></div>` : ''}
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                    historyList.innerHTML = '<p class="text-gray-500 text-center py-4">暂无历史进展记录</p>';
+                    }
+                } else {
+                    latestSection.classList.add('hidden');
+                    historyList.innerHTML = searchTerm ? '<p class="text-gray-500 text-center py-4">未找到匹配的进展记录</p>' : '';
+                    noData.classList.remove('hidden');
+                }
         }
 
         // 获取周期设置
@@ -983,7 +1176,7 @@
             }
         }
 
-        // 提交进展
+        // 提交进展（新增）
         async function submitProgress(formData) {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/research_progress/submit`, {
@@ -1004,6 +1197,64 @@
             } catch (error) {
                 console.error('提交进展失败:', error);
                 showToast('提交失败，请稍后重试', 'error');
+            }
+        }
+
+        // 更新进展（编辑）
+        async function updateProgress(progressId, formData) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/research_progress/${progressId}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(true),
+                    credentials: 'include',
+                    body: JSON.stringify(formData)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('进展更新成功！');
+                    closeSubmitModal();
+                    fetchMyProgress();
+                } else {
+                    showToast(result.message || '更新失败', 'error');
+                }
+            } catch (error) {
+                console.error('更新进展失败:', error);
+                showToast('更新失败，请稍后重试', 'error');
+            }
+        }
+
+        // 编辑进展 - 获取详情并填充表单
+        async function editProgress(progressId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/research_progress/${progressId}`, {
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    const data = result.data;
+                    currentEditingId = progressId;
+
+                    // 填充表单
+                    document.getElementById('research-direction').value = data.research_direction || '';
+                    document.getElementById('weekly-progress').value = data.weekly_progress || '';
+                    document.getElementById('next-goal').value = data.next_goal || '';
+                    document.getElementById('difficulties').value = data.difficulties || '';
+                    document.getElementById('completion-rate').value = data.completion_rate || 50;
+                    document.getElementById('completion-value').textContent = (data.completion_rate || 50) + '%';
+
+                    // 更新弹窗标题
+                    const modalTitle = document.querySelector('#submit-modal h3');
+                    modalTitle.textContent = '编辑研究进展';
+
+                    openSubmitModal();
+                } else {
+                    showToast(result.message || '获取进展详情失败', 'error');
+                }
+            } catch (error) {
+                console.error('获取进展详情失败:', error);
+                showToast('获取进展详情失败，请稍后重试', 'error');
             }
         }
 
@@ -1080,12 +1331,21 @@
         // 弹窗控制
         function openSubmitModal() {
             document.getElementById('submit-modal').classList.remove('hidden');
-            document.getElementById('research-direction').value = USER_RESEARCH_DIRECTION;
+            if (!currentEditingId) {
+                // 新增模式，设置默认值
+                document.getElementById('research-direction').value = USER_RESEARCH_DIRECTION;
+                document.getElementById('submit-form').reset();
+                document.getElementById('completion-rate').value = 50;
+                document.getElementById('completion-value').textContent = '50%';
+                document.getElementById('research-direction').value = USER_RESEARCH_DIRECTION;
+                document.querySelector('#submit-modal h3').textContent = '提交研究进展';
+            }
         }
 
         function closeSubmitModal() {
             document.getElementById('submit-modal').classList.add('hidden');
             document.getElementById('submit-form').reset();
+            currentEditingId = null;  // 重置编辑状态
         }
 
         function openDetailModal() {
@@ -1205,6 +1465,23 @@
                 fetchMyProgress();
                 fetchMySettings();
 
+                // 我的进展搜索框
+                const searchMyProgressInput = document.getElementById('search-my-progress');
+                const clearMySearchBtn = document.getElementById('clear-my-search');
+                let myProgressSearchTimeout = null;
+
+                searchMyProgressInput.addEventListener('input', function() {
+                    clearTimeout(myProgressSearchTimeout);
+                    myProgressSearchTimeout = setTimeout(() => {
+                        renderMyProgress(allMyProgressData, this.value);
+                    }, 300);
+                });
+
+                clearMySearchBtn.addEventListener('click', function() {
+                    searchMyProgressInput.value = '';
+                    renderMyProgress(allMyProgressData, '');
+                });
+
                 // 标签切换
                 document.getElementById('tab-my-progress').addEventListener('click', function() {
                     document.getElementById('tab-my-progress').classList.add('bg-primary', 'text-white');
@@ -1227,12 +1504,30 @@
                     fetchStudentTeamStats();
                 });
 
+                // 学生端团队进展搜索框
+                const searchTeamStudentInput = document.getElementById('search-team-student');
+                let teamStudentSearchTimeout = null;
+
+                searchTeamStudentInput.addEventListener('input', function() {
+                    clearTimeout(teamStudentSearchTimeout);
+                    teamStudentSearchTimeout = setTimeout(() => {
+                        const filters = {
+                            degree_type: document.getElementById('filter-degree-type-student').value,
+                            grade: document.getElementById('filter-grade-student').value,
+                            research_direction: document.getElementById('filter-direction-student').value,
+                            search: this.value
+                        };
+                        fetchStudentTeamProgress(filters);
+                    }, 300);
+                });
+
                 // 学生端筛选按钮
                 document.getElementById('apply-filter-student').addEventListener('click', function() {
                     const filters = {
                         degree_type: document.getElementById('filter-degree-type-student').value,
                         grade: document.getElementById('filter-grade-student').value,
-                        research_direction: document.getElementById('filter-direction-student').value
+                        research_direction: document.getElementById('filter-direction-student').value,
+                        search: searchTeamStudentInput.value
                     };
                     fetchStudentTeamProgress(filters);
                 });
@@ -1241,6 +1536,7 @@
                     document.getElementById('filter-degree-type-student').value = '';
                     document.getElementById('filter-grade-student').value = '';
                     document.getElementById('filter-direction-student').value = '';
+                    searchTeamStudentInput.value = '';
                     fetchStudentTeamProgress({});
                 });
 
@@ -1264,13 +1560,68 @@
                         difficulties: document.getElementById('difficulties').value,
                         completion_rate: parseInt(document.getElementById('completion-rate').value)
                     };
-                    submitProgress(formData);
+
+                    if (currentEditingId) {
+                        // 编辑模式
+                        updateProgress(currentEditingId, formData);
+                    } else {
+                        // 新增模式
+                        submitProgress(formData);
+                    }
                 });
+
+                // 事件委托：处理编辑按钮和查看详情按钮（最新进展和历史进展）
+                document.getElementById('latest-progress-content').addEventListener('click', function(e) {
+                    if (e.target.classList.contains('edit-progress-btn')) {
+                        const progressId = parseInt(e.target.dataset.id);
+                        editProgress(progressId);
+                    }
+                    if (e.target.classList.contains('view-my-detail-btn')) {
+                        const progressId = parseInt(e.target.dataset.id);
+                        viewProgressDetail(progressId, false);
+                    }
+                });
+
+                document.getElementById('history-progress-list').addEventListener('click', function(e) {
+                    if (e.target.classList.contains('edit-progress-btn')) {
+                        const progressId = parseInt(e.target.dataset.id);
+                        editProgress(progressId);
+                    }
+                    if (e.target.classList.contains('view-my-detail-btn')) {
+                        const progressId = parseInt(e.target.dataset.id);
+                        viewProgressDetail(progressId, false);
+                    }
+                });
+
+                // 更新最新进展按钮
+                document.getElementById('update-latest-btn').addEventListener('click', function() {
+                    // 获取最新进展ID并编辑
+                    const editBtn = document.querySelector('#latest-progress-content .edit-progress-btn');
+                    if (editBtn) {
+                        const progressId = parseInt(editBtn.dataset.id);
+                        editProgress(progressId);
+                    }
+                });
+
+                // 详情弹窗关闭按钮
+                document.getElementById('close-detail-modal').addEventListener('click', closeDetailModal);
 
             } else {
                 // 导师/管理员
                 fetchStats();
                 fetchTeamProgress();
+
+                // 导师端搜索框
+                const searchTeamTeacherInput = document.getElementById('search-team-teacher');
+                let teamTeacherSearchTimeout = null;
+                let currentFilter = 'all';
+
+                searchTeamTeacherInput.addEventListener('input', function() {
+                    clearTimeout(teamTeacherSearchTimeout);
+                    teamTeacherSearchTimeout = setTimeout(() => {
+                        fetchTeamProgress(currentFilter, this.value);
+                    }, 300);
+                });
 
                 // 筛选按钮
                 document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -1281,7 +1632,8 @@
                         });
                         this.classList.add('active', 'bg-primary/10', 'text-primary');
                         this.classList.remove('bg-gray-100', 'text-gray-600');
-                        fetchTeamProgress(this.dataset.filter);
+                        currentFilter = this.dataset.filter;
+                        fetchTeamProgress(currentFilter, searchTeamTeacherInput.value);
                     });
                 });
 

@@ -343,10 +343,10 @@ class PaperService:
 
         base_where = "WHERE p.team_library = 1 AND p.is_deleted = 0"
 
-        # 搜索关键词
+        # 搜索关键词（包含上传者用户名）
         if keyword:
-            base_where += " AND (p.title LIKE ? OR p.authors LIKE ? OR p.abstract LIKE ? OR p.journal LIKE ?)"
-            base_params.extend([f"%{keyword}%"] * 4)
+            base_where += " AND (p.title LIKE ? OR p.authors LIKE ? OR p.abstract LIKE ? OR p.journal LIKE ? OR u.username LIKE ?)"
+            base_params.extend([f"%{keyword}%"] * 5)
 
         # 年份筛选
         if year:

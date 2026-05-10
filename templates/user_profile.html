@@ -266,12 +266,10 @@
                                 </div>
 
                                 <div>
-                                    <label for="role" class="form-label">身份角色 <span class="text-red-500">*</span></label>
-                                    <select id="role" class="form-input appearance-none bg-gray-50" required>
-                                        <option value="admin">管理员</option>
-                                        <option value="teacher">导师</option>
-                                        <option value="student" selected>学生</option>
-                                    </select>
+                                    <label for="role" class="form-label">身份角色</label>
+                                    <input type="text" id="role_display" class="form-input" disabled>
+                                    <input type="hidden" id="role">
+                                    <p class="form-hint">角色由管理员分配，不可自行修改</p>
                                 </div>
 
                                 <div>
@@ -568,6 +566,15 @@
                     }
                     if (document.getElementById('gender')) {
                         document.getElementById('gender').value = userData.gender || '';
+                    }
+                    // 角色显示（只读，显示中文）
+                    if (document.getElementById('role_display')) {
+                        const roleText = {
+                            'admin': '管理员',
+                            'teacher': '导师',
+                            'student': '学生'
+                        }[userData.role] || userData.role || '未知';
+                        document.getElementById('role_display').value = roleText;
                     }
                     if (document.getElementById('role')) {
                         document.getElementById('role').value = userData.role || '';
