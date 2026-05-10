@@ -493,6 +493,14 @@ def init_db() -> None:
         # 唯一索引：分开处理团队和个人文献
         cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_paper_user_unique ON paper_user_relations(paper_id, user_id) WHERE paper_id IS NOT NULL")
         cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_personal_user_unique ON paper_user_relations(personal_paper_id, user_id) WHERE personal_paper_id IS NOT NULL")
+
+        # 为 research_progress 表添加 feedback_by 字段
+        cursor.execute("PRAGMA table_info(research_progress)")
+        progress_columns = [col[1] for col in cursor.fetchall()]
+        if 'feedback_by' not in progress_columns:
+            cursor.execute("ALTER TABLE research_progress ADD COLUMN feedback_by INTEGER")
+            print("✅ 已为 research_progress 表添加 feedback_by 列")
+
         print("✅ 已完成现有数据迁移")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_papers_deleted ON papers(is_deleted)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_paper_user_personal ON paper_user_relations(personal_paper_id)")

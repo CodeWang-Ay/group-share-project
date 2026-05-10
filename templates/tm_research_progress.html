@@ -327,100 +327,62 @@
                         </div>
                     </div>
 
+
+                    <!-- 统计卡片 -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white rounded-lg p-4 border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div><p class="text-gray-500 text-sm">总人数</p><h3 id="stats-total-student" class="text-2xl font-bold mt-1">--</h3></div>
+                                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary">
+                                    <i class="fa fa-users"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div><p class="text-gray-500 text-sm">进度正常</p><h3 id="stats-normal-student" class="text-2xl font-bold mt-1 text-green-600">--</h3></div>
+                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                    <i class="fa fa-check-circle"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div><p class="text-gray-500 text-sm">进度滞后</p><h3 id="stats-delayed-student" class="text-2xl font-bold mt-1 text-yellow-600">--</h3></div>
+                                <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+                                    <i class="fa fa-exclamation-circle"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div><p class="text-gray-500 text-sm">未更新本周</p><h3 id="stats-not_updated-student" class="text-2xl font-bold mt-1 text-gray-600">--</h3></div>
+                                <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
+                                    <i class="fa fa-times-circle"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
                     <!-- 团队进展区域（学生可查看） -->
                     <div id="team-progress-section" class="hidden">
                         <!-- 筛选工具栏 -->
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-                            <!-- 搜索框 -->
-                            <div class="mb-4">
-                                <div class="relative">
+                            <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                                <!-- 筛选按钮 -->
+                                <div class="flex flex-wrap gap-2">
+                                    <button class="student-filter-btn px-3 py-1 bg-primary/10 text-primary text-sm rounded-lg active" data-filter="all">全部成员</button>
+                                    <button class="student-filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="doctoral">博士生</button>
+                                    <button class="student-filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="master">硕士生</button>
+                                    <button class="student-filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="undergraduate">本科生</button>
+                                    <button class="student-filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="normal">进度正常</button>
+                                    <button class="student-filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="not_updated">进度预警</button>
+                                </div>
+                                <!-- 搜索框 -->
+                                <div class="relative sm:ml-auto sm:max-w-xs">
                                     <input type="text" id="search-team-student" class="w-full px-4 py-2 pl-10 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="搜索学生姓名、研究方向...">
                                     <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                </div>
-                            </div>
-                            <!-- 筛选下拉 -->
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <!-- 学生类型 -->
-                                <div>
-                                    <label class="text-sm text-gray-600 mb-1 block">学生类型</label>
-                                    <select id="filter-degree-type-student" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
-                                        <option value="">全部类型</option>
-                                        <option value="doctoral">博士生</option>
-                                        <option value="master">硕士生</option>
-                                        <option value="undergraduate">本科生</option>
-                                    </select>
-                                </div>
-                                <!-- 年级 -->
-                                <div>
-                                    <label class="text-sm text-gray-600 mb-1 block">年级</label>
-                                    <select id="filter-grade-student" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
-                                        <option value="">全部年级</option>
-                                        <option value="1">一年级</option>
-                                        <option value="2">二年级</option>
-                                        <option value="3">三年级</option>
-                                        <option value="4">四年级</option>
-                                        <option value="5">五年级</option>
-                                        <option value="6">六年级+</option>
-                                    </select>
-                                </div>
-                                <!-- 研究方向 -->
-                                <div>
-                                    <label class="text-sm text-gray-600 mb-1 block">研究方向</label>
-                                    <select id="filter-direction-student" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
-                                        <option value="">全部方向</option>
-                                        <option value="多模态学习">多模态学习</option>
-                                        <option value="自然语言处理">自然语言处理</option>
-                                        <option value="计算机视觉">计算机视觉</option>
-                                        <option value="推荐系统">推荐系统</option>
-                                        <option value="知识图谱">知识图谱</option>
-                                        <option value="机器学习">机器学习</option>
-                                        <option value="深度学习">深度学习</option>
-                                        <option value="强化学习">强化学习</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="mt-3 flex gap-2">
-                                <button id="apply-filter-student" class="bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary/90 transition-colors">
-                                    <i class="fa fa-filter mr-1"></i>应用筛选
-                                </button>
-                                <button id="clear-filter-student" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors">
-                                    <i class="fa fa-times mr-1"></i>清除筛选
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- 统计卡片 -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                            <div class="bg-white rounded-lg p-4 border border-gray-100">
-                                <div class="flex items-center justify-between">
-                                    <div><p class="text-gray-500 text-sm">总人数</p><h3 id="stats-total-student" class="text-2xl font-bold mt-1">--</h3></div>
-                                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary">
-                                        <i class="fa fa-users"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-white rounded-lg p-4 border border-gray-100">
-                                <div class="flex items-center justify-between">
-                                    <div><p class="text-gray-500 text-sm">进度正常</p><h3 id="stats-normal-student" class="text-2xl font-bold mt-1 text-green-600">--</h3></div>
-                                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                                        <i class="fa fa-check-circle"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-white rounded-lg p-4 border border-gray-100">
-                                <div class="flex items-center justify-between">
-                                    <div><p class="text-gray-500 text-sm">进度滞后</p><h3 id="stats-delayed-student" class="text-2xl font-bold mt-1 text-yellow-600">--</h3></div>
-                                    <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
-                                        <i class="fa fa-exclamation-circle"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-white rounded-lg p-4 border border-gray-100">
-                                <div class="flex items-center justify-between">
-                                    <div><p class="text-gray-500 text-sm">未更新本周</p><h3 id="stats-not_updated-student" class="text-2xl font-bold mt-1 text-gray-600">--</h3></div>
-                                    <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                                        <i class="fa fa-times-circle"></i>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -455,30 +417,6 @@
                 <!-- 导师/管理员端内容 -->
                 {% else %}
                 <div id="teacher-view">
-                    <!-- 筛选工具栏 -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-                        <!-- 搜索框 -->
-                        <div class="mb-4">
-                            <div class="relative">
-                                <input type="text" id="search-team-teacher" class="w-full px-4 py-2 pl-10 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="搜索学生姓名、研究方向、进展内容...">
-                                <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                            </div>
-                        </div>
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div class="flex flex-wrap gap-2">
-                                <button class="filter-btn px-3 py-1 bg-primary/10 text-primary text-sm rounded-lg active" data-filter="all">全部成员</button>
-                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="doctoral">博士生</button>
-                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="master">硕士生</button>
-                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="undergraduate">本科生</button>
-                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="not_updated">进度预警</button>
-                            </div>
-                            {% if user.role == 'admin' %}
-                            <button id="batch-settings-btn" class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary/90 flex items-center gap-2 transition-colors">
-                                <i class="fa fa-cog"></i><span>批量设置周期</span>
-                            </button>
-                            {% endif %}
-                        </div>
-                    </div>
 
                     <!-- 统计卡片 -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -513,6 +451,31 @@
                                     <i class="fa fa-times-circle"></i>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                    <!-- 筛选工具栏 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+                        <!-- 搜索框 -->
+                        <div class="mb-4">
+                            <div class="relative">
+                                <input type="text" id="search-team-teacher" class="w-full px-4 py-2 pl-10 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="搜索学生姓名、研究方向、进展内容...">
+                                <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div class="flex flex-wrap gap-2">
+                                <button class="filter-btn px-3 py-1 bg-primary/10 text-primary text-sm rounded-lg active" data-filter="all">全部成员</button>
+                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="doctoral">博士生</button>
+                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="master">硕士生</button>
+                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="undergraduate">本科生</button>
+                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="normal">进度正常</button>
+                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="not_updated">进度预警</button>
+                            </div>
+                            {% if user.role == 'admin' %}
+                            <button id="batch-settings-btn" class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary/90 flex items-center gap-2 transition-colors">
+                                <i class="fa fa-cog"></i><span>批量设置周期</span>
+                            </button>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -793,7 +756,41 @@
             }
         }
 
-        // 学生端获取团队进展列表
+        // 学生端获取团队进展列表（按钮筛选版）
+        async function fetchStudentTeamProgressFromFilter(filter = 'all', searchTerm = '') {
+            try {
+                let statusFilter = '';
+                let studentType = '';
+
+                if (filter === 'not_updated') {
+                    statusFilter = 'not_updated';
+                } else if (filter === 'normal') {
+                    statusFilter = 'normal';
+                } else if (filter !== 'all') {
+                    studentType = filter;
+                }
+
+                const params = new URLSearchParams();
+                if (studentType) params.append('student_type', studentType);
+                if (statusFilter) params.append('status', statusFilter);
+                if (searchTerm) params.append('search', searchTerm);
+
+                const response = await fetch(`${API_BASE_URL}/api/research_progress/team?${params}`, {
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+                const result = await response.json();
+
+                // 存储原始数据
+                allStudentTeamData = result.success ? result.data : [];
+
+                renderStudentTeamProgress(allStudentTeamData, searchTerm);
+            } catch (error) {
+                console.error('获取团队进展失败:', error);
+            }
+        }
+
+        // 学生端获取团队进展列表（旧版本，保留兼容）
         async function fetchStudentTeamProgress(filters = {}) {
             try {
                 // 构建查询参数
@@ -897,6 +894,8 @@
 
                 if (filter === 'not_updated') {
                     statusFilter = 'not_updated';
+                } else if (filter === 'normal') {
+                    statusFilter = 'normal';
                 } else if (filter !== 'all') {
                     studentType = filter;
                 }
@@ -1101,7 +1100,7 @@
                             </div>
                             ${latest.supervisor_feedback ? `
                                 <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                    <p class="text-sm text-blue-600 font-medium mb-1"><i class="fa fa-comment-o mr-1"></i>导师反馈</p>
+                                    <p class="text-sm text-blue-600 font-medium mb-1"><i class="fa fa-comment-o mr-1"></i>导师反馈${latest.feedback_by_name ? `（${latest.feedback_by_name}）` : ''}</p>
                                     <p class="text-gray-700">${latest.supervisor_feedback}</p>
                                 </div>
                             ` : ''}
@@ -1142,7 +1141,7 @@
                                     <p class="text-gray-700 font-medium mb-2">研究方向：${item.research_direction}</p>
                                     <p class="text-gray-600 mb-2"><strong>本周进展：</strong>${item.weekly_progress}</p>
                                     <p class="text-gray-600"><strong>下周目标：</strong>${item.next_goal}</p>
-                                    ${item.supervisor_feedback ? `<div class="mt-3 p-3 bg-blue-50 rounded-lg"><p class="text-sm text-gray-500">导师反馈：</p><p class="text-gray-700">${item.supervisor_feedback}</p></div>` : ''}
+                                    ${item.supervisor_feedback ? `<div class="mt-3 p-3 bg-blue-50 rounded-lg"><p class="text-sm text-gray-500">导师反馈${item.feedback_by_name ? `（${item.feedback_by_name}）` : ''}：</p><p class="text-gray-700">${item.supervisor_feedback}</p></div>` : ''}
                                 </div>
                             `;
                         }).join('');
@@ -1282,7 +1281,7 @@
                             ${data.attachments && data.attachments.length > 0 ?
                                 `<p class="text-gray-700"><strong>附件：</strong>${data.attachments.join(', ')}</p>` : ''}
                             ${data.supervisor_feedback ?
-                                `<div class="p-3 bg-blue-50 rounded-lg"><p class="text-sm text-gray-500 mb-1">导师反馈：</p><p class="text-gray-700">${data.supervisor_feedback}</p></div>` : ''}
+                                `<div class="p-3 bg-blue-50 rounded-lg"><p class="text-sm text-gray-500 mb-1">导师反馈${data.feedback_by_name ? `（${data.feedback_by_name}）` : ''}：</p><p class="text-gray-700">${data.supervisor_feedback}</p></div>` : ''}
                         </div>
                     `;
 
@@ -1500,44 +1499,34 @@
                     document.getElementById('team-progress-section').classList.remove('hidden');
                     document.getElementById('my-progress-section').classList.add('hidden');
                     // 加载团队进展数据
-                    fetchStudentTeamProgress();
+                    fetchStudentTeamProgressFromFilter('all', '');
                     fetchStudentTeamStats();
                 });
 
                 // 学生端团队进展搜索框
                 const searchTeamStudentInput = document.getElementById('search-team-student');
                 let teamStudentSearchTimeout = null;
+                let currentStudentFilter = 'all';
 
                 searchTeamStudentInput.addEventListener('input', function() {
                     clearTimeout(teamStudentSearchTimeout);
                     teamStudentSearchTimeout = setTimeout(() => {
-                        const filters = {
-                            degree_type: document.getElementById('filter-degree-type-student').value,
-                            grade: document.getElementById('filter-grade-student').value,
-                            research_direction: document.getElementById('filter-direction-student').value,
-                            search: this.value
-                        };
-                        fetchStudentTeamProgress(filters);
+                        fetchStudentTeamProgressFromFilter(currentStudentFilter, this.value);
                     }, 300);
                 });
 
                 // 学生端筛选按钮
-                document.getElementById('apply-filter-student').addEventListener('click', function() {
-                    const filters = {
-                        degree_type: document.getElementById('filter-degree-type-student').value,
-                        grade: document.getElementById('filter-grade-student').value,
-                        research_direction: document.getElementById('filter-direction-student').value,
-                        search: searchTeamStudentInput.value
-                    };
-                    fetchStudentTeamProgress(filters);
-                });
-
-                document.getElementById('clear-filter-student').addEventListener('click', function() {
-                    document.getElementById('filter-degree-type-student').value = '';
-                    document.getElementById('filter-grade-student').value = '';
-                    document.getElementById('filter-direction-student').value = '';
-                    searchTeamStudentInput.value = '';
-                    fetchStudentTeamProgress({});
+                document.querySelectorAll('.student-filter-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        document.querySelectorAll('.student-filter-btn').forEach(b => {
+                            b.classList.remove('active', 'bg-primary/10', 'text-primary');
+                            b.classList.add('bg-gray-100', 'text-gray-600');
+                        });
+                        this.classList.add('active', 'bg-primary/10', 'text-primary');
+                        this.classList.remove('bg-gray-100', 'text-gray-600');
+                        currentStudentFilter = this.dataset.filter;
+                        fetchStudentTeamProgressFromFilter(currentStudentFilter, searchTeamStudentInput.value);
+                    });
                 });
 
                 // 提交进展按钮

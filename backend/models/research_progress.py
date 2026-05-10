@@ -29,6 +29,8 @@ class ResearchProgress:
         period_end: 本周期截止日期
         status: 状态
         supervisor_feedback: 导师反馈内容
+        feedback_by: 反馈导师ID
+        feedback_by_name: 反馈导师名字（查询时关联）
         feedback_at: 导师反馈时间
         created_at: 创建时间
         updated_at: 更新时间
@@ -47,6 +49,8 @@ class ResearchProgress:
     period_end: Optional[datetime] = None
     status: str = "normal"
     supervisor_feedback: Optional[str] = None
+    feedback_by: Optional[int] = None
+    feedback_by_name: Optional[str] = None
     feedback_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
@@ -83,6 +87,8 @@ class ResearchProgress:
             "period_end": self.period_end.isoformat() if self.period_end else None,
             "status": self.status,
             "supervisor_feedback": self.supervisor_feedback,
+            "feedback_by": self.feedback_by,
+            "feedback_by_name": self.feedback_by_name,
             "feedback_at": self.feedback_at.isoformat() if self.feedback_at else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None
@@ -157,6 +163,8 @@ class ResearchProgress:
             period_end=period_end,
             status=data.get("status", "normal"),
             supervisor_feedback=data.get("supervisor_feedback"),
+            feedback_by=data.get("feedback_by"),
+            feedback_by_name=data.get("feedback_by_name"),
             feedback_at=feedback_at,
             created_at=created_at,
             updated_at=updated_at

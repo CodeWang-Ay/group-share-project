@@ -114,11 +114,15 @@ class ResearchProgressService:
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, user_id, research_direction, weekly_progress, next_goal,
-                       difficulties, completion_rate, attachments, submission_period,
-                       submission_date, period_start, period_end, status,
-                       supervisor_feedback, feedback_at, created_at, updated_at
-                FROM research_progress WHERE id = ?
+                SELECT rp.id, rp.user_id, rp.research_direction, rp.weekly_progress, rp.next_goal,
+                       rp.difficulties, rp.completion_rate, rp.attachments, rp.submission_period,
+                       rp.submission_date, rp.period_start, rp.period_end, rp.status,
+                       rp.supervisor_feedback, rp.feedback_at, rp.feedback_by,
+                       supervisor.username as feedback_by_name,
+                       rp.created_at, rp.updated_at
+                FROM research_progress rp
+                LEFT JOIN users supervisor ON rp.feedback_by = supervisor.id
+                WHERE rp.id = ?
             """, (progress_id,))
 
             row = cursor.fetchone()
@@ -152,13 +156,16 @@ class ResearchProgressService:
             order_clause = 'DESC' if order.lower() == 'desc' else 'ASC'
 
             cursor.execute(f"""
-                SELECT id, user_id, research_direction, weekly_progress, next_goal,
-                       difficulties, completion_rate, attachments, submission_period,
-                       submission_date, period_start, period_end, status,
-                       supervisor_feedback, feedback_at, created_at, updated_at
-                FROM research_progress
-                WHERE user_id = ?
-                ORDER BY submission_date {order_clause}
+                SELECT rp.id, rp.user_id, rp.research_direction, rp.weekly_progress, rp.next_goal,
+                       rp.difficulties, rp.completion_rate, rp.attachments, rp.submission_period,
+                       rp.submission_date, rp.period_start, rp.period_end, rp.status,
+                       rp.supervisor_feedback, rp.feedback_at, rp.feedback_by,
+                       supervisor.username as feedback_by_name,
+                       rp.created_at, rp.updated_at
+                FROM research_progress rp
+                LEFT JOIN users supervisor ON rp.feedback_by = supervisor.id
+                WHERE rp.user_id = ?
+                ORDER BY rp.submission_date {order_clause}
                 LIMIT ? OFFSET ?
             """, (user_id, limit, offset))
 
@@ -211,6 +218,8 @@ class ResearchProgressService:
                     rp.status,
                     rp.submission_date,
                     rp.supervisor_feedback,
+                    rp.feedback_by,
+                    supervisor.username as feedback_by_name,
                     ps.period_type,
                     ps.next_deadline
                 FROM users u
@@ -220,6 +229,7 @@ class ResearchProgressService:
                     GROUP BY user_id
                 ) latest ON u.id = latest.user_id
                 LEFT JOIN research_progress rp ON latest.user_id = rp.user_id AND latest.max_date = rp.submission_date
+                LEFT JOIN users supervisor ON rp.feedback_by = supervisor.id
                 LEFT JOIN progress_settings ps ON u.id = ps.user_id
                 WHERE u.role = 'student' AND u.status = 'active'
             """
@@ -450,9 +460,9 @@ class ResearchProgressService:
 
             cursor.execute("""
                 UPDATE research_progress
-                SET supervisor_feedback = ?, feedback_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                SET supervisor_feedback = ?, feedback_at = CURRENT_TIMESTAMP, feedback_by = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
-            """, (feedback, progress_id))
+            """, (feedback, supervisor_id, progress_id))
 
             if cursor.rowcount == 0:
                 return None
