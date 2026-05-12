@@ -2200,6 +2200,7 @@ async def get_members(request: Request):
         per_page = int(request.query_params.get("per_page", 10))
         role_filter = request.query_params.get("role", "")
         status_filter = request.query_params.get("status", "")
+        degree_filter = request.query_params.get("degree", "")
         search = request.query_params.get("search", "")
 
         # 验证参数
@@ -2227,6 +2228,10 @@ async def get_members(request: Request):
             if status_filter:
                 where_conditions.append("status = ?")
                 params.append(status_filter)
+
+            if degree_filter:
+                where_conditions.append("degree_type = ?")
+                params.append(degree_filter)
 
             if search:
                 where_conditions.append("(username LIKE ? OR id LIKE ? OR student_id LIKE ?)")
@@ -5767,15 +5772,19 @@ async def get_my_progress(
             content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
         )
 
-    progress_list = ResearchProgressService.get_user_progress_list(
+    result = ResearchProgressService.get_user_progress_list(
         current_user.id, page, limit, order
     )
 
     return JSONResponse(content={
         "success": True,
-        "data": [p.to_dict() for p in progress_list],
-        "page": page,
-        "limit": limit
+        "data": [p.to_dict() for p in result['items']],
+        "pagination": {
+            "total": result['total'],
+            "page": result['page'],
+            "limit": result['limit'],
+            "total_pages": result['total_pages']
+        }
     })
 
 
@@ -5908,9 +5917,13 @@ async def get_team_progress(
 
     return JSONResponse(content={
         "success": True,
-        "data": progress_list,
-        "page": page,
-        "limit": limit
+        "data": progress_list['items'],
+        "pagination": {
+            "total": progress_list['total'],
+            "page": progress_list['page'],
+            "limit": progress_list['limit'],
+            "total_pages": progress_list['total_pages']
+        }
     })
 
 

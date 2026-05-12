@@ -136,7 +136,7 @@ class ResearchProgressService:
         page: int = 1,
         limit: int = 10,
         order: str = 'desc'
-    ) -> List[ResearchProgress]:
+    ) -> Dict[str, Any]:
         """
         获取用户的进展历史列表
 
@@ -147,10 +147,16 @@ class ResearchProgressService:
             order: 排序方向
 
         Returns:
-            List[ResearchProgress]: 进展列表
+            Dict: 包含 items, total, page, limit, total_pages
         """
         with get_db() as conn:
             cursor = conn.cursor()
+
+            # 获取总数
+            cursor.execute("""
+                SELECT COUNT(*) FROM research_progress WHERE user_id = ?
+            """, (user_id,))
+            total = cursor.fetchone()[0]
 
             offset = (page - 1) * limit
             order_clause = 'DESC' if order.lower() == 'desc' else 'ASC'
@@ -170,7 +176,17 @@ class ResearchProgressService:
             """, (user_id, limit, offset))
 
             rows = cursor.fetchall()
-            return [ResearchProgress.from_dict(dict(row)) for row in rows]
+            items = [ResearchProgress.from_dict(dict(row)) for row in rows]
+
+            total_pages = (total + limit - 1) // limit if total > 0 else 1
+
+            return {
+                'items': items,
+                'total': total,
+                'page': page,
+                'limit': limit,
+                'total_pages': total_pages
+            }
 
     @staticmethod
     def get_team_progress_list(
@@ -258,7 +274,8 @@ class ResearchProgressService:
                 elif status == 'delayed':
                     query += " AND rp.status = 'delayed'"
                 elif status == 'warning':
-                    query += " AND rp.status = 'warning'"
+                    # 进度预警：包括warning状态和未更新
+                    query += " AND (rp.status = 'warning' OR rp.submission_date IS NULL OR rp.submission_date < DATE('now', '-7 days'))"
                 elif status == 'normal':
                     query += " AND rp.status = 'normal'"
 
@@ -272,6 +289,12 @@ class ResearchProgressService:
                     query += " AND rp.submission_date >= DATE('now', '-30 days')"
 
             # 排序和分页
+            # 先获取总数
+            count_query = query.replace("SELECT\n                    u.id as user_id,\n                    u.username,\n                    u.research_direction as user_research_direction,\n                    u.degree_type,\n                    u.student_id,\n                    u.avatar,\n                    rp.id as progress_id,\n                    rp.research_direction,\n                    rp.weekly_progress,\n                    rp.next_goal,\n                    rp.completion_rate,\n                    rp.status,\n                    rp.submission_date,\n                    rp.supervisor_feedback,\n                    rp.feedback_by,\n                    supervisor.username as feedback_by_name,\n                    ps.period_type,\n                    ps.next_deadline", "SELECT COUNT(*)")
+            cursor.execute(count_query, params.copy())
+            total = cursor.fetchone()[0]
+
+            # 再获取分页数据
             query += " ORDER BY rp.submission_date DESC NULLS LAST LIMIT ? OFFSET ?"
             offset = (page - 1) * limit
             params.extend([limit, offset])
@@ -296,7 +319,13 @@ class ResearchProgressService:
                     data['computed_status'] = data['status']
                 result.append(data)
 
-            return result
+            return {
+                'items': result,
+                'total': total,
+                'page': page,
+                'limit': limit,
+                'total_pages': (total + limit - 1) // limit if total > 0 else 1
+            }
 
     @staticmethod
     def get_progress_stats() -> Dict[str, int]:
@@ -348,12 +377,15 @@ class ResearchProgressService:
             """)
             not_updated_count = cursor.fetchone()[0]
 
+            # 进度预警人数（包括滞后+未更新）
+            warning_count = delayed_count + not_updated_count
+
             return {
                 'total': total_students,
                 'normal': normal_count,
                 'delayed': delayed_count,
                 'not_updated': not_updated_count,
-                'warning': 0  # 暂时设为0，后续可添加导师标记功能
+                'warning': warning_count
             }
 
     @staticmethod

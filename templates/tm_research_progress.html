@@ -324,6 +324,28 @@
                                 <p>暂无进展记录</p>
                                 <p class="text-sm">点击上方按钮开始提交你的研究进展</p>
                             </div>
+                            <!-- 我的进展分页组件 -->
+                            <div id="my-pagination-container" class="px-4 py-4 flex items-center justify-between">
+                                <div class="text-sm text-gray-500">
+                                    共 <span id="my-total-count">0</span> 条记录
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <select id="my-per-page" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                                        <option value="10" selected>10条/页</option>
+                                        <option value="20">20条/页</option>
+                                        <option value="50">50条/页</option>
+                                    </select>
+                                    <div class="flex items-center gap-1">
+                                        <button id="my-prev-page" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <i class="fa fa-chevron-left"></i>
+                                        </button>
+                                        <span class="px-3 py-1 text-sm">第 <span id="my-current-page">1</span> / <span id="my-total-pages">1</span> 页</span>
+                                        <button id="my-next-page" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <i class="fa fa-chevron-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -350,7 +372,7 @@
                             </div>
                             <div class="bg-white rounded-lg p-4 border border-gray-100">
                                 <div class="flex items-center justify-between">
-                                    <div><p class="text-gray-500 text-sm">进度滞后</p><h3 id="stats-delayed-student" class="text-2xl font-bold mt-1 text-yellow-600">--</h3></div>
+                                    <div><p class="text-gray-500 text-sm">进度预警</p><h3 id="stats-delayed-student" class="text-2xl font-bold mt-1 text-yellow-600">--</h3></div>
                                     <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
                                         <i class="fa fa-exclamation-circle"></i>
                                     </div>
@@ -372,11 +394,11 @@
                                 <!-- 筛选按钮 -->
                                 <div class="flex flex-wrap gap-2">
                                     <button class="student-filter-btn px-3 py-1 bg-primary/10 text-primary text-sm rounded-lg active" data-filter="all">全部成员</button>
-                                    <button class="student-filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="doctoral">博士生</button>
-                                    <button class="student-filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="master">硕士生</button>
-                                    <button class="student-filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="undergraduate">本科生</button>
+                                    <button class="student-filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="doctoral">博士</button>
+                                    <button class="student-filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="master">硕士</button>
+                                    <button class="student-filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="undergraduate">本科</button>
                                     <button class="student-filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="normal">进度正常</button>
-                                    <button class="student-filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="not_updated">进度预警</button>
+                                    <button class="student-filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="warning">进度预警</button>
                                 </div>
                                 <!-- 搜索框 -->
                                 <div class="relative sm:ml-auto sm:max-w-xs">
@@ -409,6 +431,28 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <!-- 分页组件 -->
+                            <div id="student-pagination-container" class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                                <div class="text-sm text-gray-500">
+                                    共 <span id="student-total-count">0</span> 条记录
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <select id="student-per-page" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                                        <option value="10">10条/页</option>
+                                        <option value="20" selected>20条/页</option>
+                                        <option value="50">50条/页</option>
+                                    </select>
+                                    <div class="flex items-center gap-1">
+                                        <button id="student-prev-page" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <i class="fa fa-chevron-left"></i>
+                                        </button>
+                                        <span class="px-3 py-1 text-sm">第 <span id="student-current-page">1</span> / <span id="student-total-pages">1</span> 页</span>
+                                        <button id="student-next-page" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <i class="fa fa-chevron-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -437,7 +481,7 @@
                         </div>
                         <div class="bg-white rounded-lg p-4 border border-gray-100">
                             <div class="flex items-center justify-between">
-                                <div><p class="text-gray-500 text-sm">进度滞后</p><h3 id="stats-delayed" class="text-2xl font-bold mt-1 text-yellow-600">--</h3></div>
+                                <div><p class="text-gray-500 text-sm">进度预警</p><h3 id="stats-delayed" class="text-2xl font-bold mt-1 text-yellow-600">--</h3></div>
                                 <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
                                     <i class="fa fa-exclamation-circle"></i>
                                 </div>
@@ -464,11 +508,11 @@
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                             <div class="flex flex-wrap gap-2">
                                 <button class="filter-btn px-3 py-1 bg-primary/10 text-primary text-sm rounded-lg active" data-filter="all">全部成员</button>
-                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="doctoral">博士生</button>
-                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="master">硕士生</button>
-                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="undergraduate">本科生</button>
+                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="doctoral">博士</button>
+                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="master">硕士</button>
+                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="undergraduate">本科</button>
                                 <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="normal">进度正常</button>
-                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="not_updated">进度预警</button>
+                                <button class="filter-btn px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200" data-filter="warning">进度预警</button>
                             </div>
                             {% if user.role == 'admin' or user.role == 'teacher' %}
                             <button id="batch-settings-btn" class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary/90 flex items-center gap-2 transition-colors">
@@ -501,6 +545,28 @@
                                     <!-- 动态加载 -->
                                 </tbody>
                             </table>
+                        </div>
+                        <!-- 分页组件 -->
+                        <div id="team-pagination-container" class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                            <div class="text-sm text-gray-500">
+                                共 <span id="team-total-count">0</span> 条记录
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <select id="team-per-page" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                                    <option value="10">10条/页</option>
+                                    <option value="20" selected>20条/页</option>
+                                    <option value="50">50条/页</option>
+                                </select>
+                                <div class="flex items-center gap-1">
+                                    <button id="team-prev-page" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fa fa-chevron-left"></i>
+                                    </button>
+                                    <span class="px-3 py-1 text-sm">第 <span id="team-current-page">1</span> / <span id="team-total-pages">1</span> 页</span>
+                                    <button id="team-next-page" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fa fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <div id="no-team-progress" class="p-6 text-center text-gray-500 hidden">
                             <i class="fa fa-inbox text-4xl mb-4"></i>
@@ -677,6 +743,26 @@
         let allStudentTeamData = [];
         let allTeacherTeamData = [];
 
+        // 分页相关变量（导师端）
+        let teamCurrentPage = 1;
+        let teamPerPage = 20;
+        let teamTotalPages = 1;
+        let teamTotalCount = 0;
+        let currentFilter = 'all'; // 筛选状态
+
+        // 分页相关变量（学生端）
+        let studentCurrentPage = 1;
+        let studentPerPage = 20;
+        let studentTotalPages = 1;
+        let studentTotalCount = 0;
+        let currentStudentFilter = 'all'; // 筛选状态
+
+        // 分页相关变量（我的进展）
+        let myCurrentPage = 1;
+        let myPerPage = 10;
+        let myTotalPages = 1;
+        let myTotalCount = 0;
+
         // 获取认证 headers（只在有 token 时才添加 Authorization）
         function getAuthHeaders(includeContentType = false) {
             const token = localStorage.getItem('session_token');
@@ -740,7 +826,7 @@
                 if (result.success) {
                     document.getElementById('stats-total').textContent = result.data.total;
                     document.getElementById('stats-normal').textContent = result.data.normal;
-                    document.getElementById('stats-delayed').textContent = result.data.delayed;
+                    document.getElementById('stats-delayed').textContent = result.data.warning;
                     document.getElementById('stats-not_updated').textContent = result.data.not_updated;
                 }
             } catch (error) {
@@ -759,7 +845,7 @@
                 if (result.success) {
                     document.getElementById('stats-total-student').textContent = result.data.total;
                     document.getElementById('stats-normal-student').textContent = result.data.normal;
-                    document.getElementById('stats-delayed-student').textContent = result.data.delayed;
+                    document.getElementById('stats-delayed-student').textContent = result.data.warning;
                     document.getElementById('stats-not_updated-student').textContent = result.data.not_updated;
                 }
             } catch (error) {
@@ -768,12 +854,14 @@
         }
 
         // 学生端获取团队进展列表（按钮筛选版）
-        async function fetchStudentTeamProgressFromFilter(filter = 'all', searchTerm = '') {
+        async function fetchStudentTeamProgressFromFilter(filter = 'all', searchTerm = '', page = 1) {
             try {
                 let statusFilter = '';
                 let studentType = '';
 
-                if (filter === 'not_updated') {
+                if (filter === 'warning') {
+                    statusFilter = 'warning';
+                } else if (filter === 'not_updated') {
                     statusFilter = 'not_updated';
                 } else if (filter === 'normal') {
                     statusFilter = 'normal';
@@ -782,6 +870,8 @@
                 }
 
                 const params = new URLSearchParams();
+                params.append('page', page);
+                params.append('limit', studentPerPage);
                 if (studentType) params.append('student_type', studentType);
                 if (statusFilter) params.append('status', statusFilter);
                 if (searchTerm) params.append('search', searchTerm);
@@ -792,10 +882,30 @@
                 });
                 const result = await response.json();
 
-                // 存储原始数据
-                allStudentTeamData = result.success ? result.data : [];
+                if (result.success) {
+                    allStudentTeamData = result.data;
 
-                renderStudentTeamProgress(allStudentTeamData, searchTerm);
+                    // 更新分页信息
+                    if (result.pagination) {
+                        studentTotalCount = result.pagination.total;
+                        studentTotalPages = result.pagination.total_pages;
+                        studentCurrentPage = result.pagination.page;
+
+                        document.getElementById('student-total-count').textContent = studentTotalCount;
+                        document.getElementById('student-current-page').textContent = studentCurrentPage;
+                        document.getElementById('student-total-pages').textContent = studentTotalPages;
+
+                        // 更新按钮状态
+                        document.getElementById('student-prev-page').disabled = studentCurrentPage <= 1;
+                        document.getElementById('student-next-page').disabled = studentCurrentPage >= studentTotalPages;
+                    }
+
+                    renderStudentTeamProgress(allStudentTeamData, searchTerm);
+
+                    // 显示/隐藏分页组件
+                    const paginationContainer = document.getElementById('student-pagination-container');
+                    paginationContainer.classList.toggle('hidden', studentTotalCount === 0);
+                }
             } catch (error) {
                 console.error('获取团队进展失败:', error);
             }
@@ -898,12 +1008,14 @@
         }
 
         // 获取团队进展列表（导师端）
-        async function fetchTeamProgress(filter = 'all', searchTerm = '') {
+        async function fetchTeamProgress(filter = 'all', searchTerm = '', page = 1) {
             try {
                 let statusFilter = '';
                 let studentType = '';
 
-                if (filter === 'not_updated') {
+                if (filter === 'warning') {
+                    statusFilter = 'warning';
+                } else if (filter === 'not_updated') {
                     statusFilter = 'not_updated';
                 } else if (filter === 'normal') {
                     statusFilter = 'normal';
@@ -912,6 +1024,8 @@
                 }
 
                 const params = new URLSearchParams();
+                params.append('page', page);
+                params.append('limit', teamPerPage);
                 if (studentType) params.append('student_type', studentType);
                 if (statusFilter) params.append('status', statusFilter);
                 if (searchTerm) params.append('search', searchTerm);
@@ -922,10 +1036,30 @@
                 });
                 const result = await response.json();
 
-                // 存储原始数据
-                allTeacherTeamData = result.success ? result.data : [];
+                if (result.success) {
+                    allTeacherTeamData = result.data;
 
-                renderTeamProgress(allTeacherTeamData, searchTerm);
+                    // 更新分页信息
+                    if (result.pagination) {
+                        teamTotalCount = result.pagination.total;
+                        teamTotalPages = result.pagination.total_pages;
+                        teamCurrentPage = result.pagination.page;
+
+                        document.getElementById('team-total-count').textContent = teamTotalCount;
+                        document.getElementById('team-current-page').textContent = teamCurrentPage;
+                        document.getElementById('team-total-pages').textContent = teamTotalPages;
+
+                        // 更新按钮状态
+                        document.getElementById('team-prev-page').disabled = teamCurrentPage <= 1;
+                        document.getElementById('team-next-page').disabled = teamCurrentPage >= teamTotalPages;
+                    }
+
+                    renderTeamProgress(allTeacherTeamData, searchTerm);
+
+                    // 显示/隐藏分页组件
+                    const paginationContainer = document.getElementById('team-pagination-container');
+                    paginationContainer.classList.toggle('hidden', teamTotalCount === 0);
+                }
             } catch (error) {
                 console.error('获取团队进展失败:', error);
             }
@@ -1017,9 +1151,13 @@
         }
 
         // 获取个人进展列表
-        async function fetchMyProgress() {
+        async function fetchMyProgress(page = 1) {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/research_progress/my`, {
+                const params = new URLSearchParams();
+                params.append('page', page);
+                params.append('limit', myPerPage);
+
+                const response = await fetch(`${API_BASE_URL}/api/research_progress/my?${params}`, {
                     headers: getAuthHeaders(),
                     credentials: 'include'
                 });
@@ -1028,7 +1166,26 @@
                 // 存储原始数据
                 allMyProgressData = result.success ? result.data : [];
 
+                // 更新分页信息
+                if (result.pagination) {
+                    myTotalCount = result.pagination.total;
+                    myTotalPages = result.pagination.total_pages;
+                    myCurrentPage = result.pagination.page;
+
+                    document.getElementById('my-total-count').textContent = myTotalCount;
+                    document.getElementById('my-current-page').textContent = myCurrentPage;
+                    document.getElementById('my-total-pages').textContent = myTotalPages;
+
+                    // 更新按钮状态
+                    document.getElementById('my-prev-page').disabled = myCurrentPage <= 1;
+                    document.getElementById('my-next-page').disabled = myCurrentPage >= myTotalPages;
+                }
+
                 renderMyProgress(allMyProgressData);
+
+                // 显示/隐藏分页组件
+                const paginationContainer = document.getElementById('my-pagination-container');
+                paginationContainer.classList.toggle('hidden', myTotalCount === 0);
             } catch (error) {
                 console.error('获取个人进展失败:', error);
             }
@@ -1362,7 +1519,7 @@
                 if (result.success) {
                     showToast('反馈发送成功！');
                     closeDetailModal();
-                    fetchTeamProgress();
+                    fetchTeamProgress(currentFilter || 'all', '', teamCurrentPage);
                 } else {
                     showToast(result.message || '发送失败', 'error');
                 }
@@ -1549,19 +1706,19 @@
                     document.getElementById('team-progress-section').classList.remove('hidden');
                     document.getElementById('my-progress-section').classList.add('hidden');
                     // 加载团队进展数据
-                    fetchStudentTeamProgressFromFilter('all', '');
+                    fetchStudentTeamProgressFromFilter('all', '', 1);
                     fetchStudentTeamStats();
                 });
 
                 // 学生端团队进展搜索框
                 const searchTeamStudentInput = document.getElementById('search-team-student');
                 let teamStudentSearchTimeout = null;
-                let currentStudentFilter = 'all';
 
                 searchTeamStudentInput.addEventListener('input', function() {
                     clearTimeout(teamStudentSearchTimeout);
                     teamStudentSearchTimeout = setTimeout(() => {
-                        fetchStudentTeamProgressFromFilter(currentStudentFilter, this.value);
+                        studentCurrentPage = 1; // 重置页码
+                        fetchStudentTeamProgressFromFilter(currentStudentFilter, searchTeamStudentInput.value, studentCurrentPage);
                     }, 300);
                 });
 
@@ -1575,8 +1732,51 @@
                         this.classList.add('active', 'bg-primary/10', 'text-primary');
                         this.classList.remove('bg-gray-100', 'text-gray-600');
                         currentStudentFilter = this.dataset.filter;
-                        fetchStudentTeamProgressFromFilter(currentStudentFilter, searchTeamStudentInput.value);
+                        studentCurrentPage = 1; // 重置页码
+                        fetchStudentTeamProgressFromFilter(currentStudentFilter, searchTeamStudentInput.value, studentCurrentPage);
                     });
+                });
+
+                // 学生端分页事件
+                document.getElementById('student-prev-page').addEventListener('click', function() {
+                    if (studentCurrentPage > 1) {
+                        studentCurrentPage--;
+                        fetchStudentTeamProgressFromFilter(currentStudentFilter, searchTeamStudentInput.value, studentCurrentPage);
+                    }
+                });
+
+                document.getElementById('student-next-page').addEventListener('click', function() {
+                    if (studentCurrentPage < studentTotalPages) {
+                        studentCurrentPage++;
+                        fetchStudentTeamProgressFromFilter(currentStudentFilter, searchTeamStudentInput.value, studentCurrentPage);
+                    }
+                });
+
+                document.getElementById('student-per-page').addEventListener('change', function() {
+                    studentPerPage = parseInt(this.value);
+                    studentCurrentPage = 1;
+                    fetchStudentTeamProgressFromFilter(currentStudentFilter, searchTeamStudentInput.value, studentCurrentPage);
+                });
+
+                // 我的进展分页事件
+                document.getElementById('my-prev-page').addEventListener('click', function() {
+                    if (myCurrentPage > 1) {
+                        myCurrentPage--;
+                        fetchMyProgress(myCurrentPage);
+                    }
+                });
+
+                document.getElementById('my-next-page').addEventListener('click', function() {
+                    if (myCurrentPage < myTotalPages) {
+                        myCurrentPage++;
+                        fetchMyProgress(myCurrentPage);
+                    }
+                });
+
+                document.getElementById('my-per-page').addEventListener('change', function() {
+                    myPerPage = parseInt(this.value);
+                    myCurrentPage = 1;
+                    fetchMyProgress(myCurrentPage);
                 });
 
                 // 提交进展按钮
@@ -1687,17 +1887,17 @@
             } else {
                 // 导师/管理员
                 fetchStats();
-                fetchTeamProgress();
+                fetchTeamProgress('all', '', 1);
 
                 // 导师端搜索框
                 const searchTeamTeacherInput = document.getElementById('search-team-teacher');
                 let teamTeacherSearchTimeout = null;
-                let currentFilter = 'all';
 
                 searchTeamTeacherInput.addEventListener('input', function() {
                     clearTimeout(teamTeacherSearchTimeout);
                     teamTeacherSearchTimeout = setTimeout(() => {
-                        fetchTeamProgress(currentFilter, this.value);
+                        teamCurrentPage = 1; // 重置页码
+                        fetchTeamProgress(currentFilter, this.value, teamCurrentPage);
                     }, 300);
                 });
 
@@ -1711,8 +1911,30 @@
                         this.classList.add('active', 'bg-primary/10', 'text-primary');
                         this.classList.remove('bg-gray-100', 'text-gray-600');
                         currentFilter = this.dataset.filter;
-                        fetchTeamProgress(currentFilter, searchTeamTeacherInput.value);
+                        teamCurrentPage = 1; // 重置页码
+                        fetchTeamProgress(currentFilter, searchTeamTeacherInput.value, teamCurrentPage);
                     });
+                });
+
+                // 分页事件
+                document.getElementById('team-prev-page').addEventListener('click', function() {
+                    if (teamCurrentPage > 1) {
+                        teamCurrentPage--;
+                        fetchTeamProgress(currentFilter, searchTeamTeacherInput.value, teamCurrentPage);
+                    }
+                });
+
+                document.getElementById('team-next-page').addEventListener('click', function() {
+                    if (teamCurrentPage < teamTotalPages) {
+                        teamCurrentPage++;
+                        fetchTeamProgress(currentFilter, searchTeamTeacherInput.value, teamCurrentPage);
+                    }
+                });
+
+                document.getElementById('team-per-page').addEventListener('change', function() {
+                    teamPerPage = parseInt(this.value);
+                    teamCurrentPage = 1;
+                    fetchTeamProgress(currentFilter, searchTeamTeacherInput.value, teamCurrentPage);
                 });
 
                 // 查看详情
