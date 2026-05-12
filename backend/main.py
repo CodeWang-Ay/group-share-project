@@ -2257,19 +2257,21 @@ async def get_members(request: Request):
             members = []
             for row in rows:
                 member = dict(row)
-                # 为前端添加必要的字段
-                member['student_id'] = member.get('student_id', str(member['id']))  # 使用student_id或id作为学号
-                member['username'] = member['username']  # 使用username作为姓名
-                member['email'] = member.get('email', f"{member['username']}@example.com")  # 使用真实邮箱或生成示例邮箱
-                member['phone'] = member.get('phone', '13800138000')  # 使用真实手机号或示例手机号
-                member['status'] = member.get('status', 'active')  # 使用真实状态
-                member['research_direction'] = member.get('research_direction', '未设置研究方向')  # 使用真实研究方向
+                # 为前端添加必要的字段 - 返回真实数据，空字段保持为空
+                member['student_id'] = member.get('student_id') or None
+                member['username'] = member['username']
+                member['email'] = member.get('email') or None
+                member['phone'] = member.get('phone') or None
+                member['status'] = member.get('status') or 'active'
+                member['research_direction'] = member.get('research_direction') or None
+                member['degree_type'] = member.get('degree_type') or None
+                member['gender'] = member.get('gender') or None
                 # 使用真实头像，如果没有则生成默认头像
                 if member.get('avatar'):
                     member['avatar'] = member['avatar']
                 else:
                     member['avatar'] = f"https://picsum.photos/seed/{member['username']}/100/100.jpg"
-                member['created_at'] = member['created_at'].split(' ')[0]  # 只取日期部分
+                member['created_at'] = member['created_at'].split(' ')[0] if member['created_at'] else None
                 members.append(member)
 
             # 计算分页信息

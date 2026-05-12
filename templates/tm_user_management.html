@@ -815,6 +815,14 @@
                                 <label class="text-sm text-gray-500">加入时间</label>
                                 <p id="view-member-created" class="text-base font-medium text-gray-800"></p>
                             </div>
+                            <div>
+                                <label class="text-sm text-gray-500">身份证号码</label>
+                                <p id="view-member-id-card" class="text-base font-medium text-gray-800"></p>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-500">银行卡号</label>
+                                <p id="view-member-bank-card" class="text-base font-medium text-gray-800"></p>
+                            </div>
                         </div>
                     </div>
 
@@ -1217,10 +1225,10 @@
             container.innerHTML = filteredMembers.map(member => `
                 <div class="member-card">
                     <div class="flex items-center gap-3 mb-3">
-                        <img src="${member.avatar}" alt="${member.name}" class="w-12 h-12 rounded-full object-cover" onerror="this.src='https://picsum.photos/seed/${member.name}/100/100.jpg'">
+                        <img src="${member.avatar}" alt="${member.username}" class="w-12 h-12 rounded-full object-cover" onerror="this.src='https://picsum.photos/seed/${member.username}/100/100.jpg'">
                         <div class="flex-1">
-                            <p class="font-medium text-gray-800">${member.name}</p>
-                            <p class="text-sm text-gray-500">${member.studentId}</p>
+                            <p class="font-medium text-gray-800">${member.username}</p>
+                            <p class="text-sm text-gray-500">${member.student_id || '未设置'}</p>
                         </div>
                     </div>
                     <div class="space-y-2">
@@ -1237,8 +1245,8 @@
                             </span>
                         </div>
                         <div class="text-sm text-gray-600">
-                            <p class="truncate">${member.email}</p>
-                            <p class="text-xs">${member.research || '未设置研究方向'}</p>
+                            <p class="truncate">${member.email || '未设置邮箱'}</p>
+                            <p class="text-xs">${member.research_direction || '未设置研究方向'}</p>
                         </div>
                     </div>
                     <div class="flex justify-end gap-2 mt-4 flex-wrap">
@@ -1537,6 +1545,8 @@
             document.getElementById('view-member-role').textContent = getRoleLabel(member.role);
             document.getElementById('view-member-status').textContent = getStatusLabel(member.status);
             document.getElementById('view-member-created').textContent = formatDate(member.created_at);
+            document.getElementById('view-member-id-card').textContent = member.id_card || '未设置';
+            document.getElementById('view-member-bank-card').textContent = member.bank_card || '未设置';
 
             // 打开详情模态框
             document.getElementById('view-member-modal').classList.remove('hidden');
