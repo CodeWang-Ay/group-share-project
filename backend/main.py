@@ -156,7 +156,7 @@ async def get_current_user(request: Request) -> Optional[User]:
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT id, username, password_hash, role, email, phone, student_id, research_direction, status, created_at, updated_at "
+                "SELECT id, username, password_hash, role, email, phone, student_id, research_direction, status, avatar, created_at, updated_at "
                 "FROM users WHERE id = ?",
                 (session["user_id"],)
             )

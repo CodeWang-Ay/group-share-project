@@ -24,6 +24,7 @@ class User:
         student_id: 学号
         research_direction: 研究方向
         status: 状态
+        avatar: 用户头像URL
         created_at: 创建时间
         updated_at: 更新时间
     """
@@ -36,6 +37,7 @@ class User:
     student_id: Optional[str] = None
     research_direction: Optional[str] = None
     status: Optional[str] = None
+    avatar: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -157,6 +159,7 @@ class User:
             "student_id": self.student_id,
             "research_direction": self.research_direction,
             "status": self.status,
+            "avatar": self.avatar,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }
@@ -197,6 +200,7 @@ class User:
             student_id=data.get("student_id"),
             research_direction=data.get("research_direction"),
             status=data.get("status"),
+            avatar=data.get("avatar"),
             created_at=created_at,
             updated_at=updated_at
         )
