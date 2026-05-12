@@ -867,7 +867,7 @@
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <img src="https://picsum.photos/id/${item.user_id}/200/200" class="w-10 h-10 rounded-full">
+                                    <img src="${item.avatar || 'https://picsum.photos/seed/' + item.username + '/100/100.jpg'}" class="w-10 h-10 rounded-full object-cover" onerror="this.src='https://picsum.photos/seed/${item.username}/100/100.jpg'">
                                     <div>
                                         <div class="font-medium text-gray-800">${item.username}</div>
                                         <div class="text-gray-500 text-xs">${item.degree_type || '学生'}</div>
@@ -974,7 +974,7 @@
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <img src="https://picsum.photos/id/${item.user_id}/200/200" class="w-10 h-10 rounded-full">
+                                    <img src="${item.avatar || 'https://picsum.photos/seed/' + item.username + '/100/100.jpg'}" class="w-10 h-10 rounded-full object-cover" onerror="this.src='https://picsum.photos/seed/${item.username}/100/100.jpg'">
                                     <div>
                                         <div class="font-medium text-gray-800">${item.username}</div>
                                         <div class="text-gray-500 text-xs">${item.degree_type || '学生'}</div>

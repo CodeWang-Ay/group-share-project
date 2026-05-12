@@ -210,6 +210,7 @@ class ResearchProgressService:
                     u.research_direction as user_research_direction,
                     u.degree_type,
                     u.student_id,
+                    u.avatar,
                     rp.id as progress_id,
                     rp.research_direction,
                     rp.weekly_progress,
