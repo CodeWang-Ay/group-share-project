@@ -1150,7 +1150,7 @@
                             <input type="checkbox" class="member-checkbox w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" data-member-id="${member.id}" onchange="updateSelectedCount()" onclick="event.stopPropagation()">
                         </div>
                         <div class="col-span-1 flex items-center gap-2">
-                            <img src="${member.avatar}" alt="${member.username}" class="w-8 h-8 rounded-full object-cover">
+                            <img src="${member.avatar}" alt="${member.username}" class="w-8 h-8 rounded-full object-cover" onerror="this.src='https://picsum.photos/seed/${member.username}/100/100.jpg'">
                             <p class="font-medium text-gray-800 truncate">${member.username}</p>
                         </div>
                         <div class="col-span-1">
@@ -1217,7 +1217,7 @@
             container.innerHTML = filteredMembers.map(member => `
                 <div class="member-card">
                     <div class="flex items-center gap-3 mb-3">
-                        <img src="${member.avatar}" alt="${member.name}" class="w-12 h-12 rounded-full object-cover">
+                        <img src="${member.avatar}" alt="${member.name}" class="w-12 h-12 rounded-full object-cover" onerror="this.src='https://picsum.photos/seed/${member.name}/100/100.jpg'">
                         <div class="flex-1">
                             <p class="font-medium text-gray-800">${member.name}</p>
                             <p class="text-sm text-gray-500">${member.studentId}</p>
@@ -1522,7 +1522,11 @@
             currentViewMember = member;
 
             // 填充详情信息（只读）
-            document.getElementById('view-member-avatar').src = member.avatar;
+            const avatarImg = document.getElementById('view-member-avatar');
+            avatarImg.src = member.avatar;
+            avatarImg.onerror = function() {
+                this.src = `https://picsum.photos/seed/${member.username}/100/100.jpg`;
+            };
             document.getElementById('view-member-username').textContent = member.username;
             document.getElementById('view-member-student-id').textContent = member.student_id || '未设置';
             document.getElementById('view-member-phone').textContent = member.phone || '未设置';

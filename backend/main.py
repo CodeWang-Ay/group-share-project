@@ -2244,7 +2244,7 @@ async def get_members(request: Request):
                 SELECT id, username, role, created_at, updated_at, email, phone,
                        student_id, research_direction, status, graduation_status,
                        supervisor, degree_type, work_location, work_company,
-                       personal_bio, personal_homepage, gender, id_card, bank_card
+                       personal_bio, personal_homepage, gender, id_card, bank_card, avatar
                 FROM users
                 {where_clause}
                 ORDER BY created_at DESC
@@ -2264,7 +2264,11 @@ async def get_members(request: Request):
                 member['phone'] = member.get('phone', '13800138000')  # 使用真实手机号或示例手机号
                 member['status'] = member.get('status', 'active')  # 使用真实状态
                 member['research_direction'] = member.get('research_direction', '未设置研究方向')  # 使用真实研究方向
-                member['avatar'] = f"https://picsum.photos/seed/{member['username']}/100/100.jpg"  # 生成头像
+                # 使用真实头像，如果没有则生成默认头像
+                if member.get('avatar'):
+                    member['avatar'] = member['avatar']
+                else:
+                    member['avatar'] = f"https://picsum.photos/seed/{member['username']}/100/100.jpg"
                 member['created_at'] = member['created_at'].split(' ')[0]  # 只取日期部分
                 members.append(member)
 
