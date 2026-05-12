@@ -1026,7 +1026,7 @@ async def get_user_profile(request: Request):
                 SELECT id, username, role, created_at, updated_at, email, phone,
                        student_id, research_direction, status, graduation_status,
                        supervisor, degree_type, work_location, work_company,
-                       personal_bio, personal_homepage, gender, id_card, bank_card
+                       personal_bio, personal_homepage, gender, id_card, bank_card, avatar
                 FROM users
                 WHERE id = ?
             """, (current_user.id,))
@@ -1154,6 +1154,118 @@ async def update_user_profile(request: Request):
             content={
                 "success": False,
                 "message": "更新个人资料失败",
+                "error": "INTERNAL_ERROR"
+            }
+        )
+
+
+# API端点：上传头像
+@app.post("/api/user/avatar")
+async def upload_avatar(request: Request):
+    """
+    上传用户头像
+    """
+    logger.info("上传用户头像")
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "message": "请先登录",
+                "error": "NOT_AUTHENTICATED"
+            }
+        )
+
+    try:
+        # 获取表单数据
+        form = await request.form()
+        file = form.get("avatar")
+
+        if not file:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "请选择要上传的头像图片",
+                    "error": "NO_FILE"
+                }
+            )
+
+        # 检查文件类型
+        allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+        if file.content_type not in allowed_types:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "只支持 JPG、PNG、GIF、WEBP 格式的图片",
+                    "error": "UNSUPPORTED_FILE_TYPE"
+                }
+            )
+
+        # 读取文件数据
+        file_data = await file.read()
+
+        # 检查文件大小（最大5MB）
+        if len(file_data) > 5 * 1024 * 1024:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "头像图片大小不能超过5MB",
+                    "error": "FILE_TOO_LARGE"
+                }
+            )
+
+        # 生成文件名
+        from pathlib import Path
+        import time
+        timestamp = int(time.time())
+        file_ext = Path(file.filename).suffix.lower() or '.jpg'
+        avatar_filename = f"avatar_{current_user.id}_{timestamp}{file_ext}"
+
+        # 创建头像存储目录
+        avatars_dir = Path(__file__).parent.parent / "uploads" / "avatars"
+        avatars_dir.mkdir(parents=True, exist_ok=True)
+
+        # 保存文件
+        avatar_path = avatars_dir / avatar_filename
+        with open(avatar_path, 'wb') as f:
+            f.write(file_data)
+
+        # 生成头像URL
+        avatar_url = f"/uploads/avatars/{avatar_filename}"
+
+        # 更新数据库
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE users
+                SET avatar = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """, (avatar_url, current_user.id))
+
+        logger.info(f"用户 {current_user.username} 上传头像成功: {avatar_url}")
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": "头像上传成功",
+                "data": {
+                    "avatar_url": avatar_url
+                }
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"上传头像失败: {str(e)}", exc_info=True)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": f"上传头像失败: {str(e)}",
                 "error": "INTERNAL_ERROR"
             }
         )

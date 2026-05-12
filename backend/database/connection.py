@@ -501,6 +501,13 @@ def init_db() -> None:
             cursor.execute("ALTER TABLE research_progress ADD COLUMN feedback_by INTEGER")
             print("✅ 已为 research_progress 表添加 feedback_by 列")
 
+        # 为 users 表添加 avatar 字段
+        cursor.execute("PRAGMA table_info(users)")
+        user_columns = [col[1] for col in cursor.fetchall()]
+        if 'avatar' not in user_columns:
+            cursor.execute("ALTER TABLE users ADD COLUMN avatar TEXT")
+            print("✅ 已为 users 表添加 avatar 列")
+
         print("✅ 已完成现有数据迁移")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_papers_deleted ON papers(is_deleted)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_paper_user_personal ON paper_user_relations(personal_paper_id)")

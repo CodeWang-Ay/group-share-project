@@ -636,6 +636,19 @@
                         document.getElementById('personal_bio').value = userData.personal_bio || '';
                     }
 
+                    // 加载头像
+                    if (userData.avatar) {
+                        const avatarPreview = document.getElementById('avatar-preview');
+                        if (avatarPreview) {
+                            avatarPreview.src = userData.avatar;
+                        }
+                        // 更新侧边栏头像
+                        const sidebarAvatar = document.querySelector('aside img');
+                        if (sidebarAvatar) {
+                            sidebarAvatar.src = userData.avatar;
+                        }
+                    }
+
                     console.log('✅ 个人资料数据加载完成');
                 } else {
                     console.error('❌ 获取用户资料失败:', result.message);
@@ -721,6 +734,90 @@
                 saveBtn.addEventListener('click', async function(e) {
                     e.preventDefault();
                     await saveUserProfile();
+                });
+            }
+
+            // 头像上传功能
+            const changeAvatarBtn = document.getElementById('change-avatar-btn');
+            const avatarUpload = document.getElementById('avatar-upload');
+            const avatarPreview = document.getElementById('avatar-preview');
+
+            // 点击更换头像按钮触发文件选择
+            if (changeAvatarBtn && avatarUpload) {
+                changeAvatarBtn.addEventListener('click', function() {
+                    avatarUpload.click();
+                });
+
+                // 点击头像图片也可以触发文件选择
+                if (avatarPreview) {
+                    avatarPreview.addEventListener('click', function() {
+                        avatarUpload.click();
+                    });
+                    avatarPreview.style.cursor = 'pointer';
+                }
+            }
+
+            // 文件选择后预览并上传
+            if (avatarUpload) {
+                avatarUpload.addEventListener('change', async function(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    // 检查文件类型
+                    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                    if (!allowedTypes.includes(file.type)) {
+                        showToast('error', '只支持 JPG、PNG、GIF、WEBP 格式的图片');
+                        return;
+                    }
+
+                    // 检查文件大小（最大5MB）
+                    if (file.size > 5 * 1024 * 1024) {
+                        showToast('error', '头像图片大小不能超过5MB');
+                        return;
+                    }
+
+                    // 本地预览
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        if (avatarPreview) {
+                            avatarPreview.src = e.target.result;
+                        }
+                    };
+                    reader.readAsDataURL(file);
+
+                    // 上传头像
+                    try {
+                        const sessionToken = getSessionToken();
+                        const formData = new FormData();
+                        formData.append('avatar', file);
+
+                        const response = await fetch(`${API_BASE_URL}/api/user/avatar`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': sessionToken ? `Bearer ${sessionToken}` : ''
+                            },
+                            body: formData
+                        });
+
+                        const result = await response.json();
+                        if (result.success) {
+                            showToast('success', '头像上传成功');
+                            // 更新预览图片为服务器返回的URL
+                            if (avatarPreview && result.data.avatar_url) {
+                                avatarPreview.src = result.data.avatar_url;
+                            }
+                            // 更新侧边栏头像
+                            const sidebarAvatar = document.querySelector('aside img');
+                            if (sidebarAvatar && result.data.avatar_url) {
+                                sidebarAvatar.src = result.data.avatar_url;
+                            }
+                        } else {
+                            showToast('error', result.message || '头像上传失败');
+                        }
+                    } catch (error) {
+                        console.error('上传头像失败:', error);
+                        showToast('error', '上传头像失败，请稍后重试');
+                    }
                 });
             }
 
