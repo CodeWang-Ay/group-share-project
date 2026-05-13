@@ -142,9 +142,86 @@
             background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
             border-left: 3px solid #14b8a6;
         }
+
+        /* Toast提示样式 */
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideDown 0.3s ease-out;
+            min-width: 280px;
+        }
+        .toast.success {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .toast.error {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .toast.warning {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border: 1px solid #f59e0b;
+            color: #92400e;
+        }
+        .toast.info {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        .toast i {
+            font-size: 18px;
+        }
+        .toast-content {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .toast-close {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .toast-close:hover {
+            opacity: 1;
+        }
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideUp {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.2s ease-out;
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 min-h-screen flex flex-col">
+    <!-- Toast提示容器 -->
+    <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-3 items-center"></div>
     <!-- 顶部导航栏 -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div class="container mx-auto px-4">
@@ -416,15 +493,16 @@
                             </div>
                             <!-- 布局切换按钮 -->
                             <div class="bg-gray-100 rounded-lg p-1 flex">
+                                <button id="calendar-view-btn" onclick="switchToCalendar()" class="layout-btn px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 text-gray-500 hover:text-gray-700" title="日历视图">
+                                    <i class="fa fa-calendar"></i>
+                                </button>
                                 <button id="grid-view-btn" onclick="switchToGrid()" class="layout-btn px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 bg-white text-gray-900 shadow-sm" title="卡片视图">
                                     <i class="fa fa-th-large"></i>
                                 </button>
                                 <button id="list-view-btn" onclick="switchToList()" class="layout-btn px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 text-gray-500 hover:text-gray-700" title="列表视图">
                                     <i class="fa fa-list"></i>
                                 </button>
-                                <button id="calendar-view-btn" onclick="switchToCalendar()" class="layout-btn px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 text-gray-500 hover:text-gray-700" title="日历视图">
-                                    <i class="fa fa-calendar"></i>
-                                </button>
+
                             </div>
                         </div>
                     </div>
@@ -437,6 +515,28 @@
                         <!-- 动态加载的组会列表将在这里显示 -->
                         <div class="text-center py-12 text-gray-500">
                             <p>加载中...</p>
+                        </div>
+                    </div>
+                    <!-- 卡片视图分页组件 -->
+                    <div id="grid-pagination-container" class="mt-6 bg-white rounded-xl shadow-sm border border-gray-100 px-6 py-4 flex items-center justify-between">
+                        <div class="text-sm text-gray-500">
+                            共 <span id="grid-total-count">0</span> 条记录
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select id="grid-per-page" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 focus:ring-2 focus:ring-primary/30">
+                                <option value="10">10条/页</option>
+                                <option value="20" selected>20条/页</option>
+                                <option value="50">50条/页</option>
+                            </select>
+                            <div class="flex items-center gap-1">
+                                <button id="grid-prev-page" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                                    <i class="fa fa-chevron-left"></i>
+                                </button>
+                                <span class="px-3 py-1.5 text-sm text-gray-600">第 <span id="grid-current-page">1</span> / <span id="grid-total-pages">1</span> 页</span>
+                                <button id="grid-next-page" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                                    <i class="fa fa-chevron-right"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -458,6 +558,28 @@
                             <tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">加载中...</td></tr>
                         </tbody>
                     </table>
+                    <!-- 列表视图分页组件 -->
+                    <div id="list-pagination-container" class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                        <div class="text-sm text-gray-500">
+                            共 <span id="list-total-count">0</span> 条记录
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select id="list-per-page" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 focus:ring-2 focus:ring-primary/30">
+                                <option value="10">10条/页</option>
+                                <option value="20" selected>20条/页</option>
+                                <option value="50">50条/页</option>
+                            </select>
+                            <div class="flex items-center gap-1">
+                                <button id="list-prev-page" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                                    <i class="fa fa-chevron-left"></i>
+                                </button>
+                                <span class="px-3 py-1.5 text-sm text-gray-600">第 <span id="list-current-page">1</span> / <span id="list-total-pages">1</span> 页</span>
+                                <button id="list-next-page" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                                    <i class="fa fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 日历视图 -->
@@ -629,7 +751,7 @@
     <!-- 页脚 -->
     <footer class="bg-white border-t border-gray-200 py-4">
         <div class="container mx-auto px-4 text-center text-sm text-gray-500">
-            <p>© 2023 智能计算实验室 - 研究生组会文件共享系统</p>
+            <p>© 2026 智能计算实验室 - 研究生组会管理系统</p>
         </div>
     </footer>
 
@@ -684,6 +806,80 @@
     <script>
         // API基础URL配置
         const API_BASE_URL = 'http://localhost:8081';
+
+        // Toast提示函数
+        function showToast(message, type = 'success', duration = 2000) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                warning: 'fa-exclamation-circle',
+                info: 'fa-info-circle'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fa ${icons[type] || icons.info}"></i>
+                <span class="toast-content">${message}</span>
+                <i class="fa fa-times toast-close"></i>
+            `;
+
+            container.appendChild(toast);
+
+            // 点击关闭
+            toast.querySelector('.toast-close').addEventListener('click', () => {
+                toast.style.animation = 'slideUp 0.3s ease-out forwards';
+                setTimeout(() => toast.remove(), 300);
+            });
+
+            // 自动消失
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.style.animation = 'slideUp 0.3s ease-out forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, duration);
+        }
+
+        // Inline确认函数 - 替代原生confirm
+        function showInlineConfirm(buttonElement, message, onConfirm) {
+            const originalContent = buttonElement.innerHTML;
+            const originalClasses = buttonElement.className;
+            const parent = buttonElement.parentElement;
+
+            // 创建确认容器
+            const confirmContainer = document.createElement('div');
+            confirmContainer.className = 'inline-flex items-center gap-2 animate-fade-in';
+            confirmContainer.innerHTML = `
+                <span class="text-sm text-gray-600">${message}</span>
+                <button class="confirm-yes px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors">确认</button>
+                <button class="confirm-no px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors">取消</button>
+            `;
+
+            // 替换按钮
+            buttonElement.replaceWith(confirmContainer);
+
+            // 确认按钮
+            confirmContainer.querySelector('.confirm-yes').addEventListener('click', () => {
+                confirmContainer.replaceWith(buttonElement);
+                onConfirm();
+            });
+
+            // 取消按钮
+            confirmContainer.querySelector('.confirm-no').addEventListener('click', () => {
+                confirmContainer.replaceWith(buttonElement);
+            });
+
+            // 3秒后自动恢复
+            setTimeout(() => {
+                if (confirmContainer.parentElement) {
+                    confirmContainer.replaceWith(buttonElement);
+                }
+            }, 5000);
+        }
 
         // 认证辅助函数
         function getAuthHeaders() {
@@ -779,7 +975,7 @@
                 });
 
                 if (!response.ok) {
-                    alert('下载失败，请检查登录状态');
+                    showToast('下载失败，请检查登录状态', 'error');
                     return;
                 }
 
@@ -794,7 +990,7 @@
                 a.remove();
             } catch (e) {
                 console.error('下载失败:', e);
-                alert('下载失败，请重试');
+                showToast('下载失败，请重试', 'error');
             }
         }
 
@@ -825,6 +1021,10 @@
         let meetingCurrentPage = 1;
         let meetingCurrentStatus = '';
         let meetingCurrentType = '';
+        let meetingSearchKeyword = ''; // 搜索关键词
+        let meetingPerPage = 20; // 每页显示数量
+        let meetingTotalPages = 1;
+        let meetingTotalCount = 0;
 
         // 加载组会统计
         async function loadMeetingStats() {
@@ -848,9 +1048,10 @@
             try {
                 const params = new URLSearchParams();
                 params.append('page', meetingCurrentPage);
-                params.append('limit', 10);
+                params.append('limit', meetingPerPage);
                 if (meetingCurrentStatus) params.append('status', meetingCurrentStatus);
                 if (meetingCurrentType) params.append('meeting_type', meetingCurrentType);
+                if (meetingSearchKeyword) params.append('search', meetingSearchKeyword);
 
                 const response = await fetch(`${API_BASE_URL}/api/meetings?${params.toString()}`, {
                     credentials: 'include'
@@ -859,6 +1060,12 @@
                 console.log('组会列表响应:', result);
                 if (result.success) {
                     renderMeetingList(result.data.meetings, result.data.pagination);
+                    // 更新分页信息
+                    if (result.data.pagination) {
+                        meetingTotalCount = result.data.pagination.total || 0;
+                        meetingTotalPages = result.data.pagination.total_pages || 1;
+                        updateMeetingPagination();
+                    }
                 } else {
                     console.error('加载组会列表失败:', result.message);
                     const container = document.getElementById('meetings-container');
@@ -875,7 +1082,46 @@
             }
         }
 
-        // 渲染组会列表
+        // 更新分页信息显示
+        function updateMeetingPagination() {
+            // 更新卡片视图分页
+            const gridTotalCount = document.getElementById('grid-total-count');
+            const gridCurrentPage = document.getElementById('grid-current-page');
+            const gridTotalPages = document.getElementById('grid-total-pages');
+            const gridPrevBtn = document.getElementById('grid-prev-page');
+            const gridNextBtn = document.getElementById('grid-next-page');
+            const gridPerPageSelect = document.getElementById('grid-per-page');
+
+            if (gridTotalCount) gridTotalCount.textContent = meetingTotalCount;
+            if (gridCurrentPage) gridCurrentPage.textContent = meetingCurrentPage;
+            if (gridTotalPages) gridTotalPages.textContent = meetingTotalPages;
+            if (gridPrevBtn) gridPrevBtn.disabled = meetingCurrentPage <= 1;
+            if (gridNextBtn) gridNextBtn.disabled = meetingCurrentPage >= meetingTotalPages;
+            if (gridPerPageSelect) gridPerPageSelect.value = meetingPerPage;
+
+            // 更新列表视图分页
+            const listTotalCount = document.getElementById('list-total-count');
+            const listCurrentPage = document.getElementById('list-current-page');
+            const listTotalPages = document.getElementById('list-total-pages');
+            const listPrevBtn = document.getElementById('list-prev-page');
+            const listNextBtn = document.getElementById('list-next-page');
+            const listPerPageSelect = document.getElementById('list-per-page');
+
+            if (listTotalCount) listTotalCount.textContent = meetingTotalCount;
+            if (listCurrentPage) listCurrentPage.textContent = meetingCurrentPage;
+            if (listTotalPages) listTotalPages.textContent = meetingTotalPages;
+            if (listPrevBtn) listPrevBtn.disabled = meetingCurrentPage <= 1;
+            if (listNextBtn) listNextBtn.disabled = meetingCurrentPage >= meetingTotalPages;
+            if (listPerPageSelect) listPerPageSelect.value = meetingPerPage;
+
+            // 显示/隐藏分页组件
+            const gridPagination = document.getElementById('grid-pagination-container');
+            const listPagination = document.getElementById('list-pagination-container');
+            if (gridPagination) gridPagination.classList.toggle('hidden', meetingTotalCount === 0);
+            if (listPagination) listPagination.classList.toggle('hidden', meetingTotalCount === 0);
+        }
+
+        // 渲染组会列表（真正的卡片网格视图）
         function renderMeetingList(meetings, pagination) {
             const container = document.getElementById('meetings-container');
             if (!container) return;
@@ -885,77 +1131,91 @@
                 return;
             }
 
-            container.innerHTML = meetings.map(m => {
-                const statusText = m.status === 'scheduled' ? '待召开' : (m.status === 'ongoing' ? '进行中' : (m.status === 'completed' ? '已召开' : (m.status === 'cancelled' ? '已废弃' : '已推迟')));
-                const statusClass = m.status === 'scheduled' ? 'bg-blue-100 text-blue-700' : (m.status === 'ongoing' ? 'bg-green-100 text-green-700' : (m.status === 'completed' ? 'bg-gray-100 text-gray-700' : (m.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700')));
-                const typeText = m.meeting_type === 'regular' ? '常规组会' : (m.meeting_type === 'paper_reading' ? '论文研读' : '专题讨论');
-                const date = new Date(m.scheduled_at);
-                const formattedDate = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+            // 使用网格布局，一行显示2-3个卡片
+            container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                ${meetings.map(m => {
+                    const statusText = m.status === 'scheduled' ? '待召开' : (m.status === 'ongoing' ? '进行中' : (m.status === 'completed' ? '已召开' : (m.status === 'cancelled' ? '已废弃' : '已推迟')));
+                    const statusClass = m.status === 'scheduled' ? 'bg-blue-100 text-blue-700' : (m.status === 'ongoing' ? 'bg-green-100 text-green-700' : (m.status === 'completed' ? 'bg-gray-100 text-gray-700' : (m.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700')));
+                    const typeText = m.meeting_type === 'regular' ? '常规组会' : (m.meeting_type === 'paper_reading' ? '论文研读' : '专题讨论');
+                    const typeColor = m.meeting_type === 'regular' ? 'from-blue-500 to-blue-600' : (m.meeting_type === 'paper_reading' ? 'from-purple-500 to-purple-600' : 'from-teal-500 to-teal-600');
+                    const date = new Date(m.scheduled_at);
+                    const formattedDate = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+                    const formattedTime = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
 
-                // 汇报人信息
-                const presenters = m.presenters || [];
-                const presentersHtml = presenters.length > 0
-                    ? `<div class="flex items-center gap-2 mt-3">
-                        <i class="fa fa-users text-gray-400"></i>
-                        <div class="flex flex-wrap gap-2">
-                            ${presenters.map(p => {
-                                // 材料状态显示
-                                const materialStatusText = {
-                                    'pending': '待提交',
-                                    'submitted': '待审核',
-                                    'approved': '已通过',
-                                    'rejected': '已驳回'
-                                }[p.material_status] || '待提交';
-                                const materialStatusClass = {
-                                    'pending': 'bg-orange-100 text-orange-600',
-                                    'submitted': 'bg-yellow-100 text-yellow-600',
-                                    'approved': 'bg-green-100 text-green-600',
-                                    'rejected': 'bg-red-100 text-red-600'
-                                }[p.material_status] || 'bg-gray-100 text-gray-600';
-
-                                const fileCount = p.files ? p.files.length : 0;
-
-                                return `<span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-700">
-                                    <i class="fa fa-user-o"></i>${p.real_name || p.username}
-                                    <span class="text-gray-400">${p.duration_minutes}分钟</span>
-                                    ${p.material_required ? `<span class="${materialStatusClass} px-1 rounded text-xs">
-                                        <i class="fa fa-file-text-o"></i>${materialStatusText}${fileCount > 0 ? `(${fileCount})` : ''}
-                                    </span>` : ''}
+                    // 汇报人信息
+                    const presenters = m.presenters || [];
+                    const presentersHtml = presenters.length > 0
+                        ? `<div class="flex flex-wrap gap-1.5 mt-3">
+                            ${presenters.slice(0, 3).map(p => {
+                                return `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs text-gray-600">
+                                    <i class="fa fa-user-o text-gray-400"></i>${p.real_name || p.username}
                                 </span>`;
                             }).join('')}
-                        </div>
-                       </div>`
-                    : '<p class="text-sm text-gray-400 mt-3"><i class="fa fa-users mr-1"></i>暂无汇报人</p>';
+                            ${presenters.length > 3 ? `<span class="text-xs text-gray-400">+${presenters.length - 3}</span>` : ''}
+                        </div>`
+                        : '<p class="text-xs text-gray-400 mt-3"><i class="fa fa-user-o mr-1"></i>暂无汇报人</p>';
 
-                return `
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <span class="${statusClass} text-xs px-3 py-1 rounded-full font-medium">${statusText}</span>
-                            <span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full font-medium ml-2">${typeText}</span>
-                            <h3 class="text-lg font-semibold mt-3">${m.title}</h3>
-                            ${m.description ? `<p class="text-sm text-gray-500 mt-1">${m.description}</p>` : ''}
+                    return `
+                    <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+                        <!-- 卡片顶部渐变条 -->
+                        <div class="h-2 bg-gradient-to-r ${typeColor}"></div>
+
+                        <!-- 卡片主体 -->
+                        <div class="p-5">
+                            <!-- 状态和类型标签 -->
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="${statusClass} text-xs px-2 py-0.5 rounded-full font-medium">${statusText}</span>
+                                <span class="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full">${typeText}</span>
+                            </div>
+
+                            <!-- 标题 -->
+                            <h3 class="text-base font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors">${m.title}</h3>
+
+                            <!-- 描述 -->
+                            ${m.description ? `<p class="text-sm text-gray-500 mb-3 line-clamp-2">${m.description}</p>` : ''}
+
+                            <!-- 时间地点信息 -->
+                            <div class="flex items-center gap-4 text-sm text-gray-500 mb-3">
+                                <span class="flex items-center gap-1">
+                                    <i class="fa fa-calendar text-gray-400"></i>
+                                    ${formattedDate}
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <i class="fa fa-clock-o text-gray-400"></i>
+                                    ${formattedTime}
+                                </span>
+                            </div>
+
+                            ${m.location ? `<div class="flex items-center gap-1 text-sm text-gray-500 mb-3">
+                                <i class="fa fa-map-marker text-gray-400"></i>
+                                <span class="truncate">${m.location}</span>
+                            </div>` : ''}
+
+                            <!-- 汇报人 -->
                             ${presentersHtml}
+
+                            <!-- 底部操作区 -->
+                            <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+                                <div class="flex items-center gap-2 text-xs text-gray-400">
+                                    <span><i class="fa fa-users mr-1"></i>${presenters.length}人</span>
+                                    <span><i class="fa fa-clock-o mr-1"></i>${m.duration_total}分钟</span>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button onclick="viewMeeting(${m.id})" class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center justify-center transition-colors" title="查看详情">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+                                    <button onclick="openEditMeetingFromList(${m.id})" class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 hover:bg-orange-200 flex items-center justify-center transition-colors" title="编辑">
+                                        <i class="fa fa-edit"></i>
+                                    </button>
+                                    <button onclick="confirmDeleteMeeting(${m.id}, '${m.title.replace(/'/g, "\\'")}')\" class="w-8 h-8 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center transition-colors" title="删除">
+                                        <i class="fa fa-trash-o"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="text-right text-sm text-gray-500">
-                            <p><i class="fa fa-calendar mr-1"></i>${formattedDate}</p>
-                            <p class="mt-1"><i class="fa fa-clock-o mr-1"></i>${m.duration_total}分钟</p>
-                            ${m.location ? `<p class="mt-1"><i class="fa fa-map-marker mr-1"></i>${m.location}</p>` : ''}
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                        <div class="text-sm text-gray-500">
-                            ${m.material_required ? '<span class="mr-4"><i class="fa fa-file-text-o mr-1"></i>需提交材料</span>' : ''}
-                            <span class="text-gray-400"><i class="fa fa-users mr-1"></i>${presenters.length} 位汇报人</span>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="viewMeeting(${m.id})" class="px-3 py-1 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"><i class="fa fa-eye mr-1"></i>详情</button>
-                            <button onclick="openEditMeetingFromList(${m.id})" class="px-3 py-1 text-sm text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"><i class="fa fa-edit mr-1"></i>编辑</button>
-                            <button onclick="confirmDeleteMeeting(${m.id}, '${m.title.replace(/'/g, "\\'")}')\" class="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"><i class="fa fa-trash-o mr-1"></i>删除</button>
-                        </div>
-                    </div>
-                </div>`;
-            }).join('');
+                    </div>`;
+                }).join('')}
+            </div>`;
 
             // 同时渲染列表视图
             renderMeetingTable(meetings, pagination);
@@ -1413,6 +1673,20 @@
                     }
                 });
             }
+
+            // 搜索框事件监听（带防抖）
+            const searchInput = document.getElementById('meeting-search');
+            if (searchInput) {
+                let searchTimeout;
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        meetingSearchKeyword = this.value.trim();
+                        meetingCurrentPage = 1; // 搜索时重置页码
+                        loadMeetings();
+                    }, 300); // 300ms防抖
+                });
+            }
         });
 
         function createMeetingOnSelectedDate() {
@@ -1459,20 +1733,6 @@
                     btn.className = 'px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors';
                 }
             });
-        }
-
-        // 搜索处理
-        let meetingSearchKeyword = '';
-        function handleMeetingSearch() {
-            meetingSearchKeyword = document.getElementById('meeting-search').value.trim();
-            // 搜索时客户端过滤
-            applyMeetingFilters();
-        }
-
-        function applyMeetingFilters() {
-            // 这里可以添加客户端过滤逻辑，或者重新调用API搜索
-            // 目前简单的做法是让API搜索或前端过滤
-            loadMeetings();
         }
 
         // 从列表直接打开编辑模态框
@@ -1538,8 +1798,7 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    alert('组会已删除');
-                    closeDeleteModal();
+                    showToast('组会已删除', 'success');
                     // 关闭日历日期详情弹窗（如果打开）
                     closeCalendarDayModal();
                     loadMeetingStats();
@@ -1550,12 +1809,14 @@
                         loadMeetings();
                     }
                 } else {
-                    alert(result.message || '删除失败');
+                    showToast(result.message || '删除失败', 'error');
                 }
             } catch (error) {
                 console.error('删除组会失败:', error);
-                alert('网络错误，请重试');
+                showToast('网络错误，请重试', 'error');
             } finally {
+                // 无论成功与否都关闭模态框
+                closeDeleteModal();
                 if (deleteBtn) {
                     deleteBtn.disabled = false;
                     deleteBtn.innerHTML = '确认删除';
@@ -1578,11 +1839,11 @@
                 if (result.success) {
                     showMeetingDetail(result.data);
                 } else {
-                    alert(result.message || '获取详情失败');
+                    showToast(result.message || '获取详情失败', 'error');
                 }
             } catch (error) {
                 console.error('获取组会详情失败:', error);
-                alert('网络错误，请重试');
+                showToast('网络错误，请重试', 'error');
             }
         }
 
@@ -1689,7 +1950,7 @@
                                         </p>
                                         <p class="text-xs text-gray-400">${p.duration_minutes}分钟 · ${typeText}</p>
                                     </div>
-                                    <button onclick="removePresenter(${p.id})" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                                    <button onclick="removePresenter(${p.id}, event)" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
                                         <i class="fa fa-times"></i>
                                     </button>
                                 </div>
@@ -1756,7 +2017,7 @@
 
             const userId = document.getElementById('presenter-user-select').value;
             if (!userId) {
-                alert('请选择汇报人');
+                showToast('请选择汇报人', 'warning');
                 return;
             }
 
@@ -1778,23 +2039,57 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    alert('添加汇报人成功');
+                    showToast('添加汇报人成功', 'success');
                     closeAddPresenterModal();
                     loadPresenters(currentMeetingId);
                 } else {
-                    alert(result.message || '添加失败');
+                    showToast(result.message || '添加失败', 'error');
                 }
             } catch (error) {
                 console.error('添加汇报人失败:', error);
-                alert('网络错误');
+                showToast('网络错误', 'error');
             }
         }
 
-        async function removePresenter(presenterId) {
+        async function removePresenter(presenterId, event) {
             if (!currentMeetingId) return;
 
-            if (!confirm('确定要移除该汇报人吗？')) return;
+            // 使用inline确认
+            const btn = event?.target;
+            if (btn && !btn.dataset.confirming) {
+                // 第一次点击 - 显示确认状态
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fa fa-check text-xs"></i>';
+                btn.className = 'text-green-500 hover:bg-green-50 p-2 rounded-lg transition-colors';
+                btn.dataset.confirming = 'true';
+                btn.dataset.originalHtml = originalHtml;
 
+                // 添加取消按钮
+                const cancelBtn = document.createElement('button');
+                cancelBtn.innerHTML = '<i class="fa fa-times text-xs"></i>';
+                cancelBtn.className = 'text-gray-400 hover:bg-gray-50 p-2 rounded-lg transition-colors ml-1';
+                cancelBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    btn.innerHTML = btn.dataset.originalHtml;
+                    btn.className = 'text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors';
+                    delete btn.dataset.confirming;
+                    cancelBtn.remove();
+                };
+                btn.parentElement.appendChild(cancelBtn);
+
+                // 3秒后自动恢复
+                setTimeout(() => {
+                    if (btn.dataset.confirming) {
+                        btn.innerHTML = btn.dataset.originalHtml;
+                        btn.className = 'text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors';
+                        delete btn.dataset.confirming;
+                        cancelBtn.remove();
+                    }
+                }, 3000);
+                return;
+            }
+
+            // 第二次点击 - 执行删除
             try {
                 const response = await fetch(`${API_BASE_URL}/api/meetings/${currentMeetingId}/presenters/${presenterId}`, {
                     method: 'DELETE',
@@ -1804,13 +2099,14 @@
                 const result = await response.json();
 
                 if (result.success) {
+                    showToast('汇报人已移除', 'success');
                     loadPresenters(currentMeetingId);
                 } else {
-                    alert(result.message || '移除失败');
+                    showToast(result.message || '移除失败', 'error');
                 }
             } catch (error) {
                 console.error('移除汇报人失败:', error);
-                alert('网络错误');
+                showToast('网络错误', 'error');
             }
         }
 
@@ -1823,7 +2119,7 @@
         }
 
         // 更新组会状态
-        async function updateMeetingStatus(meetingId, newStatus) {
+        async function updateMeetingStatus(meetingId, newStatus, event) {
             if (!meetingId) return;
 
             const statusNames = {
@@ -1834,10 +2130,32 @@
                 'postponed': '已推迟'
             };
 
-            if (!confirm(`确定将组会状态更改为"${statusNames[newStatus]}"吗？`)) {
+            // 使用inline确认
+            const btn = event?.target?.closest('.status-btn');
+            if (btn && !btn.dataset.confirming) {
+                // 第一次点击 - 显示确认状态
+                const originalClasses = btn.className;
+                const originalHtml = btn.innerHTML;
+                btn.dataset.confirming = 'true';
+                btn.dataset.originalClasses = originalClasses;
+                btn.dataset.originalHtml = originalHtml;
+                btn.className = originalClasses.replace('hover:bg-', 'bg-');
+                btn.innerHTML = `<i class="fa fa-check mr-1"></i>确认`;
+                btn.style.boxShadow = '0 0 0 2px rgba(0,0,0,0.1)';
+
+                // 3秒后自动恢复
+                setTimeout(() => {
+                    if (btn.dataset.confirming) {
+                        btn.className = btn.dataset.originalClasses;
+                        btn.innerHTML = btn.dataset.originalHtml;
+                        btn.style.boxShadow = '';
+                        delete btn.dataset.confirming;
+                    }
+                }, 3000);
                 return;
             }
 
+            // 第二次点击 - 执行更新
             try {
                 const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/status`, {
                     method: 'PUT',
@@ -1851,18 +2169,18 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    alert('状态更新成功');
+                    showToast('状态更新成功', 'success');
                     // 更新详情显示
                     showMeetingDetail(result.data);
                     // 刷新列表
                     loadMeetingStats();
                     loadMeetings();
                 } else {
-                    alert(result.message || '更新失败');
+                    showToast(result.message || '更新失败', 'error');
                 }
             } catch (error) {
                 console.error('更新状态失败:', error);
-                alert('网络错误，请重试');
+                showToast('网络错误，请重试', 'error');
             }
         }
 
@@ -1899,11 +2217,11 @@
                         modal.classList.add('flex');
                     }
                 } else {
-                    alert(result.message || '获取组会信息失败');
+                    showToast(result.message || '获取组会信息失败', 'error');
                 }
             } catch (error) {
                 console.error('获取组会信息失败:', error);
-                alert('网络错误，请重试');
+                showToast('网络错误，请重试', 'error');
             }
         }
 
@@ -2131,7 +2449,7 @@
             const typeSelect = document.getElementById('presenter-select-type');
 
             if (checkboxes.length === 0) {
-                alert('请至少选择一个成员');
+                showToast('请至少选择一个成员', 'warning');
                 return;
             }
 
@@ -2217,7 +2535,7 @@
                             <p class="text-xs text-gray-500">${p.duration}分钟 · ${p.type === 'assigned' ? '导师指定' : '主动报名'}${p.id ? ' (已保存)' : ''}</p>
                         </div>
                     </div>
-                    <button onclick="removeEditPresenter(${index})" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                    <button onclick="removeEditPresenter(${index}, event)" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
                         <i class="fa fa-times"></i>
                     </button>
                 </div>
@@ -2231,13 +2549,32 @@
         }
 
         // 移除编辑表单的汇报人
-        async function removeEditPresenter(index) {
+        async function removeEditPresenter(index, event) {
             const presenter = editSelectedPresenters[index];
+
+            // 使用inline确认
+            const btn = event?.target?.closest('button');
+            if (btn && !btn.dataset.confirming) {
+                // 第一次点击 - 显示确认状态
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fa fa-check text-xs"></i>';
+                btn.className = 'text-green-500 hover:bg-green-50 p-2 rounded-lg transition-colors';
+                btn.dataset.confirming = 'true';
+                btn.dataset.originalHtml = originalHtml;
+
+                // 3秒后自动恢复
+                setTimeout(() => {
+                    if (btn.dataset.confirming) {
+                        btn.innerHTML = btn.dataset.originalHtml;
+                        btn.className = 'text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors';
+                        delete btn.dataset.confirming;
+                    }
+                }, 3000);
+                return;
+            }
 
             // 如果是已保存的汇报人，需要调用API删除
             if (presenter.id && currentMeetingId) {
-                if (!confirm('确定要移除该汇报人吗？')) return;
-
                 try {
                     const response = await fetch(`${API_BASE_URL}/api/meetings/${currentMeetingId}/presenters/${presenter.id}`, {
                         method: 'DELETE',
@@ -2246,12 +2583,13 @@
                     const result = await response.json();
 
                     if (!result.success) {
-                        alert(result.message || '删除失败');
+                        showToast(result.message || '删除失败', 'error');
                         return;
                     }
+                    showToast('汇报人已移除', 'success');
                 } catch (error) {
                     console.error('删除汇报人失败:', error);
-                    alert('网络错误');
+                    showToast('网络错误', 'error');
                     return;
                 }
             }
@@ -2307,11 +2645,11 @@
             const scheduledAt = document.getElementById('edit-meeting-scheduled-at').value;
 
             if (!title) {
-                alert('请输入组会标题');
+                showToast('请输入组会标题', 'warning');
                 return;
             }
             if (!scheduledAt) {
-                alert('请选择会议时间');
+                showToast('请选择会议时间', 'warning');
                 return;
             }
 
@@ -2366,7 +2704,7 @@
                         });
                     }
 
-                    alert('组会更新成功！');
+                    showToast('组会更新成功！', 'success');
                     closeEditModal();
                     closeDetailModal();
                     editSelectedPresenters = [];
@@ -2378,11 +2716,11 @@
                         loadMeetings();
                     }
                 } else {
-                    alert(result.message || '更新失败，请重试');
+                    showToast(result.message || '更新失败，请重试', 'error');
                 }
             } catch (error) {
                 console.error('更新组会失败:', error);
-                alert('网络错误，请重试');
+                showToast('网络错误，请重试', 'error');
             } finally {
                 const submitBtn = document.querySelector('#edit-meeting-modal button:last-child');
                 if (submitBtn) {
@@ -2396,6 +2734,68 @@
             // 初始化视图模式
             const savedMode = getSavedViewMode();
             applyLayout(savedMode);
+
+            // 卡片视图分页事件
+            const gridPrevBtn = document.getElementById('grid-prev-page');
+            const gridNextBtn = document.getElementById('grid-next-page');
+            const gridPerPageSelect = document.getElementById('grid-per-page');
+
+            if (gridPrevBtn) {
+                gridPrevBtn.addEventListener('click', function() {
+                    if (meetingCurrentPage > 1) {
+                        meetingCurrentPage--;
+                        loadMeetings();
+                    }
+                });
+            }
+
+            if (gridNextBtn) {
+                gridNextBtn.addEventListener('click', function() {
+                    if (meetingCurrentPage < meetingTotalPages) {
+                        meetingCurrentPage++;
+                        loadMeetings();
+                    }
+                });
+            }
+
+            if (gridPerPageSelect) {
+                gridPerPageSelect.addEventListener('change', function() {
+                    meetingPerPage = parseInt(this.value);
+                    meetingCurrentPage = 1;
+                    loadMeetings();
+                });
+            }
+
+            // 列表视图分页事件
+            const listPrevBtn = document.getElementById('list-prev-page');
+            const listNextBtn = document.getElementById('list-next-page');
+            const listPerPageSelect = document.getElementById('list-per-page');
+
+            if (listPrevBtn) {
+                listPrevBtn.addEventListener('click', function() {
+                    if (meetingCurrentPage > 1) {
+                        meetingCurrentPage--;
+                        loadMeetings();
+                    }
+                });
+            }
+
+            if (listNextBtn) {
+                listNextBtn.addEventListener('click', function() {
+                    if (meetingCurrentPage < meetingTotalPages) {
+                        meetingCurrentPage++;
+                        loadMeetings();
+                    }
+                });
+            }
+
+            if (listPerPageSelect) {
+                listPerPageSelect.addEventListener('change', function() {
+                    meetingPerPage = parseInt(this.value);
+                    meetingCurrentPage = 1;
+                    loadMeetings();
+                });
+            }
 
             // 搜索框事件
             const searchInput = document.getElementById('meeting-search');
@@ -2412,6 +2812,40 @@
             if (presenterSearchInput) {
                 presenterSearchInput.addEventListener('input', () => {
                     searchPresenterMembers();
+                });
+            }
+
+            // 备注字段TAB键补全默认内容
+            const meetingNotesInput = document.getElementById('meeting-notes');
+            if (meetingNotesInput) {
+                meetingNotesInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Tab' && this.value.trim() === '') {
+                        e.preventDefault();
+                        // 将placeholder内容填入实际value
+                        this.value = this.placeholder;
+                    }
+                });
+            }
+
+            // 编辑组会标题TAB键补全默认内容
+            const editMeetingTitleInput = document.getElementById('edit-meeting-title');
+            if (editMeetingTitleInput) {
+                editMeetingTitleInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Tab' && this.value.trim() === '') {
+                        e.preventDefault();
+                        this.value = this.placeholder;
+                    }
+                });
+            }
+
+            // 创建组会标题TAB键补全默认内容
+            const createMeetingTitleInput = document.getElementById('meeting-title');
+            if (createMeetingTitleInput) {
+                createMeetingTitleInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Tab' && this.value.trim() === '') {
+                        e.preventDefault();
+                        this.value = this.placeholder;
+                    }
                 });
             }
 
@@ -2539,7 +2973,8 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">组会标题 <span class="text-red-500">*</span></label>
                         <input type="text" id="meeting-title" name="title" required
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                            placeholder="例如：第13周组会 - 论文研读与进展汇报">
+                            placeholder="第XX周组会 - 论文研读与进展汇报">
+                        <p class="text-xs text-gray-400 mt-1">提示：按TAB键可快速填入默认格式，然后修改周数即可</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -2597,7 +3032,8 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
                         <textarea id="meeting-notes" name="notes" rows="2"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
-                            placeholder="例如：请各位汇报人提前提交PPT"></textarea>
+                            placeholder="请各位汇报人提前提交汇报材料"></textarea>
+                        <p class="text-xs text-gray-400 mt-1">提示：按TAB键可快速填入默认内容</p>
                     </div>
 
                     <!-- 汇报人选择 -->
@@ -2763,19 +3199,19 @@
                 <div class="mt-6 p-4 bg-blue-50 rounded-lg">
                     <p class="text-sm text-gray-500 mb-3">状态管理</p>
                     <div class="flex flex-wrap gap-2">
-                        <button onclick="updateMeetingStatus(currentMeetingId, 'scheduled')" class="status-btn px-3 py-2 rounded-lg border-2 border-blue-200 bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors text-sm flex items-center gap-1">
+                        <button onclick="updateMeetingStatus(currentMeetingId, 'scheduled', event)" class="status-btn px-3 py-2 rounded-lg border-2 border-blue-200 bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors text-sm flex items-center gap-1">
                             <i class="fa fa-clock-o"></i> 待召开
                         </button>
-                        <button onclick="updateMeetingStatus(currentMeetingId, 'ongoing')" class="status-btn px-3 py-2 rounded-lg border-2 border-green-200 bg-green-100 text-green-700 hover:bg-green-200 transition-colors text-sm flex items-center gap-1">
+                        <button onclick="updateMeetingStatus(currentMeetingId, 'ongoing', event)" class="status-btn px-3 py-2 rounded-lg border-2 border-green-200 bg-green-100 text-green-700 hover:bg-green-200 transition-colors text-sm flex items-center gap-1">
                             <i class="fa fa-play-circle"></i> 进行中
                         </button>
-                        <button onclick="updateMeetingStatus(currentMeetingId, 'completed')" class="status-btn px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors text-sm flex items-center gap-1">
+                        <button onclick="updateMeetingStatus(currentMeetingId, 'completed', event)" class="status-btn px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors text-sm flex items-center gap-1">
                             <i class="fa fa-check-circle"></i> 已召开
                         </button>
-                        <button onclick="updateMeetingStatus(currentMeetingId, 'postponed')" class="status-btn px-3 py-2 rounded-lg border-2 border-yellow-200 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition-colors text-sm flex items-center gap-1">
+                        <button onclick="updateMeetingStatus(currentMeetingId, 'postponed', event)" class="status-btn px-3 py-2 rounded-lg border-2 border-yellow-200 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition-colors text-sm flex items-center gap-1">
                             <i class="fa fa-pause-circle"></i> 推迟
                         </button>
-                        <button onclick="updateMeetingStatus(currentMeetingId, 'cancelled')" class="status-btn px-3 py-2 rounded-lg border-2 border-red-200 bg-red-100 text-red-700 hover:bg-red-200 transition-colors text-sm flex items-center gap-1">
+                        <button onclick="updateMeetingStatus(currentMeetingId, 'cancelled', event)" class="status-btn px-3 py-2 rounded-lg border-2 border-red-200 bg-red-100 text-red-700 hover:bg-red-200 transition-colors text-sm flex items-center gap-1">
                             <i class="fa fa-ban"></i> 废弃
                         </button>
                     </div>
@@ -2807,7 +3243,8 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">组会标题 <span class="text-red-500">*</span></label>
                         <input type="text" id="edit-meeting-title" name="title" required
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                            placeholder="例如：第13周组会 - 论文研读与进展汇报">
+                            placeholder="第XX周组会 - 论文研读与进展汇报">
+                        <p class="text-xs text-gray-400 mt-1">提示：按TAB键可快速填入默认格式，然后修改周数即可</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -3028,6 +3465,11 @@
                 now.setDate(now.getDate() + 7);
                 const defaultTime = now.toISOString().slice(0, 16);
                 document.getElementById('meeting-scheduled-at').value = defaultTime;
+                // 备注字段保持空白，显示placeholder提示
+                const notesInput = document.getElementById('meeting-notes');
+                if (notesInput) {
+                    notesInput.value = '';
+                }
             });
         }
 
@@ -3039,6 +3481,11 @@
             onlineLinkContainer.classList.add('hidden');
             createSelectedPresenters = [];
             renderCreatePresenters();
+            // 备注字段保持空白，显示placeholder
+            const notesInput = document.getElementById('meeting-notes');
+            if (notesInput) {
+                notesInput.value = '';
+            }
         }
 
         function closeCreateModal() {
@@ -3078,11 +3525,11 @@
                 const scheduledAt = document.getElementById('meeting-scheduled-at').value;
 
                 if (!title) {
-                    alert('请输入组会标题');
+                    showToast('请输入组会标题', 'warning');
                     return;
                 }
                 if (!scheduledAt) {
-                    alert('请选择会议时间');
+                    showToast('请选择会议时间', 'warning');
                     return;
                 }
 
@@ -3133,7 +3580,7 @@
                             }
                         }
 
-                        alert('组会发布成功！');
+                        showToast('组会发布成功！', 'success');
                         closeCreateModal();
                         createSelectedPresenters = [];
                         loadMeetingStats();
@@ -3144,11 +3591,11 @@
                             loadMeetings();
                         }
                     } else {
-                        alert(result.message || '发布失败，请重试');
+                        showToast(result.message || '发布失败，请重试', 'error');
                     }
                 } catch (error) {
                     console.error('创建组会失败:', error);
-                    alert('网络错误，请重试');
+                    showToast('网络错误，请重试', 'error');
                 } finally {
                     submitMeetingBtn.disabled = false;
                     submitMeetingBtn.innerHTML = '发布组会';

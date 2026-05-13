@@ -3700,6 +3700,7 @@ async def get_meetings(request: Request):
         limit = int(request.query_params.get("limit", 10))
         meeting_status = request.query_params.get("status")
         meeting_type = request.query_params.get("meeting_type")
+        search = request.query_params.get("search", "")
 
         offset = (page - 1) * limit
 
@@ -3707,6 +3708,7 @@ async def get_meetings(request: Request):
         meetings = MeetingService.get_meetings(
             status=meeting_status,
             meeting_type=meeting_type,
+            search=search if search else None,
             limit=limit,
             offset=offset
         )
@@ -3714,7 +3716,8 @@ async def get_meetings(request: Request):
         # 获取总数
         total = MeetingService.get_meetings_count(
             status=meeting_status,
-            meeting_type=meeting_type
+            meeting_type=meeting_type,
+            search=search if search else None
         )
 
         # 为每个组会获取汇报人信息
@@ -4688,10 +4691,10 @@ async def upload_material_file(presenter_id: int, request: Request):
 
         meeting_file_id = cursor.lastrowid
 
-        # 更新汇报人材料状态为已提交
+        # 更新汇报人材料状态为已通过（无需审核）
         cursor.execute("""
             UPDATE meeting_presenters
-            SET material_status = 'submitted', updated_at = CURRENT_TIMESTAMP
+            SET material_status = 'approved', updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
         """, (presenter_id,))
 

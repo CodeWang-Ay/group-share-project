@@ -108,6 +108,7 @@ class MeetingService:
         status: Optional[str] = None,
         meeting_type: Optional[str] = None,
         created_by: Optional[int] = None,
+        search: Optional[str] = None,
         limit: int = 10,
         offset: int = 0
     ) -> List[Meeting]:
@@ -130,6 +131,10 @@ class MeetingService:
                 where_conditions.append("created_by = ?")
                 params.append(created_by)
 
+            if search:
+                where_conditions.append("title LIKE ?")
+                params.append(f"%{search}%")
+
             where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
 
             query = f"""
@@ -151,7 +156,8 @@ class MeetingService:
     def get_meetings_count(
         status: Optional[str] = None,
         meeting_type: Optional[str] = None,
-        created_by: Optional[int] = None
+        created_by: Optional[int] = None,
+        search: Optional[str] = None
     ) -> int:
         """获取组会总数"""
         with get_db() as conn:
@@ -171,6 +177,10 @@ class MeetingService:
             if created_by:
                 where_conditions.append("created_by = ?")
                 params.append(created_by)
+
+            if search:
+                where_conditions.append("title LIKE ?")
+                params.append(f"%{search}%")
 
             where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
 
