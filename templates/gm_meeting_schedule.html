@@ -1256,10 +1256,16 @@
                     </td>
                     <td class="px-4 py-3 text-sm text-gray-500">${presentersList}</td>
                     <td class="px-4 py-3">
-                        <div class="flex gap-2">
-                            <button onclick="viewMeeting(${m.id})" class="text-primary hover:underline text-sm">详情</button>
-                            <button onclick="openEditMeetingFromList(${m.id})" class="text-orange-600 hover:underline text-sm">编辑</button>
-                            <button onclick="confirmDeleteMeeting(${m.id}, '${m.title.replace(/'/g, "\\'")}')" class="text-red-600 hover:underline text-sm">删除</button>
+                        <div class="flex gap-1">
+                            <button onclick="viewMeeting(${m.id})" class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center justify-center transition-colors" title="查看详情">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                            <button onclick="openEditMeetingFromList(${m.id})" class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 hover:bg-orange-200 flex items-center justify-center transition-colors" title="编辑">
+                                <i class="fa fa-edit"></i>
+                            </button>
+                            <button onclick="confirmDeleteMeeting(${m.id}, '${m.title.replace(/'/g, "\\'")}')" class="w-8 h-8 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center transition-colors" title="删除">
+                                <i class="fa fa-trash-o"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>`;
@@ -1856,7 +1862,8 @@
 
             // 填充详情数据
             const statusText = meeting.status === 'scheduled' ? '待召开' : (meeting.status === 'ongoing' ? '进行中' : (meeting.status === 'completed' ? '已召开' : (meeting.status === 'cancelled' ? '已废弃' : '已推迟')));
-            const statusClass = meeting.status === 'scheduled' ? 'bg-blue-100 text-blue-700' : (meeting.status === 'ongoing' ? 'bg-green-100 text-green-700' : (meeting.status === 'completed' ? 'bg-gray-100 text-gray-700' : (meeting.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700')));
+            const statusClass = meeting.status === 'scheduled' ? 'bg-blue-100 text-blue-700 border-blue-200' : (meeting.status === 'ongoing' ? 'bg-green-100 text-green-700 border-green-200' : (meeting.status === 'completed' ? 'bg-gray-100 text-gray-700 border-gray-200' : (meeting.status === 'cancelled' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200')));
+            const statusIcon = meeting.status === 'scheduled' ? 'fa-clock-o' : (meeting.status === 'ongoing' ? 'fa-play-circle' : (meeting.status === 'completed' ? 'fa-check-circle' : (meeting.status === 'cancelled' ? 'fa-ban' : 'fa-pause-circle')));
             const typeText = meeting.meeting_type === 'regular' ? '常规组会' : (meeting.meeting_type === 'paper_reading' ? '论文研读' : '专题讨论');
 
             const date = new Date(meeting.scheduled_at);
@@ -1864,6 +1871,14 @@
 
             document.getElementById('detail-status').innerHTML = `<span class="${statusClass} text-xs px-3 py-1 rounded-full font-medium">${statusText}</span>`;
             document.getElementById('detail-type').innerHTML = `<span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full font-medium">${typeText}</span>`;
+
+            // 更新当前状态显示区域
+            const currentStatusContainer = document.getElementById('detail-current-status');
+            if (currentStatusContainer) {
+                currentStatusContainer.innerHTML = `<span class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 ${statusClass} text-sm font-medium">
+                    <i class="fa ${statusIcon}"></i> ${statusText}
+                </span>`;
+            }
             document.getElementById('detail-title').textContent = meeting.title;
             document.getElementById('detail-time').textContent = formattedDate;
             document.getElementById('detail-duration').textContent = meeting.duration_total + '分钟';
@@ -1942,17 +1957,12 @@
                                         ${p.files && p.files.length > 0 ? `<p class="text-xs mt-1">${filesHtml}</p>` : ''}
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-3">
-                                    <div class="text-right">
-                                        <p class="text-sm ${statusClass}">${statusText}</p>
-                                        <p class="text-xs ${materialStatusClass} px-1 rounded">
-                                            <i class="fa fa-file-text-o"></i>${materialStatusText}
-                                        </p>
-                                        <p class="text-xs text-gray-400">${p.duration_minutes}分钟 · ${typeText}</p>
-                                    </div>
-                                    <button onclick="removePresenter(${p.id}, event)" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
-                                        <i class="fa fa-times"></i>
-                                    </button>
+                                <div class="text-right">
+                                    <p class="text-sm ${statusClass}">${statusText}</p>
+                                    <p class="text-xs ${materialStatusClass} px-1 rounded">
+                                        <i class="fa fa-file-text-o"></i>${materialStatusText}
+                                    </p>
+                                    <p class="text-xs text-gray-400">${p.duration_minutes}分钟 · ${typeText}</p>
                                 </div>
                             </div>`;
                         }).join('');
@@ -2507,11 +2517,21 @@
                             <p class="text-xs text-gray-500">${p.duration}分钟 · ${p.type === 'assigned' ? '导师指定' : '主动报名'}</p>
                         </div>
                     </div>
-                    <button onclick="removeCreatePresenter(${index})" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                    <button type="button" data-index="${index}" class="create-remove-presenter-btn text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors cursor-pointer">
                         <i class="fa fa-times"></i>
                     </button>
                 </div>
             `).join('');
+
+            // 使用事件委托处理删除按钮点击
+            container.querySelectorAll('.create-remove-presenter-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const idx = parseInt(this.dataset.index);
+                    removeCreatePresenter(idx);
+                });
+            });
         }
 
         // 渲染编辑表单的汇报人列表
@@ -2535,11 +2555,21 @@
                             <p class="text-xs text-gray-500">${p.duration}分钟 · ${p.type === 'assigned' ? '导师指定' : '主动报名'}${p.id ? ' (已保存)' : ''}</p>
                         </div>
                     </div>
-                    <button onclick="removeEditPresenter(${index}, event)" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                    <button type="button" data-index="${index}" class="edit-remove-presenter-btn text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors cursor-pointer">
                         <i class="fa fa-times"></i>
                     </button>
                 </div>
             `).join('');
+
+            // 使用事件委托处理删除按钮点击
+            container.querySelectorAll('.edit-remove-presenter-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const idx = parseInt(this.dataset.index);
+                    removeEditPresenter(idx);
+                });
+            });
         }
 
         // 移除创建表单的汇报人
@@ -2549,44 +2579,31 @@
         }
 
         // 移除编辑表单的汇报人
-        async function removeEditPresenter(index, event) {
+        async function removeEditPresenter(index) {
+            console.log('removeEditPresenter called with index:', index);
+            console.log('editSelectedPresenters before:', editSelectedPresenters);
+
             const presenter = editSelectedPresenters[index];
-
-            // 使用inline确认
-            const btn = event?.target?.closest('button');
-            if (btn && !btn.dataset.confirming) {
-                // 第一次点击 - 显示确认状态
-                const originalHtml = btn.innerHTML;
-                btn.innerHTML = '<i class="fa fa-check text-xs"></i>';
-                btn.className = 'text-green-500 hover:bg-green-50 p-2 rounded-lg transition-colors';
-                btn.dataset.confirming = 'true';
-                btn.dataset.originalHtml = originalHtml;
-
-                // 3秒后自动恢复
-                setTimeout(() => {
-                    if (btn.dataset.confirming) {
-                        btn.innerHTML = btn.dataset.originalHtml;
-                        btn.className = 'text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors';
-                        delete btn.dataset.confirming;
-                    }
-                }, 3000);
+            if (!presenter) {
+                console.error('Presenter not found at index:', index);
                 return;
             }
 
             // 如果是已保存的汇报人，需要调用API删除
             if (presenter.id && currentMeetingId) {
                 try {
+                    console.log('Calling API to delete presenter:', presenter.id);
                     const response = await fetch(`${API_BASE_URL}/api/meetings/${currentMeetingId}/presenters/${presenter.id}`, {
                         method: 'DELETE',
                         credentials: 'include'
                     });
                     const result = await response.json();
 
+                    console.log('API result:', result);
                     if (!result.success) {
                         showToast(result.message || '删除失败', 'error');
                         return;
                     }
-                    showToast('汇报人已移除', 'success');
                 } catch (error) {
                     console.error('删除汇报人失败:', error);
                     showToast('网络错误', 'error');
@@ -2594,8 +2611,20 @@
                 }
             }
 
+            // 从数组中移除
             editSelectedPresenters.splice(index, 1);
+            console.log('editSelectedPresenters after splice:', editSelectedPresenters);
+
+            // 重新渲染编辑表单中的汇报人列表
             renderEditPresenters();
+
+            // 同时刷新组会详情模态框中的汇报人列表（如果打开）
+            const detailModal = document.getElementById('meeting-detail-modal');
+            if (detailModal && !detailModal.classList.contains('hidden') && currentMeetingId) {
+                loadPresenters(currentMeetingId);
+            }
+
+            showToast('汇报人已移除', 'success');
         }
 
         function populateEditForm(meeting) {
@@ -3184,43 +3213,21 @@
 
                 <!-- 汇报人列表 -->
                 <div class="mt-6 p-4 bg-green-50 rounded-lg">
-                    <div class="flex justify-between items-center mb-3">
-                        <p class="text-sm text-gray-500">汇报人</p>
-                        <button onclick="openAddPresenterModal()" class="px-3 py-1 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors flex items-center gap-1">
-                            <i class="fa fa-plus"></i> 添加汇报人
-                        </button>
-                    </div>
+                    <p class="text-sm text-gray-500 mb-3">汇报人</p>
                     <div id="presenters-list" class="space-y-2">
                         <p class="text-sm text-gray-400">加载中...</p>
                     </div>
                 </div>
 
-                <!-- 状态管理 -->
+                <!-- 当前状态 -->
                 <div class="mt-6 p-4 bg-blue-50 rounded-lg">
-                    <p class="text-sm text-gray-500 mb-3">状态管理</p>
-                    <div class="flex flex-wrap gap-2">
-                        <button onclick="updateMeetingStatus(currentMeetingId, 'scheduled', event)" class="status-btn px-3 py-2 rounded-lg border-2 border-blue-200 bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors text-sm flex items-center gap-1">
-                            <i class="fa fa-clock-o"></i> 待召开
-                        </button>
-                        <button onclick="updateMeetingStatus(currentMeetingId, 'ongoing', event)" class="status-btn px-3 py-2 rounded-lg border-2 border-green-200 bg-green-100 text-green-700 hover:bg-green-200 transition-colors text-sm flex items-center gap-1">
-                            <i class="fa fa-play-circle"></i> 进行中
-                        </button>
-                        <button onclick="updateMeetingStatus(currentMeetingId, 'completed', event)" class="status-btn px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors text-sm flex items-center gap-1">
-                            <i class="fa fa-check-circle"></i> 已召开
-                        </button>
-                        <button onclick="updateMeetingStatus(currentMeetingId, 'postponed', event)" class="status-btn px-3 py-2 rounded-lg border-2 border-yellow-200 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition-colors text-sm flex items-center gap-1">
-                            <i class="fa fa-pause-circle"></i> 推迟
-                        </button>
-                        <button onclick="updateMeetingStatus(currentMeetingId, 'cancelled', event)" class="status-btn px-3 py-2 rounded-lg border-2 border-red-200 bg-red-100 text-red-700 hover:bg-red-200 transition-colors text-sm flex items-center gap-1">
-                            <i class="fa fa-ban"></i> 废弃
-                        </button>
+                    <p class="text-sm text-gray-500 mb-2">当前状态</p>
+                    <div id="detail-current-status">
+                        <!-- 动态显示当前状态 -->
                     </div>
                 </div>
             </div>
-            <div class="px-6 py-4 border-t border-gray-200 flex justify-between">
-                <button onclick="openEditModal()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2">
-                    <i class="fa fa-edit"></i> 编辑组会
-                </button>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
                 <button onclick="closeDetailModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
                     关闭
                 </button>
