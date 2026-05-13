@@ -1191,7 +1191,7 @@
             }
         }
 
-        // 渲染个人进展（支持搜索过滤）
+        // 渲染个人进展（最新进展不受搜索影响，搜索只针对历史记录）
         function renderMyProgress(data, searchTerm = '') {
             const latestSection = document.getElementById('latest-progress-section');
             const latestContent = document.getElementById('latest-progress-content');
@@ -1199,86 +1199,85 @@
             const noData = document.getElementById('no-progress');
             const clearBtn = document.getElementById('clear-my-search');
 
-            // 搜索过滤
-            let filteredData = data;
-            if (searchTerm) {
-                const term = searchTerm.toLowerCase();
-                filteredData = data.filter(item =>
-                    (item.research_direction && item.research_direction.toLowerCase().includes(term)) ||
-                    (item.weekly_progress && item.weekly_progress.toLowerCase().includes(term)) ||
-                    (item.next_goal && item.next_goal.toLowerCase().includes(term)) ||
-                    (item.difficulties && item.difficulties.toLowerCase().includes(term)) ||
-                    (item.supervisor_feedback && item.supervisor_feedback.toLowerCase().includes(term))
-                );
-                clearBtn.classList.remove('hidden');
-            } else {
-                clearBtn.classList.add('hidden');
-            }
+            if (data.length > 0) {
+                noData.classList.add('hidden');
 
-                if (filteredData.length > 0) {
-                    noData.classList.add('hidden');
+                // 最新进展（第一条，不受搜索影响）
+                const latest = data[0];
+                const latestStatusClass = {
+                    'normal': 'status-normal',
+                    'delayed': 'status-delayed',
+                    'warning': 'status-warning'
+                }[latest.status] || 'status-normal';
 
-                    // 最新进展（第一条）
-                    const latest = filteredData[0];
-                    const latestStatusClass = {
-                        'normal': 'status-normal',
-                        'delayed': 'status-delayed',
-                        'warning': 'status-warning'
-                    }[latest.status] || 'status-normal';
+                const latestStatusText = {
+                    'normal': '进度正常',
+                    'delayed': '进度滞后',
+                    'warning': '进度预警'
+                }[latest.status] || '进度正常';
 
-                    const latestStatusText = {
-                        'normal': '进度正常',
-                        'delayed': '进度滞后',
-                        'warning': '进度预警'
-                    }[latest.status] || '进度正常';
+                const latestDate = new Date(latest.submission_date).toLocaleDateString('zh-CN');
 
-                    const latestDate = new Date(latest.submission_date).toLocaleDateString('zh-CN');
-
-                    latestSection.classList.remove('hidden');
-                    latestContent.innerHTML = `
-                        <div class="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg p-4">
-                            <div class="flex justify-between items-start mb-3">
-                                <div>
-                                    <span class="text-gray-500 text-sm">${latestDate}</span>
-                                    <span class="px-2 py-1 rounded-full text-xs ml-2 ${latestStatusClass}">${latestStatusText}</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-sm text-gray-600">完成度: ${latest.completion_rate}%</span>
-                                    <button class="text-primary hover:underline text-sm edit-progress-btn" data-id="${latest.id}">编辑</button>
-                                    <button class="text-primary hover:underline text-sm view-my-detail-btn" data-id="${latest.id}">查看详情</button>
-                                </div>
+                latestSection.classList.remove('hidden');
+                latestContent.innerHTML = `
+                    <div class="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg p-4">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <span class="text-gray-500 text-sm">${latestDate}</span>
+                                <span class="px-2 py-1 rounded-full text-xs ml-2 ${latestStatusClass}">${latestStatusText}</span>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <p class="text-sm text-gray-500 mb-1">研究方向</p>
-                                    <p class="text-gray-800 font-medium">${latest.research_direction}</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-500 mb-1">本周进展</p>
-                                    <p class="text-gray-700">${latest.weekly_progress}</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-500 mb-1">下周目标</p>
-                                    <p class="text-gray-700">${latest.next_goal}</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-500 mb-1">遇到问题</p>
-                                    <p class="text-gray-700">${latest.difficulties || '暂无'}</p>
-                                </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-gray-600">完成度: ${latest.completion_rate}%</span>
+                                <button class="text-primary hover:underline text-sm edit-progress-btn" data-id="${latest.id}">编辑</button>
+                                <button class="text-primary hover:underline text-sm view-my-detail-btn" data-id="${latest.id}">查看详情</button>
                             </div>
-                            ${latest.supervisor_feedback ? `
-                                <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                    <p class="text-sm text-blue-600 font-medium mb-1"><i class="fa fa-comment-o mr-1"></i>导师反馈${latest.feedback_by_name ? `（${latest.feedback_by_name}）` : ''}</p>
-                                    <p class="text-gray-700">${latest.supervisor_feedback}</p>
-                                </div>
-                            ` : ''}
                         </div>
-                    `;
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">研究方向</p>
+                                <p class="text-gray-800 font-medium">${latest.research_direction}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">本周进展</p>
+                                <p class="text-gray-700">${latest.weekly_progress}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">下周目标</p>
+                                <p class="text-gray-700">${latest.next_goal}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">遇到问题</p>
+                                <p class="text-gray-700">${latest.difficulties || '暂无'}</p>
+                            </div>
+                        </div>
+                        ${latest.supervisor_feedback ? `
+                            <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                <p class="text-sm text-blue-600 font-medium mb-1"><i class="fa fa-comment-o mr-1"></i>导师反馈${latest.feedback_by_name ? `（${latest.feedback_by_name}）` : ''}</p>
+                                <p class="text-gray-700">${latest.supervisor_feedback}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
 
-                    // 历史进展（其余记录）
-                    if (filteredData.length > 1) {
-                        const history = filteredData.slice(1);
-                        historyList.innerHTML = history.map(item => {
+                // 历史进展（从第二条开始，受搜索影响）
+                const historyData = data.slice(1);
+                let filteredHistory = historyData;
+                if (searchTerm) {
+                    const term = searchTerm.toLowerCase();
+                    filteredHistory = historyData.filter(item =>
+                        (item.research_direction && item.research_direction.toLowerCase().includes(term)) ||
+                        (item.weekly_progress && item.weekly_progress.toLowerCase().includes(term)) ||
+                        (item.next_goal && item.next_goal.toLowerCase().includes(term)) ||
+                        (item.difficulties && item.difficulties.toLowerCase().includes(term)) ||
+                        (item.supervisor_feedback && item.supervisor_feedback.toLowerCase().includes(term))
+                    );
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                }
+
+                if (filteredHistory.length > 0) {
+                    historyList.innerHTML = filteredHistory.map(item => {
                             const statusClass = {
                                 'normal': 'status-normal',
                                 'delayed': 'status-delayed',
@@ -1333,14 +1332,15 @@
                                 </div>
                             `;
                         }).join('');
-                    } else {
-                    historyList.innerHTML = '<p class="text-gray-500 text-center py-4">暂无历史进展记录</p>';
-                    }
                 } else {
-                    latestSection.classList.add('hidden');
-                    historyList.innerHTML = searchTerm ? '<p class="text-gray-500 text-center py-4">未找到匹配的进展记录</p>' : '';
-                    noData.classList.remove('hidden');
+                    historyList.innerHTML = searchTerm ? '<p class="text-gray-500 text-center py-4">未找到匹配的历史记录</p>' : '<p class="text-gray-500 text-center py-4">暂无历史进展记录</p>';
                 }
+            } else {
+                latestSection.classList.add('hidden');
+                historyList.innerHTML = '';
+                noData.classList.remove('hidden');
+                clearBtn.classList.add('hidden');
+            }
         }
 
         // 获取周期设置

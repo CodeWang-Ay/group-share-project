@@ -353,15 +353,15 @@ class ResearchProgressService:
             """)
             normal_count = cursor.fetchone()[0]
 
-            # 进度滞后人数
+            # 进度预警人数（状态为warning）
             cursor.execute("""
                 SELECT COUNT(DISTINCT u.id)
                 FROM users u
                 JOIN research_progress rp ON u.id = rp.user_id
                 WHERE u.role = 'student' AND u.status = 'active'
-                AND rp.status = 'delayed'
+                AND rp.status = 'warning'
             """)
-            delayed_count = cursor.fetchone()[0]
+            warning_status_count = cursor.fetchone()[0]
 
             # 未更新本周人数
             cursor.execute("""
@@ -377,15 +377,14 @@ class ResearchProgressService:
             """)
             not_updated_count = cursor.fetchone()[0]
 
-            # 进度预警人数（包括滞后+未更新）
-            warning_count = delayed_count + not_updated_count
+            # 进度预警人数（状态warning + 未更新）
+            warning_count = warning_status_count + not_updated_count
 
             return {
                 'total': total_students,
                 'normal': normal_count,
-                'delayed': delayed_count,
-                'not_updated': not_updated_count,
-                'warning': warning_count
+                'warning': warning_count,
+                'not_updated': not_updated_count
             }
 
     @staticmethod
