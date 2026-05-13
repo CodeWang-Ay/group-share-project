@@ -216,20 +216,70 @@ class MeetingService:
 
     @staticmethod
     def delete_meeting(meeting_id: int) -> bool:
-        """删除组会"""
+        """删除组会（级联删除关联的汇报人和材料）"""
         with get_db() as conn:
             cursor = conn.cursor()
+
+            # 先删除关联的汇报材料文件
+            cursor.execute("DELETE FROM meeting_files WHERE meeting_id = ?", (meeting_id,))
+
+            # 删除关联的汇报人记录
+            cursor.execute("DELETE FROM meeting_presenters WHERE meeting_id = ?", (meeting_id,))
+
+            # 最后删除组会本身
             cursor.execute("DELETE FROM meetings WHERE id = ?", (meeting_id,))
             return cursor.rowcount > 0
 
     @staticmethod
     def update_meeting_status(meeting_id: int, status: str) -> Optional[Meeting]:
         """更新组会状态"""
-        valid_statuses = ['scheduled', 'ongoing', 'completed']
+        valid_statuses = ['scheduled', 'ongoing', 'completed', 'cancelled']
         if status not in valid_statuses:
             return None
 
         return MeetingService.update_meeting(meeting_id, status=status)
+
+    @staticmethod
+    def auto_update_meeting_statuses() -> int:
+        """
+        根据日期自动更新组会状态（以天为单位）
+        - 过去的组会 → completed（已召开）
+        - 今天的组会 → ongoing（进行中）
+        - 未来的组会 → scheduled（待召开）
+
+        Returns:
+            int: 更新的组会数量
+        """
+        from datetime import date
+
+        with get_db() as conn:
+            cursor = conn.cursor()
+            today = date.today()
+            today_str = today.isoformat()
+
+            # 更新过去的组会为已完成（scheduled_at < 今天，且状态为 scheduled 或 ongoing）
+            cursor.execute("""
+                UPDATE meetings
+                SET status = 'completed', updated_at = ?
+                WHERE status IN ('scheduled', 'ongoing')
+                AND DATE(scheduled_at) < ?
+            """, (datetime.now().isoformat(), today_str))
+            past_updated = cursor.rowcount
+
+            # 更新今天的组会为进行中（scheduled_at = 今天，且状态为 scheduled）
+            cursor.execute("""
+                UPDATE meetings
+                SET status = 'ongoing', updated_at = ?
+                WHERE status = 'scheduled'
+                AND DATE(scheduled_at) = ?
+            """, (datetime.now().isoformat(), today_str))
+            today_updated = cursor.rowcount
+
+            total_updated = past_updated + today_updated
+            if total_updated > 0:
+                logger.info(f"自动更新了 {total_updated} 个组会状态（过去:{past_updated}, 今天:{today_updated}）")
+
+            return total_updated
 
     @staticmethod
     def get_meeting_stats(created_by: Optional[int] = None) -> dict:

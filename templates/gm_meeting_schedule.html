@@ -404,6 +404,7 @@
                         <div class="flex flex-wrap gap-2">
                             <button onclick="filterMeetingStatus('')" id="filter-meeting-all" class="px-3 py-1 bg-primary text-white text-sm rounded-lg transition-colors">全部安排</button>
                             <button onclick="filterMeetingStatus('scheduled')" id="filter-meeting-scheduled" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors"><i class="fa fa-clock-o mr-1"></i>待召开</button>
+                            <button onclick="filterMeetingStatus('ongoing')" id="filter-meeting-ongoing" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors"><i class="fa fa-play-circle mr-1 text-green-600"></i>进行中</button>
                             <button onclick="filterMeetingStatus('completed')" id="filter-meeting-completed" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors"><i class="fa fa-check-circle mr-1"></i>已召开</button>
                             <button onclick="filterMeetingStatus('cancelled')" id="filter-meeting-cancelled" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors"><i class="fa fa-times-circle mr-1 text-red-600"></i>已废弃</button>
                         </div>
@@ -631,6 +632,53 @@
             <p>© 2023 智能计算实验室 - 研究生组会文件共享系统</p>
         </div>
     </footer>
+
+    <!-- 日历日期详情弹窗 -->
+    <div id="calendar-day-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+            <!-- 弹窗头部 -->
+            <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                        <i class="fa fa-calendar text-white"></i>
+                    </div>
+                    <div>
+                        <h3 id="day-modal-title" class="text-white font-semibold text-lg">日期详情</h3>
+                        <p id="day-modal-date" class="text-white/70 text-sm">2026年5月13日</p>
+                    </div>
+                </div>
+                <button onclick="closeCalendarDayModal()" class="w-8 h-8 rounded-lg bg-white/20 text-white hover:bg-white/30 transition-colors flex items-center justify-center">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+
+            <!-- 弹窗内容 -->
+            <div class="p-5">
+                <!-- 当天组会列表 -->
+                <div id="day-meetings-list" class="space-y-3 mb-5">
+                    <!-- 动态渲染 -->
+                </div>
+
+                <!-- 无组会提示 -->
+                <div id="day-no-meeting" class="hidden text-center py-6">
+                    <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                        <i class="fa fa-calendar-o text-gray-400 text-2xl"></i>
+                    </div>
+                    <p class="text-gray-500 mb-4">该日期暂无组会安排</p>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="border-t border-gray-100 pt-4 flex gap-3">
+                    <button onclick="closeCalendarDayModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-medium hover:bg-gray-200 transition-colors">
+                        <i class="fa fa-times mr-2"></i>关闭
+                    </button>
+                    <button id="day-create-btn" onclick="createMeetingOnSelectedDate()" class="flex-1 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-indigo-700 transition-colors shadow-lg">
+                        <i class="fa fa-plus mr-2"></i>创建组会
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- JavaScript -->
     <script>
@@ -959,7 +1007,7 @@
         }
 
         // 布局切换函数
-        let currentViewMode = 'grid';
+        let currentViewMode = 'calendar';
         let calendarCurrentDate = new Date();
         let allMeetingsData = []; // 存储所有组会数据用于日历显示
 
@@ -1025,7 +1073,7 @@
         }
 
         function getSavedViewMode() {
-            return localStorage.getItem('meeting_view_mode') || 'grid';
+            return localStorage.getItem('meeting_view_mode') || 'calendar';
         }
 
         // ====================== 日历视图功能 ======================
@@ -1156,12 +1204,23 @@
                                         const statusExtra = m.status === 'cancelled' ? 'opacity-40' : '';
                                         const time = new Date(m.scheduled_at);
                                         const timeStr = `${String(time.getHours()).padStart(2,'0')}:${String(time.getMinutes()).padStart(2,'0')}`;
-                                        return `<div class="text-xs px-2.5 py-1.5 rounded-lg ${typeBg} ${statusExtra} border-l-3 shadow-sm truncate hover:shadow-md transition-shadow" onclick="event.stopPropagation(); viewMeeting(${m.id})">
-                                            <div class="flex items-center gap-1">
-                                                <div class="w-1.5 h-1.5 rounded-full bg-gradient-to-br ${typeGradient}"></div>
-                                                <span class="font-medium text-gray-700 truncate">${m.title}</span>
+                                        // 汇报人名字（最多显示前2个）
+                                        const presenters = m.presenters || [];
+                                        const presenterNames = presenters.slice(0, 2).map(p => p.real_name || p.username).join('、');
+                                        const hasMorePresenters = presenters.length > 2;
+                                        return `<div class="text-xs px-2.5 py-1.5 rounded-lg ${typeBg} ${statusExtra} border-l-3 shadow-sm hover:shadow-md transition-shadow" onclick="event.stopPropagation(); viewMeeting(${m.id})">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center gap-1 min-w-0">
+                                                    <div class="w-1.5 h-1.5 rounded-full bg-gradient-to-br ${typeGradient} flex-shrink-0"></div>
+                                                    <span class="font-medium text-gray-700 truncate">${m.title}</span>
+                                                </div>
+                                                <span class="text-gray-400 text-xs flex-shrink-0">${timeStr}</span>
                                             </div>
-                                            <span class="text-gray-400 ml-2">${timeStr}</span>
+                                            ${presenterNames ? `<div class="flex items-center gap-1 mt-1 text-gray-500">
+                                                <i class="fa fa-user-o text-xs"></i>
+                                                <span class="truncate">${presenterNames}</span>
+                                                ${hasMorePresenters ? `<span class="text-gray-400">+${presenters.length - 2}</span>` : ''}
+                                            </div>` : ''}
                                         </div>`;
                                     }).join('')}
                                     ${dayMeetings.length > 2 ? `
@@ -1255,24 +1314,129 @@
             }).join('');
         }
 
+        // ====================== 日历日期详情弹窗功能 ======================
+        let selectedCalendarDate = null; // 保存用户选择的日期
+
         function showDayMeetings(dateKey) {
-            // 点击某一天，显示当天所有组会（可以用弹窗或者跳转到列表视图筛选该日期）
-            // 简单实现：显示toast提示
+            // 保存选择的日期
+            selectedCalendarDate = dateKey;
+
+            // 解析日期
+            const [year, month, day] = dateKey.split('-');
+            const dateObj = new Date(year, parseInt(month) - 1, parseInt(day));
+            const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            const weekday = weekdays[dateObj.getDay()];
+
+            // 更新弹窗标题
+            document.getElementById('day-modal-title').textContent = `${month}月${parseInt(day)}日 · ${weekday}`;
+            document.getElementById('day-modal-date').textContent = `${year}年${month}月${parseInt(day)}日`;
+
+            // 获取当天组会
             const dayMeetings = allMeetingsData.filter(m => {
                 const date = new Date(m.scheduled_at);
                 const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
                 return key === dateKey;
             });
 
+            // 渲染组会列表
+            const listContainer = document.getElementById('day-meetings-list');
+            const noMeetingDiv = document.getElementById('day-no-meeting');
+
             if (dayMeetings.length === 0) {
-                showToast(`${dateKey} 暂无组会安排`, 'info');
-                return;
+                listContainer.innerHTML = '';
+                noMeetingDiv.classList.remove('hidden');
+            } else {
+                noMeetingDiv.classList.add('hidden');
+                listContainer.innerHTML = dayMeetings.map(m => {
+                    const date = new Date(m.scheduled_at);
+                    const timeStr = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+                    const statusText = m.status === 'scheduled' ? '待召开' :
+                                      m.status === 'ongoing' ? '进行中' :
+                                      m.status === 'completed' ? '已召开' :
+                                      m.status === 'cancelled' ? '已废弃' : '未知';
+                    const statusClass = m.status === 'scheduled' ? 'bg-blue-100 text-blue-600' :
+                                        m.status === 'ongoing' ? 'bg-green-100 text-green-600' :
+                                        m.status === 'completed' ? 'bg-gray-100 text-gray-600' :
+                                        m.status === 'cancelled' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500';
+                    const typeGradient = m.meeting_type === 'regular' ? 'from-blue-400 to-blue-600' :
+                                         m.meeting_type === 'paper_reading' ? 'from-purple-400 to-purple-600' :
+                                         'from-teal-400 to-teal-600';
+
+                    return `
+                        <div class="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                            <div class="flex items-start gap-3">
+                                <div class="w-3 h-3 rounded-full bg-gradient-to-br ${typeGradient} mt-1.5"></div>
+                                <div class="flex-1 cursor-pointer" onclick="viewMeeting(${m.id})">
+                                    <div class="flex items-center justify-between">
+                                        <h4 class="font-medium text-gray-800">${m.title}</h4>
+                                        <span class="text-xs px-2 py-1 rounded-full ${statusClass}">${statusText}</span>
+                                    </div>
+                                    <div class="flex items-center gap-3 mt-2 text-sm text-gray-500">
+                                        <span><i class="fa fa-clock-o mr-1"></i>${timeStr}</span>
+                                        ${m.location ? `<span><i class="fa fa-map-marker mr-1"></i>${m.location}</span>` : ''}
+                                        <span><i class="fa fa-users mr-1"></i>${m.presenters?.length || 0}人汇报</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 ml-2">
+                                    <button onclick="event.stopPropagation(); viewMeeting(${m.id})" class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors flex items-center justify-center" title="查看详情">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+                                    <button onclick="event.stopPropagation(); confirmDeleteMeetingFromCalendar(${m.id}, '${m.title.replace(/'/g, "\\'")}')\" class="w-8 h-8 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors flex items-center justify-center" title="删除组会">
+                                        <i class="fa fa-trash-o"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>`;
+                }).join('');
             }
 
-            // 显示当天组会列表
-            const meetingNames = dayMeetings.map(m => m.title).join(', ');
-            showToast(`${dateKey}: ${dayMeetings.length}场组会 (${meetingNames})`, 'info');
+            // 打开弹窗
+            const modal = document.getElementById('calendar-day-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         }
+
+        function closeCalendarDayModal() {
+            const modal = document.getElementById('calendar-day-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            selectedCalendarDate = null;
+        }
+
+        // 点击弹窗外部关闭
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('calendar-day-modal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeCalendarDayModal();
+                    }
+                });
+            }
+        });
+
+        function createMeetingOnSelectedDate() {
+            if (!selectedCalendarDate) return;
+
+            // 解析日期并设置默认时间（当天上午9点）
+            const [year, month, day] = selectedCalendarDate.split('-');
+            const defaultDateTime = `${year}-${month}-${day}T09:00`;
+
+            // 关闭日期详情弹窗
+            closeCalendarDayModal();
+
+            // 打开创建组会模态框并预填日期
+            const createModal = document.getElementById('create-meeting-modal');
+            const scheduledAtInput = document.getElementById('meeting-scheduled-at');
+
+            if (createModal && scheduledAtInput) {
+                createModal.classList.remove('hidden');
+                createModal.classList.add('flex');
+                scheduledAtInput.value = defaultDateTime;
+            }
+        }
+
+        // ====================== 日历日期详情弹窗功能结束 ======================
 
         // ====================== 日历视图功能结束 ======================
 
@@ -1285,7 +1449,7 @@
         }
 
         function updateFilterButtons() {
-            ['filter-meeting-all', 'filter-meeting-scheduled', 'filter-meeting-completed', 'filter-meeting-cancelled'].forEach(id => {
+            ['filter-meeting-all', 'filter-meeting-scheduled', 'filter-meeting-ongoing', 'filter-meeting-completed', 'filter-meeting-cancelled'].forEach(id => {
                 const btn = document.getElementById(id);
                 if (!btn) return;
                 const btnStatus = id.replace('filter-meeting-', '');
@@ -1335,6 +1499,18 @@
             }
         }
 
+        // 从日历弹窗删除组会（删除后刷新日历）
+        function confirmDeleteMeetingFromCalendar(id, title) {
+            meetingToDelete = id;
+            const modal = document.getElementById('delete-meeting-modal');
+            const titleEl = document.getElementById('delete-meeting-title');
+            if (modal && titleEl) {
+                titleEl.textContent = title;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
         function closeDeleteModal() {
             const modal = document.getElementById('delete-meeting-modal');
             if (modal) {
@@ -1364,8 +1540,15 @@
                 if (result.success) {
                     alert('组会已删除');
                     closeDeleteModal();
+                    // 关闭日历日期详情弹窗（如果打开）
+                    closeCalendarDayModal();
                     loadMeetingStats();
-                    loadMeetings();
+                    // 根据当前视图刷新
+                    if (currentViewMode === 'calendar') {
+                        renderCalendar();
+                    } else {
+                        loadMeetings();
+                    }
                 } else {
                     alert(result.message || '删除失败');
                 }
@@ -1541,7 +1724,8 @@
             if (!select) return;
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/members`, {
+                // 加载所有成员（设置较大分页数量）
+                const response = await fetch(`${API_BASE_URL}/api/members?per_page=100&status=active`, {
                     credentials: 'include'
                 });
                 const result = await response.json();
@@ -1576,7 +1760,7 @@
                 return;
             }
 
-            const duration = parseInt(document.getElementById('presenter-duration').value) || 20;
+            const duration = parseInt(document.getElementById('presenter-duration').value) || 30;
             const presenterType = document.getElementById('presenter-type').value;
 
             try {
@@ -1764,9 +1948,9 @@
 
         // 加载成员列表
         async function loadMembersForSelect() {
-            // 每次都重新加载以确保数据最新
+            // 每次都重新加载以确保数据最新（加载所有激活成员）
             try {
-                const response = await fetch(`${API_BASE_URL}/api/members`, {
+                const response = await fetch(`${API_BASE_URL}/api/members?per_page=100&status=active`, {
                     credentials: 'include'
                 });
                 const result = await response.json();
@@ -1785,47 +1969,33 @@
         }
 
         // 打开汇报人选择模态框
+        let presenterSearchTerm = ''; // 搜索关键词
+        let presenterSelectTarget = ''; // 目标（create/edit）
+
         async function openPresenterSelectModal(target) {
             // 先加载成员列表
             await loadMembersForSelect();
+            presenterSelectTarget = target;
+            presenterSearchTerm = '';
+
+            // 清空搜索框
+            const searchInput = document.getElementById('presenter-search-input');
+            if (searchInput) {
+                searchInput.value = '';
+                document.getElementById('presenter-search-clear')?.classList.add('hidden');
+            }
 
             const modal = document.getElementById('presenter-select-modal');
-            const membersListContainer = document.getElementById('presenter-members-list');
             const durationInput = document.getElementById('presenter-select-duration');
             const typeSelect = document.getElementById('presenter-select-type');
             const selectedCountEl = document.getElementById('selected-count');
 
-            if (!modal || !membersListContainer) return;
+            if (!modal) return;
 
-            // 填充成员多选列表（checkbox形式）
-            if (membersList.length === 0) {
-                membersListContainer.innerHTML = '<p class="text-sm text-gray-400">暂无成员</p>';
-            } else {
-                // 根据target判断哪些成员已被选中，需要排除
-                const existingIds = target === 'create'
-                    ? createSelectedPresenters.map(p => p.user_id)
-                    : editSelectedPresenters.map(p => p.user_id);
+            // 渲染成员列表
+            renderPresenterMembersList();
 
-                membersListContainer.innerHTML = membersList
-                    .filter(m => !existingIds.includes(m.id)) // 排除已添加的成员
-                    .map(m => `
-                        <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                            <input type="checkbox" class="presenter-checkbox rounded border-gray-300 text-primary focus:ring-primary"
-                                value="${m.id}" data-name="${m.real_name || m.username}"
-                                onchange="updateSelectedCount()">
-                            <div class="flex-1">
-                                <span class="font-medium text-gray-800">${m.real_name || m.username}</span>
-                                <span class="text-xs text-gray-500 ml-2">${m.role === 'student' ? '学生' : m.role === 'teacher' ? '导师' : '管理员'}</span>
-                            </div>
-                        </label>
-                    `).join('');
-
-                if (membersListContainer.innerHTML === '') {
-                    membersListContainer.innerHTML = '<p class="text-sm text-gray-400">所有成员都已添加</p>';
-                }
-            }
-
-            durationInput.value = 20;
+            durationInput.value = 30;
             typeSelect.value = 'assigned';
             selectedCountEl.textContent = '已选择 0 人';
 
@@ -1834,6 +2004,106 @@
 
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+        }
+
+        // 渲染汇报人成员列表（支持搜索）
+        function renderPresenterMembersList() {
+            const membersListContainer = document.getElementById('presenter-members-list');
+            if (!membersListContainer) return;
+
+            // 根据target判断哪些成员已被选中，需要排除
+            const existingIds = presenterSelectTarget === 'create'
+                ? createSelectedPresenters.map(p => p.user_id)
+                : editSelectedPresenters.map(p => p.user_id);
+
+            // 搜索过滤
+            let filteredMembers = membersList.filter(m => !existingIds.includes(m.id));
+            if (presenterSearchTerm) {
+                const term = presenterSearchTerm.toLowerCase();
+                filteredMembers = filteredMembers.filter(m =>
+                    (m.real_name && m.real_name.toLowerCase().includes(term)) ||
+                    (m.username && m.username.toLowerCase().includes(term))
+                );
+            }
+
+            if (filteredMembers.length === 0) {
+                if (presenterSearchTerm) {
+                    membersListContainer.innerHTML = `<p class="text-sm text-gray-400 text-center py-4">
+                        <i class="fa fa-search mr-1"></i>未找到匹配"${presenterSearchTerm}"的成员
+                    </p>`;
+                } else if (membersList.length === 0) {
+                    membersListContainer.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">暂无成员</p>';
+                } else {
+                    membersListContainer.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">所有成员都已添加</p>';
+                }
+            } else {
+                membersListContainer.innerHTML = filteredMembers.map(m => `
+                    <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                        <input type="checkbox" class="presenter-checkbox rounded border-gray-300 text-primary focus:ring-primary"
+                            value="${m.id}" data-name="${m.real_name || m.username}"
+                            onchange="updateSelectedCount()">
+                        <div class="flex-1">
+                            <span class="font-medium text-gray-800">${m.real_name || m.username}</span>
+                            <span class="text-xs text-gray-500 ml-2">${m.role === 'student' ? '学生' : m.role === 'teacher' ? '导师' : '管理员'}</span>
+                            ${m.degree_type ? `<span class="text-xs text-blue-500 ml-1">(${m.degree_type})</span>` : ''}
+                        </div>
+                    </label>
+                `).join('');
+            }
+        }
+
+        // 搜索汇报人成员
+        let presenterSearchTimeout = null;
+        async function searchPresenterMembers() {
+            const searchInput = document.getElementById('presenter-search-input');
+            const clearBtn = document.getElementById('presenter-search-clear');
+            presenterSearchTerm = searchInput?.value.trim() || '';
+
+            if (presenterSearchTerm) {
+                clearBtn?.classList.remove('hidden');
+                // 如果搜索词较长（>=2字符），尝试从后端搜索
+                if (presenterSearchTerm.length >= 2) {
+                    clearTimeout(presenterSearchTimeout);
+                    presenterSearchTimeout = setTimeout(async () => {
+                        try {
+                            const response = await fetch(`${API_BASE_URL}/api/members?search=${encodeURIComponent(presenterSearchTerm)}&per_page=50&status=active`, {
+                                credentials: 'include'
+                            });
+                            const result = await response.json();
+                            if (result.success) {
+                                // 合并搜索结果到现有列表（去重）
+                                const searchMembers = result.data.members || [];
+                                const existingIds = membersList.map(m => m.id);
+                                searchMembers.forEach(m => {
+                                    if (!existingIds.includes(m.id)) {
+                                        membersList.push(m);
+                                    }
+                                });
+                                renderPresenterMembersList();
+                            }
+                        } catch (error) {
+                            console.error('后端搜索失败:', error);
+                            renderPresenterMembersList();
+                        }
+                    }, 500);
+                } else {
+                    renderPresenterMembersList();
+                }
+            } else {
+                clearBtn?.classList.add('hidden');
+                renderPresenterMembersList();
+            }
+        }
+
+        // 清除搜索
+        function clearPresenterSearch() {
+            const searchInput = document.getElementById('presenter-search-input');
+            if (searchInput) {
+                searchInput.value = '';
+            }
+            presenterSearchTerm = '';
+            document.getElementById('presenter-search-clear')?.classList.add('hidden');
+            renderPresenterMembersList();
         }
 
         // 更新已选择人数显示
@@ -1865,7 +2135,7 @@
                 return;
             }
 
-            const duration = parseInt(durationInput.value) || 20;
+            const duration = parseInt(durationInput.value) || 30;
             const type = typeSelect.value;
             const target = modal.dataset.target;
 
@@ -2101,7 +2371,12 @@
                     closeDetailModal();
                     editSelectedPresenters = [];
                     loadMeetingStats();
-                    loadMeetings();
+                    // 根据当前视图模式刷新数据
+                    if (currentViewMode === 'calendar') {
+                        renderCalendar();
+                    } else {
+                        loadMeetings();
+                    }
                 } else {
                     alert(result.message || '更新失败，请重试');
                 }
@@ -2129,6 +2404,14 @@
                 searchInput.addEventListener('input', () => {
                     clearTimeout(timeout);
                     timeout = setTimeout(handleMeetingSearch, 300);
+                });
+            }
+
+            // 汇报人搜索框事件
+            const presenterSearchInput = document.getElementById('presenter-search-input');
+            if (presenterSearchInput) {
+                presenterSearchInput.addEventListener('input', () => {
+                    searchPresenterMembers();
                 });
             }
 
@@ -2632,9 +2915,17 @@
             </div>
             <div class="p-6">
                 <div class="space-y-4">
-                    <!-- 成员多选列表 -->
+                    <!-- 成员搜索框 -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">选择成员 <span class="text-red-500">*</span></label>
+                        <div class="relative mb-3">
+                            <input type="text" id="presenter-search-input" placeholder="搜索成员姓名..."
+                                class="w-full px-4 py-2 pl-10 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                            <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <button id="presenter-search-clear" onclick="clearPresenterSearch()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden">
+                                <i class="fa fa-times-circle"></i>
+                            </button>
+                        </div>
                         <div class="text-xs text-gray-500 mb-2">提示：可勾选多个成员，一次添加多个汇报人</div>
                         <div id="presenter-members-list" class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
                             <p class="text-sm text-gray-400">加载中...</p>
@@ -2644,7 +2935,7 @@
                     <div class="grid grid-cols-2 gap-4 pt-3 border-t border-gray-100">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">汇报时长（分钟）</label>
-                            <input type="number" id="presenter-select-duration" value="20" min="5" max="60"
+                            <input type="number" id="presenter-select-duration" value="30" min="5" max="60"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
                         </div>
                         <div>
@@ -2692,7 +2983,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">汇报时长（分钟）</label>
-                        <input type="number" id="presenter-duration" value="20" min="5" max="60"
+                        <input type="number" id="presenter-duration" value="30" min="5" max="60"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
                     </div>
                     <div>
@@ -2846,7 +3137,12 @@
                         closeCreateModal();
                         createSelectedPresenters = [];
                         loadMeetingStats();
-                        loadMeetings();
+                        // 根据当前视图模式刷新数据
+                        if (currentViewMode === 'calendar') {
+                            renderCalendar();
+                        } else {
+                            loadMeetings();
+                        }
                     } else {
                         alert(result.message || '发布失败，请重试');
                     }

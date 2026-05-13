@@ -2204,7 +2204,7 @@ async def get_members(request: Request):
         search = request.query_params.get("search", "")
 
         # 验证参数
-        if per_page not in [5, 10, 20, 50]:
+        if per_page not in [5, 10, 20, 50, 100]:
             per_page = 10
 
         if page < 1:
@@ -2234,8 +2234,8 @@ async def get_members(request: Request):
                 params.append(degree_filter)
 
             if search:
-                where_conditions.append("(username LIKE ? OR id LIKE ? OR student_id LIKE ?)")
-                params.extend([f"%{search}%", f"%{search}%", f"%{search}%"])
+                where_conditions.append("(username LIKE ? OR id LIKE ? OR student_id LIKE ? OR real_name LIKE ?)")
+                params.extend([f"%{search}%", f"%{search}%", f"%{search}%", f"%{search}%"])
 
             where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
 
@@ -3692,6 +3692,9 @@ async def get_meetings(request: Request):
         )
 
     try:
+        # 先自动更新组会状态（根据日期）
+        MeetingService.auto_update_meeting_statuses()
+
         # 获取查询参数
         page = int(request.query_params.get("page", 1))
         limit = int(request.query_params.get("limit", 10))
@@ -3880,6 +3883,9 @@ async def get_meeting_stats(request: Request):
         )
 
     try:
+        # 先自动更新组会状态
+        MeetingService.auto_update_meeting_statuses()
+
         stats = MeetingService.get_meeting_stats()
 
         return JSONResponse(
