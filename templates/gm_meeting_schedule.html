@@ -113,6 +113,35 @@
                 }
             }
         }
+
+        /* 日历视图增强样式 */
+        .border-l-3 {
+            border-left-width: 3px;
+        }
+
+        #calendar-grid > div {
+            transition: all 0.2s ease;
+        }
+
+        #calendar-grid > div:hover {
+            transform: translateY(-1px);
+        }
+
+        /* 日历事件卡片渐变 */
+        .calendar-event-regular {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-left: 3px solid #3b82f6;
+        }
+
+        .calendar-event-paper {
+            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+            border-left: 3px solid #8b5cf6;
+        }
+
+        .calendar-event-discussion {
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+            border-left: 3px solid #14b8a6;
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 min-h-screen flex flex-col">
@@ -392,6 +421,9 @@
                                 <button id="list-view-btn" onclick="switchToList()" class="layout-btn px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 text-gray-500 hover:text-gray-700" title="列表视图">
                                     <i class="fa fa-list"></i>
                                 </button>
+                                <button id="calendar-view-btn" onclick="switchToCalendar()" class="layout-btn px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 text-gray-500 hover:text-gray-700" title="日历视图">
+                                    <i class="fa fa-calendar"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -425,6 +457,166 @@
                             <tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">加载中...</td></tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- 日历视图 -->
+                <div id="calendar-view" class="hidden">
+                    <!-- 日历主体区域 -->
+                    <div class="flex gap-6">
+                        <!-- 日历核心 -->
+                        <div class="flex-1">
+                            <!-- 日历工具栏 -->
+                            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl border border-gray-200 p-5 flex items-center justify-between shadow-sm">
+                                <div class="flex items-center gap-4">
+                                    <div class="flex items-center gap-2">
+                                        <button onclick="calendarPrevMonth()" class="w-9 h-9 rounded-xl bg-white shadow-sm border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-blue-100 hover:text-blue-600 hover:border-blue-200 transition-all duration-200">
+                                            <i class="fa fa-chevron-left text-sm"></i>
+                                        </button>
+                                        <span id="calendar-month-title" class="text-xl font-bold text-gray-800 min-w-[150px] text-center tracking-wide">2026年5月</span>
+                                        <button onclick="calendarNextMonth()" class="w-9 h-9 rounded-xl bg-white shadow-sm border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-blue-100 hover:text-blue-600 hover:border-blue-200 transition-all duration-200">
+                                            <i class="fa fa-chevron-right text-sm"></i>
+                                        </button>
+                                    </div>
+                                    <button onclick="calendarGoToday()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-2">
+                                        <i class="fa fa-crosshairs"></i>今天
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <!-- 类型筛选 -->
+                                    <div class="relative">
+                                        <select id="calendar-type-filter" onchange="renderCalendar()" class="appearance-none px-4 py-2 pr-8 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 shadow-sm cursor-pointer">
+                                            <option value="">全部类型</option>
+                                            <option value="regular">常规组会</option>
+                                            <option value="paper_reading">论文研读</option>
+                                            <option value="discussion">专题讨论</option>
+                                        </select>
+                                        <i class="fa fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+                                    </div>
+                                    <!-- 状态筛选 -->
+                                    <div class="relative">
+                                        <select id="calendar-status-filter" onchange="renderCalendar()" class="appearance-none px-4 py-2 pr-8 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 shadow-sm cursor-pointer">
+                                            <option value="">全部状态</option>
+                                            <option value="scheduled">待召开</option>
+                                            <option value="completed">已召开</option>
+                                            <option value="cancelled">已废弃</option>
+                                        </select>
+                                        <i class="fa fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 日历网格 -->
+                            <div class="bg-white rounded-b-2xl border border-t-0 border-gray-200 overflow-hidden shadow-lg">
+                                <!-- 星期头部 -->
+                                <div class="grid grid-cols-7 bg-gradient-to-b from-gray-100 to-gray-50 border-b border-gray-200">
+                                    <div class="py-4 text-center text-sm font-semibold text-red-400">日</div>
+                                    <div class="py-4 text-center text-sm font-semibold text-gray-600">一</div>
+                                    <div class="py-4 text-center text-sm font-semibold text-gray-600">二</div>
+                                    <div class="py-4 text-center text-sm font-semibold text-gray-600">三</div>
+                                    <div class="py-4 text-center text-sm font-semibold text-gray-600">四</div>
+                                    <div class="py-4 text-center text-sm font-semibold text-gray-600">五</div>
+                                    <div class="py-4 text-center text-sm font-semibold text-blue-400">六</div>
+                                </div>
+                                <!-- 日历主体 -->
+                                <div id="calendar-grid" class="grid grid-cols-7">
+                                    <!-- 动态渲染 -->
+                                </div>
+                            </div>
+
+                            <!-- 图例 -->
+                            <div class="mt-6 bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-6">
+                                        <span class="text-sm font-medium text-gray-500">类型标识：</span>
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-4 h-4 rounded-md bg-gradient-to-br from-blue-400 to-blue-600 shadow-sm"></div>
+                                            <span class="text-sm text-gray-600">常规组会</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-4 h-4 rounded-md bg-gradient-to-br from-purple-400 to-purple-600 shadow-sm"></div>
+                                            <span class="text-sm text-gray-600">论文研读</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-4 h-4 rounded-md bg-gradient-to-br from-teal-400 to-teal-600 shadow-sm"></div>
+                                            <span class="text-sm text-gray-600">专题讨论</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-4 h-4 rounded-md bg-gradient-to-br from-gray-300 to-gray-400 opacity-60"></div>
+                                            <span class="text-sm text-gray-400">已废弃</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-sm text-gray-400">
+                                        <i class="fa fa-lightbulb-o mr-1"></i>点击日期查看详情
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 侧边面板 -->
+                        <div class="w-80 space-y-4">
+                            <!-- 本月概览 -->
+                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                                <div class="flex items-center gap-2 mb-4">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                                        <i class="fa fa-chart-pie text-white text-sm"></i>
+                                    </div>
+                                    <h3 class="text-base font-semibold text-gray-800">本月概览</h3>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 text-center">
+                                        <div class="text-2xl font-bold text-blue-600" id="calendar-stats-total">--</div>
+                                        <div class="text-xs text-blue-500 mt-1">组会总数</div>
+                                    </div>
+                                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 text-center">
+                                        <div class="text-2xl font-bold text-green-600" id="calendar-stats-completed">--</div>
+                                        <div class="text-xs text-green-500 mt-1">已召开</div>
+                                    </div>
+                                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 text-center">
+                                        <div class="text-2xl font-bold text-orange-600" id="calendar-stats-scheduled">--</div>
+                                        <div class="text-xs text-orange-500 mt-1">待召开</div>
+                                    </div>
+                                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 text-center">
+                                        <div class="text-2xl font-bold text-purple-600" id="calendar-stats-presenters">--</div>
+                                        <div class="text-xs text-purple-500 mt-1">汇报人次</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 近期安排 -->
+                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                                <div class="flex items-center gap-2 mb-4">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                                        <i class="fa fa-clock-o text-white text-sm"></i>
+                                    </div>
+                                    <h3 class="text-base font-semibold text-gray-800">近期安排</h3>
+                                </div>
+                                <div id="calendar-upcoming-list" class="space-y-3">
+                                    <!-- 动态渲染 -->
+                                </div>
+                            </div>
+
+                            <!-- 快速操作 -->
+                            <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 shadow-sm p-5">
+                                <div class="flex items-center gap-2 mb-4">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                                        <i class="fa fa-magic text-white text-sm"></i>
+                                    </div>
+                                    <h3 class="text-base font-semibold text-gray-800">快速操作</h3>
+                                </div>
+                                <div class="space-y-2">
+                                    <button onclick="document.getElementById('create-meeting-btn').click()" class="w-full py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all flex items-center justify-center gap-2">
+                                        <i class="fa fa-plus-circle"></i>新建组会
+                                    </button>
+                                    <button onclick="switchToGrid()" class="w-full py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
+                                        <i class="fa fa-th-large"></i>卡片视图
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -768,6 +960,8 @@
 
         // 布局切换函数
         let currentViewMode = 'grid';
+        let calendarCurrentDate = new Date();
+        let allMeetingsData = []; // 存储所有组会数据用于日历显示
 
         function switchToGrid() {
             currentViewMode = 'grid';
@@ -781,32 +975,306 @@
             localStorage.setItem('meeting_view_mode', 'list');
         }
 
+        function switchToCalendar() {
+            currentViewMode = 'calendar';
+            applyLayout('calendar');
+            localStorage.setItem('meeting_view_mode', 'calendar');
+            renderCalendar();
+        }
+
         function applyLayout(layout) {
             const gridView = document.getElementById('grid-view');
             const listView = document.getElementById('list-view');
+            const calendarView = document.getElementById('calendar-view');
             const gridBtn = document.getElementById('grid-view-btn');
             const listBtn = document.getElementById('list-view-btn');
+            const calendarBtn = document.getElementById('calendar-view-btn');
 
+            // 重置所有按钮样式
+            const resetBtnStyle = (btn) => {
+                btn.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+                btn.classList.add('text-gray-500', 'hover:text-gray-700');
+            };
+            const activateBtnStyle = (btn) => {
+                btn.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+                btn.classList.remove('text-gray-500', 'hover:text-gray-700');
+            };
+
+            // 隐藏所有视图
+            gridView.classList.add('hidden');
+            listView.classList.add('hidden');
+            calendarView.classList.add('hidden');
+
+            // 重置所有按钮
+            resetBtnStyle(gridBtn);
+            resetBtnStyle(listBtn);
+            resetBtnStyle(calendarBtn);
+
+            // 显示对应视图和激活按钮
             if (layout === 'grid') {
                 gridView.classList.remove('hidden');
-                listView.classList.add('hidden');
-                gridBtn.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
-                gridBtn.classList.remove('text-gray-500', 'hover:text-gray-700');
-                listBtn.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
-                listBtn.classList.add('text-gray-500', 'hover:text-gray-700');
-            } else {
-                gridView.classList.add('hidden');
+                activateBtnStyle(gridBtn);
+            } else if (layout === 'list') {
                 listView.classList.remove('hidden');
-                listBtn.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
-                listBtn.classList.remove('text-gray-500', 'hover:text-gray-700');
-                gridBtn.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
-                gridBtn.classList.add('text-gray-500', 'hover:text-gray-700');
+                activateBtnStyle(listBtn);
+            } else if (layout === 'calendar') {
+                calendarView.classList.remove('hidden');
+                activateBtnStyle(calendarBtn);
+                renderCalendar();
             }
         }
 
         function getSavedViewMode() {
             return localStorage.getItem('meeting_view_mode') || 'grid';
         }
+
+        // ====================== 日历视图功能 ======================
+        function calendarPrevMonth() {
+            calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function calendarNextMonth() {
+            calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function calendarGoToday() {
+            calendarCurrentDate = new Date();
+            renderCalendar();
+        }
+
+        async function loadAllMeetingsForCalendar() {
+            try {
+                const params = new URLSearchParams();
+                params.append('page', 1);
+                params.append('limit', 1000); // 加载所有组会用于日历显示
+                const typeFilter = document.getElementById('calendar-type-filter')?.value || '';
+                const statusFilter = document.getElementById('calendar-status-filter')?.value || '';
+                if (typeFilter) params.append('meeting_type', typeFilter);
+                if (statusFilter) params.append('status', statusFilter);
+
+                const response = await fetch(`${API_BASE_URL}/api/meetings?${params.toString()}`, {
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    allMeetingsData = result.data.meetings || [];
+                    return allMeetingsData;
+                }
+                return [];
+            } catch (error) {
+                console.error('加载组会数据失败:', error);
+                return [];
+            }
+        }
+
+        async function renderCalendar() {
+            // 更新月份标题
+            const monthTitle = document.getElementById('calendar-month-title');
+            if (monthTitle) {
+                monthTitle.textContent = `${calendarCurrentDate.getFullYear()}年${calendarCurrentDate.getMonth() + 1}月`;
+            }
+
+            // 加载组会数据
+            const meetings = await loadAllMeetingsForCalendar();
+
+            // 构建日期->组会映射
+            const meetingMap = {};
+            meetings.forEach(m => {
+                const date = new Date(m.scheduled_at);
+                const dateKey = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+                if (!meetingMap[dateKey]) meetingMap[dateKey] = [];
+                meetingMap[dateKey].push(m);
+            });
+
+            // 更新侧边面板统计
+            updateCalendarStats(meetings);
+            updateCalendarUpcoming(meetings);
+
+            // 获取当月第一天和最后一天
+            const firstDay = new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth(), 1);
+            const lastDay = new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth() + 1, 0);
+
+            // 获取当月第一天是星期几（0=周日）
+            const startWeekday = firstDay.getDay();
+            // 获取当月总天数
+            const totalDays = lastDay.getDate();
+
+            // 计算需要显示的周数
+            const weeksCount = Math.ceil((startWeekday + totalDays) / 7);
+
+            // 今天
+            const today = new Date();
+            const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+            // 渲染日历网格
+            const grid = document.getElementById('calendar-grid');
+            if (!grid) return;
+
+            let html = '';
+            for (let week = 0; week < weeksCount; week++) {
+                for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+                    const dayIndex = week * 7 + dayOfWeek;
+                    const dayNum = dayIndex - startWeekday + 1;
+
+                    // 周末颜色
+                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                    const weekendBg = dayOfWeek === 0 ? 'bg-red-50/30' : 'bg-blue-50/30';
+
+                    if (dayNum < 1 || dayNum > totalDays) {
+                        // 空白格子（非当月日期）
+                        html += `<div class="min-h-[120px] p-2 border-b border-r border-gray-100 bg-gray-100/50"></div>`;
+                    } else {
+                        const dateKey = `${calendarCurrentDate.getFullYear()}-${String(calendarCurrentDate.getMonth()+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+                        const isToday = dateKey === todayKey;
+                        const dayMeetings = meetingMap[dateKey] || [];
+                        const hasMeeting = dayMeetings.length > 0;
+
+                        // 根据是否有组会决定背景
+                        const bgClass = isToday ? 'bg-gradient-to-br from-blue-100 to-indigo-100' :
+                                       hasMeeting ? 'bg-white' :
+                                       isWeekend ? weekendBg : 'bg-white';
+
+                        html += `
+                            <div class="min-h-[120px] p-3 border-b border-r border-gray-100 cursor-pointer ${bgClass} hover:shadow-md hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 group relative" onclick="showDayMeetings('${dateKey}')">
+                                <!-- 日期数字 -->
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="${isToday ? 'w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-sm font-bold shadow-lg' : hasMeeting ? 'text-sm font-semibold text-gray-800' : 'text-sm text-gray-400 group-hover:text-gray-600'}">${dayNum}</span>
+                                    ${dayMeetings.length > 0 ? `<span class="text-xs font-medium ${hasMeeting ? 'text-blue-500' : 'text-gray-300'} bg-blue-100 px-1.5 py-0.5 rounded-full">${dayMeetings.length}</span>` : ''}
+                                </div>
+                                <!-- 组会列表 -->
+                                <div class="space-y-1.5 overflow-hidden">
+                                    ${dayMeetings.slice(0, 2).map(m => {
+                                        const typeGradient = m.meeting_type === 'regular' ? 'from-blue-400 to-blue-600' :
+                                                         m.meeting_type === 'paper_reading' ? 'from-purple-400 to-purple-600' :
+                                                         'from-teal-400 to-teal-600';
+                                        const typeBg = m.meeting_type === 'regular' ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-blue-300' :
+                                                         m.meeting_type === 'paper_reading' ? 'bg-gradient-to-r from-purple-50 to-purple-100 border-purple-300' :
+                                                         'bg-gradient-to-r from-teal-50 to-teal-100 border-teal-300';
+                                        const statusExtra = m.status === 'cancelled' ? 'opacity-40' : '';
+                                        const time = new Date(m.scheduled_at);
+                                        const timeStr = `${String(time.getHours()).padStart(2,'0')}:${String(time.getMinutes()).padStart(2,'0')}`;
+                                        return `<div class="text-xs px-2.5 py-1.5 rounded-lg ${typeBg} ${statusExtra} border-l-3 shadow-sm truncate hover:shadow-md transition-shadow" onclick="event.stopPropagation(); viewMeeting(${m.id})">
+                                            <div class="flex items-center gap-1">
+                                                <div class="w-1.5 h-1.5 rounded-full bg-gradient-to-br ${typeGradient}"></div>
+                                                <span class="font-medium text-gray-700 truncate">${m.title}</span>
+                                            </div>
+                                            <span class="text-gray-400 ml-2">${timeStr}</span>
+                                        </div>`;
+                                    }).join('')}
+                                    ${dayMeetings.length > 2 ? `
+                                        <div class="text-xs text-gray-400 px-2 py-1 bg-gray-50 rounded-lg text-center hover:bg-gray-100 transition-colors">
+                                            +${dayMeetings.length - 2} 更多
+                                        </div>` : ''}
+                                </div>
+                                <!-- hover提示 -->
+                                ${!hasMeeting ? `<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">暂无安排</span>
+                                </div>` : ''}
+                            </div>`;
+                    }
+                }
+            }
+            grid.innerHTML = html;
+        }
+
+        // 更新日历侧边统计
+        function updateCalendarStats(meetings) {
+            const currentMonth = calendarCurrentDate.getMonth();
+            const currentYear = calendarCurrentDate.getFullYear();
+
+            // 本月组会
+            const monthMeetings = meetings.filter(m => {
+                const date = new Date(m.scheduled_at);
+                return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+            });
+
+            // 统计数据
+            const total = monthMeetings.length;
+            const completed = monthMeetings.filter(m => m.status === 'completed').length;
+            const scheduled = monthMeetings.filter(m => m.status === 'scheduled').length;
+            const presenters = monthMeetings.reduce((sum, m) => sum + (m.presenters?.length || 0), 0);
+
+            // 更新显示
+            document.getElementById('calendar-stats-total')?.textContent && (document.getElementById('calendar-stats-total').textContent = total);
+            document.getElementById('calendar-stats-completed')?.textContent && (document.getElementById('calendar-stats-completed').textContent = completed);
+            document.getElementById('calendar-stats-scheduled')?.textContent && (document.getElementById('calendar-stats-scheduled').textContent = scheduled);
+            document.getElementById('calendar-stats-presenters')?.textContent && (document.getElementById('calendar-stats-presenters').textContent = presenters);
+        }
+
+        // 更新近期安排列表
+        function updateCalendarUpcoming(meetings) {
+            const list = document.getElementById('calendar-upcoming-list');
+            if (!list) return;
+
+            // 获取未来7天内的组会（按时间排序）
+            const now = new Date();
+            const futureDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+            const upcomingMeetings = meetings
+                .filter(m => {
+                    const date = new Date(m.scheduled_at);
+                    return date >= now && date <= futureDate && m.status === 'scheduled';
+                })
+                .sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at))
+                .slice(0, 4);
+
+            if (upcomingMeetings.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-4 text-gray-400">
+                        <i class="fa fa-calendar-o text-2xl mb-2"></i>
+                        <p class="text-sm">近期暂无安排</p>
+                    </div>`;
+                return;
+            }
+
+            list.innerHTML = upcomingMeetings.map(m => {
+                const date = new Date(m.scheduled_at);
+                const dateStr = `${date.getMonth()+1}月${date.getDate()}日`;
+                const timeStr = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+                const typeGradient = m.meeting_type === 'regular' ? 'from-blue-400 to-blue-600' :
+                                 m.meeting_type === 'paper_reading' ? 'from-purple-400 to-purple-600' :
+                                 'from-teal-400 to-teal-600';
+                const typeBg = m.meeting_type === 'regular' ? 'bg-blue-100 text-blue-600' :
+                              m.meeting_type === 'paper_reading' ? 'bg-purple-100 text-purple-600' :
+                              'bg-teal-100 text-teal-600';
+
+                return `
+                    <div class="flex gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer" onclick="viewMeeting(${m.id})">
+                        <div class="w-2.5 h-2.5 rounded-full bg-gradient-to-br ${typeGradient} mt-2"></div>
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-800 text-sm">${m.title}</div>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-xs text-gray-400">${dateStr} · ${timeStr}</span>
+                                ${m.location ? `<span class="text-xs ${typeBg} px-1.5 py-0.5 rounded-full">${m.location}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function showDayMeetings(dateKey) {
+            // 点击某一天，显示当天所有组会（可以用弹窗或者跳转到列表视图筛选该日期）
+            // 简单实现：显示toast提示
+            const dayMeetings = allMeetingsData.filter(m => {
+                const date = new Date(m.scheduled_at);
+                const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+                return key === dateKey;
+            });
+
+            if (dayMeetings.length === 0) {
+                showToast(`${dateKey} 暂无组会安排`, 'info');
+                return;
+            }
+
+            // 显示当天组会列表
+            const meetingNames = dayMeetings.map(m => m.title).join(', ');
+            showToast(`${dateKey}: ${dayMeetings.length}场组会 (${meetingNames})`, 'info');
+        }
+
+        // ====================== 日历视图功能结束 ======================
 
         // 状态筛选函数
         function filterMeetingStatus(status) {
