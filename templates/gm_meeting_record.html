@@ -1171,6 +1171,31 @@
                 // 计算周数（根据日期推算）
                 const weekNum = getWeekNumber(date);
 
+                // 处理纪要摘要：去除Markdown符号，只显示纯文本
+                let summaryText = '暂无会议纪要';
+                if (m.minutes) {
+                    // 去除Markdown标记符号
+                    summaryText = m.minutes
+                        .replace(/```[\s\S]*?```/g, '')  // 去除代码块（包含换行）
+                        .replace(/---+/g, '')  // 去除分隔线
+                        .replace(/\|[^|]+\|/g, '')  // 去除表格内容
+                        .replace(/^#+ .*/gm, '')  // 去除标题行
+                        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')  // 链接只显示文字
+                        .replace(/[*_`~>#-]/g, '')  // 去除各种Markdown符号
+                        .replace(/\s+/g, ' ')  // 多空格合并为一个
+                        .trim();
+                    // 严格限制长度为60字符
+                    if (summaryText.length > 60) {
+                        summaryText = summaryText.substring(0, 60) + '...';
+                    }
+                    if (!summaryText || summaryText === '...') summaryText = '已填写纪要';
+                } else if (m.description) {
+                    summaryText = m.description;
+                    if (summaryText.length > 60) {
+                        summaryText = summaryText.substring(0, 60) + '...';
+                    }
+                }
+
                 return `
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 record-card flex flex-col min-h-[280px]">
                     <!-- 头部标签 -->
@@ -1180,9 +1205,9 @@
                     </div>
                     <!-- 标题 -->
                     <h3 class="font-semibold text-gray-800 mb-2">${m.title}</h3>
-                    <!-- 紀要摘要 -->
-                    <p class="text-sm text-gray-500 line-clamp-2 mb-4">
-                        ${m.minutes || m.description || '暂无会议纪要'}
+                    <!-- 紀要摘要（固定高度2行） -->
+                    <p class="text-sm text-gray-500 overflow-hidden h-10 mb-4">
+                        ${summaryText}
                     </p>
                     <!-- 汇报人和紀要状态 -->
                     <div class="flex items-center justify-between text-sm text-gray-500 mb-3">
@@ -1436,9 +1461,10 @@
             // 创建模态框
             const modalHtml = `
             <div id="record-detail-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                <div class="bg-white rounded-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-                    <div class="p-6">
-                        <div class="flex justify-between items-start mb-4">
+                <div class="bg-white rounded-xl max-w-4xl w-full mx-4 max-h-[85vh] flex flex-col overflow-hidden">
+                    <!-- 头部固定区域 -->
+                    <div class="p-6 border-b border-gray-100 flex-shrink-0">
+                        <div class="flex justify-between items-start mb-2">
                             <div>
                                 <span class="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full font-medium">已召开</span>
                                 <span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full font-medium ml-2">${typeText}</span>
@@ -1447,8 +1473,11 @@
                                 <i class="fa fa-times text-xl"></i>
                             </button>
                         </div>
+                        <h2 class="text-xl font-bold text-gray-800">${meeting.title}</h2>
+                    </div>
 
-                        <h2 class="text-xl font-bold text-gray-800 mb-4">${meeting.title}</h2>
+                    <!-- 内容滚动区域 -->
+                    <div class="flex-1 overflow-y-auto p-6">
 
                         <!-- 基本信息 -->
                         <div class="bg-gray-50 rounded-lg p-4 mb-4">
@@ -1491,7 +1520,9 @@
                                     <i class="fa fa-edit"></i> 编辑
                                 </button>
                             </div>
-                            ${minutesContentHtml}
+                            <div class="max-h-[400px] overflow-y-auto">
+                                ${minutesContentHtml}
+                            </div>
                         </div>
 
                         <!-- 汇报材料区域 -->
@@ -1515,14 +1546,15 @@
                             <p class="text-gray-600 font-medium mb-2">会议描述：</p>
                             <p class="text-gray-800">${meeting.description || '无描述'}</p>
                         </div>
+                    </div>
 
-                        <div class="mt-6 pt-4 border-t border-gray-100 flex justify-end gap-3">
-                            <button onclick="closeRecordDetailModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">关闭</button>
-                            <button onclick="openEditMinutes(${meeting.id}, '${escapedMinutesForClick}', '${escapedTitleForClick}')"
-                                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
-                                <i class="fa fa-edit mr-1"></i>编辑纪要
-                            </button>
-                        </div>
+                    <!-- 底部固定按钮区域 -->
+                    <div class="p-4 border-t border-gray-100 flex justify-end gap-3 flex-shrink-0 bg-white">
+                        <button onclick="closeRecordDetailModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">关闭</button>
+                        <button onclick="openEditMinutes(${meeting.id}, '${escapedMinutesForClick}', '${escapedTitleForClick}')"
+                                class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                            <i class="fa fa-edit mr-1"></i>编辑纪要
+                        </button>
                     </div>
                 </div>
             </div>`;
