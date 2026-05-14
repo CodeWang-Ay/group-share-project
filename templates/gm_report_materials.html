@@ -28,9 +28,51 @@
                 @apply bg-primary/10 text-primary font-medium;
             }
         }
+        /* Toast提示样式 */
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideDown 0.3s ease-out;
+            min-width: 280px;
+        }
+        .toast.success {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .toast.error {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .toast.warning {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border: 1px solid #f59e0b;
+            color: #92400e;
+        }
+        .toast.info {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(-20px); opacity: 0; }
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 min-h-screen flex flex-col">
+    <!-- Toast提示容器 -->
+    <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-3 items-center"></div>
+
     <!-- 顶部导航栏 -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div class="container mx-auto px-4">
@@ -48,7 +90,7 @@
 
                 <div class="flex items-center gap-2 sm:gap-4">
                     <div class="relative hidden md:block">
-                        <input type="text" id="search-input" placeholder="搜索材料..."
+                        <input type="text" id="search-input" placeholder="搜索组会..."
                                class="py-2 pl-10 pr-4 rounded-lg bg-gray-100 border-0 focus:ring-2 focus:ring-primary/30 focus:bg-white w-48 lg:w-64">
                         <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                     </div>
@@ -68,9 +110,7 @@
                             <div class="px-4 py-2 border-b border-gray-100">
                                 <p class="font-medium">{{ user.username }}</p>
                                 <p class="text-xs text-gray-500">
-                                    {% if user.role == 'admin' %}管理员
-                                    {% elif user.role == 'teacher' %}导师
-                                    {% else %}学生{% endif %}
+                                    {% if user.role == 'admin' %}管理员{% elif user.role == 'teacher' %}导师{% else %}学生{% endif %}
                                 </p>
                             </div>
                             <a href="/user_profile" class="block px-4 py-2 text-sm hover:bg-gray-100"><i class="fa fa-user-o mr-2"></i>个人资料</a>
@@ -140,31 +180,31 @@
         <div class="flex-1 p-4 lg:p-6 overflow-y-auto">
             <div class="mb-6">
                 <h1 class="text-xl font-bold text-gray-800 mb-2">汇报材料</h1>
-                <p class="text-gray-500 mb-6">上传、查看、下载各周组会汇报PPT与文档材料</p>
+                <p class="text-gray-500 mb-6">按组会查看和管理汇报材料，点击组会卡片选择汇报人上传材料</p>
 
                 <!-- 统计卡片 -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div><p class="text-gray-500 text-sm">材料总数</p><h3 class="text-2xl font-bold mt-1 stats-total">0</h3></div>
-                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary"><i class="fa fa-file-text-o"></i></div>
+                            <div><p class="text-gray-500 text-sm">组会总数</p><h3 class="text-2xl font-bold mt-1 stats-total">0</h3></div>
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary"><i class="fa fa-calendar"></i></div>
                         </div>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div><p class="text-gray-500 text-sm">待提交</p><h3 class="text-2xl font-bold mt-1 stats-pending text-orange-500">0</h3></div>
+                            <div><p class="text-gray-500 text-sm">待提交材料</p><h3 class="text-2xl font-bold mt-1 stats-pending text-orange-500">0</h3></div>
                             <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-500"><i class="fa fa-exclamation-circle"></i></div>
                         </div>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div><p class="text-gray-500 text-sm">待审核</p><h3 class="text-2xl font-bold mt-1 stats-submitted text-yellow-600">0</h3></div>
+                            <div><p class="text-gray-500 text-sm">已提交待审核</p><h3 class="text-2xl font-bold mt-1 stats-submitted text-yellow-600">0</h3></div>
                             <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600"><i class="fa fa-clock-o"></i></div>
                         </div>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-gray-100">
                         <div class="flex items-center justify-between">
-                            <div><p class="text-gray-500 text-sm">已通过</p><h3 class="text-2xl font-bold mt-1 stats-approved text-green-600">0</h3></div>
+                            <div><p class="text-gray-500 text-sm">材料已通过</p><h3 class="text-2xl font-bold mt-1 stats-approved text-green-600">0</h3></div>
                             <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="fa fa-check-circle"></i></div>
                         </div>
                     </div>
@@ -174,19 +214,18 @@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
                     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                         <div class="flex flex-wrap gap-2">
-                            <button onclick="filterByStatus('all')" id="filter-all" class="px-3 py-1 bg-primary text-white text-sm rounded-lg transition-colors">全部材料</button>
-                            <button onclick="filterByStatus('submitted')" id="filter-submitted" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors"><i class="fa fa-clock-o mr-1"></i>待审核</button>
-                            <button onclick="filterByStatus('approved')" id="filter-approved" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors"><i class="fa fa-check-circle mr-1 text-green-600"></i>已通过</button>
-                            <button onclick="filterByStatus('rejected')" id="filter-rejected" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors"><i class="fa fa-times-circle mr-1 text-red-600"></i>已驳回</button>
-                            <button onclick="filterByStatus('pending')" id="filter-pending" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors"><i class="fa fa-exclamation-circle mr-1 text-orange-500"></i>待提交</button>
+                            <button onclick="filterByStatus('all')" id="filter-all" class="px-3 py-1 bg-primary text-white text-sm rounded-lg transition-colors">全部组会</button>
+                            <button onclick="filterByStatus('pending')" id="filter-pending" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors"><i class="fa fa-exclamation-circle mr-1 text-orange-500"></i>有待提交</button>
+                            <button onclick="filterByStatus('submitted')" id="filter-submitted" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors"><i class="fa fa-clock-o mr-1 text-yellow-600"></i>待审核</button>
+                            <button onclick="filterByStatus('approved')" id="filter-approved" class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors"><i class="fa fa-check-circle mr-1 text-green-600"></i>已完成</button>
                         </div>
                         <div class="flex items-center gap-3 w-full lg:w-auto">
                             <div class="relative flex-1 lg:w-64">
-                                <input type="text" id="material-search" placeholder="搜索组会、汇报人..."
+                                <input type="text" id="meeting-search" placeholder="搜索组会标题..."
                                        class="w-full py-2 pl-10 pr-4 rounded-lg bg-gray-100 border-0 focus:ring-2 focus:ring-primary/30 focus:bg-white">
                                 <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                             </div>
-                            <!-- 布局切换按钮 -->
+                            <!-- 视图切换按钮 -->
                             <div class="bg-gray-100 rounded-lg p-1 flex">
                                 <button id="grid-view-btn" onclick="switchToGrid()" class="layout-btn px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 bg-white text-gray-900 shadow-sm" title="卡片视图">
                                     <i class="fa fa-th-large"></i>
@@ -201,7 +240,7 @@
 
                 <!-- 卡片视图 -->
                 <div id="grid-view">
-                    <div id="materials-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <div id="meetings-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         <div class="text-center py-12 text-gray-500"><p>加载中...</p></div>
                     </div>
                 </div>
@@ -212,14 +251,15 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">组会</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">时间</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">类型</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">汇报人</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">状态</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">文件</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">材料状态</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
                             </tr>
                         </thead>
-                        <tbody id="materials-list-body" class="divide-y divide-gray-100">
-                            <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">加载中...</td></tr>
+                        <tbody id="meetings-list-body" class="divide-y divide-gray-100">
+                            <tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">加载中...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -234,43 +274,85 @@
         </div>
     </footer>
 
+    <!-- 汇报人选择模态框 -->
+    <div id="presenter-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl max-w-lg w-full mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-800">选择汇报人上传材料</h2>
+                    <p id="modal-meeting-title" class="text-sm text-gray-500"></p>
+                </div>
+                <button onclick="closePresenterModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div id="presenters-list" class="space-y-3">
+                    <p class="text-sm text-gray-400">加载中...</p>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+                <button onclick="closePresenterModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- 上传材料模态框 -->
     <div id="upload-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-        <div class="bg-white rounded-xl max-w-md w-full mx-4">
+        <div class="bg-white rounded-xl max-w-md w-full mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-800">上传汇报材料</h2>
+                <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
             <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-bold">上传汇报材料</h2>
-                    <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-600"><i class="fa fa-times text-xl"></i></button>
-                </div>
                 <div id="upload-info" class="mb-4 p-3 bg-gray-50 rounded-lg text-sm">
                     <p><strong>组会：</strong><span id="upload-meeting-title"></span></p>
                     <p><strong>汇报人：</strong><span id="upload-presenter-name"></span></p>
                 </div>
                 <form id="upload-form">
                     <input type="hidden" id="upload-presenter-id">
+                    <input type="hidden" id="upload-meeting-id">
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">选择文件</label>
                         <input type="file" id="upload-file-input" accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
                         <p class="text-xs text-gray-500 mt-1">支持 PDF、PPT、DOC、XLS 格式，单个文件最大50MB</p>
                     </div>
                 </form>
-                <div class="flex justify-end gap-3 mt-6">
-                    <button onclick="closeUploadModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">取消</button>
-                    <button id="upload-submit-btn" onclick="submitUpload()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"><i class="fa fa-upload mr-1"></i>上传</button>
+                <!-- 已上传文件列表 -->
+                <div id="existing-files" class="mb-4 hidden">
+                    <p class="text-sm font-medium text-gray-700 mb-2">已上传文件</p>
+                    <div id="files-list" class="space-y-2"></div>
                 </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                <button onclick="closeUploadModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">取消</button>
+                <button id="upload-submit-btn" onclick="submitUpload()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                    <i class="fa fa-upload mr-1"></i>上传
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- 材料详情模态框 -->
-    <div id="detail-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-        <div class="bg-white rounded-xl max-w-lg w-full mx-4">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-bold">材料详情</h2>
-                    <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600"><i class="fa fa-times text-xl"></i></button>
-                </div>
-                <div id="detail-content"></div>
+    <!-- 组会详情模态框 -->
+    <div id="material-detail-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl max-w-2xl w-full mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-800">组会材料详情</h2>
+                <button onclick="closeMaterialDetailModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6" id="material-detail-content">
+                <!-- 动态填充内容 -->
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+                <button onclick="closeMaterialDetailModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
+                    关闭
+                </button>
             </div>
         </div>
     </div>
@@ -278,20 +360,45 @@
     <!-- JavaScript -->
     <script>
         const API_BASE_URL = 'http://localhost:8081';
-        let allMaterialsCache = [];
+        let allMeetingsCache = [];
         let currentStatusFilter = 'all';
         let currentSearchKeyword = '';
+        let currentMeetingId = null;
         let currentUserRole = '{{ user.role }}';
         let currentUserId = {{ user.id }};
 
+        // Toast提示函数
+        function showToast(message, type = 'success', duration = 2000) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                warning: 'fa-exclamation-circle',
+                info: 'fa-info-circle'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fa ${icons[type] || icons.info}"></i>
+                <span class="toast-content">${message}</span>
+            `;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.style.animation = 'slideUp 0.3s ease-out forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, duration);
+        }
+
         function getAuthHeaders() {
             const token = localStorage.getItem('session_token');
-            const headers = {
-                'Content-Type': 'application/json'
-            };
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
             return headers;
         }
 
@@ -299,232 +406,250 @@
             return localStorage.getItem('session_token');
         }
 
-        // 加载汇报材料列表
-        async function loadMaterials() {
-            const container = document.getElementById('materials-container');
+        // 加载组会列表（带汇报人材料状态）
+        async function loadMeetings() {
+            const container = document.getElementById('meetings-container');
             container.innerHTML = '<div class="text-center py-12 text-gray-500"><p>加载中...</p></div>';
 
             try {
                 const params = new URLSearchParams();
-                if (currentStatusFilter !== 'all') params.append('status', currentStatusFilter);
+                if (currentStatusFilter !== 'all') params.append('material_status', currentStatusFilter);
+                if (currentSearchKeyword) params.append('search', currentSearchKeyword);
 
-                const response = await fetch(`${API_BASE_URL}/api/materials?${params.toString()}`, {
+                const response = await fetch(`${API_BASE_URL}/api/materials/meetings?${params.toString()}`, {
                     credentials: 'include',
                     headers: getAuthHeaders()
                 });
 
                 const result = await response.json();
-                console.log('材料列表响应:', result);
+                console.log('组会材料列表响应:', result);
 
                 if (result.success) {
-                    allMaterialsCache = result.data.materials;
+                    allMeetingsCache = result.data.meetings;
                     updateStats(result.data.stats);
-                    applyFiltersAndRender();
+                    renderMeetingCards(allMeetingsCache);
+                    renderMeetingTable(allMeetingsCache);
+                    updateFilterButtons();
+
+                    // 恢复保存的视图模式
+                    const savedMode = localStorage.getItem('materials_view_mode') || 'grid';
+                    if (savedMode !== currentViewMode) {
+                        currentViewMode = savedMode;
+                        applyViewLayout(savedMode);
+                    }
                 } else {
                     container.innerHTML = `<div class="text-center py-12 text-gray-500"><p>${result.message || '加载失败'}</p></div>`;
                 }
             } catch (e) {
-                console.error('加载材料失败:', e);
+                console.error('加载组会材料失败:', e);
                 container.innerHTML = '<div class="text-center py-12 text-gray-500"><p>网络错误，请刷新重试</p></div>';
             }
         }
 
         // 更新统计卡片
         function updateStats(stats) {
-            document.querySelector('.stats-total').textContent = stats.total || 0;
+            document.querySelector('.stats-total').textContent = stats.total_meetings || 0;
             document.querySelector('.stats-pending').textContent = stats.pending || 0;
             document.querySelector('.stats-submitted').textContent = stats.submitted || 0;
             document.querySelector('.stats-approved').textContent = stats.approved || 0;
         }
 
-        // 应用筛选并渲染
-        function applyFiltersAndRender() {
-            let filtered = allMaterialsCache;
+        // 渲染组会卡片
+        function renderMeetingCards(meetings) {
+            const container = document.getElementById('meetings-container');
 
-            // 关键词搜索
-            if (currentSearchKeyword) {
-                const kw = currentSearchKeyword.toLowerCase();
-                filtered = filtered.filter(m =>
-                    (m.meeting_title && m.meeting_title.toLowerCase().includes(kw)) ||
-                    (m.username && m.username.toLowerCase().includes(kw))
-                );
-            }
-
-            renderMaterialList(filtered);
-            renderMaterialTable(filtered);
-            updateFilterButtons();
-
-            // 应用保存的视图模式
-            const savedMode = getSavedViewMode();
-            if (savedMode !== currentViewMode) {
-                currentViewMode = savedMode;
-                applyLayout(savedMode);
-            }
-        }
-
-        // 渲染表格视图（列表模式）
-        function renderMaterialTable(materials) {
-            const tbody = document.getElementById('materials-list-body');
-            if (!tbody) return;
-
-            if (!materials || materials.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">暂无材料</td></tr>';
+            if (!meetings || meetings.length === 0) {
+                let msg = '暂无组会';
+                if (currentSearchKeyword) msg = `未找到包含 "${currentSearchKeyword}" 的组会`;
+                container.innerHTML = `<div class="text-center py-12 text-gray-500"><p>${msg}</p></div>`;
                 return;
             }
 
-            const statusClassMap = {
-                'pending': 'bg-orange-100 text-orange-600',
-                'submitted': 'bg-yellow-100 text-yellow-700',
-                'approved': 'bg-green-100 text-green-700',
-                'rejected': 'bg-red-100 text-red-700'
-            };
-            const statusTextMap = {
-                'pending': '待提交',
-                'submitted': '待审核',
-                'approved': '已通过',
-                'rejected': '已驳回'
-            };
+            container.innerHTML = meetings.map(m => {
+                const statusText = m.status === 'scheduled' ? '待召开' : (m.status === 'ongoing' ? '进行中' : (m.status === 'completed' ? '已召开' : '已废弃'));
+                const statusClass = m.status === 'scheduled' ? 'bg-blue-100 text-blue-700' : (m.status === 'ongoing' ? 'bg-green-100 text-green-700' : (m.status === 'completed' ? 'bg-gray-100 text-gray-700' : 'bg-red-100 text-red-700'));
+                const typeText = m.meeting_type === 'regular' ? '常规组会' : (m.meeting_type === 'paper_reading' ? '论文研读' : '专题讨论');
+                const typeColor = m.meeting_type === 'regular' ? 'from-blue-500 to-blue-600' : (m.meeting_type === 'paper_reading' ? 'from-purple-500 to-purple-600' : 'from-teal-500 to-teal-600');
 
-            tbody.innerHTML = materials.map(m => {
-                const statusClass = statusClassMap[m.status] || 'bg-gray-100 text-gray-600';
-                const statusText = statusTextMap[m.status] || '待提交';
-                const scheduledDate = m.meeting_scheduled_at ? new Date(m.meeting_scheduled_at).toLocaleDateString('zh-CN') : '待定';
-                const filesHtml = m.files && m.files.length > 0
-                    ? m.files.map(f => `<button onclick="downloadFile(${f.id})" class="text-xs text-primary hover:underline mr-2">${f.filename}</button>`).join('')
-                    : '<span class="text-xs text-orange-500">待上传</span>';
+                const date = new Date(m.scheduled_at);
+                const formattedDate = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+                const formattedTime = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+
+                // 汇报人材料统计
+                const presenters = m.presenters || [];
+                const pendingCount = presenters.filter(p => p.material_status === 'pending').length;
+                const submittedCount = presenters.filter(p => p.material_status === 'submitted').length;
+                const approvedCount = presenters.filter(p => p.material_status === 'approved').length;
+
+                // 材料进度条
+                const totalPresenters = presenters.length;
+                const approvedPercent = totalPresenters > 0 ? (approvedCount / totalPresenters * 100) : 0;
+
+                // 材料状态徽章
+                let materialBadge = '';
+                if (pendingCount > 0) {
+                    materialBadge = `<span class="bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded-full">${pendingCount}人待提交</span>`;
+                } else if (submittedCount > 0) {
+                    materialBadge = `<span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full">${submittedCount}人待审核</span>`;
+                } else if (approvedCount === totalPresenters && totalPresenters > 0) {
+                    materialBadge = `<span class="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded-full">全部完成</span>`;
+                }
+
+                return `
+                <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group h-full flex flex-col">
+                    <!-- 卡片顶部渐变条 -->
+                    <div class="h-2 bg-gradient-to-r ${typeColor}"></div>
+
+                    <!-- 卡片主体 -->
+                    <div class="p-5 flex-1 flex flex-col">
+                        <!-- 状态和类型标签 -->
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="${statusClass} text-xs px-2 py-0.5 rounded-full font-medium">${statusText}</span>
+                            <span class="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full">${typeText}</span>
+                            ${materialBadge}
+                        </div>
+
+                        <!-- 标题 -->
+                        <h3 class="text-base font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors">${m.title}</h3>
+
+                        <!-- 时间地点 -->
+                        <div class="flex items-center gap-4 text-sm text-gray-500 mb-3">
+                            <span class="flex items-center gap-1">
+                                <i class="fa fa-calendar text-gray-400"></i>
+                                ${formattedDate}
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <i class="fa fa-clock-o text-gray-400"></i>
+                                ${formattedTime}
+                            </span>
+                        </div>
+
+                        ${m.location ? `<div class="flex items-center gap-1 text-sm text-gray-500 mb-3">
+                            <i class="fa fa-map-marker text-gray-400"></i>
+                            <span class="truncate">${m.location}</span>
+                        </div>` : '<div class="flex items-center gap-1 text-sm text-gray-400 mb-3 h-5"><span>地点待定</span></div>'}
+
+                        <!-- 汇报人数量 -->
+                        <div class="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                            <i class="fa fa-users text-gray-400"></i>
+                            <span>${presenters.length} 位汇报人</span>
+                        </div>
+
+                        <!-- 材料提交进度 -->
+                        ${totalPresenters > 0 ? `
+                        <div class="mt-auto">
+                            <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                <span>材料提交进度</span>
+                                <span>${approvedCount}/${totalPresenters}</span>
+                            </div>
+                            <div class="w-full bg-gray-100 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full transition-all" style="width: ${approvedPercent}%"></div>
+                            </div>
+                        </div>
+                        ` : '<p class="text-xs text-gray-400 mt-auto"><i class="fa fa-user-o mr-1"></i>暂无汇报人</p>'}
+
+                        <!-- 底部操作按钮 -->
+                        <div class="mt-3 pt-3 border-t border-gray-100 flex justify-center gap-3">
+                            <button onclick="event.stopPropagation(); openMaterialDetailModal(${m.id})" class="flex items-center gap-1 px-3 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors text-sm">
+                                <i class="fa fa-eye"></i> 详情
+                            </button>
+                            <button onclick="event.stopPropagation(); openPresenterModal(${m.id}, '${m.title.replace(/'/g, "\\'")}')\" class="flex items-center gap-1 px-3 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors text-sm">
+                                <i class="fa fa-upload"></i> 上传
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // 渲染列表视图表格
+        function renderMeetingTable(meetings) {
+            const tbody = document.getElementById('meetings-list-body');
+            if (!tbody) return;
+
+            if (!meetings || meetings.length === 0) {
+                let msg = '暂无组会';
+                if (currentSearchKeyword) msg = `未找到包含 "${currentSearchKeyword}" 的组会`;
+                tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">${msg}</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = meetings.map(m => {
+                const statusText = m.status === 'scheduled' ? '待召开' : (m.status === 'ongoing' ? '进行中' : (m.status === 'completed' ? '已召开' : '已废弃'));
+                const statusClass = m.status === 'scheduled' ? 'bg-blue-100 text-blue-700' : (m.status === 'ongoing' ? 'bg-green-100 text-green-700' : (m.status === 'completed' ? 'bg-gray-100 text-gray-700' : 'bg-red-100 text-red-700'));
+                const typeText = m.meeting_type === 'regular' ? '常规组会' : (m.meeting_type === 'paper_reading' ? '论文研读' : '专题讨论');
+
+                const date = new Date(m.scheduled_at);
+                const formattedDate = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+
+                const presenters = m.presenters || [];
+                const presenterNames = presenters.length > 0
+                    ? presenters.slice(0, 3).map(p => p.name || p.user?.username || '未知').join(', ') + (presenters.length > 3 ? ` 等${presenters.length}人` : '')
+                    : '暂无';
+
+                // 材料状态
+                const pendingCount = presenters.filter(p => p.material_status === 'pending').length;
+                const submittedCount = presenters.filter(p => p.material_status === 'submitted').length;
+                const approvedCount = presenters.filter(p => p.material_status === 'approved').length;
+
+                let materialStatusText = '';
+                let materialStatusClass = '';
+                if (pendingCount > 0) {
+                    materialStatusText = `${pendingCount}人待提交`;
+                    materialStatusClass = 'bg-orange-100 text-orange-600';
+                } else if (submittedCount > 0) {
+                    materialStatusText = `${submittedCount}人待审核`;
+                    materialStatusClass = 'bg-yellow-100 text-yellow-700';
+                } else if (approvedCount === presenters.length && presenters.length > 0) {
+                    materialStatusText = '全部完成';
+                    materialStatusClass = 'bg-green-100 text-green-600';
+                } else {
+                    materialStatusText = '暂无汇报人';
+                    materialStatusClass = 'bg-gray-100 text-gray-500';
+                }
 
                 return `
                 <tr class="hover:bg-gray-50">
                     <td class="px-4 py-3">
-                        <div class="font-medium text-gray-800">${m.meeting_title || '未命名组会'}</div>
-                        <div class="text-xs text-gray-400">${scheduledDate}</div>
+                        <div class="font-medium text-gray-800">${m.title}</div>
+                        ${m.description ? `<div class="text-xs text-gray-400 mt-1 truncate max-w-xs">${m.description}</div>` : ''}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-500">${formattedDate}</td>
+                    <td class="px-4 py-3 text-sm text-gray-500">${typeText}</td>
+                    <td class="px-4 py-3 text-sm text-gray-500">${presenterNames}</td>
+                    <td class="px-4 py-3">
+                        <span class="${materialStatusClass} text-xs px-2 py-1 rounded-full">${materialStatusText}</span>
                     </td>
                     <td class="px-4 py-3">
-                        <div class="text-gray-700">${m.username || '未知'}</div>
-                        <div class="text-xs text-gray-400">${m.presenter_type === 'assigned' ? '导师指定' : '主动报名'}</div>
-                    </td>
-                    <td class="px-4 py-3">
-                        <span class="${statusClass} text-xs px-2 py-1 rounded-full">${statusText}</span>
-                    </td>
-                    <td class="px-4 py-3">
-                        <div>${filesHtml}</div>
-                    </td>
-                    <td class="px-4 py-3">
-                        <div class="flex gap-2">
-                            <button onclick="openUploadModal(${m.id}, '${m.meeting_title || ''}', '${m.username || ''}')" class="text-primary hover:underline text-sm">上传</button>
-                            <button onclick="goToMeetingRecord(${m.meeting_id})" class="text-purple-600 hover:underline text-sm">记录</button>
+                        <div class="flex items-center gap-2">
+                            <button onclick="openMaterialDetailModal(${m.id})" class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center justify-center transition-colors" title="查看详情">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                            <button onclick="openPresenterModal(${m.id}, '${m.title.replace(/'/g, "\\'")}')\" class="w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 flex items-center justify-center transition-colors" title="上传材料">
+                                <i class="fa fa-upload"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>`;
             }).join('');
         }
 
-        // 渲染材料列表
-        function renderMaterialList(materials) {
-            const container = document.getElementById('materials-container');
-
-            if (!materials || materials.length === 0) {
-                let msg = '暂无汇报材料';
-                if (currentSearchKeyword) msg = `未找到包含 "${currentSearchKeyword}" 的材料`;
-                container.innerHTML = `<div class="text-center py-12 text-gray-500"><p>${msg}</p></div>`;
-                return;
-            }
-
-            container.innerHTML = materials.map(m => {
-                const statusClassMap = {
-                    'pending': 'bg-orange-100 text-orange-600',
-                    'submitted': 'bg-yellow-100 text-yellow-700',
-                    'approved': 'bg-green-100 text-green-700',
-                    'rejected': 'bg-red-100 text-red-700'
-                };
-                const statusClass = statusClassMap[m.status] || 'bg-gray-100 text-gray-600';
-
-                const iconClassMap = { 'pdf': 'fa-file-pdf-o text-red-500', 'ppt': 'fa-file-powerpoint-o text-orange-500', 'pptx': 'fa-file-powerpoint-o text-orange-500', 'doc': 'fa-file-word-o text-blue-500', 'docx': 'fa-file-word-o text-blue-500' };
-                const fileType = m.files && m.files[0] ? m.files[0].file_type : 'ppt';
-                const iconClass = iconClassMap[fileType] || 'fa-file-o text-gray-500';
-
-                const meetingTypeMap = { 'regular': '常规组会', 'paper_reading': '论文研读', 'topic_discussion': '专题讨论' };
-                const meetingTypeText = meetingTypeMap[m.meeting_type] || '常规组会';
-
-                const scheduledDate = m.meeting_scheduled_at ? new Date(m.meeting_scheduled_at).toLocaleDateString('zh-CN') : '待定';
-
-                return `
-                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:shadow-md transition-shadow">
-                    <div class="flex justify-between items-start mb-3">
-                        <span class="${statusClass} text-xs px-2 py-0.5 rounded-full">${m.status_text}</span>
-                        <i class="fa ${iconClass} text-xl"></i>
-                    </div>
-                    <h4 class="font-semibold text-gray-800 mb-1">${m.meeting_title || '未命名组会'}</h4>
-                    <p class="text-xs text-gray-400 mb-2">${meetingTypeText} · ${scheduledDate}</p>
-                    <p class="text-sm text-gray-500 mb-4 line-clamp-2">
-                        汇报时长：${m.duration_minutes}分钟 · 类型：${m.presenter_type === 'assigned' ? '导师指定' : '主动报名'}
-                    </p>
-                    <div class="flex items-center justify-between text-sm text-gray-500 mb-3">
-                        <div class="flex items-center gap-2">
-                            <i class="fa fa-user-o"></i>
-                            <span>${m.username || '未知'}</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            ${m.files && m.files.length > 0 ? `<i class="fa fa-paperclip"></i><span>${m.files.length}个文件</span>` : '<span class="text-orange-500">待上传</span>'}
-                        </div>
-                    </div>
-                    <!-- 文件列表 -->
-                    ${m.files && m.files.length > 0 ? `
-                    <div class="mb-3 p-2 bg-gray-50 rounded">
-                        ${m.files.map(f => `
-                            <div class="flex items-center justify-between py-1">
-                                <span class="text-sm text-gray-700"><i class="fa fa-file-o mr-1"></i>${f.filename}</span>
-                                <button onclick="downloadFile(${f.id})" class="text-xs text-primary hover:underline"><i class="fa fa-download"></i></button>
-                            </div>
-                        `).join('')}
-                    </div>
-                    ` : ''}
-                    <!-- 状态选择（仅本人、导师、管理员可见） -->
-                    ${m.user_id === currentUserId || currentUserRole === 'admin' || currentUserRole === 'teacher' ? `
-                    <div class="mt-3 pt-3 border-t border-gray-100">
-                        <label class="text-xs text-gray-500 mb-1 block">审核状态：</label>
-                        <select onchange="updateMaterialStatus(${m.id}, this.value)"
-                            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                            <option value="pending" ${m.status === 'pending' ? 'selected' : ''}>待提交</option>
-                            <option value="submitted" ${m.status === 'submitted' ? 'selected' : ''}>待审核</option>
-                            <option value="approved" ${m.status === 'approved' ? 'selected' : ''}>已通过</option>
-                            <option value="rejected" ${m.status === 'rejected' ? 'selected' : ''}>已驳回</option>
-                        </select>
-                    </div>
-                    ` : ''}
-                    <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between gap-2 flex-wrap">
-                        <button onclick="viewMaterialDetail(${m.id})" class="text-gray-400 hover:text-primary px-2"><i class="fa fa-eye"></i> 查看</button>
-                        <button onclick="openUploadModal(${m.id}, '${m.meeting_title || ''}', '${m.username || ''}')" class="text-gray-400 hover:text-primary px-2"><i class="fa fa-upload"></i> 上传</button>
-                        <button onclick="goToMeetingRecord(${m.meeting_id})" class="text-gray-400 hover:text-purple-600 px-2"><i class="fa fa-comments-o"></i> 记录</button>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        // 状态筛选
-        function filterByStatus(status) {
-            currentStatusFilter = status;
-            currentSearchKeyword = '';
-            document.getElementById('material-search').value = '';
-            loadMaterials();
-        }
-
-        // 布局切换函数
+        // 视图切换
         let currentViewMode = 'grid';
 
         function switchToGrid() {
             currentViewMode = 'grid';
-            applyLayout('grid');
+            applyViewLayout('grid');
             localStorage.setItem('materials_view_mode', 'grid');
         }
 
         function switchToList() {
             currentViewMode = 'list';
-            applyLayout('list');
+            applyViewLayout('list');
             localStorage.setItem('materials_view_mode', 'list');
         }
 
-        function applyLayout(layout) {
+        function applyViewLayout(layout) {
             const gridView = document.getElementById('grid-view');
             const listView = document.getElementById('list-view');
             const gridBtn = document.getElementById('grid-view-btn');
@@ -547,80 +672,116 @@
             }
         }
 
-        function getSavedViewMode() {
-            return localStorage.getItem('materials_view_mode') || 'grid';
-        }
+        // 打开汇报人选择模态框
+        async function openPresenterModal(meetingId, meetingTitle) {
+            currentMeetingId = meetingId;
+            document.getElementById('modal-meeting-title').textContent = meetingTitle;
 
-        // 搜索功能
-        function handleSearch() {
-            currentSearchKeyword = document.getElementById('material-search').value.trim();
-            applyFiltersAndRender();
-        }
-
-        // 更新筛选按钮样式
-        function updateFilterButtons() {
-            ['filter-all', 'filter-pending', 'filter-submitted', 'filter-approved', 'filter-rejected'].forEach(id => {
-                const btn = document.getElementById(id);
-                if (!btn) return;
-                if (id === `filter-${currentStatusFilter}`) {
-                    btn.className = 'px-3 py-1 bg-primary text-white text-sm rounded-lg transition-colors';
-                } else {
-                    btn.className = 'px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors';
-                }
-            });
-        }
-
-        // 查看详情
-        async function viewMaterialDetail(presenterId) {
-            const m = allMaterialsCache.find(item => item.id === presenterId);
-            if (!m) return;
-
-            const filesHtml = m.files && m.files.length > 0
-                ? m.files.map(f => `<div class="flex items-center gap-2 p-2 bg-gray-50 rounded"><i class="fa fa-file-o"></i><span>${f.filename}</span><span class="text-xs text-gray-400">${(f.file_size/1024).toFixed(1)}KB</span></div>`).join('')
-                : '<p class="text-gray-400">暂无文件</p>';
-
-            const modal = document.getElementById('detail-modal');
-            document.getElementById('detail-content').innerHTML = `
-                <div class="space-y-4">
-                    <div class="flex items-center gap-2">
-                        <span class="px-2 py-1 rounded text-xs ${m.status === 'approved' ? 'bg-green-100 text-green-700' : m.status === 'submitted' ? 'bg-yellow-100 text-yellow-700' : m.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-600'}">${m.status_text}</span>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500">组会标题</p>
-                        <p class="font-medium">${m.meeting_title || '未命名'}</p>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <p class="text-sm text-gray-500">汇报人</p>
-                            <p class="font-medium">${m.username || '未知'}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500">时长</p>
-                            <p class="font-medium">${m.duration_minutes}分钟</p>
-                        </div>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500 mb-2">关联文件</p>
-                        ${filesHtml}
-                    </div>
-                </div>
-            `;
+            const modal = document.getElementById('presenter-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+
+            // 加载汇报人列表
+            await loadPresentersForModal(meetingId);
         }
 
-        function closeDetailModal() {
-            const modal = document.getElementById('detail-modal');
+        function closePresenterModal() {
+            const modal = document.getElementById('presenter-modal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+            currentMeetingId = null;
         }
 
-        // 上传材料
-        function openUploadModal(presenterId, meetingTitle, presenterName) {
+        // 加载汇报人列表
+        async function loadPresentersForModal(meetingId) {
+            const container = document.getElementById('presenters-list');
+            container.innerHTML = '<p class="text-sm text-gray-400">加载中...</p>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/presenters`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const presenters = result.data.presenters;
+                    if (presenters.length === 0) {
+                        container.innerHTML = '<p class="text-sm text-gray-400">该组会暂无汇报人，请先在组会安排中添加汇报人</p>';
+                        return;
+                    }
+                    renderPresentersList(presenters, meetingId);
+                } else {
+                    container.innerHTML = `<p class="text-sm text-red-400">${result.message || '加载失败'}</p>`;
+                }
+            } catch (e) {
+                console.error('加载汇报人失败:', e);
+                container.innerHTML = '<p class="text-sm text-red-400">网络错误</p>';
+            }
+        }
+
+        // 渲染汇报人列表
+        function renderPresentersList(presenters, meetingId) {
+            const container = document.getElementById('presenters-list');
+
+            const statusClassMap = {
+                'pending': 'bg-orange-100 text-orange-600',
+                'submitted': 'bg-yellow-100 text-yellow-700',
+                'approved': 'bg-green-100 text-green-700',
+                'rejected': 'bg-red-100 text-red-700'
+            };
+            const statusTextMap = {
+                'pending': '待提交',
+                'submitted': '待审核',
+                'approved': '已通过',
+                'rejected': '已驳回'
+            };
+
+            container.innerHTML = presenters.map(p => {
+                const statusClass = statusClassMap[p.material_status] || 'bg-gray-100 text-gray-600';
+                const statusText = statusTextMap[p.material_status] || '待提交';
+                const presenterName = p.user.real_name || p.user.username;
+                const filesHtml = p.files && p.files.length > 0
+                    ? p.files.map(f => `<span class="text-xs text-gray-500 mr-2"><i class="fa fa-file-o"></i>${f.filename}</span>`).join('')
+                    : '<span class="text-xs text-orange-500">未上传</span>';
+
+                return `
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                            <i class="fa fa-user"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-800">${presenterName}</p>
+                            <p class="text-xs text-gray-500">${p.duration_minutes}分钟 · ${p.presenter_type === 'assigned' ? '导师指定' : '主动报名'}</p>
+                            <div class="mt-1">${filesHtml}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="${statusClass} text-xs px-2 py-1 rounded-full">${statusText}</span>
+                        <button onclick="openUploadModal(${p.id}, ${meetingId}, '${presenterName.replace(/'/g, "\\'")}')\"
+                            class="px-3 py-1 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-1">
+                            <i class="fa fa-upload"></i> 上传
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // 打开上传模态框
+        async function openUploadModal(presenterId, meetingId, presenterName) {
             document.getElementById('upload-presenter-id').value = presenterId;
-            document.getElementById('upload-meeting-title').textContent = meetingTitle;
+            document.getElementById('upload-meeting-id').value = meetingId;
             document.getElementById('upload-presenter-name').textContent = presenterName;
-            document.getElementById('upload-file-input').value = '';
+
+            // 获取组会标题
+            const meeting = allMeetingsCache.find(m => m.id === meetingId);
+            document.getElementById('upload-meeting-title').textContent = meeting ? meeting.title : '';
+
+            // 加载已上传文件
+            await loadExistingFiles(presenterId);
+
             const modal = document.getElementById('upload-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -630,109 +791,112 @@
             const modal = document.getElementById('upload-modal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+            document.getElementById('upload-file-input').value = '';
         }
 
+        // 加载已上传文件
+        async function loadExistingFiles(presenterId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/materials/${presenterId}/files`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+
+                const result = await response.json();
+                const existingFilesDiv = document.getElementById('existing-files');
+                const filesListDiv = document.getElementById('files-list');
+
+                if (result.success && result.files && result.files.length > 0) {
+                    existingFilesDiv.classList.remove('hidden');
+                    filesListDiv.innerHTML = result.files.map(f => `
+                        <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                            <span class="text-sm text-gray-700"><i class="fa fa-file-o mr-1 text-gray-400"></i>${f.filename}</span>
+                            <div class="flex gap-2">
+                                <button onclick="downloadFile(${f.id}, '${f.filename}')\" class="text-xs text-primary hover:underline">
+                                    <i class="fa fa-download"></i>
+                                </button>
+                                <button onclick="deleteFile(${f.id})" class="text-xs text-red-500 hover:underline">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    existingFilesDiv.classList.add('hidden');
+                    filesListDiv.innerHTML = '';
+                }
+            } catch (e) {
+                console.error('加载文件失败:', e);
+            }
+        }
+
+        // 上传文件
         async function submitUpload() {
             const presenterId = document.getElementById('upload-presenter-id').value;
+            const meetingId = document.getElementById('upload-meeting-id').value;
             const fileInput = document.getElementById('upload-file-input');
-            const submitBtn = document.getElementById('upload-submit-btn');
+            const uploadBtn = document.getElementById('upload-submit-btn');
 
-            if (!fileInput.files[0]) {
-                alert('请选择文件');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showToast('请选择文件', 'warning');
                 return;
             }
 
             const file = fileInput.files[0];
             if (file.size > 50 * 1024 * 1024) {
-                alert('文件大小不能超过50MB');
+                showToast('文件大小不能超过50MB', 'warning');
                 return;
             }
 
-            try {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 上传中...';
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 上传中...';
 
+            try {
                 const formData = new FormData();
                 formData.append('file', file);
-
-                // 使用 cookie 认证，不需要 Authorization header
-                const token = localStorage.getItem('session_token');
-                const headers = {};
-                if (token) {
-                    headers['Authorization'] = `Bearer ${token}`;
-                }
+                formData.append('presenter_id', presenterId);
+                formData.append('meeting_id', meetingId);
 
                 const response = await fetch(`${API_BASE_URL}/api/materials/${presenterId}/files`, {
                     method: 'POST',
-                    headers: headers,
                     credentials: 'include',
                     body: formData
                 });
 
                 const result = await response.json();
+
                 if (result.success) {
-                    alert('材料上传成功');
+                    showToast('上传成功', 'success');
                     closeUploadModal();
-                    loadMaterials();
+                    // 刷新汇报人列表
+                    await loadPresentersForModal(currentMeetingId);
+                    // 刷新组会列表
+                    loadMeetings();
                 } else {
-                    alert(result.message || '上传失败');
+                    showToast(result.message || '上传失败', 'error');
                 }
             } catch (e) {
                 console.error('上传失败:', e);
-                alert('网络错误，请重试');
+                showToast('网络错误', 'error');
             } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fa fa-upload mr-1"></i>上传';
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i class="fa fa-upload mr-1"></i>上传';
             }
         }
 
-        // 更新材料审核状态
-        async function updateMaterialStatus(presenterId, newStatus) {
-            if (!newStatus) return;
-
+        // 下载文件
+        async function downloadFile(fileId, filename) {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/materials/${presenterId}/status`, {
-                    method: 'PUT',
-                    headers: getAuthHeaders(),
-                    credentials: 'include',
-                    body: JSON.stringify({ status: newStatus })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    loadMaterials();
-                } else {
-                    alert(result.message || '状态更新失败');
-                }
-            } catch (e) {
-                console.error('状态更新失败:', e);
-                alert('网络错误，请重试');
-            }
-        }
-
-        // 下载单个文件（使用fetch携带认证信息）
-        async function downloadFile(fileId) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/meeting_files/${fileId}/download`, {
-                    method: 'GET',
+                const response = await fetch(`${API_BASE_URL}/api/files/${fileId}/download`, {
                     credentials: 'include',
                     headers: getAuthHeaders()
                 });
 
                 if (!response.ok) {
-                    const result = await response.json();
-                    alert(result.message || '下载失败');
+                    showToast('下载失败', 'error');
                     return;
                 }
 
-                // 获取文件名
-                const disposition = response.headers.get('Content-Disposition');
-                let filename = 'download';
-                if (disposition && disposition.includes('filename=')) {
-                    filename = disposition.split('filename=')[1].replace(/"/g, '');
-                }
-
-                // 创建blob并下载
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -744,70 +908,203 @@
                 a.remove();
             } catch (e) {
                 console.error('下载失败:', e);
-                alert('下载失败，请重试');
+                showToast('网络错误', 'error');
             }
         }
 
-        // 跳转到组会记录
-        function goToMeetingRecord(meetingId) {
-            window.location.href = `${API_BASE_URL}/gm_meeting_record`;
-        }
-
-        // 移动端侧边栏
-        function initMobileSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const toggle = document.getElementById('mobile-sidebar-toggle');
-            const close = document.getElementById('mobile-sidebar-close');
-
-            if (toggle) toggle.addEventListener('click', () => { sidebar.classList.remove('-translate-x-full'); document.body.style.overflow = 'hidden'; });
-            if (close) close.addEventListener('click', () => { sidebar.classList.add('-translate-x-full'); document.body.style.overflow = ''; });
-        }
-
-        // 登出
-        async function performLogout() {
+        // 删除文件
+        async function deleteFile(fileId) {
             try {
-                await fetch(`${API_BASE_URL}/api/auth/logout`, { method: 'POST', headers: getAuthHeaders(), credentials: 'include' });
-            } catch (e) {}
-            localStorage.removeItem('session_token');
-            localStorage.removeItem('user_info');
-            window.location.href = `${API_BASE_URL}/login`;
-        }
+                const response = await fetch(`${API_BASE_URL}/api/files/${fileId}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
 
-        // 检查URL中的session_token
-        function checkUrlSessionToken() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const token = urlParams.get('session_token');
-            if (token) {
-                localStorage.setItem('session_token', token);
-                const url = new URL(window.location);
-                url.searchParams.delete('session_token');
-                window.history.replaceState({}, document.title, url);
+                const result = await response.json();
+                if (result.success) {
+                    showToast('文件已删除', 'success');
+                    const presenterId = document.getElementById('upload-presenter-id').value;
+                    await loadExistingFiles(presenterId);
+                    await loadPresentersForModal(currentMeetingId);
+                    loadMeetings();
+                } else {
+                    showToast(result.message || '删除失败', 'error');
+                }
+            } catch (e) {
+                console.error('删除失败:', e);
+                showToast('网络错误', 'error');
             }
         }
 
+        // 组会详情模态框
+        async function openMaterialDetailModal(meetingId) {
+            const meeting = allMeetingsCache.find(m => m.id === meetingId);
+            if (!meeting) {
+                showToast('未找到组会信息', 'error');
+                return;
+            }
+
+            const modal = document.getElementById('material-detail-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // 渲染组会基本信息和汇报人材料状态
+            const content = document.getElementById('material-detail-content');
+
+            const statusText = meeting.status === 'scheduled' ? '待召开' : (meeting.status === 'ongoing' ? '进行中' : (meeting.status === 'completed' ? '已召开' : '已废弃'));
+            const statusClass = meeting.status === 'scheduled' ? 'bg-blue-100 text-blue-700' : (meeting.status === 'ongoing' ? 'bg-green-100 text-green-700' : (meeting.status === 'completed' ? 'bg-gray-100 text-gray-700' : 'bg-red-100 text-red-700'));
+            const typeText = meeting.meeting_type === 'regular' ? '常规组会' : (meeting.meeting_type === 'paper_reading' ? '论文研读' : '专题讨论');
+
+            const date = new Date(meeting.scheduled_at);
+            const formattedDate = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+
+            const presenters = meeting.presenters || [];
+
+            // 汇报人列表HTML
+            const presentersHtml = presenters.length > 0
+                ? presenters.map(p => {
+                    const materialStatusText = p.material_status === 'pending' ? '待提交' : (p.material_status === 'submitted' ? '待审核' : (p.material_status === 'approved' ? '已通过' : '已驳回'));
+                    const materialStatusClass = p.material_status === 'pending' ? 'bg-orange-100 text-orange-600' : (p.material_status === 'submitted' ? 'bg-yellow-100 text-yellow-700' : (p.material_status === 'approved' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'));
+                    const filesHtml = p.files && p.files.length > 0
+                        ? p.files.map(f => `<span class="text-xs text-gray-500 mr-2"><i class="fa fa-file-o"></i>${f.filename}</span>`).join('')
+                        : '<span class="text-xs text-gray-400">未上传</span>';
+
+                    return `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm">
+                                <i class="fa fa-user"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">${p.name || p.user?.username || '未知'}</p>
+                                <p class="text-xs text-gray-500">${p.duration_minutes}分钟 · ${p.presenter_type === 'assigned' ? '导师指定' : '主动报名'}</p>
+                                <div class="mt-1">${filesHtml}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="${materialStatusClass} text-xs px-2 py-1 rounded-full">${materialStatusText}</span>
+                            <button onclick="closeMaterialDetailModal(); openPresenterModal(${meetingId}, '${meeting.title.replace(/'/g, "\\'")}')\" class="px-3 py-1 bg-primary text-white text-sm rounded-lg hover:bg-primary/90">
+                                <i class="fa fa-upload mr-1"></i>上传
+                            </button>
+                        </div>
+                    </div>`;
+                }).join('')
+                : '<p class="text-sm text-gray-400 text-center py-4">暂无汇报人</p>';
+
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <!-- 组会基本信息 -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="${statusClass} text-xs px-2 py-0.5 rounded-full font-medium">${statusText}</span>
+                            <span class="bg-gray-200 text-gray-500 text-xs px-2 py-0.5 rounded-full">${typeText}</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">${meeting.title}</h3>
+                        <div class="flex items-center gap-4 text-sm text-gray-500 mb-2">
+                            <span class="flex items-center gap-1"><i class="fa fa-calendar text-gray-400"></i>${formattedDate}</span>
+                            ${meeting.location ? `<span class="flex items-center gap-1"><i class="fa fa-map-marker text-gray-400"></i>${meeting.location}</span>` : ''}
+                        </div>
+                        ${meeting.description ? `<p class="text-sm text-gray-600">${meeting.description}</p>` : ''}
+                    </div>
+
+                    <!-- 汇报人材料状态 -->
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-700 mb-3">汇报人材料状态 (${presenters.length}人)</h4>
+                        <div class="space-y-2">
+                            ${presentersHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeMaterialDetailModal() {
+            const modal = document.getElementById('material-detail-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // 状态筛选
+        function filterByStatus(status) {
+            currentStatusFilter = status;
+            loadMeetings();
+        }
+
+        function updateFilterButtons() {
+            ['all', 'pending', 'submitted', 'approved'].forEach(s => {
+                const btn = document.getElementById(`filter-${s}`);
+                if (!btn) return;
+                if (s === currentStatusFilter) {
+                    btn.classList.add('bg-primary', 'text-white');
+                    btn.classList.remove('bg-gray-100', 'text-gray-600');
+                } else {
+                    btn.classList.remove('bg-primary', 'text-white');
+                    btn.classList.add('bg-gray-100', 'text-gray-600');
+                }
+            });
+        }
+
+        // 搜索
         document.addEventListener('DOMContentLoaded', function() {
-            checkUrlSessionToken();
-            initMobileSidebar();
-            loadMaterials();
-
-            // 初始化视图模式
-            const savedMode = getSavedViewMode();
-            applyLayout(savedMode);
-
-            // 搜索框
-            const searchInput = document.getElementById('material-search');
+            const searchInput = document.getElementById('meeting-search');
             if (searchInput) {
-                let timeout;
-                searchInput.addEventListener('input', () => {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(handleSearch, 300);
+                let searchTimeout;
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        currentSearchKeyword = this.value.trim();
+                        loadMeetings();
+                    }, 300);
                 });
             }
 
-            // 登出按钮
-            document.getElementById('logout-btn')?.addEventListener('click', e => { e.preventDefault(); performLogout(); });
-            document.getElementById('logout-btn-mobile')?.addEventListener('click', e => { e.preventDefault(); performLogout(); });
+            loadMeetings();
+            initMobileSidebar();
+            initLogout();
         });
+
+        function initMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('mobile-sidebar-toggle');
+            const closeBtn = document.getElementById('mobile-sidebar-close');
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    sidebar.classList.remove('-translate-x-full');
+                });
+            }
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    sidebar.classList.add('-translate-x-full');
+                });
+            }
+        }
+
+        function initLogout() {
+            const logoutBtn = document.getElementById('logout-btn');
+            const logoutBtnMobile = document.getElementById('logout-btn-mobile');
+
+            const doLogout = async () => {
+                try {
+                    await fetch(`${API_BASE_URL}/api/auth/logout`, {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: getAuthHeaders()
+                    });
+                    localStorage.removeItem('session_token');
+                    localStorage.removeItem('user_info');
+                    window.location.href = '/login';
+                } catch (e) {
+                    localStorage.removeItem('session_token');
+                    localStorage.removeItem('user_info');
+                    window.location.href = '/login';
+                }
+            };
+
+            if (logoutBtn) logoutBtn.addEventListener('click', doLogout);
+            if (logoutBtnMobile) logoutBtnMobile.addEventListener('click', doLogout);
+        }
     </script>
 </body>
 </html>

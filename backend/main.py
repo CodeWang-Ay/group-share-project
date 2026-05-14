@@ -4229,7 +4229,7 @@ async def get_meeting_presenters(meeting_id: int, request: Request):
                 "user": {
                     "id": row[2],
                     "username": row[10],
-                    "real_name": row[10],
+                    "real_name": row[10],  # 使用 username 作为显示名
                     "role": row[11],
                     "research_direction": row[12]
                 },
@@ -4522,6 +4522,180 @@ async def get_materials(request: Request):
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"success": False, "message": "获取汇报材料列表失败", "error": "INTERNAL_ERROR"}
+        )
+
+
+@app.get("/api/materials/meetings")
+async def get_meetings_with_materials(request: Request):
+    """
+    获取组会列表及汇报人材料状态API
+    用于汇报材料页面，按组会展示汇报人材料情况
+    """
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 获取查询参数
+        material_status_filter = request.query_params.get("material_status")  # pending, submitted, approved
+        search_keyword = request.query_params.get("search", "")
+
+        # 获取所有组会（排除已废弃的）
+        cursor.execute("""
+            SELECT m.id, m.title, m.scheduled_at, m.meeting_type, m.status, m.location,
+                   m.duration_total, m.description
+            FROM meetings m
+            WHERE m.status != 'cancelled'
+            ORDER BY m.scheduled_at DESC
+        """)
+        meetings_rows = cursor.fetchall()
+
+        meetings = []
+        total_pending = 0
+        total_submitted = 0
+        total_approved = 0
+
+        for row in meetings_rows:
+            meeting = dict(row)
+
+            # 搜索过滤
+            if search_keyword and search_keyword.lower() not in (meeting.get('title', '') or '').lower():
+                continue
+
+            # 获取该组会的汇报人
+            cursor.execute("""
+                SELECT mp.id, mp.user_id, mp.presenter_type, mp.duration_minutes,
+                       mp.material_status, u.username
+                FROM meeting_presenters mp
+                LEFT JOIN users u ON mp.user_id = u.id
+                WHERE mp.meeting_id = ?
+                ORDER BY mp.created_at ASC
+            """, (meeting['id'],))
+            presenters_rows = cursor.fetchall()
+
+            presenters = []
+            meeting_has_pending = False
+            meeting_has_submitted = False
+            meeting_all_approved = True
+
+            for p_row in presenters_rows:
+                presenter = dict(p_row)
+                presenter['user'] = {
+                    'username': presenter.get('username', ''),
+                    'real_name': presenter.get('username', '')  # 使用 username 作为显示名
+                }
+                presenter['name'] = presenter.get('username', '未知')
+
+                # 获取该汇报人的文件
+                cursor.execute("""
+                    SELECT id, filename, file_path, file_size, file_type, uploaded_at
+                    FROM meeting_files
+                    WHERE presenter_id = ? AND filename IS NOT NULL
+                """, (presenter['id'],))
+                files_rows = cursor.fetchall()
+                presenter['files'] = [dict(f) for f in files_rows]
+
+                presenters.append(presenter)
+
+                # 统计材料状态
+                presenter_status = presenter.get('material_status', 'pending')
+                if presenter_status == 'pending':
+                    total_pending += 1
+                    meeting_has_pending = True
+                    meeting_all_approved = False
+                elif presenter_status == 'submitted':
+                    total_submitted += 1
+                    meeting_has_submitted = True
+                    meeting_all_approved = False
+                elif presenter_status == 'approved':
+                    total_approved += 1
+
+            meeting['presenters'] = presenters
+
+            # 按材料状态筛选组会
+            if material_status_filter == 'pending' and not meeting_has_pending:
+                continue
+            elif material_status_filter == 'submitted' and not meeting_has_submitted:
+                continue
+            elif material_status_filter == 'approved' and not meeting_all_approved:
+                continue
+
+            meetings.append(meeting)
+
+        stats = {
+            'total_meetings': len(meetings),
+            'pending': total_pending,
+            'submitted': total_submitted,
+            'approved': total_approved
+        }
+
+        return JSONResponse(
+            content={
+                "success": True,
+                "data": {
+                    "meetings": meetings,
+                    "stats": stats
+                }
+            }
+        )
+    except Exception as e:
+        logger.error(f"获取组会材料列表失败: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": "获取组会材料列表失败", "error": "INTERNAL_ERROR"}
+        )
+
+
+@app.get("/api/materials/{presenter_id}/files")
+async def get_presenter_files(presenter_id: int, request: Request):
+    """
+    获取汇报人的文件列表API
+    """
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT id, filename, file_path, file_size, file_type, uploaded_at
+            FROM meeting_files
+            WHERE presenter_id = ? AND filename IS NOT NULL
+            ORDER BY uploaded_at DESC
+        """, (presenter_id,))
+
+        files = []
+        for row in cursor.fetchall():
+            files.append({
+                "id": row[0],
+                "filename": row[1],
+                "file_path": row[2],
+                "file_size": row[3],
+                "file_type": row[4],
+                "uploaded_at": row[5]
+            })
+
+        conn.close()
+
+        return JSONResponse(
+            content={"success": True, "files": files}
+        )
+    except Exception as e:
+        logger.error(f"获取文件列表失败: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": "获取文件列表失败", "error": "INTERNAL_ERROR"}
         )
 
 
