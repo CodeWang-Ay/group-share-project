@@ -1626,9 +1626,15 @@ async def get_files(request: Request):
             files = FileService.get_files_by_user(current_user.id, limit, offset)
             total = FileService.get_files_count_by_user(current_user.id)
         elif scope == "public":
-            # 获取公开文件
+            # 获取公开文件 + 用户自己的文件
             files = FileService.get_public_files(limit, offset)
-            total = FileService.get_public_files_count()
+            # 合并用户自己的文件（去重）
+            my_files = FileService.get_files_by_user(current_user.id, limit, offset)
+            existing_ids = set(f.id for f in files)
+            for f in my_files:
+                if f.id not in existing_ids:
+                    files.append(f)
+            total = FileService.get_public_files_count() + FileService.get_files_count_by_user(current_user.id)
         elif scope == "all" and current_user.role == "admin":
             # 管理员获取所有文件
             if user_id:
@@ -1656,10 +1662,25 @@ async def get_files(request: Request):
             has_next = page < total_pages
             has_prev = page > 1
 
+            # 获取上传者名字
+            files_data = []
+            with get_db() as conn:
+                cursor = conn.cursor()
+                for file in files:
+                    file_dict = file.to_dict()
+                    # 查询上传者名字
+                    cursor.execute("SELECT username FROM users WHERE id = ?", (file.uploader_id,))
+                    uploader_row = cursor.fetchone()
+                    if uploader_row:
+                        file_dict['uploader_name'] = uploader_row[0]
+                    else:
+                        file_dict['uploader_name'] = '未知用户'
+                    files_data.append(file_dict)
+
             reponse_content = {
                 "success": True,
                 "data": {
-                    "files": [file.to_dict() for file in files],
+                    "files": files_data,
                     "total_files_count": total,
                     "pagination": {
                         "current_page": page,

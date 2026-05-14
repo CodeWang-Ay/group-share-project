@@ -16,8 +16,8 @@ from database.connection import get_db
 class FileService:
     """文件服务类"""
 
-    # 文件上传目录
-    UPLOAD_DIR = Path(__file__).parent.parent / "uploads"
+    # 文件上传目录 - 共享资料统一存放在项目根目录
+    UPLOAD_DIR = Path(__file__).parent.parent.parent / "uploads" / "share_files"
 
     # 允许的文件类型
     ALLOWED_EXTENSIONS = {
@@ -153,9 +153,8 @@ class FileService:
             if not username:
                 return None, "用户不存在"
 
-            # 创建用户专属的上传目录
-            user_upload_dir = cls.UPLOAD_DIR / username
-            user_upload_dir.mkdir(parents=True, exist_ok=True)
+            # 确保上传目录存在
+            cls.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
             # 生成唯一文件名（skip_name_check 时强制使用时间戳前缀）
             if skip_name_check:
@@ -165,7 +164,7 @@ class FileService:
             else:
                 unique_filename = cls.generate_unique_filename(original_filename)
 
-            file_path = user_upload_dir / unique_filename
+            file_path = cls.UPLOAD_DIR / unique_filename
 
             # 保存文件到磁盘
             with open(file_path, 'wb') as f:
