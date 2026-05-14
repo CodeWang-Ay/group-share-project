@@ -1858,18 +1858,27 @@
             }
 
             return materials.map(m => {
+                // 根据是否有文件来判断真实状态
+                const hasFiles = m.files && m.files.length > 0;
+                let actualStatus = m.material_status;
+                if (!hasFiles) {
+                    actualStatus = 'pending'; // 没有文件一律显示待提交
+                } else if (m.material_status === 'pending') {
+                    actualStatus = 'submitted'; // 有文件但状态是pending，显示待审核
+                }
+
                 const statusClass = {
                     'pending': 'text-orange-600',
                     'submitted': 'text-yellow-600',
                     'approved': 'text-green-600',
                     'rejected': 'text-red-600'
-                }[m.material_status] || 'text-gray-600';
+                }[actualStatus] || 'text-gray-600';
                 const statusText = {
                     'pending': '待提交',
                     'submitted': '待审核',
                     'approved': '已通过',
                     'rejected': '已驳回'
-                }[m.material_status] || '';
+                }[actualStatus] || '';
 
                 const filesHtml = m.files && m.files.length > 0
                     ? m.files.map(f => `<button onclick="downloadMeetingFile(${f.id}, '${f.filename}')" class="inline-flex items-center gap-1 text-primary hover:underline mr-2">
@@ -1920,18 +1929,27 @@
             }
 
             return materials.map(m => {
+                // 根据是否有文件来判断真实状态
+                const hasFiles = m.files && m.files.length > 0;
+                let actualStatus = m.material_status;
+                if (!hasFiles) {
+                    actualStatus = 'pending'; // 没有文件一律显示待提交
+                } else if (m.material_status === 'pending') {
+                    actualStatus = 'submitted'; // 有文件但状态是pending，显示待审核
+                }
+
                 const statusClass = {
                     'pending': 'bg-orange-100 text-orange-600',
                     'submitted': 'bg-yellow-100 text-yellow-600',
                     'approved': 'bg-green-100 text-green-600',
                     'rejected': 'bg-red-100 text-red-600'
-                }[m.material_status] || 'bg-gray-100 text-gray-600';
+                }[actualStatus] || 'bg-gray-100 text-gray-600';
                 const statusText = {
                     'pending': '待提交',
                     'submitted': '待审核',
                     'approved': '已通过',
                     'rejected': '已驳回'
-                }[m.material_status] || '';
+                }[actualStatus] || '';
 
                 const filesHtml = m.files && m.files.length > 0
                     ? m.files.map(f => `<button onclick="downloadMeetingFile(${f.id}, '${f.filename}')" class="inline-flex items-center gap-1 text-sm text-primary hover:underline mr-3">

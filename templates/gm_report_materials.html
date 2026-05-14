@@ -475,11 +475,11 @@
                 const formattedDate = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
                 const formattedTime = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
 
-                // 汇报人材料统计
+                // 汇报人材料统计（根据是否有文件来判断真实状态）
                 const presenters = m.presenters || [];
-                const pendingCount = presenters.filter(p => p.material_status === 'pending').length;
-                const submittedCount = presenters.filter(p => p.material_status === 'submitted').length;
-                const approvedCount = presenters.filter(p => p.material_status === 'approved').length;
+                const pendingCount = presenters.filter(p => !(p.files && p.files.length > 0)).length; // 没有文件的都是待提交
+                const submittedCount = presenters.filter(p => p.files && p.files.length > 0 && p.material_status === 'pending').length; // 有文件但状态pending
+                const approvedCount = presenters.filter(p => p.files && p.files.length > 0 && p.material_status === 'approved').length; // 有文件且状态approved
 
                 // 材料进度条
                 const totalPresenters = presenters.length;
@@ -587,10 +587,10 @@
                     ? presenters.slice(0, 3).map(p => p.name || p.user?.username || '未知').join(', ') + (presenters.length > 3 ? ` 等${presenters.length}人` : '')
                     : '暂无';
 
-                // 材料状态
-                const pendingCount = presenters.filter(p => p.material_status === 'pending').length;
-                const submittedCount = presenters.filter(p => p.material_status === 'submitted').length;
-                const approvedCount = presenters.filter(p => p.material_status === 'approved').length;
+                // 材料状态（根据是否有文件来判断真实状态）
+                const pendingCount = presenters.filter(p => !(p.files && p.files.length > 0)).length;
+                const submittedCount = presenters.filter(p => p.files && p.files.length > 0 && p.material_status === 'pending').length;
+                const approvedCount = presenters.filter(p => p.files && p.files.length > 0 && p.material_status === 'approved').length;
 
                 let materialStatusText = '';
                 let materialStatusClass = '';
@@ -739,8 +739,17 @@
             };
 
             container.innerHTML = presenters.map(p => {
-                const statusClass = statusClassMap[p.material_status] || 'bg-gray-100 text-gray-600';
-                const statusText = statusTextMap[p.material_status] || '待提交';
+                // 根据是否有文件来判断真实状态
+                const hasFiles = p.files && p.files.length > 0;
+                let actualStatus = p.material_status;
+                if (!hasFiles) {
+                    actualStatus = 'pending'; // 没有文件一律显示待提交
+                } else if (p.material_status === 'pending') {
+                    actualStatus = 'submitted'; // 有文件但状态是pending，显示待审核
+                }
+
+                const statusClass = statusClassMap[actualStatus] || 'bg-gray-100 text-gray-600';
+                const statusText = statusTextMap[actualStatus] || '待提交';
                 const presenterName = p.user.real_name || p.user.username;
                 const filesHtml = p.files && p.files.length > 0
                     ? p.files.map(f => `<span class="text-xs text-gray-500 mr-2"><i class="fa fa-file-o"></i>${f.filename}</span>`).join('')
@@ -964,8 +973,17 @@
             // 汇报人列表HTML
             const presentersHtml = presenters.length > 0
                 ? presenters.map(p => {
-                    const materialStatusText = p.material_status === 'pending' ? '待提交' : (p.material_status === 'submitted' ? '待审核' : (p.material_status === 'approved' ? '已通过' : '已驳回'));
-                    const materialStatusClass = p.material_status === 'pending' ? 'bg-orange-100 text-orange-600' : (p.material_status === 'submitted' ? 'bg-yellow-100 text-yellow-700' : (p.material_status === 'approved' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'));
+                    // 根据是否有文件来判断真实状态
+                    const hasFiles = p.files && p.files.length > 0;
+                    let actualStatus = p.material_status;
+                    if (!hasFiles) {
+                        actualStatus = 'pending'; // 没有文件一律显示待提交
+                    } else if (p.material_status === 'pending') {
+                        actualStatus = 'submitted'; // 有文件但状态是pending，显示待审核
+                    }
+
+                    const materialStatusText = actualStatus === 'pending' ? '待提交' : (actualStatus === 'submitted' ? '待审核' : (actualStatus === 'approved' ? '已通过' : '已驳回'));
+                    const materialStatusClass = actualStatus === 'pending' ? 'bg-orange-100 text-orange-600' : (actualStatus === 'submitted' ? 'bg-yellow-100 text-yellow-700' : (actualStatus === 'approved' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'));
                     const filesHtml = p.files && p.files.length > 0
                         ? p.files.map(f => `<span class="text-xs text-gray-500 mr-2"><i class="fa fa-file-o"></i>${f.filename}</span>`).join('')
                         : '<span class="text-xs text-gray-400">未上传</span>';
