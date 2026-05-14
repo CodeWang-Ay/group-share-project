@@ -4571,7 +4571,7 @@ async def get_meetings_with_materials(request: Request):
             # 获取该组会的汇报人
             cursor.execute("""
                 SELECT mp.id, mp.user_id, mp.presenter_type, mp.duration_minutes,
-                       mp.material_status, u.username
+                       mp.material_status, mp.status, u.username
                 FROM meeting_presenters mp
                 LEFT JOIN users u ON mp.user_id = u.id
                 WHERE mp.meeting_id = ?
@@ -4696,6 +4696,68 @@ async def get_presenter_files(presenter_id: int, request: Request):
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"success": False, "message": "获取文件列表失败", "error": "INTERNAL_ERROR"}
+        )
+
+
+@app.put("/api/materials/{presenter_id}/confirm")
+async def confirm_presenter_attendance(presenter_id: int, request: Request):
+    """
+    汇报人确认参会API
+    只有被指定的汇报人自己可以确认
+    """
+    current_user = await get_current_user(request)
+    if not current_user:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "message": "请先登录", "error": "NOT_AUTHENTICATED"}
+        )
+
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 获取汇报人信息
+        cursor.execute("""
+            SELECT mp.id, mp.user_id, mp.meeting_id, mp.status, mp.presenter_type
+            FROM meeting_presenters mp
+            WHERE mp.id = ?
+        """, (presenter_id,))
+
+        presenter_row = cursor.fetchone()
+        if not presenter_row:
+            conn.close()
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"success": False, "message": "汇报人记录不存在"}
+            )
+
+        presenter = dict(presenter_row)
+
+        # 只有汇报人自己可以确认参会
+        if presenter['user_id'] != current_user.id:
+            conn.close()
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={"success": False, "message": "只有汇报人本人可以确认参会"}
+            )
+
+        # 更新状态为已确认
+        cursor.execute("""
+            UPDATE meeting_presenters
+            SET status = 'confirmed', updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        """, (presenter_id,))
+
+        conn.commit()
+        conn.close()
+
+        return {"success": True, "message": "已确认参会"}
+
+    except Exception as e:
+        logger.error(f"确认参会失败: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": "服务器错误"}
         )
 
 

@@ -755,6 +755,12 @@
                     ? p.files.map(f => `<span class="text-xs text-gray-500 mr-2"><i class="fa fa-file-o"></i>${f.filename}</span>`).join('')
                     : '<span class="text-xs text-orange-500">未上传</span>';
 
+                // 参会确认状态
+                const confirmStatusClass = p.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-600';
+                const confirmStatusText = p.status === 'confirmed' ? '已确认参会' : '待确认参会';
+                const isCurrentUser = currentUserId && p.user_id === currentUserId;
+                const canConfirm = isCurrentUser && p.status === 'pending';
+
                 return `
                 <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div class="flex items-center gap-3">
@@ -767,15 +773,37 @@
                             <div class="mt-1">${filesHtml}</div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="${confirmStatusClass} text-xs px-2 py-1 rounded-full">${confirmStatusText}</span>
                         <span class="${statusClass} text-xs px-2 py-1 rounded-full">${statusText}</span>
-                        <button onclick="openUploadModal(${p.id}, ${meetingId}, '${presenterName.replace(/'/g, "\\'")}')\"
-                            class="px-3 py-1 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-1">
-                            <i class="fa fa-upload"></i> 上传
-                        </button>
+                        ${canConfirm ? `<button onclick="confirmAttendance(${p.id})" class="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"><i class="fa fa-check"></i> 确认参会</button>` : ''}
+                        ${isCurrentUser ? `<button onclick="openUploadModal(${p.id}, ${meetingId}, '${presenterName.replace(/'/g, "\\'")}')\" class="px-3 py-1 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-1"><i class="fa fa-upload"></i> 上传</button>` : ''}
                     </div>
                 </div>`;
             }).join('');
+        }
+
+        // 确认参会
+        async function confirmAttendance(presenterId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/materials/${presenterId}/confirm`, {
+                    method: 'PUT',
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('已确认参会', 'success');
+                    // 刷新数据
+                    loadMeetings();
+                } else {
+                    showToast(result.message || '确认失败', 'error');
+                }
+            } catch (e) {
+                console.error('确认参会失败:', e);
+                showToast('网络错误', 'error');
+            }
         }
 
         // 打开上传模态框
@@ -988,6 +1016,14 @@
                         ? p.files.map(f => `<span class="text-xs text-gray-500 mr-2"><i class="fa fa-file-o"></i>${f.filename}</span>`).join('')
                         : '<span class="text-xs text-gray-400">未上传</span>';
 
+                    // 参会确认状态
+                    const confirmStatusClass = p.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-600';
+                    const confirmStatusText = p.status === 'confirmed' ? '已确认' : '待确认';
+                    const presenterUserId = p.user_id || p.user?.id;
+                    const isCurrentUser = currentUserId && presenterUserId === currentUserId;
+                    const canConfirm = isCurrentUser && p.status === 'pending';
+                    const presenterId = p.id;
+
                     return `
                     <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div class="flex items-center gap-3">
@@ -1000,11 +1036,10 @@
                                 <div class="mt-1">${filesHtml}</div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2">
+                            <span class="${confirmStatusClass} text-xs px-2 py-1 rounded-full">${confirmStatusText}</span>
                             <span class="${materialStatusClass} text-xs px-2 py-1 rounded-full">${materialStatusText}</span>
-                            <button onclick="closeMaterialDetailModal(); openPresenterModal(${meetingId}, '${meeting.title.replace(/'/g, "\\'")}')\" class="px-3 py-1 bg-primary text-white text-sm rounded-lg hover:bg-primary/90">
-                                <i class="fa fa-upload mr-1"></i>上传
-                            </button>
+                            ${canConfirm ? `<button onclick="confirmAttendance(${presenterId})" class="px-2 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700"><i class="fa fa-check"></i> 确认</button>` : ''}
                         </div>
                     </div>`;
                 }).join('')
