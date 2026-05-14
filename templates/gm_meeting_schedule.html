@@ -2791,6 +2791,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             // 初始化视图模式
             const savedMode = getSavedViewMode();
+            currentViewMode = savedMode;  // 关键：设置当前视图模式变量
             applyLayout(savedMode);
 
             // 卡片视图分页事件
