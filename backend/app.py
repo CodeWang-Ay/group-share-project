@@ -153,7 +153,7 @@ async def startup_event():
 async def shutdown_event():
     logger.info("应用关闭")
 
-
+# 模型入口函数
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8081)
