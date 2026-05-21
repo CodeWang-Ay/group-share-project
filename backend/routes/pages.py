@@ -1,6 +1,89 @@
 """
-页面路由
-所有 HTML 页面的路由端点
+================================================================================
+页面路由模块 (routes/pages.py)
+================================================================================
+
+模块名称: backend/routes/pages.py
+功能描述: 所有 HTML 页面的路由端点，用于前端页面渲染
+
+页面路由列表 (共15个):
+    GET /                    - 主页面（根据登录状态显示）
+        未登录: 显示登录页面
+        已登录: 显示仪表板首页
+
+    GET /login               - 登录页面
+        渲染: login.html
+
+    GET /register            - 注册页面
+        渲染: register.html
+
+    GET /rm_share_file       - 共享文件页面 (资源管理)
+        渲染: rm_share_file.html
+        需要登录
+
+    GET /tm_user_management  - 成员管理页面 (团队管理)
+        渲染: tm_user_management.html
+        需要登录
+
+    GET /tm_academic_website - 学术网站页面 (团队管理)
+        渲染: tm_academic_website.html
+        需要登录
+
+    GET /tm_research_progress - 研究进展页面 (团队管理)
+        渲染: tm_research_progress.html
+        需要登录
+
+    GET /rm_paper_database   - 文献库页面 (资源管理)
+        渲染: rm_paper_database.html
+        需要登录
+
+    GET /gm_meeting_schedule - 组会安排页面 (组会管理)
+        渲染: gm_meeting_schedule.html
+        需要登录
+
+    GET /gm_report_materials - 汇报材料页面 (组会管理)
+        渲染: gm_report_materials.html
+        需要登录
+
+    GET /gm_meeting_record   - 组会记录页面 (组会管理)
+        渲染: gm_meeting_record.html
+        需要登录
+
+    GET /rm_research_tasks   - 研究任务页面 (资源管理)
+        渲染: rm_research_tasks.html
+        需要登录
+
+    GET /user_profile        - 个人资料页面
+        渲染: user_profile.html
+        需要登录
+
+    GET /edit_password       - 修改密码页面
+        渲染: edit_password.html
+        需要登录
+
+    GET /settings            - 设置页面
+        渲染: settings.html
+        需要登录
+
+路由配置:
+    - 前缀: 无 (根路径和各页面路径)
+    - 标签: 页面
+
+页面模块分类:
+    - gm_ (组会管理)  : 组会安排、汇报材料、组会记录
+    - rm_ (资源管理)  : 共享文件、文献库、研究任务
+    - tm_ (团队管理)  : 成员管理、学术网站、研究进展
+
+登录检查:
+    大部分页面需要登录，未登录时自动重定向到 /login
+
+依赖模块:
+    - extensions.templates    : Jinja2 模板引擎
+    - utils.auth_helper       : get_current_user 登录检查
+
+作者: wjg
+创建日期: 2026-05-21
+================================================================================
 """
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse

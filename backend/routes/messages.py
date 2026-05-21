@@ -1,9 +1,46 @@
 """
-消息路由
-端点：
-- POST /api/messages/send - 发送留言
-- GET  /api/messages - 获取消息列表
-- PUT  /api/messages/{message_id}/read - 标记已读
+================================================================================
+消息路由模块 (routes/messages.py)
+================================================================================
+
+模块名称: backend/routes/messages.py
+功能描述: 消息系统 API 端点，用于导师与学生之间的留言通知
+
+API 端点列表 (共3个):
+    POST /api/messages/send          - 发送留言
+        接收: receiver_id, title, content
+        发送私信给指定用户
+        返回: 消息 ID 和发送时间
+
+    GET  /api/messages               - 获取消息列表
+        参数: is_read (true/false/all)
+        返回: 收到的消息列表，按时间倒序排列
+
+    PUT  /api/messages/{message_id}/read - 标记已读
+        将指定消息标记为已读状态
+        返回: 更新后的消息状态
+
+路由配置:
+    - 前缀: /api/messages
+    - 标签: 消息
+
+消息状态:
+    - unread : 未读（新消息）
+    - read   : 已读
+
+消息流程:
+    1. 导师发送留言给学生
+    2. 学生收到消息通知
+    3. 学生阅读后标记已读
+
+依赖模块:
+    - utils.auth_helper       : get_current_user 认证依赖
+    - database.connection     : 数据库连接
+    - datetime                : 时间处理
+
+作者: wjg
+创建日期: 2026-05-21
+================================================================================
 """
 from datetime import datetime
 

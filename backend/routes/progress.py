@@ -1,16 +1,70 @@
 """
-研究进展路由
-端点：
-- GET  /api/research_progress/my - 获取自己进展历史
-- POST /api/research_progress/submit - 提交新进展
-- GET  /api/research_progress/settings - 获取提交周期设置
-- GET  /api/research_progress/team - 获取团队进展
-- GET  /api/research_progress/stats - 获取统计数据
-- PUT  /api/research_progress/settings/{user_id} - 设置学生提交周期
-- POST /api/research_progress/settings/batch - 批量设置提交周期
-- GET  /api/research_progress/{progress_id} - 查看进展详情
-- PUT  /api/research_progress/{progress_id} - 编辑已提交进展
-- POST /api/research_progress/{progress_id}/feedback - 发送导师反馈
+================================================================================
+研究进展路由模块 (routes/progress.py)
+================================================================================
+
+模块名称: backend/routes/progress.py
+功能描述: 研究进展管理 API 端点，包括进度提交、周期设置、导师反馈等
+
+API 端点列表 (共10个):
+    GET  /api/research_progress/my        - 获取自己进展历史
+        返回: 用户提交的所有研究进展记录
+
+    POST /api/research_progress/submit    - 提交新进展
+        接收: title, content, attachments[], progress_date
+        学生提交周/月度进展报告
+
+    GET  /api/research_progress/settings  - 获取提交周期设置
+        返回: 各学生的提交周期配置
+
+    GET  /api/research_progress/team      - 获取团队进展
+        返回: 所有学生的最新进展汇总
+        需要导师/管理员权限
+
+    GET  /api/research_progress/stats     - 获取统计数据
+        返回: 提交率、活跃度、逾期统计等
+
+    PUT  /api/research_progress/settings/{user_id} - 设置学生提交周期
+        接收: cycle_type(weekly/monthly), cycle_day
+        需要导师/管理员权限
+
+    POST /api/research_progress/settings/batch - 批量设置提交周期
+        接收: user_ids[], cycle_type, cycle_day
+        为多名学生统一设置提交周期
+
+    GET  /api/research_progress/{progress_id} - 查看进展详情
+        返回: 进展完整内容 + 附件
+
+    PUT  /api/research_progress/{progress_id} - 编辑已提交进展
+        接收: title, content, attachments[]
+        仅限提交者本人或导师/管理员
+
+    POST /api/research_progress/{progress_id}/feedback - 发送导师反馈
+        接收: content
+        导师对进展进行评价指导
+
+路由配置:
+    - 前缀: /api/research_progress
+    - 标签: 研究进展
+
+提交周期类型:
+    - weekly  : 每周提交 (如每周一)
+    - monthly : 每月提交 (如每月15日)
+
+权限要求:
+    提交进展: 学生本人
+    设置周期: 导师/管理员
+    查看团队: 导师/管理员
+    发送反馈: 导师/管理员
+
+依赖模块:
+    - services.research_progress_service: 研究进展服务
+    - utils.auth_helper                 : 认证依赖
+    - database.connection               : 数据库连接
+
+作者: wjg
+创建日期: 2026-05-21
+================================================================================
 """
 from typing import Optional
 

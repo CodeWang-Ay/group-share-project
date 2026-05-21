@@ -1,12 +1,25 @@
 """
-健康检查路由
-端点：
-- GET /health
-- GET /health/detailed
-- GET /ready
-- GET /alive
-- GET /metrics
-- DELETE /api/admin/clear-sessions
+================================================================================
+健康检查路由模块 (routes/health.py)
+================================================================================
+
+模块名称: backend/routes/health.py
+功能描述: 应用健康状态检查 API 端点，用于运维监控和负载均衡
+API 端点列表 (共6个):
+    GET /health                      - 基础健康检查
+    GET /health/detailed             - 详细健康检查
+    GET /ready                       - 就绪检查 (Readiness)
+    GET /alive                       - 存活检查 (Liveness)
+    GET /metrics                     - 应用指标统计
+    DELETE /api/admin/clear-sessions - 清空所有会话
+依赖模块:
+    - config.Config             : 配置信息
+    - database.connection       : 数据库连接检查
+    - services.session          : 会话管理器检查
+
+作者: wjg
+创建日期: 2026-05-21
+================================================================================
 """
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse

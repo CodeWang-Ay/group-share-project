@@ -1,13 +1,54 @@
 """
-研究任务路由
-端点：
-- GET    /api/research_tasks - 获取任务列表（分页筛选）
-- GET    /api/research_tasks/stats - 获取任务统计
-- POST   /api/research_tasks - 创建研究任务
-- GET    /api/research_tasks/{task_id} - 获取任务详情
-- PUT    /api/research_tasks/{task_id} - 更新任务
-- PUT    /api/research_tasks/{task_id}/progress - 更新任务进度
-- DELETE /api/research_tasks/{task_id} - 删除任务
+================================================================================
+研究任务路由模块 (routes/tasks.py)
+================================================================================
+
+模块名称: backend/routes/tasks.py
+功能描述: 研究任务管理 API 端点，包括任务创建、进度跟踪等
+
+API 端点列表 (共7个):
+    GET    /api/research_tasks              - 获取任务列表（分页筛选）
+        参数: status, assignee_id, creator_id, keyword, page, limit
+        返回: 任务列表 + 分页信息
+
+    GET    /api/research_tasks/stats        - 获取任务统计
+        返回: 任务总数、状态分布、完成率等
+
+    POST   /api/research_tasks              - 创建研究任务
+        接收: title, description, assignee_id, deadline, priority
+        需要导师/管理员权限
+
+    GET    /api/research_tasks/{task_id}    - 获取任务详情
+        返回: 任务完整信息 + 进度记录
+
+    PUT    /api/research_tasks/{task_id}    - 更新任务信息
+        接收: title, description, deadline, priority
+        需要创建者/导师/管理员权限
+
+    PUT    /api/research_tasks/{task_id}/progress - 更新任务进度
+        接收: progress_value, note
+        学生可更新自己被分配的任务进度
+
+    DELETE /api/research_tasks/{task_id}    - 删除任务
+        需要创建者/导师/管理员权限
+
+路由配置:
+    - 前缀: /api/research_tasks
+    - 标签: 研究任务
+
+权限要求:
+    创建/删除: 导师 (teacher) 或管理员 (admin)
+    更新进度: 被分配的学生 或 导师/管理员
+    查看: 所有已登录用户
+
+依赖模块:
+    - services.task_service.TaskService: 任务服务
+    - utils.auth_helper                : 认证依赖
+    - database.connection              : 数据库连接
+
+作者: wjg
+创建日期: 2026-05-21
+================================================================================
 """
 from datetime import datetime
 from fastapi import APIRouter, Request, status

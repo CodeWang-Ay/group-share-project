@@ -1,13 +1,24 @@
 """
-认证路由
-端点：
-- POST /api/auth/login
-- POST /api/auth/register
-- POST /api/auth/logout
-- GET  /api/auth/me
-- PUT  /api/auth/change-password
-- POST /api/auth/refresh
-- GET  /api/auth/session-status
+================================================================================
+认证路由模块 (routes/auth.py)
+================================================================================
+
+模块名称: backend/routes/auth.py
+功能描述: 用户认证相关 API 端点，包括登录、注册、会话管理等
+路由配置:
+    - 前缀: /api/auth
+    - 标签: 认证
+
+依赖模块:
+    - models.user.User           : 用户模型
+    - services.auth.AuthService  : 认证服务
+    - services.session           : 会话管理
+    - database.connection        : 数据库连接
+    - utils.auth_helper          : 认证辅助函数
+
+作者: wjg
+创建日期: 2026-05-21
+================================================================================
 """
 from fastapi import APIRouter, Request, status
 from fastapi.responses import JSONResponse, RedirectResponse

@@ -1,6 +1,43 @@
 """
-FastAPI 应用入口
-研究生组会文件共享系统
+================================================================================
+应用入口模块 (app.py)
+================================================================================
+
+模块名称: backend/app.py
+功能描述: FastAPI 应用主入口，负责创建和配置整个应用程序
+
+主要内容:
+    1. FastAPI 应用实例创建
+    2. 中间件配置 (CORS、安全头、请求日志)
+    3. 全局异常处理
+    4. 静态文件挂载
+    5. 路由模块注册
+
+注册的路由模块 (共12个):
+    - health_router     : 健康检查端点
+    - pages_router      : HTML 页面路由
+    - auth_router       : 用户认证 (登录、注册、登出)
+    - users_router      : 用户信息管理
+    - files_router      : 文件上传下载管理
+    - members_router    : 团队成员管理
+    - messages_router   : 消息系统
+    - meetings_router   : 组会管理
+    - materials_router  : 汇报材料管理
+    - tasks_router      : 研究任务管理
+    - papers_router     : 文献库管理
+    - progress_router   : 研究进展管理
+
+依赖模块:
+    - config            : 应用配置
+    - extensions        : 扩展初始化
+    - routes/*          : 各路由模块
+
+运行方式:
+    python app.py
+
+作者: wjg
+创建日期: 2026-05-21
+================================================================================
 """
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles

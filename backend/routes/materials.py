@@ -1,14 +1,28 @@
 """
-汇报材料路由
-端点：
-- GET  /api/materials - 获取汇报材料列表
-- GET  /api/materials/meetings - 获取组会及材料状态
-- GET  /api/materials/{presenter_id}/files - 获取汇报人文件
-- PUT  /api/materials/{presenter_id}/confirm - 确认参会
-- PUT  /api/materials/{presenter_id}/status - 更新材料审核状态
-- POST /api/materials/{presenter_id}/files - 上传材料文件
-- GET  /api/meetings/{meeting_id}/materials - 获取组会所有材料
-- GET  /api/meeting_files/{file_id}/download - 下载汇报材料
+================================================================================
+汇报材料路由模块 (routes/materials.py)
+================================================================================
+
+模块名称: backend/routes/materials.py
+功能描述: 组会汇报材料管理 API 端点，包括材料上传、状态更新等
+
+API 端点列表 (共8个):
+    GET  /api/materials                     - 获取汇报材料列表
+    GET  /api/materials/meetings            - 获取组会及材料状态
+    GET  /api/materials/{presenter_id}/files - 获取汇报人文件
+    PUT  /api/materials/{presenter_id}/confirm - 确认参会
+    PUT  /api/materials/{presenter_id}/status - 更新材料审核状态
+    POST /api/materials/{presenter_id}/files - 上传材料文件
+    GET  /api/meetings/{meeting_id}/materials - 获取组会所有材料
+    GET  /api/meeting_files/{file_id}/download - 下载汇报材料
+依赖模块:
+    - utils.auth_helper       : 认证依赖
+    - database.connection     : 数据库连接
+    - config.Config.UPLOAD_DIR: 上传目录
+
+作者: wjg
+创建日期: 2026-05-21
+================================================================================
 """
 from datetime import datetime
 from pathlib import Path

@@ -1,16 +1,37 @@
 """
-组会管理路由
-端点：
-- GET    /api/meetings - 获取组会列表
-- POST   /api/meetings - 创建组会
-- GET    /api/meetings/stats - 获取组会统计
-- GET    /api/meetings/{meeting_id} - 获取组会详情
-- PUT    /api/meetings/{meeting_id} - 更新组会
-- DELETE /api/meetings/{meeting_id} - 删除组会
-- PUT    /api/meetings/{meeting_id}/status - 更新组会状态
-- GET    /api/meetings/{meeting_id}/presenters - 获取汇报人列表
-- POST   /api/meetings/{meeting_id}/presenters - 添加汇报人
-- DELETE /api/meetings/{meeting_id}/presenters/{presenter_id} - 移除汇报人
+================================================================================
+组会管理路由模块 (routes/meetings.py)
+================================================================================
+
+模块名称: backend/routes/meetings.py
+功能描述: 组会管理 API 端点，包括组会创建、汇报人管理等
+
+API 端点列表 (共10个):
+    GET    /api/meetings                  - 获取组会列表
+        参数: status, date_range, page, limit
+        返回: 组会列表 + 汇报人信息
+
+    POST   /api/meetings                  - 创建组会
+        接收: title, date, location, description, status
+        需要导师/管理员权限
+
+    GET    /api/meetings/stats            - 获取组会统计
+    GET    /api/meetings/{meeting_id}     - 获取组会详情
+    PUT    /api/meetings/{meeting_id}     - 更新组会信息
+    DELETE /api/meetings/{meeting_id}     - 删除组会
+    PUT    /api/meetings/{meeting_id}/status - 更新组会状态
+    GET    /api/meetings/{meeting_id}/presenters - 获取汇报人列表
+    POST   /api/meetings/{meeting_id}/presenters - 添加汇报人
+    DELETE /api/meetings/{meeting_id}/presenters/{presenter_id} - 移除汇报人
+
+依赖模块:
+    - services.meeting_service.MeetingService: 组会服务
+    - utils.auth_helper                      : 认证依赖
+    - database.connection                    : 数据库连接
+
+作者: wjg
+创建日期: 2026-05-21
+================================================================================
 """
 from datetime import datetime
 from fastapi import APIRouter, Request, status

@@ -1,21 +1,79 @@
 """
-文献库路由
-端点：
-- GET    /api/paper_database/          获取文献列表
-- GET    /api/paper_database/stats    获取文献统计
-- GET    /api/paper_database/tags     获取标签列表
-- POST   /api/paper_database/batch/star      批量收藏
-- POST   /api/paper_database/{paper_id}/add-to-personal   添加到个人库
-- POST   /api/paper_database/{paper_id}/share-to-team    分享到团队库
-- POST   /api/paper_database/batch/tags     批量设置标签
-- DELETE /api/paper_database/batch           批量删除
-- GET    /api/paper_database/{paper_id}     获取文献详情
-- POST   /api/paper_database/          上传文献
-- PUT    /api/paper_database/{paper_id}     更新文献信息
-- POST   /api/paper_database/{paper_id}/star    收藏/取消
-- PUT    /api/paper_database/{paper_id}/status  更新阅读状态
-- DELETE /api/paper_database/{paper_id}     删除文献
-- GET    /api/paper_database/{paper_id}/download  下载文献PDF
+================================================================================
+文献库路由模块 (routes/papers.py)
+================================================================================
+
+模块名称: backend/routes/papers.py
+功能描述: 文献论文管理 API 端点，包括文献上传、收藏、标签管理等
+
+API 端点列表 (共15个):
+    GET    /api/paper_database/             - 获取文献列表
+        参数: scope(personal/team/public), keyword, tag, status, page, limit
+        返回: 文献列表 + 分页信息
+
+    GET    /api/paper_database/stats        - 获取文献统计
+        返回: 文献总数、状态分布、标签分布等
+
+    GET    /api/paper_database/tags         - 获取标签列表
+        返回: 所有可用标签及其使用次数
+
+    POST   /api/paper_database/batch/star   - 批量收藏
+        接收: paper_ids[]
+        批量添加到个人收藏
+
+    POST   /api/paper_database/{paper_id}/add-to-personal - 添加到个人库
+        将团队/公开文献添加到个人库
+
+    POST   /api/paper_database/{paper_id}/share-to-team    - 分享到团队库
+        将个人文献分享给团队
+
+    POST   /api/paper_database/batch/tags   - 批量设置标签
+        接收: paper_ids[], tags[]
+        为多篇文献统一设置标签
+
+    DELETE /api/paper_database/batch        - 批量删除文献
+        接收: paper_ids[]
+
+    GET    /api/paper_database/{paper_id}   - 获取文献详情
+        返回: 文献完整信息 + 标签列表
+
+    POST   /api/paper_database/             - 上传文献
+        接收: multipart/form-data (file + metadata)
+        支持: PDF 格式
+
+    PUT    /api/paper_database/{paper_id}   - 更新文献信息
+        接收: title, authors, journal, year, abstract 等
+
+    POST   /api/paper_database/{paper_id}/star - 收藏/取消收藏
+        切换收藏状态
+
+    PUT    /api/paper_database/{paper_id}/status - 更新阅读状态
+        接收: status (unread/reading/read)
+
+    DELETE /api/paper_database/{paper_id}   - 删除文献
+        删除文献记录及 PDF 文件
+
+    GET    /api/paper_database/{paper_id}/download - 下载文献 PDF
+        返回 PDF 文件流
+
+路由配置:
+    - 前缀: /api/paper_database
+    - 标签: 文献库
+
+文献状态:
+    - unread   : 未读
+    - reading  : 正在读
+    - read     : 已读完
+    - starred  : 已收藏
+
+依赖模块:
+    - services.paper_service.PaperService: 文献服务
+    - utils.auth_helper                   : 认证依赖
+    - database.connection                 : 数据库连接
+
+作者: wjg
+创建日期: 2026-05-21
+================================================================================
 """
 import os
 from datetime import datetime

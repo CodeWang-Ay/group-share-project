@@ -1,6 +1,41 @@
 """
-认证辅助函数
-提供 FastAPI 依赖注入所需的用户认证函数
+================================================================================
+认证辅助函数模块 (utils/auth_helper.py)
+================================================================================
+
+模块名称: backend/utils/auth_helper.py
+功能描述: 提供 FastAPI 依赖注入所需的用户认证相关函数
+
+主要函数:
+    - get_current_user(request) -> Optional[User]
+        获取当前登录用户（可选）
+        从请求头、cookie 或 URL 参数中获取 session_token 并验证
+
+    - get_current_user_required(request) -> User
+        获取当前用户（必须登录）
+        未登录时抛出 401 异常
+
+    - get_admin_user(request) -> User
+        获取管理员用户
+        验证用户角色为 admin，否则抛出 403 异常
+
+会话令牌获取顺序:
+    1. Authorization 请求头 (Bearer token)
+    2. Cookie 中的 session_token
+    3. URL 参数 session_token
+
+依赖模块:
+    - models.user.User      : 用户模型
+    - services.session      : 会话管理服务
+    - database.connection   : 数据库连接
+
+使用方式:
+    from utils.auth_helper import get_current_user
+    current_user = await get_current_user(request)
+
+作者: wjg
+创建日期: 2026-05-21
+================================================================================
 """
 from fastapi import Request, HTTPException, status
 from typing import Optional

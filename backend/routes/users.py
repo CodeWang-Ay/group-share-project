@@ -1,9 +1,37 @@
 """
-用户路由
-端点：
-- GET  /api/user/profile
-- PUT  /api/user/profile
-- POST /api/user/avatar
+================================================================================
+用户路由模块 (routes/users.py)
+================================================================================
+
+模块名称: backend/routes/users.py
+功能描述: 用户个人信息管理 API 端点
+
+API 端点列表 (共3个):
+    GET  /api/user/profile - 获取当前用户详细资料
+        返回: 用户所有字段信息（邮箱、电话、学号、研究方向等）
+
+    PUT  /api/user/profile - 更新用户个人资料
+        接收: email, phone, student_id, research_direction, degree_type,
+               work_location, work_company, personal_bio, personal_homepage 等
+        返回: 更新后的用户信息
+
+    POST /api/user/avatar  - 上传用户头像
+        接收: multipart/form-data (avatar 文件)
+        支持: JPG, PNG, GIF, WEBP 格式，最大 5MB
+        返回: avatar_url 头像地址
+
+路由配置:
+    - 前缀: /api/user
+    - 标签: 用户
+
+依赖模块:
+    - utils.auth_helper       : get_current_user 认证依赖
+    - database.connection     : 数据库连接
+    - config.Config.UPLOAD_DIR: 上传目录配置
+
+作者: wjg
+创建日期: 2026-05-21
+================================================================================
 """
 from fastapi import APIRouter, Request, status
 from fastapi.responses import JSONResponse

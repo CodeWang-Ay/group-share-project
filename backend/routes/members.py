@@ -1,16 +1,66 @@
 """
-成员管理路由
-端点：
-- GET    /api/members                    获取成员列表（分页筛选）
-- GET    /api/members/stats              获取成员统计
-- PUT    /api/members/{member_id}/status 更新成员状态
-- PUT    /api/members/{member_id}        更新成员信息
-- POST   /api/members                    添加成员
-- DELETE /api/members/{member_id}        删除成员
-- PUT    /api/members/{member_id}/reset-password 重置密码
-- POST   /api/users/batch-update-role    批量修改角色
-- POST   /api/users/batch-update-status  批量修改状态
-- POST   /api/users/batch-delete         批量删除
+================================================================================
+成员管理路由模块 (routes/members.py)
+================================================================================
+
+模块名称: backend/routes/members.py
+功能描述: 团队成员管理 API 端点，包括成员增删改查、批量操作等
+
+API 端点列表 (共10个):
+    GET    /api/members                    - 获取成员列表（分页筛选）
+        参数: role, status, degree, search, page, per_page
+        返回: 成员列表 + 分页信息
+
+    GET    /api/members/stats              - 获取成员统计
+        返回: 总人数、角色分布、活跃/非活跃数量
+
+    PUT    /api/members/{member_id}/status - 更新成员状态
+        接收: status (active/inactive)
+        需要管理员权限
+
+    PUT    /api/members/{member_id}        - 更新成员信息
+        接收: username, email, phone, role, degree_type 等
+        需要管理员权限
+
+    POST   /api/members                    - 添加新成员
+        接收: 完整成员信息
+        需要管理员权限
+
+    DELETE /api/members/{member_id}        - 删除成员
+        需要管理员权限
+
+    PUT    /api/members/{member_id}/reset-password - 重置密码
+        接收: new_password
+        需要管理员权限
+
+    POST   /api/users/batch-update-role    - 批量修改角色
+        接收: user_ids[], role
+        需要管理员权限
+
+    POST   /api/users/batch-update-status  - 批量修改状态
+        接收: user_ids[], status
+        需要管理员权限
+
+    POST   /api/users/batch-delete         - 批量删除成员
+        接收: user_ids[]
+        需要管理员权限
+
+路由配置:
+    - 前缀: /api
+    - 标签: 成员管理
+
+权限要求:
+    大部分端点需要管理员 (admin) 权限
+
+依赖模块:
+    - utils.auth_helper       : get_current_user, get_admin_user
+    - utils.helpers           : getFieldLabel 字段标签映射
+    - database.connection     : 数据库连接
+    - models.user.User        : 用户模型
+
+作者: wjg
+创建日期: 2026-05-21
+================================================================================
 """
 import re
 from datetime import datetime

@@ -1,15 +1,27 @@
 """
-文件路由
-端点：
-- POST /api/files/upload - 上传文件
-- GET  /api/files/download/{filename} - 按文件名下载
-- GET  /api/files - 获取文件列表（分页）
-- GET  /api/files/stats - 获取文件统计
-- GET  /api/files/{file_id} - 获取文件详情
-- PUT  /api/files/{file_id} - 更新文件信息
-- DELETE /api/files/{file_id} - 删除文件
-- GET  /api/files/{file_id}/download - 文件下载
-- GET  /api/files/{file_id}/view - 文件预览
+================================================================================
+文件路由模块 (routes/files.py)
+================================================================================
+模块名称: backend/routes/files.py
+功能描述: 文件上传、下载、管理 API 端点
+API 端点列表 (共9个):
+    POST /api/files/upload              - 上传文件
+    GET  /api/files/download/{filename} - 按文件名下载
+    GET  /api/files                     - 获取文件列表（分页筛选）
+    GET  /api/files/stats               - 获取文件统计
+    GET  /api/files/{file_id}           - 获取文件详情
+    PUT  /api/files/{file_id}           - 更新文件信息
+    DELETE /api/files/{file_id}         - 删除文件
+    GET  /api/files/{file_id}/download  - 按 ID 下载文件
+    GET  /api/files/{file_id}/view      - 文件预览
+依赖模块:
+    - services.file_service.FileService: 文件服务
+    - utils.auth_helper                 : 认证依赖
+    - database.connection               : 数据库连接
+
+作者: wjg
+创建日期: 2026-05-21
+================================================================================
 """
 import os
 import urllib.parse
