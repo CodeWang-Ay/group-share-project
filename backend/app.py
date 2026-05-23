@@ -13,30 +13,39 @@
     4. 静态文件挂载
     5. 路由模块注册
 
-注册的路由模块 (共12个):
+注册的路由模块 (共12个，遵循 CLAUDE.md 命名规范 xxx_router):
     - health_router     : 健康检查端点
-    - pages_router      : HTML 页面路由
+    - page_router       : HTML 页面路由
     - auth_router       : 用户认证 (登录、注册、登出)
-    - users_router      : 用户信息管理
-    - files_router      : 文件上传下载管理
-    - members_router    : 团队成员管理
-    - messages_router   : 消息系统
-    - meetings_router   : 组会管理
-    - materials_router  : 汇报材料管理
-    - tasks_router      : 研究任务管理
-    - papers_router     : 文献库管理
+    - user_router       : 用户信息管理
+    - file_router       : 文件上传下载管理
+    - member_router     : 团队成员管理
+    - message_router    : 消息系统
+    - meeting_router    : 组会管理
+    - material_router   : 汇报材料管理
+    - task_router       : 研究任务管理
+    - paper_router      : 文献库管理
     - progress_router   : 研究进展管理
+
+目录结构 (遵循 CLAUDE.md):
+    - routers/      : 只处理 HTTP 请求和响应
+    - services/     : 所有业务逻辑
+    - repositories/ : 只做数据库 CRUD
+    - schemas/      : Pydantic 数据验证
+    - dependencies/ : 依赖注入
+    - models/       : ORM 表映射
+    - database/     : 数据库连接
 
 依赖模块:
     - config            : 应用配置
     - extensions        : 扩展初始化
-    - routes/*          : 各路由模块
+    - routers/*         : 各路由模块
 
 运行方式:
     python app.py
 
 作者: wjg
-创建日期: 2026-05-21
+创建日期: 2026-05-23
 ================================================================================
 """
 from fastapi import FastAPI, Request
@@ -48,21 +57,21 @@ from loguru import logger
 
 from config import Config
 
-# 导入所有路由模块
-from routes import (
+# 导入所有路由模块 (遵循 CLAUDE.md 命名规范: xxx_router)
+from routers import (
     auth_router,
-    users_router,
-    files_router,
+    user_router,
+    file_router,
     health_router,
-    pages_router,
-    meetings_router,
-    messages_router,
-    tasks_router,
-    members_router,
+    page_router,
+    meeting_router,
+    message_router,
+    task_router,
+    member_router,
+    material_router,
+    paper_router,
+    progress_router,
 )
-from routes.papers import router as papers_router
-from routes.materials import router as materials_router
-from routes.progress import router as progress_router
 
 # 创建 FastAPI 应用
 app = FastAPI(
@@ -125,18 +134,18 @@ Config.UPLOAD_DIR.mkdir(exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(Config.UPLOAD_DIR)), name="uploads")
 
 
-# 注册所有路由
+# 注册所有路由 (遵循 CLAUDE.md 命名规范)
 app.include_router(health_router)
-app.include_router(pages_router)
+app.include_router(page_router)
 app.include_router(auth_router)
-app.include_router(users_router)
-app.include_router(files_router)
-app.include_router(members_router)
-app.include_router(messages_router)
-app.include_router(meetings_router)
-app.include_router(materials_router)
-app.include_router(tasks_router)
-app.include_router(papers_router)
+app.include_router(user_router)
+app.include_router(file_router)
+app.include_router(member_router)
+app.include_router(message_router)
+app.include_router(meeting_router)
+app.include_router(material_router)
+app.include_router(task_router)
+app.include_router(paper_router)
 app.include_router(progress_router)
 
 

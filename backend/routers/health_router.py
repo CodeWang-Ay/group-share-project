@@ -32,7 +32,7 @@ from loguru import logger
 
 from config import Config
 from database.connection import get_db, DATABASE_PATH
-from services.session import session_manager
+from services.session_service import session_manager
 
 router = APIRouter(tags=["健康检查"])
 

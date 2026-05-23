@@ -26,8 +26,8 @@ import bcrypt
 from loguru import logger
 
 from models.user import User
-from services.auth import AuthService
-from services.session import session_manager
+from services.auth_service import AuthService
+from services.session_service import session_manager
 from database.connection import get_db
 from utils.auth_helper import get_current_user
 

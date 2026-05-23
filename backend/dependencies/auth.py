@@ -1,9 +1,9 @@
 """
 ================================================================================
-认证辅助函数模块 (utils/auth_helper.py)
+认证依赖模块 (dependencies/auth.py)
 ================================================================================
 
-模块名称: backend/utils/auth_helper.py
+模块名称: backend/dependencies/auth.py
 功能描述: 提供 FastAPI 依赖注入所需的用户认证相关函数
 
 主要函数:
@@ -30,11 +30,11 @@
     - database.connection   : 数据库连接
 
 使用方式:
-    from utils.auth_helper import get_current_user
+    from dependencies.auth import get_current_user
     current_user = await get_current_user(request)
 
 作者: wjg
-创建日期: 2026-05-21
+创建日期: 2026-05-23
 ================================================================================
 """
 from fastapi import Request, HTTPException, status
@@ -59,7 +59,6 @@ async def get_current_user(request: Request) -> Optional[User]:
     """
     # 从请求头中获取会话令牌
     session_token = request.headers.get("Authorization")
-    logger.info(f"当前用户session_token: {session_token}")
     if session_token and session_token.startswith("Bearer "):
         session_token = session_token[7:]  # 移除 "Bearer " 前缀
 
