@@ -4,7 +4,7 @@
 ================================================================================
 
 模块名称: backend/services/message_service.py
-功能描述: 消息系统业务逻辑处理
+功能描述: 消息系统业务逻辑处理，返回完整响应数据
 
 Service 类方法:
     - send(sender_id, receiver_id, title, content): 发送消息
@@ -12,18 +12,14 @@ Service 类方法:
     - mark_read(message_id, user_id)              : 标记已读
 
 职责:
-    - 处理业务逻辑
-    - 权限验证
+    - 所有业务逻辑写在这里
+    - 返回完整响应数据（status_code, content）
     - 调用 Repository 进行数据操作
-
-依赖:
-    - repositories.message_repository: 数据访问层
 
 作者: wjg
 创建日期: 2026-05-23
 ================================================================================
 """
-from typing import Dict, Any, List
 from datetime import datetime
 from loguru import logger
 
@@ -33,54 +29,42 @@ from repositories.message_repository import MessageRepository
 class MessageService:
     """消息业务服务类"""
 
-    @staticmethod
-    def send(sender_id: int, receiver_id: int, title: str, content: str) -> Dict[str, Any]:
+    async def send(self, sender_id: int, receiver_id: int, title: str, content: str) -> dict:
         """发送消息"""
-        # 参数验证
+        # 1. 参数验证
         if not receiver_id or not title or not content:
-            raise ValueError("缺少必要参数")
+            return {"status_code": 400, "content": {"success": False, "message": "缺少必要参数", "error": "MISSING_PARAMS"}}
 
-        # 不能给自己留言
+        # 2. 不能给自己留言
         if receiver_id == sender_id:
-            raise ValueError("不能给自己留言")
+            return {"status_code": 400, "content": {"success": False, "message": "不能给自己留言", "error": "SELF_MESSAGE_NOT_ALLOWED"}}
 
-        # 检查接收者是否存在且活跃
+        # 3. 检查接收者是否存在
         if not MessageRepository.check_user_active(receiver_id):
-            raise ValueError("接收者不存在或已被禁用")
+            return {"status_code": 404, "content": {"success": False, "message": "接收者不存在或已被禁用", "error": "RECEIVER_NOT_FOUND"}}
 
-        # 创建消息
+        # 4. 创建消息
         message_id = MessageRepository.create(sender_id, receiver_id, title, content)
-
         logger.info(f"留言发送成功: {sender_id} -> {receiver_id}")
-        return {
-            "message_id": message_id,
-            "success": True
-        }
+        return {"status_code": 200, "content": {"success": True, "message": "留言成功", "data": {"message_id": message_id}}}
 
-    @staticmethod
-    def get_received(user_id: int) -> List[Dict[str, Any]]:
+    async def get_received(self, user_id: int) -> dict:
         """获取用户收到的消息列表"""
         messages = MessageRepository.get_by_receiver(user_id)
-        return messages
+        return {"status_code": 200, "content": {"success": True, "messages": messages}}
 
-    @staticmethod
-    def mark_read(message_id: int, user_id: int) -> bool:
+    async def mark_read(self, message_id: int, user_id: int) -> dict:
         """标记消息已读"""
-        # 获取消息
+        # 1. 获取消息
         message = MessageRepository.get_by_id(message_id)
         if not message:
-            raise ValueError("留言不存在")
+            return {"status_code": 404, "content": {"success": False, "message": "留言不存在", "error": "MESSAGE_NOT_FOUND"}}
 
-        # 权限验证：只有接收者可以标记已读
+        # 2. 权限验证
         if message['receiver_id'] != user_id:
-            raise ValueError("留言不存在")
+            return {"status_code": 404, "content": {"success": False, "message": "留言不存在", "error": "MESSAGE_NOT_FOUND"}}
 
-        # 标记已读
-        read_at = datetime.now().isoformat()
-        success = MessageRepository.mark_read(message_id, read_at)
-
-        if not success:
-            raise ValueError("操作失败")
-
+        # 3. 标记已读
+        MessageRepository.mark_read(message_id, datetime.now().isoformat())
         logger.info(f"留言已标记已读: message_id={message_id}")
-        return True
+        return {"status_code": 200, "content": {"success": True, "message": "已标记为已读"}}

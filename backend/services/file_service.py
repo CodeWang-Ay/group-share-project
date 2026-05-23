@@ -1,645 +1,232 @@
 """
-文件服务模块
-处理文件相关的业务逻辑
+================================================================================
+文件业务服务模块 (services/file_service.py)
+================================================================================
+
+模块名称: backend/services/file_service.py
+功能描述: 文件业务逻辑处理，返回完整响应数据
+
+Service 类方法:
+    - upload(form, user_id)                : 上传文件
+    - get_list(filters, user_id, role)     : 获取文件列表
+    - get_stats(filters, user_id, role)    : 获取统计信息
+    - get_detail(file_id, user_id, role)   : 获取文件详情
+    - update(file_id, data, user_id, role) : 更新文件信息
+    - delete(file_id, user_id, role)       : 删除文件
+    - download(file_id, user_id, role)     : 下载文件
+    - download_by_name(filename, user_id)  : 按文件名下载
+    - view(file_id, user_id, role)         : 预览文件
+
+职责:
+    - 所有业务逻辑写在这里
+    - 返回完整响应数据（status_code, content）
+    - 调用 Repository 进行数据操作
+
+作者: wjg
+创建日期: 2026-05-23
+================================================================================
 """
-
 import os
-import shutil
-from typing import Optional, List, Dict, Any
-from datetime import datetime
+from typing import Dict, Any, Optional
 from pathlib import Path
+from datetime import datetime
+from loguru import logger
 
+from repositories.file_repository import FileRepository
 from models.file import File
-from database.connection import get_db
+from config import Config
 
 
 class FileService:
-    """文件服务类"""
+    """文件业务服务类"""
 
-    # 文件上传目录 - 共享资料统一存放在项目根目录
-    UPLOAD_DIR = Path(__file__).parent.parent.parent / "uploads" / "share_files"
-
-    # 允许的文件类型
-    ALLOWED_EXTENSIONS = {
-        # 文档
-        '.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt', '.xls', '.xlsx', '.ppt', '.pptx',
-        # 图片
-        '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg',
-        # 视频
-        '.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.mkv',
-        # 音频
-        '.mp3', '.wav', '.flac', '.aac', '.ogg', '.wma',
-        # 压缩文件
-        '.zip', '.rar', '.7z', '.tar', '.gz',
-        # 代码文件
-        '.py', '.js', '.html', '.css', '.java', '.cpp', '.c', '.php', '.rb', '.go',
-        # 其他
-        '.md', '.json', '.xml', '.csv'
-    }
-
-    # 最大文件大小（50MB）
+    UPLOAD_DIR = Config.UPLOAD_DIR / "share_files"
+    ALLOWED_EXTENSIONS = {'.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt', '.xls', '.xlsx', '.ppt', '.pptx',
+                          '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.mp4', '.avi', '.mov',
+                          '.wmv', '.flv', '.webm', '.mkv', '.mp3', '.wav', '.flac', '.aac', '.ogg', '.wma',
+                          '.zip', '.rar', '.7z', '.tar', '.gz', '.py', '.js', '.html', '.css', '.java',
+                          '.cpp', '.c', '.php', '.rb', '.go', '.md', '.json', '.xml', '.csv'}
     MAX_FILE_SIZE = 50 * 1024 * 1024
 
-    @classmethod
-    def init_upload_directory(cls) -> None:
-        """初始化文件上传目录"""
-        cls.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    async def upload(self, form: Dict[str, Any], user_id: int) -> Dict[str, Any]:
+        """上传文件"""
+        file = form.get("file")
+        if not file:
+            return {"status_code": 400, "content": {"success": False, "message": "请选择要上传的文件", "error": "NO_FILE"}}
 
-    @classmethod
-    def get_user_by_id(cls, user_id: int) -> Optional[str]:
-        """
-        根据用户ID获取用户名
+        file_data = file.file.read()
+        if len(file_data) > self.MAX_FILE_SIZE:
+            return {"status_code": 400, "content": {"success": False, "message": f"文件大小超过限制（最大 {self.MAX_FILE_SIZE // (1024*1024)} MB）", "error": "FILE_TOO_LARGE"}}
 
-        Args:
-            user_id: 用户ID
+        file_ext = Path(file.filename).suffix.lower()
+        if file_ext not in self.ALLOWED_EXTENSIONS:
+            return {"status_code": 400, "content": {"success": False, "message": "不支持的文件类型", "error": "UNSUPPORTED_TYPE"}}
 
-        Returns:
-            str: 用户名，不存在时返回None
-        """
-        try:
-            with get_db() as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT username FROM users WHERE id = ?", (user_id,))
-                result = cursor.fetchone()
-                return result[0] if result else None
-        except Exception as e:
-            print(f"获取用户名失败: {str(e)}")
-            return None
+        # 检查文件名是否存在
+        if FileRepository.check_filename_exists(file.filename, user_id):
+            return {"status_code": 409, "content": {"success": False, "message": f"文件名 '{file.filename}' 已存在", "error": "FILENAME_EXISTS"}}
 
-    @classmethod
-    def is_allowed_file(cls, filename: str) -> bool:
-        """
-        检查文件类型是否允许上传
-
-        Args:
-            filename: 文件名
-
-        Returns:
-            bool: 是否允许上传
-        """
-        file_extension = Path(filename).suffix.lower()
-        return file_extension in cls.ALLOWED_EXTENSIONS
-
-    @classmethod
-    def generate_unique_filename(cls, original_filename: str) -> str:
-        """
-        生成唯一的文件名，避免文件名冲突
-
-        Args:
-            original_filename: 原始文件名
-
-        Returns:
-            str: 唯一的文件名
-        """
-        file_path = Path(original_filename)
+        # 生成唯一文件名
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        unique_filename = f"{timestamp}_{file.filename}"
+        self.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        file_path = self.UPLOAD_DIR / unique_filename
+        with open(file_path, 'wb') as f:
+            f.write(file_data)
 
-        # 生成新文件名：时间戳_原始文件名
-        new_filename = f"{timestamp}_{file_path.name}"
+        # 创建记录
+        file_hash = File.calculate_file_hash(str(file_path))
+        create_data = {
+            'filename': unique_filename, 'file_path': str(file_path), 'file_size': len(file_data),
+            'file_type': File.get_mime_type(file.filename), 'file_hash': file_hash, 'uploader_id': user_id,
+            'description': form.get("description"), 'tags': form.get("tags"), 'is_public': form.get("is_public", "false").lower() == "true"
+        }
+        file_id = FileRepository.create(create_data)
 
-        # 如果文件名过长，截断处理
-        if len(new_filename) > 255:
-            name_without_ext = file_path.stem[:200]  # 保留最多200个字符
-            extension = file_path.suffix
-            new_filename = f"{timestamp}_{name_without_ext}{extension}"
+        logger.info(f"文件上传成功: {unique_filename} (ID: {file_id})")
+        return {"status_code": 201, "content": {"success": True, "message": "文件上传成功",
+                                                 "data": {"id": file_id, "filename": unique_filename, "file_size": len(file_data)}}}
 
-        return new_filename
+    async def get_list(self, filters: Dict[str, Any], user_id: int, role: str) -> Dict[str, Any]:
+        """获取文件列表"""
+        scope = filters.get("scope", "my")
+        keyword = filters.get("keyword", "")
+        page = int(filters.get("page", 1))
+        limit = int(filters.get("limit", 5))
+        if limit not in [5, 10, 20, 100]:
+            limit = 5
+        offset = (page - 1) * limit
 
-    @classmethod
-    def upload_file(cls, file_data: bytes, original_filename: str,
-                   uploader_id: int, description: Optional[str] = None,
-                   tags: Optional[str] = None, is_public: bool = False,
-                   skip_name_check: bool = False) -> tuple[Optional[File], Optional[str]]:
-        """
-        上传文件
-
-        Args:
-            file_data: 文件二进制数据
-            original_filename: 原始文件名
-            uploader_id: 上传者ID
-            description: 文件描述
-            tags: 标签
-            is_public: 是否公开
-            skip_name_check: 是否跳过文件名重复检查（用于材料上传场景）
-
-        Returns:
-            tuple: (文件对象, 错误信息)，成功时错误信息为None
-        """
-        try:
-            # 检查文件大小
-            if len(file_data) > cls.MAX_FILE_SIZE:
-                return None, f"文件大小超过限制（最大 {cls.MAX_FILE_SIZE // (1024*1024)} MB）"
-
-            # 检查文件类型
-            if not cls.is_allowed_file(original_filename):
-                return None, "不支持的文件类型"
-
-            # 检查是否已存在相同文件名的文件（同一用户下）
-            # skip_name_check=True 时跳过此检查，直接使用时间戳前缀
-            if not skip_name_check:
-                with get_db() as conn:
-                    cursor = conn.cursor()
-                    cursor.execute("""
-                        SELECT id, filename FROM files
-                        WHERE filename = ? AND uploader_id = ? AND status = 'active'
-                    """, (original_filename, uploader_id))
-
-                    existing_file = cursor.fetchone()
-                    if existing_file:
-                        return None, f"文件名 '{original_filename}' 已存在，请重命名后再次上传"
-
-            # 获取用户名
-            username = cls.get_user_by_id(uploader_id)
-            if not username:
-                return None, "用户不存在"
-
-            # 确保上传目录存在
-            cls.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
-            # 生成唯一文件名（skip_name_check 时强制使用时间戳前缀）
-            if skip_name_check:
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                file_path_obj = Path(original_filename)
-                unique_filename = f"{timestamp}_{file_path_obj.name}"
+        files, total = [], 0
+        if scope == "my":
+            files = FileRepository.get_by_user(user_id, limit, offset)
+            total = FileRepository.get_count_by_user(user_id)
+        elif scope == "public":
+            files = FileRepository.get_public(limit, offset)
+            user_files = FileRepository.get_by_user(user_id, limit, offset)
+            existing_ids = set(f['id'] for f in files)
+            for f in user_files:
+                if f['id'] not in existing_ids:
+                    files.append(f)
+            total = FileRepository.get_public_count() + FileRepository.get_count_by_user(user_id)
+        elif scope == "all" and role == "admin":
+            target_id = filters.get("user_id")
+            if target_id:
+                files = FileRepository.get_by_user(int(target_id), limit, offset)
+                total = FileRepository.get_count_by_user(int(target_id))
             else:
-                unique_filename = cls.generate_unique_filename(original_filename)
-
-            file_path = cls.UPLOAD_DIR / unique_filename
-
-            # 保存文件到磁盘
-            with open(file_path, 'wb') as f:
-                f.write(file_data)
-
-            # 计算文件信息
-            file_size = len(file_data)
-            file_hash = File.calculate_file_hash(str(file_path))
-            file_type = File.get_mime_type(original_filename)
-
-            # 检查是否已存在相同文件内容的文件（通过哈希值）
-            # skip_name_check=True 时也跳过此检查（用于材料上传场景）
-            if file_hash and not skip_name_check:
-                with get_db() as conn:
-                    cursor = conn.cursor()
-                    cursor.execute("""
-                        SELECT id, filename FROM files
-                        WHERE file_hash = ? AND uploader_id = ? AND status = 'active'
-                    """, (file_hash, uploader_id))
-
-                    duplicate_content = cursor.fetchone()
-                    if duplicate_content:
-                        # 删除刚创建的文件，因为内容重复
-                        os.remove(file_path)
-                        return None, f"文件内容与已存在的文件 '{duplicate_content[1]}' 重复"
-
-            # 创建文件对象
-            # 数据库存储实际保存的文件名（带时间戳前缀），这样用户能看到实际文件名
-            # skip_name_check=True 时 file_hash 设为 None，避免 UNIQUE 约束冲突
-            file_obj = File(
-                filename=unique_filename,
-                file_path=str(file_path),
-                file_size=file_size,
-                file_type=file_type,
-                uploader_id=uploader_id,
-                file_hash=None if skip_name_check else file_hash,
-                description=description,
-                tags=tags,
-                is_public=is_public
-            )
-
-            # 保存到数据库 - 使用新的数据库连接
-            with get_db() as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    INSERT INTO files (
-                        filename, file_path, file_size, file_type, file_hash,
-                        uploader_id, description, tags, is_public
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    file_obj.filename,
-                    file_obj.file_path,
-                    file_obj.file_size,
-                    file_obj.file_type,
-                    file_obj.file_hash,
-                    file_obj.uploader_id,
-                    file_obj.description,
-                    file_obj.tags,
-                    file_obj.is_public
-                ))
-
-                # 获取新插入的文件ID
-                cursor.execute("SELECT last_insert_rowid()")
-                file_obj.id = cursor.fetchone()[0]
-
-            return file_obj, None
-
-        except Exception as e:
-            # 如果上传失败，删除已创建的文件
-            print(f"文件上传失败: {str(e)}")
-            if 'file_path' in locals() and os.path.exists(file_path):
-                os.remove(file_path)
-            return None, f"文件上传失败: {str(e)}"
-
-    @classmethod
-    def get_file_by_id(cls, file_id: int) -> Optional[File]:
-        """
-        根据ID获取文件
-
-        Args:
-            file_id: 文件ID
-
-        Returns:
-            File: 文件对象，不存在时返回None
-        """
-        try:
-            with get_db() as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT * FROM files WHERE id = ? AND status = 'active'
-                """, (file_id,))
-
-                row = cursor.fetchone()
-                if row:
-                    return File.from_dict(dict(row))
-                return None
-        except Exception as e:
-            print(f"获取文件失败: {str(e)}")
-            return None
-
-    @classmethod
-    def get_files_by_user(cls, user_id: int, limit: int = 50, offset: int = 0) -> List[File]:
-        """
-        获取用户上传的文件列表
-
-        Args:
-            user_id: 用户ID
-            limit: 返回数量限制
-            offset: 偏移量
-
-        Returns:
-            List[File]: 文件列表
-        """
-        try:
-            with get_db() as conn:
-                cursor = conn.cursor()
-                files_list = cursor.execute("""
-                    SELECT * FROM files
-                    WHERE uploader_id = ? AND status = 'active'
-                    ORDER BY upload_time DESC
-                    LIMIT ? OFFSET ?
-                """, (user_id, limit, offset)).fetchall()
-
-                return [File.from_dict(dict(row)) for row in files_list]
-        except Exception as e:
-            print(f"获取用户文件列表失败: {str(e)}")
-            return []
-
-    @classmethod
-    def get_files_count_by_user(cls, user_id: int) -> int:
-        """
-        获取用户文件总数
-
-        Args:
-            user_id: 用户ID
-
-        Returns:
-            int: 文件总数
-        """
-        try:
-            with get_db() as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT COUNT(*) FROM files
-                    WHERE uploader_id = ? AND status = 'active'
-                """, (user_id,))
-                result = cursor.fetchone()
-                return result[0] if result else 0
-        except Exception as e:
-            print(f"获取用户文件总数失败: {str(e)}")
-            return 0
-
-    @classmethod
-    def get_public_files(cls, limit: int = 50, offset: int = 0) -> List[File]:
-        """
-        获取公开文件列表
-
-        Args:
-            limit: 返回数量限制
-            offset: 偏移量
-
-        Returns:
-            List[File]: 文件列表
-        """
-        try:
-            with get_db() as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT * FROM files
-                    WHERE is_public = 1 AND status = 'active'
-                    ORDER BY upload_time DESC
-                    LIMIT ? OFFSET ?
-                """, (limit, offset))
-
-                return [File.from_dict(dict(row)) for row in cursor.fetchall()]
-        except Exception as e:
-            print(f"获取公开文件列表失败: {str(e)}")
-            return []
-
-    @classmethod
-    def get_public_files_count(cls) -> int:
-        """
-        获取公开文件总数
-
-        Returns:
-            int: 公开文件总数
-        """
-        try:
-            with get_db() as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT COUNT(*) FROM files
-                    WHERE is_public = 1 AND status = 'active'
-                """)
-                result = cursor.fetchone()
-                return result[0] if result else 0
-        except Exception as e:
-            print(f"获取公开文件总数失败: {str(e)}")
-            return 0
-
-    @classmethod
-    def search_files(cls, keyword: str, user_id: Optional[int] = None,
-                    limit: int = 50, offset: int = 0) -> List[File]:
-        """
-        搜索文件
-
-        Args:
-            keyword: 搜索关键词
-            user_id: 用户ID（可选，用于限制搜索范围）
-            limit: 返回数量限制
-            offset: 偏移量
-
-        Returns:
-            List[File]: 文件列表
-        """
-        try:
-            with get_db() as conn:
-                cursor = conn.cursor()
-
-                if user_id:
-                    # 搜索用户的文件和公开文件
-                    cursor.execute("""
-                        SELECT * FROM files
-                        WHERE status = 'active'
-                        AND (uploader_id = ? OR is_public = 1)
-                        AND (filename LIKE ? OR description LIKE ? OR tags LIKE ?)
-                        ORDER BY upload_time DESC
-                        LIMIT ? OFFSET ?
-                    """, (user_id, f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", limit, offset))
-                else:
-                    # 只搜索公开文件
-                    cursor.execute("""
-                        SELECT * FROM files
-                        WHERE status = 'active' AND is_public = 1
-                        AND (filename LIKE ? OR description LIKE ? OR tags LIKE ?)
-                        ORDER BY upload_time DESC
-                        LIMIT ? OFFSET ?
-                    """, (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", limit, offset))
-
-                return [File.from_dict(dict(row)) for row in cursor.fetchall()]
-        except Exception as e:
-            print(f"搜索文件失败: {str(e)}")
-            return []
-
-    @classmethod
-    def get_search_files_count(cls, keyword: str, user_id: Optional[int] = None) -> int:
-        """
-        获取搜索结果总数
-
-        Args:
-            keyword: 搜索关键词
-            user_id: 用户ID（可选，用于限制搜索范围）
-
-        Returns:
-            int: 搜索结果总数
-        """
-        try:
-            with get_db() as conn:
-                cursor = conn.cursor()
-
-                if user_id:
-                    # 搜索用户的文件和公开文件数量
-                    cursor.execute("""
-                        SELECT COUNT(*) FROM files
-                        WHERE status = 'active'
-                        AND (uploader_id = ? OR is_public = 1)
-                        AND (filename LIKE ? OR description LIKE ? OR tags LIKE ?)
-                    """, (user_id, f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"))
-                else:
-                    # 只搜索公开文件数量
-                    cursor.execute("""
-                        SELECT COUNT(*) FROM files
-                        WHERE status = 'active' AND is_public = 1
-                        AND (filename LIKE ? OR description LIKE ? OR tags LIKE ?)
-                    """, (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"))
-
-                result = cursor.fetchone()
-                return result[0] if result else 0
-        except Exception as e:
-            print(f"获取搜索结果总数失败: {str(e)}")
-            return 0
-
-    @classmethod
-    def delete_file(cls, file_id: int, user_id: int, user_role: str) -> bool:
-        """
-        删除文件（硬删除）
-
-        Args:
-            file_id: 文件ID
-            user_id: 操作用户ID
-            user_role: 操作用户角色
-
-        Returns:
-            bool: 是否删除成功
-        """
-        try:
-            file_obj = cls.get_file_by_id(file_id)
-            if not file_obj:
-                return False
-
-            # 检查权限
-            if not file_obj.is_accessible_by_user(user_id, user_role):
-                return False
-
-            # 只有文件上传者和管理员可以删除文件
-            if file_obj.uploader_id != user_id and user_role != "admin":
-                return False
-
-            # 删除物理文件
-            if os.path.exists(file_obj.file_path):
-                os.remove(file_obj.file_path)
-                print(f"已删除物理文件: {file_obj.file_path}")
-
-            # 从数据库中删除记录
-            with get_db() as conn:
-                cursor = conn.cursor()
-                cursor.execute("DELETE FROM files WHERE id = ?", (file_id,))
-
-                return cursor.rowcount > 0
-
-        except Exception as e:
-            print(f"删除文件失败: {str(e)}")
-            return False
-
-    
-    @classmethod
-    def update_file_info(cls, file_id: int, user_id: int, user_role: str,
-                        description: Optional[str] = None, tags: Optional[str] = None,
-                        is_public: Optional[bool] = None) -> bool:
-        """
-        更新文件信息
-
-        Args:
-            file_id: 文件ID
-            user_id: 操作用户ID
-            user_role: 操作用户角色
-            description: 新的描述
-            tags: 新的标签
-            is_public: 是否公开
-
-        Returns:
-            bool: 是否更新成功
-        """
-        try:
-            file_obj = cls.get_file_by_id(file_id)
-            if not file_obj:
-                return False
-
-            # 检查权限
-            if not file_obj.is_accessible_by_user(user_id, user_role):
-                return False
-
-            # 只有文件上传者和管理员可以修改文件信息
-            if file_obj.uploader_id != user_id and user_role != "admin":
-                return False
-
-            # 更新数据库
-            with get_db() as conn:
-                cursor = conn.cursor()
-
-                # 构建更新语句
-                updates = []
-                params = []
-
-                if description is not None:
-                    updates.append("description = ?")
-                    params.append(description)
-
-                if tags is not None:
-                    updates.append("tags = ?")
-                    params.append(tags)
-
-                if is_public is not None:
-                    updates.append("is_public = ?")
-                    params.append(is_public)
-
-                if updates:
-                    updates.append("updated_at = ?")
-                    params.append(datetime.now())
-                    params.append(file_id)
-
-                    cursor.execute(f"""
-                        UPDATE files
-                        SET {', '.join(updates)}
-                        WHERE id = ?
-                    """, params)
-
-                    return cursor.rowcount > 0
-
-                return True
-
-        except Exception as e:
-            print(f"更新文件信息失败: {str(e)}")
-            return False
-
-    @classmethod
-    def increment_download_count(cls, file_id: int) -> bool:
-        """
-        增加文件下载次数
-
-        Args:
-            file_id: 文件ID
-
-        Returns:
-            bool: 是否更新成功
-        """
-        try:
-            with get_db() as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    UPDATE files
-                    SET download_count = download_count + 1,
-                        last_accessed = ?,
-                        updated_at = ?
-                    WHERE id = ? AND status = 'active'
-                """, (datetime.now(), datetime.now(), file_id))
-
-                return cursor.rowcount > 0
-
-        except Exception as e:
-            print(f"更新下载次数失败: {str(e)}")
-            return False
-
-    @classmethod
-    def get_file_stats(cls, user_id: Optional[int] = None) -> Dict[str, Any]:
-        """
-        获取文件统计信息
-
-        Args:
-            user_id: 用户ID（可选，用于获取特定用户的统计）
-
-        Returns:
-            Dict[str, Any]: 统计信息
-        """
-        try:
-            with get_db() as conn:
-                cursor = conn.cursor()
-
-                if user_id:
-                    # 获取特定用户的统计
-                    cursor.execute("""
-                        SELECT
-                            COUNT(*) as total_files,
-                            SUM(file_size) as total_size,
-                            COUNT(CASE WHEN is_public = 1 THEN 1 END) as public_files,
-                            SUM(download_count) as total_downloads
-                        FROM files
-                        WHERE uploader_id = ? AND status = 'active'
-                    """, (user_id,))
-                else:
-                    # 获取全局统计
-                    cursor.execute("""
-                        SELECT
-                            COUNT(*) as total_files,
-                            SUM(file_size) as total_size,
-                            COUNT(CASE WHEN is_public = 1 THEN 1 END) as public_files,
-                            SUM(download_count) as total_downloads
-                        FROM files
-                        WHERE status = 'active'
-                    """)
-
-                result = cursor.fetchone()
-
-                return {
-                    'total_files': result[0] or 0,
-                    'total_size': result[1] or 0,
-                    'public_files': result[2] or 0,
-                    'total_downloads': result[3] or 0
-                }
-
-        except Exception as e:
-            print(f"获取文件统计失败: {str(e)}")
-            return {
-                'total_files': 0,
-                'total_size': 0,
-                'public_files': 0,
-                'total_downloads': 0
-            }
+                files = FileRepository.get_by_user(user_id, limit, offset) + FileRepository.get_public(limit, offset)
+                total = FileRepository.get_count_by_user(user_id) + FileRepository.get_public_count()
+
+        if keyword:
+            files = FileRepository.search(keyword, user_id if scope == "my" else None, limit, offset)
+            total = FileRepository.get_search_count(keyword, user_id if scope == "my" else None)
+
+        # 添加上传者名字
+        for f in files:
+            f['uploader_name'] = FileRepository.get_uploader_name(f['uploader_id']) or '未知用户'
+
+        total_pages = (total + limit - 1) // limit if total > 0 else 1
+        return {"status_code": 200, "content": {"success": True, "data": {
+            "files": files, "total_files_count": total, "pagination": {
+                "current_page": page, "per_page": limit, "total": total, "total_pages": total_pages,
+                "has_next": page < total_pages, "has_prev": page > 1}}}}
+
+    async def get_stats(self, filters: Dict[str, Any], user_id: int, role: str) -> Dict[str, Any]:
+        """获取文件统计"""
+        scope = filters.get("scope", "my")
+        target_id = None
+        if scope == "my":
+            target_id = user_id
+        elif scope == "all" and role == "admin":
+            target_id = int(filters.get("user_id", 0)) if filters.get("user_id") else None
+        stats = FileRepository.get_stats(target_id)
+        return {"status_code": 200, "content": {"success": True, "data": stats}}
+
+    async def get_detail(self, file_id: int, user_id: int, role: str) -> Dict[str, Any]:
+        """获取文件详情"""
+        file_data = FileRepository.get_by_id(file_id)
+        if not file_data:
+            return {"status_code": 404, "content": {"success": False, "message": "文件不存在", "error": "FILE_NOT_FOUND"}}
+        file_obj = File.from_dict(file_data)
+        if not file_obj.is_accessible_by_user(user_id, role):
+            return {"status_code": 403, "content": {"success": False, "message": "没有权限访问此文件", "error": "ACCESS_DENIED"}}
+        FileRepository.increment_download(file_id)
+        return {"status_code": 200, "content": {"success": True, "data": file_obj.to_dict()}}
+
+    async def update(self, file_id: int, data: Dict[str, Any], user_id: int, role: str) -> Dict[str, Any]:
+        """更新文件信息"""
+        file_data = FileRepository.get_by_id(file_id)
+        if not file_data:
+            return {"status_code": 404, "content": {"success": False, "message": "文件不存在", "error": "FILE_NOT_FOUND"}}
+        file_obj = File.from_dict(file_data)
+        if not file_obj.is_accessible_by_user(user_id, role):
+            return {"status_code": 403, "content": {"success": False, "message": "没有权限修改此文件", "error": "ACCESS_DENIED"}}
+        if file_obj.uploader_id != user_id and role != "admin":
+            return {"status_code": 403, "content": {"success": False, "message": "只有上传者和管理员可以修改", "error": "ACCESS_DENIED"}}
+        update_data = {}
+        if data.get("description"):
+            update_data['description'] = data.get("description")
+        if data.get("tags"):
+            update_data['tags'] = data.get("tags")
+        if data.get("is_public") is not None:
+            update_data['is_public'] = data.get("is_public")
+        FileRepository.update(file_id, update_data)
+        logger.info(f"文件信息更新成功: file_id={file_id}")
+        return {"status_code": 200, "content": {"success": True, "message": "文件信息更新成功"}}
+
+    async def delete(self, file_id: int, user_id: int, role: str) -> Dict[str, Any]:
+        """删除文件"""
+        file_data = FileRepository.get_by_id(file_id)
+        if not file_data:
+            return {"status_code": 404, "content": {"success": False, "message": "文件不存在", "error": "FILE_NOT_FOUND"}}
+        file_obj = File.from_dict(file_data)
+        if not file_obj.is_accessible_by_user(user_id, role):
+            return {"status_code": 403, "content": {"success": False, "message": "没有权限删除此文件", "error": "ACCESS_DENIED"}}
+        if file_obj.uploader_id != user_id and role != "admin":
+            return {"status_code": 403, "content": {"success": False, "message": "只有上传者和管理员可以删除", "error": "ACCESS_DENIED"}}
+        # 删除物理文件
+        if os.path.exists(file_obj.file_path):
+            os.remove(file_obj.file_path)
+        FileRepository.delete(file_id)
+        logger.info(f"文件删除成功: file_id={file_id}")
+        return {"status_code": 200, "content": {"success": True, "message": "文件删除成功"}}
+
+    async def download(self, file_id: int, user_id: int, role: str) -> Dict[str, Any]:
+        """下载文件"""
+        file_data = FileRepository.get_by_id(file_id)
+        if not file_data:
+            return {"status_code": 404, "error": True, "content": {"success": False, "message": "文件不存在", "error": "FILE_NOT_FOUND"}}
+        file_obj = File.from_dict(file_data)
+        if not file_obj.is_accessible_by_user(user_id, role):
+            return {"status_code": 403, "error": True, "content": {"success": False, "message": "没有权限访问此文件", "error": "ACCESS_DENIED"}}
+        if not os.path.exists(file_obj.file_path):
+            return {"status_code": 404, "error": True, "content": {"success": False, "message": "文件已丢失", "error": "FILE_LOST"}}
+        FileRepository.increment_download(file_id)
+        return {"file_path": file_obj.file_path, "filename": file_obj.filename, "file_type": file_obj.file_type}
+
+    async def download_by_name(self, filename: str, user_id: int) -> Dict[str, Any]:
+        """按文件名下载"""
+        import urllib.parse
+        decoded = urllib.parse.unquote(filename)
+        file_data = FileRepository.get_by_filename(decoded)
+        if not file_data:
+            return {"status_code": 404, "error": True, "content": {"success": False, "message": "文件不存在", "error": "FILE_NOT_FOUND"}}
+        if not os.path.exists(file_data['file_path']):
+            return {"status_code": 404, "error": True, "content": {"success": False, "message": "文件已丢失", "error": "FILE_LOST"}}
+        return {"file_path": file_data['file_path'], "filename": file_data['filename'], "file_type": file_data['file_type']}
+
+    async def view(self, file_id: int, user_id: int, role: str) -> Dict[str, Any]:
+        """预览文件"""
+        result = await self.download(file_id, user_id, role)
+        if result.get("error"):
+            return result
+        # 设置预览 MIME 类型
+        media_type = result['file_type']
+        if result['file_type'] == 'application/pdf':
+            media_type = 'application/pdf'
+        elif not result['file_type'].startswith(('image/', 'text/', 'video/', 'audio/')):
+            media_type = 'application/octet-stream'
+        result['media_type'] = media_type
+        result['headers'] = {"Content-Disposition": f"inline; filename=\"{result['filename']}\""}
+        return result

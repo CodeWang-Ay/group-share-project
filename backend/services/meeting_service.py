@@ -1,332 +1,273 @@
 """
-组会业务逻辑服务
-"""
-from datetime import datetime
-from typing import Optional, List
-from dataclasses import dataclass
+================================================================================
+组会业务服务模块 (services/meeting_service.py)
+================================================================================
 
-from database.connection import get_db
-from models.meeting import Meeting, MeetingPresenter, MeetingFile
+模块名称: backend/services/meeting_service.py
+功能描述: 组会业务逻辑处理，返回完整响应数据
+
+Service 类方法:
+    - get_list(filters, user_id, role)       : 获取组会列表
+    - create(data, user_id, role)            : 创建组会
+    - get_stats()                            : 获取统计信息
+    - get_detail(meeting_id, user_id, role)  : 获取组会详情
+    - update(meeting_id, data, user_id, role): 更新组会
+    - delete(meeting_id, user_id, role)      : 删除组会
+    - update_status(meeting_id, status, user_id, role): 更新状态
+    - get_presenters(meeting_id)             : 获取汇报人列表
+    - add_presenter(meeting_id, data, user_id, role): 添加汇报人
+    - remove_presenter(meeting_id, presenter_id, user_id, role): 移除汇报人
+
+职责:
+    - 所有业务逻辑写在这里
+    - 返回完整响应数据（status_code, content）
+    - 调用 Repository 进行数据操作
+
+作者: wjg
+创建日期: 2026-05-23
+================================================================================
+"""
+import os
+from typing import Dict, Any, Optional, List
+from pathlib import Path
+from datetime import datetime
 from loguru import logger
+
+from repositories.meeting_repository import MeetingRepository
 
 
 class MeetingService:
-    """组会服务类"""
+    """组会业务服务类"""
 
-    # 组会类型常量
-    MEETING_TYPES = ['regular', 'paper_reading', 'topic_discussion']
-
-    # 组会状态常量
-    STATUS_SCHEDULED = 'scheduled'
-    STATUS_ONGOING = 'ongoing'
-    STATUS_COMPLETED = 'completed'
-
-    # 汇报人类型常量
-    PRESENTER_ASSIGNED = 'assigned'
-    PRESENTER_VOLUNTEERED = 'volunteered'
-    PRESENTER_PENDING = 'pending'
-
-    # 汇报人状态常量
-    PRESENTER_STATUS_PENDING = 'pending'
-    PRESENTER_STATUS_CONFIRMED = 'confirmed'
-    PRESENTER_STATUS_COMPLETED = 'completed'
-
-    @staticmethod
-    def create_meeting(
-        title: str,
-        meeting_type: str,
-        scheduled_at: datetime,
-        created_by: int,
-        description: Optional[str] = None,
-        location: Optional[str] = None,
-        is_online: bool = False,
-        online_link: Optional[str] = None,
-        duration_total: int = 60,
-        material_required: bool = True,
-        material_deadline: Optional[datetime] = None,
-        notes: Optional[str] = None,
-        minutes: Optional[str] = None
-    ) -> Meeting:
-        """创建组会"""
-        with get_db() as conn:
-            cursor = conn.cursor()
-
-            cursor.execute("""
-                INSERT INTO meetings (
-                    title, meeting_type, description, location, is_online, online_link,
-                    scheduled_at, duration_total, material_required, material_deadline,
-                    notes, minutes, status, created_by, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'scheduled', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-            """, (
-                title, meeting_type, description, location, is_online, online_link,
-                scheduled_at.isoformat(), duration_total, material_required,
-                material_deadline.isoformat() if material_deadline else None,
-                notes, minutes, created_by
-            ))
-
-            meeting_id = cursor.lastrowid
-
-            return Meeting(
-                id=meeting_id,
-                title=title,
-                meeting_type=meeting_type,
-                description=description,
-                location=location,
-                is_online=is_online,
-                online_link=online_link,
-                scheduled_at=scheduled_at,
-                duration_total=duration_total,
-                material_required=material_required,
-                material_deadline=material_deadline,
-                notes=notes,
-                minutes=minutes,
-                status='scheduled',
-                created_by=created_by,
-                created_at=datetime.now(),
-                updated_at=datetime.now()
-            )
-
-    @staticmethod
-    def get_meeting_by_id(meeting_id: int) -> Optional[Meeting]:
-        """根据ID获取组会"""
-        with get_db() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT id, title, meeting_type, description, location, is_online, online_link,
-                       scheduled_at, duration_total, material_required, material_deadline,
-                       notes, minutes, status, created_by, created_at, updated_at
-                FROM meetings WHERE id = ?
-            """, (meeting_id,))
-
-            row = cursor.fetchone()
-            if row:
-                return Meeting.from_dict(dict(row))
-            return None
-
-    @staticmethod
-    def get_meetings(
-        status: Optional[str] = None,
-        meeting_type: Optional[str] = None,
-        created_by: Optional[int] = None,
-        search: Optional[str] = None,
-        limit: int = 10,
-        offset: int = 0
-    ) -> List[Meeting]:
+    async def get_list(self, filters: Dict[str, Any], user_id: int, role: str) -> Dict[str, Any]:
         """获取组会列表"""
-        with get_db() as conn:
-            cursor = conn.cursor()
+        page = int(filters.get("page", 1))
+        limit = int(filters.get("limit", 10))
+        offset = (page - 1) * limit
 
-            where_conditions = []
-            params = []
+        MeetingRepository.auto_update_status()
 
-            if status:
-                where_conditions.append("status = ?")
-                params.append(status)
+        meetings = MeetingRepository.get_list(filters, limit, offset)
+        total = MeetingRepository.get_count(filters)
 
-            if meeting_type:
-                where_conditions.append("meeting_type = ?")
-                params.append(meeting_type)
+        meetings_with_presenters = []
+        for m in meetings:
+            presenters = MeetingRepository.get_presenters(m['id'])
+            presenter_list = []
+            for p in presenters:
+                files = MeetingRepository.get_presenter_files(p['id'])
+                presenter_list.append({
+                    "id": p['id'],
+                    "user_id": p['user_id'],
+                    "presenter_type": p['presenter_type'],
+                    "duration_minutes": p['duration_minutes'],
+                    "status": p['status'],
+                    "material_status": p['material_status'],
+                    "username": p['username'],
+                    "real_name": p['username'],
+                    "files": files
+                })
+            m['presenters'] = presenter_list
+            meetings_with_presenters.append(m)
 
-            if created_by:
-                where_conditions.append("created_by = ?")
-                params.append(created_by)
+        total_pages = (total + limit - 1) // limit if total > 0 else 1
+        return {"status_code": 200, "content": {"success": True, "data": {
+            "meetings": meetings_with_presenters,
+            "pagination": {
+                "current_page": page, "per_page": limit, "total": total,
+                "total_pages": total_pages, "has_next": page < total_pages, "has_prev": page > 1
+            }
+        }}}
 
-            if search:
-                where_conditions.append("title LIKE ?")
-                params.append(f"%{search}%")
+    async def create(self, data: Dict[str, Any], user_id: int, role: str) -> Dict[str, Any]:
+        """创建组会"""
+        if role not in ['admin', 'teacher']:
+            return {"status_code": 403, "content": {"success": False, "message": "只有导师和管理员可以创建组会", "error": "ACCESS_DENIED"}}
 
-            where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
+        if not data.get("title"):
+            return {"status_code": 400, "content": {"success": False, "message": "组会标题不能为空", "error": "VALIDATION_ERROR"}}
+        if not data.get("scheduled_at"):
+            return {"status_code": 400, "content": {"success": False, "message": "会议时间不能为空", "error": "VALIDATION_ERROR"}}
 
-            query = f"""
-                SELECT id, title, meeting_type, description, location, is_online, online_link,
-                       scheduled_at, duration_total, material_required, material_deadline,
-                       notes, minutes, status, created_by, created_at, updated_at
-                FROM meetings
-                {where_clause}
-                ORDER BY scheduled_at DESC
-                LIMIT ? OFFSET ?
-            """
+        scheduled_at = datetime.fromisoformat(data["scheduled_at"])
+        material_deadline = datetime.fromisoformat(data.get("material_deadline")) if data.get("material_deadline") else None
 
-            cursor.execute(query, params + [limit, offset])
-            rows = cursor.fetchall()
+        create_data = {
+            'title': data["title"],
+            'meeting_type': data.get("meeting_type", "regular"),
+            'scheduled_at': scheduled_at.isoformat(),
+            'created_by': user_id,
+            'description': data.get("description"),
+            'location': data.get("location"),
+            'is_online': data.get("is_online", False),
+            'online_link': data.get("online_link"),
+            'duration_total': data.get("duration_total", 60),
+            'material_required': data.get("material_required", True),
+            'material_deadline': material_deadline.isoformat() if material_deadline else None,
+            'notes': data.get("notes"),
+            'minutes': data.get("minutes")
+        }
+        meeting_id = MeetingRepository.create(create_data)
 
-            return [Meeting.from_dict(dict(row)) for row in rows]
+        logger.info(f"创建组会成功: {data['title']} (ID: {meeting_id})")
+        return {"status_code": 201, "content": {"success": True, "message": "组会创建成功", "data": {"id": meeting_id, "title": data["title"]}}}
 
-    @staticmethod
-    def get_meetings_count(
-        status: Optional[str] = None,
-        meeting_type: Optional[str] = None,
-        created_by: Optional[int] = None,
-        search: Optional[str] = None
-    ) -> int:
-        """获取组会总数"""
-        with get_db() as conn:
-            cursor = conn.cursor()
+    async def get_stats(self) -> Dict[str, Any]:
+        """获取统计信息"""
+        MeetingRepository.auto_update_status()
+        stats = MeetingRepository.get_stats()
+        return {"status_code": 200, "content": {"success": True, "data": stats}}
 
-            where_conditions = []
-            params = []
+    async def get_detail(self, meeting_id: int, user_id: int, role: str) -> Dict[str, Any]:
+        """获取组会详情"""
+        meeting = MeetingRepository.get_by_id(meeting_id)
+        if not meeting:
+            return {"status_code": 404, "content": {"success": False, "message": "组会不存在", "error": "MEETING_NOT_FOUND"}}
 
-            if status:
-                where_conditions.append("status = ?")
-                params.append(status)
+        presenters = MeetingRepository.get_presenters(meeting_id)
+        presenter_list = []
+        for p in presenters:
+            presenter_list.append({
+                "id": p['id'],
+                "user_id": p['user_id'],
+                "presenter_type": p['presenter_type'],
+                "duration_minutes": p['duration_minutes'],
+                "status": p['status'],
+                "username": p['username'],
+                "real_name": p['username'],
+                "user_role": p['role']
+            })
+        meeting['presenters'] = presenter_list
 
-            if meeting_type:
-                where_conditions.append("meeting_type = ?")
-                params.append(meeting_type)
+        return {"status_code": 200, "content": {"success": True, "data": meeting}}
 
-            if created_by:
-                where_conditions.append("created_by = ?")
-                params.append(created_by)
+    async def update(self, meeting_id: int, data: Dict[str, Any], user_id: int, role: str) -> Dict[str, Any]:
+        """更新组会"""
+        meeting = MeetingRepository.get_by_id(meeting_id)
+        if not meeting:
+            return {"status_code": 404, "content": {"success": False, "message": "组会不存在", "error": "MEETING_NOT_FOUND"}}
 
-            if search:
-                where_conditions.append("title LIKE ?")
-                params.append(f"%{search}%")
-
-            where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
-
-            query = f"SELECT COUNT(*) FROM meetings {where_clause}"
-            cursor.execute(query, params)
-
-            return cursor.fetchone()[0]
-
-    @staticmethod
-    def update_meeting(meeting_id: int, **kwargs) -> Optional[Meeting]:
-        """更新组会信息"""
-        allowed_fields = [
-            'title', 'meeting_type', 'description', 'location', 'is_online',
-            'online_link', 'scheduled_at', 'duration_total', 'material_required',
-            'material_deadline', 'notes', 'minutes', 'status'
-        ]
+        if role not in ['admin', 'teacher'] and meeting['created_by'] != user_id:
+            return {"status_code": 403, "content": {"success": False, "message": "没有权限修改此组会", "error": "ACCESS_DENIED"}}
 
         update_data = {}
-        for field in allowed_fields:
-            if field in kwargs and kwargs[field] is not None:
-                if field in ['scheduled_at', 'material_deadline'] and isinstance(kwargs[field], datetime):
-                    update_data[field] = kwargs[field].isoformat()
-                else:
-                    update_data[field] = kwargs[field]
+        if data.get("scheduled_at"):
+            update_data["scheduled_at"] = datetime.fromisoformat(data["scheduled_at"]).isoformat()
+        if data.get("material_deadline"):
+            update_data["material_deadline"] = datetime.fromisoformat(data["material_deadline"]).isoformat()
 
-        if not update_data:
-            return None
+        for field in ['title', 'meeting_type', 'description', 'location', 'is_online',
+                       'online_link', 'duration_total', 'material_required', 'notes', 'minutes', 'status']:
+            if field in data:
+                update_data[field] = data[field]
 
-        with get_db() as conn:
-            cursor = conn.cursor()
+        MeetingRepository.update(meeting_id, update_data)
 
-            set_clause = ", ".join([f"{field} = ?" for field in update_data.keys()])
-            values = list(update_data.values()) + [meeting_id]
+        logger.info(f"组会更新成功: meeting_id={meeting_id}")
+        return {"status_code": 200, "content": {"success": True, "message": "组会更新成功"}}
 
-            cursor.execute(f"""
-                UPDATE meetings SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?
-            """, values)
+    async def delete(self, meeting_id: int, user_id: int, role: str) -> Dict[str, Any]:
+        """删除组会"""
+        if role not in ['admin', 'teacher']:
+            return {"status_code": 403, "content": {"success": False, "message": "没有权限删除组会", "error": "ACCESS_DENIED"}}
 
-            if cursor.rowcount == 0:
-                return None
+        meeting = MeetingRepository.get_by_id(meeting_id)
+        if not meeting:
+            return {"status_code": 404, "content": {"success": False, "message": "组会不存在", "error": "MEETING_NOT_FOUND"}}
 
-            return MeetingService.get_meeting_by_id(meeting_id)
+        MeetingRepository.delete(meeting_id)
+        logger.info(f"组会删除成功: meeting_id={meeting_id}")
+        return {"status_code": 200, "content": {"success": True, "message": "组会删除成功"}}
 
-    @staticmethod
-    def delete_meeting(meeting_id: int) -> bool:
-        """删除组会（级联删除关联的汇报人和材料）"""
-        with get_db() as conn:
-            cursor = conn.cursor()
-
-            # 先删除关联的汇报材料文件
-            cursor.execute("DELETE FROM meeting_files WHERE meeting_id = ?", (meeting_id,))
-
-            # 删除关联的汇报人记录
-            cursor.execute("DELETE FROM meeting_presenters WHERE meeting_id = ?", (meeting_id,))
-
-            # 最后删除组会本身
-            cursor.execute("DELETE FROM meetings WHERE id = ?", (meeting_id,))
-            return cursor.rowcount > 0
-
-    @staticmethod
-    def update_meeting_status(meeting_id: int, status: str) -> Optional[Meeting]:
+    async def update_status(self, meeting_id: int, status: str, user_id: int, role: str) -> Dict[str, Any]:
         """更新组会状态"""
-        valid_statuses = ['scheduled', 'ongoing', 'completed', 'cancelled']
+        if role not in ['admin', 'teacher']:
+            return {"status_code": 403, "content": {"success": False, "message": "没有权限更新组会状态", "error": "ACCESS_DENIED"}}
+
+        valid_statuses = ['scheduled', 'ongoing', 'completed', 'cancelled', 'postponed']
         if status not in valid_statuses:
-            return None
+            return {"status_code": 400, "content": {"success": False, "message": f"状态值无效，有效状态：{', '.join(valid_statuses)}", "error": "INVALID_STATUS"}}
 
-        return MeetingService.update_meeting(meeting_id, status=status)
+        meeting = MeetingRepository.get_by_id(meeting_id)
+        if not meeting:
+            return {"status_code": 404, "content": {"success": False, "message": "组会不存在", "error": "MEETING_NOT_FOUND"}}
 
-    @staticmethod
-    def auto_update_meeting_statuses() -> int:
-        """
-        根据日期自动更新组会状态（以天为单位）
-        - 过去的组会 → completed（已召开）
-        - 今天的组会 → ongoing（进行中）
-        - 未来的组会 → scheduled（待召开）
+        MeetingRepository.update(meeting_id, {'status': status})
 
-        Returns:
-            int: 更新的组会数量
-        """
-        from datetime import date
+        if status == 'completed':
+            MeetingRepository.update_presenter_status(meeting_id, 'completed')
+            MeetingRepository.update_presenter_material_status(meeting_id, 'approved')
+        elif status == 'cancelled':
+            MeetingRepository.reset_presenter_material_status(meeting_id)
 
-        with get_db() as conn:
-            cursor = conn.cursor()
-            today = date.today()
-            today_str = today.isoformat()
+        logger.info(f"组会状态更新成功: meeting_id={meeting_id}, status={status}")
+        return {"status_code": 200, "content": {"success": True, "message": "组会状态更新成功"}}
 
-            # 更新过去的组会为已完成（scheduled_at < 今天，且状态为 scheduled 或 ongoing）
-            cursor.execute("""
-                UPDATE meetings
-                SET status = 'completed', updated_at = ?
-                WHERE status IN ('scheduled', 'ongoing')
-                AND DATE(scheduled_at) < ?
-            """, (datetime.now().isoformat(), today_str))
-            past_updated = cursor.rowcount
+    async def get_presenters(self, meeting_id: int) -> Dict[str, Any]:
+        """获取汇报人列表"""
+        presenters = MeetingRepository.get_presenters(meeting_id)
+        presenter_list = []
+        for p in presenters:
+            files = MeetingRepository.get_presenter_files(p['id'])
+            presenter_list.append({
+                "id": p['id'],
+                "meeting_id": p['meeting_id'],
+                "user_id": p['user_id'],
+                "presenter_type": p['presenter_type'],
+                "duration_minutes": p['duration_minutes'],
+                "material_required": p['material_required'],
+                "status": p['status'],
+                "material_status": p['material_status'],
+                "created_at": p['created_at'],
+                "updated_at": p['updated_at'],
+                "user": {
+                    "id": p['user_id'],
+                    "username": p['username'],
+                    "real_name": p['username'],
+                    "role": p['role'],
+                    "research_direction": p['research_direction']
+                },
+                "files": files
+            })
+        return {"status_code": 200, "content": {"success": True, "data": {"presenters": presenter_list}}}
 
-            # 更新今天的组会为进行中（scheduled_at = 今天，且状态为 scheduled）
-            cursor.execute("""
-                UPDATE meetings
-                SET status = 'ongoing', updated_at = ?
-                WHERE status = 'scheduled'
-                AND DATE(scheduled_at) = ?
-            """, (datetime.now().isoformat(), today_str))
-            today_updated = cursor.rowcount
+    async def add_presenter(self, meeting_id: int, data: Dict[str, Any], user_id: int, role: str) -> Dict[str, Any]:
+        """添加汇报人"""
+        if role not in ['admin', 'teacher']:
+            creator_id = MeetingRepository.get_meeting_creator(meeting_id)
+            if creator_id != user_id:
+                return {"status_code": 403, "content": {"success": False, "message": "只有导师、管理员或组会创建者可以分配汇报人", "error": "ACCESS_DENIED"}}
 
-            total_updated = past_updated + today_updated
-            if total_updated > 0:
-                logger.info(f"自动更新了 {total_updated} 个组会状态（过去:{past_updated}, 今天:{today_updated}）")
+        user_id_to_add = data.get("user_id")
+        if not user_id_to_add:
+            return {"status_code": 400, "content": {"success": False, "message": "请选择汇报人", "error": "VALIDATION_ERROR"}}
 
-            return total_updated
+        if MeetingRepository.check_presenter_exists(meeting_id, user_id_to_add):
+            return {"status_code": 400, "content": {"success": False, "message": "该成员已是汇报人", "error": "ALREADY_EXISTS"}}
 
-    @staticmethod
-    def get_meeting_stats(created_by: Optional[int] = None) -> dict:
-        """获取组会统计信息"""
-        with get_db() as conn:
-            cursor = conn.cursor()
+        presenter_type = data.get("presenter_type", "assigned")
+        duration_minutes = data.get("duration_minutes", 20)
+        presenter_id = MeetingRepository.add_presenter(meeting_id, user_id_to_add, presenter_type, duration_minutes)
 
-            where_clause = "WHERE created_by = ?" if created_by else ""
-            params = [created_by] if created_by else []
+        presenter = MeetingRepository.get_presenter_by_id(presenter_id)
+        logger.info(f"添加汇报人成功: meeting_id={meeting_id}, presenter_id={presenter_id}")
+        return {"status_code": 200, "content": {"success": True, "message": "添加汇报人成功",
+                                                 "data": {"id": presenter_id, "meeting_id": meeting_id,
+                                                          "user_id": user_id_to_add, "presenter_type": presenter_type,
+                                                          "duration_minutes": duration_minutes, "status": "pending",
+                                                          "user": {"id": user_id_to_add, "username": presenter['username'],
+                                                                   "real_name": presenter['username'],
+                                                                   "research_direction": presenter['research_direction']}}}}
 
-            # 总组会数
-            cursor.execute(f"SELECT COUNT(*) FROM meetings {where_clause}", params)
-            total_meetings = cursor.fetchone()[0]
+    async def remove_presenter(self, meeting_id: int, presenter_id: int, user_id: int, role: str) -> Dict[str, Any]:
+        """移除汇报人"""
+        if role not in ['admin', 'teacher']:
+            creator_id = MeetingRepository.get_meeting_creator(meeting_id)
+            if creator_id != user_id:
+                return {"status_code": 403, "content": {"success": False, "message": "只有导师、管理员或组会创建者可以移除汇报人", "error": "ACCESS_DENIED"}}
 
-            # 各状态组会数
-            cursor.execute(f"""
-                SELECT status, COUNT(*) FROM meetings {where_clause} GROUP BY status
-            """, params)
-            status_counts = dict(cursor.fetchall())
+        if not MeetingRepository.remove_presenter(presenter_id, meeting_id):
+            return {"status_code": 404, "content": {"success": False, "message": "汇报人不存在", "error": "NOT_FOUND"}}
 
-            # 本月组会数
-            if where_clause:
-                cursor.execute(f"""
-                    SELECT COUNT(*) FROM meetings
-                    {where_clause} AND scheduled_at >= date('now', 'start of month')
-                """, params)
-            else:
-                cursor.execute("""
-                    SELECT COUNT(*) FROM meetings
-                    WHERE scheduled_at >= date('now', 'start of month')
-                """)
-            this_month_meetings = cursor.fetchone()[0]
-
-            return {
-                'total_meetings': total_meetings,
-                'scheduled_count': status_counts.get('scheduled', 0),
-                'ongoing_count': status_counts.get('ongoing', 0),
-                'completed_count': status_counts.get('completed', 0),
-                'this_month_meetings': this_month_meetings
-            }
+        logger.info(f"移除汇报人成功: presenter_id={presenter_id}")
+        return {"status_code": 200, "content": {"success": True, "message": "移除汇报人成功"}}

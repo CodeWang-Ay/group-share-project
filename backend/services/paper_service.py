@@ -1468,3 +1468,212 @@ class PaperService:
         except Exception as e:
             print(f"更新下载次数失败: {str(e)}")
             return False
+
+    @classmethod
+    def batch_set_tags(cls, paper_ids: List[int], tag: str, user_id: int,
+                       library_type: str = 'public') -> Tuple[int, Optional[str]]:
+        """批量设置标签"""
+        if not tag:
+            return 0, "标签不能为空"
+        if not paper_ids:
+            return 0, "文献ID不能为空"
+
+        try:
+            with get_db() as conn:
+                cursor = conn.cursor()
+                count = 0
+
+                # 确保个人文献标签表存在
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS personal_paper_tags (
+                        personal_paper_id INTEGER NOT NULL,
+                        tag_id INTEGER NOT NULL,
+                        PRIMARY KEY (personal_paper_id, tag_id)
+                    )
+                """)
+
+                # 获取或创建标签
+                cursor.execute("SELECT id FROM tags WHERE name = ?", (tag,))
+                tag_row = cursor.fetchone()
+                if tag_row:
+                    tag_id = tag_row[0]
+                else:
+                    cursor.execute("""
+                        INSERT INTO tags (name, tag_type, created_by, created_at)
+                        VALUES (?, 'custom', ?, ?)
+                    """, (tag, user_id, datetime.now()))
+                    tag_id = cursor.lastrowid
+
+                for paper_id in paper_ids:
+                    if library_type == 'public':
+                        cursor.execute("""
+                            INSERT OR IGNORE INTO paper_tags (paper_id, tag_id)
+                            VALUES (?, ?)
+                        """, (paper_id, tag_id))
+                    else:
+                        cursor.execute("""
+                            INSERT OR IGNORE INTO personal_paper_tags (personal_paper_id, tag_id)
+                            VALUES (?, ?)
+                        """, (paper_id, tag_id))
+                    count += 1
+
+                return count, None
+        except Exception as e:
+            return 0, str(e)
+
+    # ==================== API 异步方法（返回 {status_code, content}） ====================
+
+    async def api_get_list(self, filters: Dict[str, Any], user_id: int) -> Dict[str, Any]:
+        """获取文献列表 API"""
+        papers, total = self.get_papers(
+            user_id=user_id,
+            keyword=filters.get('keyword'),
+            tag=filters.get('tag'),
+            status=filters.get('status'),
+            year=filters.get('year'),
+            starred=filters.get('starred'),
+            library_type=filters.get('library_type'),
+            sort=filters.get('sort', 'newest'),
+            limit=filters.get('limit', 20),
+            offset=filters.get('offset', 0)
+        )
+        return {"status_code": 200, "content": {"success": True, "data": papers, "total": total}}
+
+    async def api_get_stats(self, user_id: int, library_type: Optional[str] = None) -> Dict[str, Any]:
+        """获取文献统计 API"""
+        stats = self.get_stats(user_id=user_id, library_type=library_type)
+        return {"status_code": 200, "content": {"success": True, "data": stats}}
+
+    async def api_get_tags(self) -> Dict[str, Any]:
+        """获取标签列表 API"""
+        tags = self.get_tags()
+        return {"status_code": 200, "content": {"success": True, "data": [t.to_dict() for t in tags]}}
+
+    async def api_batch_star(self, data: Dict[str, Any], user_id: int) -> Dict[str, Any]:
+        """批量收藏 API"""
+        paper_ids = data.get("paper_ids", [])
+        star = data.get("star", True)
+        library_type = data.get("library_type", "public")
+        count = self.batch_star(paper_ids, user_id, star, library_type)
+        return {"status_code": 200, "content": {"success": True, "count": count}}
+
+    async def api_add_to_personal(self, paper_id: int, user_id: int) -> Dict[str, Any]:
+        """添加到个人库 API"""
+        success, error = self.add_to_personal_library(paper_id, user_id)
+        if success:
+            return {"status_code": 200, "content": {"success": True, "message": "已添加到个人文献库"}}
+        return {"status_code": 400, "content": {"success": False, "message": error}}
+
+    async def api_share_to_team(self, paper_id: int, user_id: int) -> Dict[str, Any]:
+        """分享到团队库 API"""
+        success, message = self.share_to_team(paper_id, user_id)
+        if success:
+            return {"status_code": 200, "content": {"success": True, "message": message or "已分享到团队文献库"}}
+        return {"status_code": 400, "content": {"success": False, "message": message}}
+
+    async def api_batch_set_tags(self, data: Dict[str, Any], user_id: int) -> Dict[str, Any]:
+        """批量设置标签 API"""
+        paper_ids = data.get("paper_ids", [])
+        tag = data.get("tag")
+        library_type = data.get("library_type", "public")
+        count, error = self.batch_set_tags(paper_ids, tag, user_id, library_type)
+        if error:
+            return {"status_code": 400, "content": {"success": False, "message": error}}
+        return {"status_code": 200, "content": {"success": True, "count": count}}
+
+    async def api_batch_delete(self, data: Dict[str, Any], user_id: int, user_role: str) -> Dict[str, Any]:
+        """批量删除 API"""
+        paper_ids = data.get("paper_ids", [])
+        library_type = data.get("library_type", "public")
+        result = self.batch_delete(paper_ids, user_id, user_role, library_type)
+        return {"status_code": 200, "content": result}
+
+    async def api_get_detail(self, paper_id: int, user_id: int, library_type: str) -> Dict[str, Any]:
+        """获取文献详情 API"""
+        paper = self.get_paper_by_id(paper_id, user_id, library_type)
+        if not paper:
+            return {"status_code": 404, "content": {"success": False, "message": "文献不存在", "error": "NOT_FOUND"}}
+        return {"status_code": 200, "content": {"success": True, "data": paper}}
+
+    async def api_upload(self, form: Dict[str, Any], user_id: int) -> Dict[str, Any]:
+        """上传文献 API"""
+        title = form.get("title")
+        pdf_file = form.get("pdf")
+
+        # 验证
+        if not title:
+            return {"status_code": 400, "content": {"success": False, "message": "标题不能为空"}}
+        if not pdf_file:
+            return {"status_code": 400, "content": {"success": False, "message": "请上传PDF文件"}}
+
+        # 解析数据
+        pdf_data = await pdf_file.read()
+        library_type = form.get("library_type", "public")
+        year_val = int(form.get("year")) if form.get("year") else None
+        tags_str = form.get("tags", "")
+        tags_list = [t.strip() for t in tags_str.split(",") if t.strip()] if tags_str else None
+
+        paper, error = self.create_paper(
+            title=title, pdf_data=pdf_data, original_filename=pdf_file.filename,
+            uploader_id=user_id, authors=form.get("authors"), year=year_val,
+            journal=form.get("journal"), doi=form.get("doi"), abstract=form.get("abstract"),
+            arxiv_link=form.get("arxiv_link"), semantic_scholar_link=form.get("semantic_scholar_link"),
+            tags=tags_list, library_type=library_type
+        )
+
+        if paper is None and error:
+            return {"status_code": 400, "content": {"success": False, "message": error}}
+        return {"status_code": 201, "content": {"success": True, "data": paper, "message": error if error else "文献上传成功"}}
+
+    async def api_update(self, paper_id: int, data: Dict[str, Any], user_id: int) -> Dict[str, Any]:
+        """更新文献 API"""
+        library_type = data.get("library_type", "public")
+        year_val = int(data.get("year")) if data.get("year") else None
+        tags_str = data.get("tags", "")
+        tags_list = [t.strip() for t in tags_str.split(",") if t.strip()] if tags_str else None
+
+        paper, error = self.update_paper(
+            paper_id=paper_id, user_id=user_id, title=data.get("title"),
+            authors=data.get("authors"), year=year_val, journal=data.get("journal"),
+            doi=data.get("doi"), abstract=data.get("abstract"), arxiv_link=data.get("arxiv_link"),
+            semantic_scholar_link=data.get("semantic_scholar_link"), tags=tags_list,
+            read_status=data.get("read_status"), library_type=library_type
+        )
+
+        if error:
+            return {"status_code": 400, "content": {"success": False, "message": error}}
+        return {"status_code": 200, "content": {"success": True, "data": paper, "message": "文献更新成功"}}
+
+    async def api_toggle_star(self, paper_id: int, data: Dict[str, Any], user_id: int) -> Dict[str, Any]:
+        """收藏/取消收藏 API"""
+        library_type = data.get("library_type", "public") if data else "public"
+        success = self.toggle_star(paper_id, user_id, library_type)
+        return {"status_code": 200, "content": {"success": success}}
+
+    async def api_update_status(self, paper_id: int, data: Dict[str, Any], user_id: int) -> Dict[str, Any]:
+        """更新阅读状态 API"""
+        status_val = data.get("status")
+        library_type = data.get("library_type", "public")
+        if not status_val:
+            return {"status_code": 400, "content": {"success": False, "message": "状态不能为空"}}
+        success = self.update_status(paper_id, user_id, status_val, library_type)
+        return {"status_code": 200, "content": {"success": success}}
+
+    async def api_delete(self, paper_id: int, data: Dict[str, Any], user_id: int, user_role: str) -> Dict[str, Any]:
+        """删除文献 API"""
+        library_type = data.get("library_type", "public") if data else "public"
+        result = self.delete_paper(paper_id, user_id, user_role, library_type)
+        return {"status_code": 200, "content": result}
+
+    async def api_download(self, paper_id: int, user_id: int, library_type: str) -> Dict[str, Any]:
+        """下载文献 API"""
+        paper = self.get_paper_by_id(paper_id, user_id, library_type)
+        if not paper:
+            return {"status_code": 404, "content": {"success": False, "message": "文献不存在", "error": "NOT_FOUND"}, "error": True}
+
+        pdf_path = paper.get('pdf_path')
+        if not pdf_path or not os.path.exists(pdf_path):
+            return {"status_code": 404, "content": {"success": False, "message": "PDF文件不存在"}, "error": True}
+
+        self.increment_download_count(paper_id, library_type)
+        return {"status_code": 200, "file_path": pdf_path, "filename": os.path.basename(pdf_path), "media_type": "application/pdf"}

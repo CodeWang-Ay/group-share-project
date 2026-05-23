@@ -439,3 +439,193 @@ class TaskService:
                 return task.task_type == 'personal' and task.creator_id == user_id
 
         return False
+
+    # ==================== API 异步方法（返回 {status_code, content}） ====================
+
+    async def api_get_list(self, filters: Dict[str, Any], user_id: int, user_role: str) -> Dict[str, Any]:
+        """获取任务列表 API"""
+        from repositories.user_repository import UserRepository
+
+        page = filters.get('page', 1)
+        limit = filters.get('limit', 10)
+        offset = (page - 1) * limit
+
+        tasks = TaskService.get_tasks(
+            user_id=user_id, user_role=user_role,
+            status=filters.get('status'), priority=filters.get('priority'),
+            assignee_id=int(filters.get('assignee_id')) if filters.get('assignee_id') else None,
+            task_type=filters.get('task_type'), keyword=filters.get('keyword'),
+            sort_by=filters.get('sort_by', 'deadline'), sort_order=filters.get('sort_order', 'asc'),
+            limit=limit, offset=offset
+        )
+
+        total = TaskService.get_tasks_count(
+            user_id=user_id, user_role=user_role,
+            status=filters.get('status'), priority=filters.get('priority'),
+            assignee_id=int(filters.get('assignee_id')) if filters.get('assignee_id') else None,
+            task_type=filters.get('task_type'), keyword=filters.get('keyword')
+        )
+
+        total_pages = (total + limit - 1) // limit if total > 0 else 1
+
+        tasks_with_assignee = []
+        for task in tasks:
+            task_dict = task.to_dict()
+            task_dict['display_status'] = task.get_display_status()
+            task_dict['status_text'] = task.get_status_text()
+            task_dict['priority_text'] = task.get_priority_text()
+
+            assignee_data = UserRepository.get_by_id(task.assignee_id)
+            if assignee_data:
+                task_dict['assignee'] = {'id': assignee_data['id'], 'username': assignee_data['username']}
+
+            creator_data = UserRepository.get_by_id(task.creator_id)
+            if creator_data:
+                task_dict['creator'] = {'id': creator_data['id'], 'username': creator_data['username']}
+
+            tasks_with_assignee.append(task_dict)
+
+        return {"status_code": 200, "content": {
+            "success": True,
+            "data": {
+                "tasks": tasks_with_assignee,
+                "pagination": {
+                    "current_page": page,
+                    "per_page": limit,
+                    "total": total,
+                    "total_pages": total_pages,
+                    "has_next": page < total_pages,
+                    "has_prev": page > 1
+                }
+            }
+        }}
+
+    async def api_get_stats(self, user_id: int, user_role: str) -> Dict[str, Any]:
+        """获取任务统计 API"""
+        stats = TaskService.get_task_stats(user_id, user_role)
+        return {"status_code": 200, "content": {"success": True, "data": stats}}
+
+    async def api_create(self, data: Dict[str, Any], user_id: int, user_role: str) -> Dict[str, Any]:
+        """创建任务 API"""
+        from datetime import datetime
+
+        title = data.get("title")
+        if not title:
+            return {"status_code": 400, "content": {"success": False, "message": "任务标题不能为空", "error": "VALIDATION_ERROR"}}
+
+        deadline_str = data.get("deadline")
+        deadline = None
+        if deadline_str:
+            try:
+                deadline = datetime.fromisoformat(deadline_str)
+            except:
+                pass
+
+        # 确定任务类型和负责人
+        if user_role in ['admin', 'teacher']:
+            task_type = data.get("task_type", "assigned")
+            assignee_id = data.get("assignee_id") or user_id
+        else:
+            task_type = "personal"
+            assignee_id = user_id
+
+        task = TaskService.create_task(
+            title=title, creator_id=user_id, assignee_id=assignee_id,
+            task_type=task_type, description=data.get("description"),
+            priority=data.get("priority", "middle"), deadline=deadline
+        )
+
+        return {"status_code": 201, "content": {"success": True, "message": "任务创建成功", "data": task.to_dict()}}
+
+    async def api_get_detail(self, task_id: int, user_id: int, user_role: str) -> Dict[str, Any]:
+        """获取任务详情 API"""
+        from repositories.user_repository import UserRepository
+
+        task = TaskService.get_task_by_id(task_id)
+        if not task:
+            return {"status_code": 404, "content": {"success": False, "message": "任务不存在", "error": "NOT_FOUND"}}
+
+        if user_role not in ['admin', 'teacher']:
+            if task.assignee_id != user_id and task.creator_id != user_id:
+                return {"status_code": 403, "content": {"success": False, "message": "无权限查看此任务", "error": "ACCESS_DENIED"}}
+
+        task_dict = task.to_dict()
+        task_dict['display_status'] = task.get_display_status()
+        task_dict['status_text'] = task.get_status_text()
+        task_dict['priority_text'] = task.get_priority_text()
+
+        assignee_data = UserRepository.get_by_id(task.assignee_id)
+        if assignee_data:
+            task_dict['assignee'] = {'id': assignee_data['id'], 'username': assignee_data['username']}
+
+        creator_data = UserRepository.get_by_id(task.creator_id)
+        if creator_data:
+            task_dict['creator'] = {'id': creator_data['id'], 'username': creator_data['username']}
+
+        return {"status_code": 200, "content": {"success": True, "data": task_dict}}
+
+    async def api_update(self, task_id: int, data: Dict[str, Any], user_id: int, user_role: str) -> Dict[str, Any]:
+        """更新任务 API"""
+        from datetime import datetime
+
+        task = TaskService.get_task_by_id(task_id)
+        if not task:
+            return {"status_code": 404, "content": {"success": False, "message": "任务不存在", "error": "NOT_FOUND"}}
+
+        if not TaskService.check_permission(task, user_id, user_role, 'edit'):
+            return {"status_code": 403, "content": {"success": False, "message": "无权限编辑此任务", "error": "ACCESS_DENIED"}}
+
+        deadline_str = data.get("deadline")
+        deadline = None
+        if deadline_str:
+            try:
+                deadline = datetime.fromisoformat(deadline_str)
+            except:
+                pass
+
+        updated_task = TaskService.update_task(
+            task_id,
+            title=data.get("title"),
+            description=data.get("description"),
+            priority=data.get("priority"),
+            status=data.get("status"),
+            progress=data.get("progress"),
+            assignee_id=data.get("assignee_id"),
+            deadline=deadline
+        )
+
+        if not updated_task:
+            return {"status_code": 500, "content": {"success": False, "message": "更新失败", "error": "UPDATE_FAILED"}}
+
+        return {"status_code": 200, "content": {"success": True, "message": "任务更新成功", "data": updated_task.to_dict()}}
+
+    async def api_update_progress(self, task_id: int, data: Dict[str, Any], user_id: int, user_role: str) -> Dict[str, Any]:
+        """更新任务进度 API"""
+        task = TaskService.get_task_by_id(task_id)
+        if not task:
+            return {"status_code": 404, "content": {"success": False, "message": "任务不存在", "error": "NOT_FOUND"}}
+
+        if not TaskService.check_permission(task, user_id, user_role, 'update_progress'):
+            return {"status_code": 403, "content": {"success": False, "message": "无权限更新此任务进度", "error": "ACCESS_DENIED"}}
+
+        updated_task = TaskService.update_progress(task_id, data.get("progress", 0), data.get("status"))
+
+        if not updated_task:
+            return {"status_code": 500, "content": {"success": False, "message": "更新进度失败", "error": "UPDATE_FAILED"}}
+
+        return {"status_code": 200, "content": {"success": True, "message": "进度更新成功", "data": updated_task.to_dict()}}
+
+    async def api_delete(self, task_id: int, user_id: int, user_role: str) -> Dict[str, Any]:
+        """删除任务 API"""
+        task = TaskService.get_task_by_id(task_id)
+        if not task:
+            return {"status_code": 404, "content": {"success": False, "message": "任务不存在", "error": "NOT_FOUND"}}
+
+        if not TaskService.check_permission(task, user_id, user_role, 'delete'):
+            return {"status_code": 403, "content": {"success": False, "message": "无权限删除此任务", "error": "ACCESS_DENIED"}}
+
+        success = TaskService.delete_task(task_id)
+        if not success:
+            return {"status_code": 500, "content": {"success": False, "message": "删除失败", "error": "DELETE_FAILED"}}
+
+        return {"status_code": 200, "content": {"success": True, "message": "任务删除成功"}}

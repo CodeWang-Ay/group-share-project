@@ -90,7 +90,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from loguru import logger
 
 from utils.extensions import templates
-from utils.auth_helper import get_current_user
+from dependencies.auth import get_current_user
 
 router = APIRouter(tags=["页面"])
 
