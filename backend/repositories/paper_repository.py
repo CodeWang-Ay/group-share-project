@@ -109,17 +109,17 @@ class PaperRepository:
             cursor.execute("""
                 INSERT INTO papers (
                     title, authors, year, journal, doi, abstract,
-                    arxiv_link, semantic_scholar_link, pdf_path, pdf_filename,
-                    file_hash, file_size, team_library, uploader_id,
-                    upload_date, is_deleted, download_count, read_status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 0, 0, 'unread')
+                    arxiv_link, semantic_scholar_link, pdf_path,
+                    file_hash, pdf_size, team_library, uploader_id,
+                    created_at, is_deleted, download_count
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, CURRENT_TIMESTAMP, 0, 0)
             """, (
                 data.get('title'), data.get('authors'), data.get('year'),
                 data.get('journal'), data.get('doi'), data.get('abstract'),
                 data.get('arxiv_link'), data.get('semantic_scholar_link'),
-                data.get('pdf_path'), data.get('pdf_filename'),
-                data.get('file_hash'), data.get('file_size'),
-                data.get('uploader_id'), datetime.now().isoformat()
+                data.get('pdf_path'),
+                data.get('file_hash'), data.get('pdf_size'),
+                data.get('uploader_id')
             ))
             return cursor.lastrowid
 
@@ -131,18 +131,17 @@ class PaperRepository:
             cursor.execute("""
                 INSERT INTO personal_papers (
                     title, authors, year, journal, doi, abstract,
-                    arxiv_link, semantic_scholar_link, pdf_path, pdf_filename,
-                    file_hash, file_size, owner_user_id, original_paper_id,
-                    upload_date, is_deleted, download_count, read_status, is_starred
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 'unread', 0)
+                    arxiv_link, semantic_scholar_link, pdf_path,
+                    file_hash, pdf_size, owner_user_id, source_paper_id,
+                    created_at, download_count
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, 0)
             """, (
                 data.get('title'), data.get('authors'), data.get('year'),
                 data.get('journal'), data.get('doi'), data.get('abstract'),
                 data.get('arxiv_link'), data.get('semantic_scholar_link'),
-                data.get('pdf_path'), data.get('pdf_filename'),
-                data.get('file_hash'), data.get('file_size'),
-                data.get('owner_user_id'), data.get('original_paper_id'),
-                datetime.now().isoformat()
+                data.get('pdf_path'),
+                data.get('file_hash'), data.get('pdf_size'),
+                data.get('owner_user_id'), data.get('source_paper_id')
             ))
             return cursor.lastrowid
 
@@ -153,9 +152,9 @@ class PaperRepository:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, title, authors, year, journal, doi, abstract,
-                       arxiv_link, semantic_scholar_link, pdf_path, pdf_filename,
-                       file_hash, file_size, team_library, uploader_id,
-                       upload_date, is_deleted, download_count, read_status
+                       arxiv_link, semantic_scholar_link, pdf_path,
+                       file_hash, pdf_size, team_library, uploader_id,
+                       created_at, is_deleted, download_count
                 FROM papers WHERE id = ? AND is_deleted = 0
             """, (paper_id,))
             row = cursor.fetchone()
@@ -168,10 +167,10 @@ class PaperRepository:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, title, authors, year, journal, doi, abstract,
-                       arxiv_link, semantic_scholar_link, pdf_path, pdf_filename,
-                       file_hash, file_size, owner_user_id, original_paper_id,
-                       upload_date, is_deleted, download_count, read_status, is_starred
-                FROM personal_papers WHERE id = ? AND is_deleted = 0
+                       arxiv_link, semantic_scholar_link, pdf_path,
+                       file_hash, pdf_size, owner_user_id, source_paper_id,
+                       created_at, download_count
+                FROM personal_papers WHERE id = ?
             """, (paper_id,))
             row = cursor.fetchone()
             return dict(row) if row else None
@@ -190,20 +189,17 @@ class PaperRepository:
             if filters.get('tag'):
                 where_conditions.append("EXISTS (SELECT 1 FROM paper_tags pt JOIN tags t ON pt.tag_id = t.id WHERE pt.paper_id = papers.id AND t.name = ?)")
                 params.append(filters['tag'])
-            if filters.get('status'):
-                where_conditions.append("read_status = ?")
-                params.append(filters['status'])
             if filters.get('year'):
                 where_conditions.append("year = ?")
                 params.append(filters['year'])
 
             where_clause = "WHERE " + " AND ".join(where_conditions)
-            order_by = "upload_date DESC" if filters.get('sort') == 'newest' else "upload_date ASC"
+            order_by = "created_at DESC" if filters.get('sort') == 'newest' else "created_at ASC"
 
             query = f"""
                 SELECT id, title, authors, year, journal, doi, abstract,
-                       pdf_path, pdf_filename, file_size, uploader_id,
-                       upload_date, download_count, read_status
+                       pdf_path, pdf_size, uploader_id,
+                       created_at, download_count
                 FROM papers {where_clause}
                 ORDER BY {order_by}
                 LIMIT ? OFFSET ?
@@ -225,9 +221,6 @@ class PaperRepository:
             if filters.get('tag'):
                 where_conditions.append("EXISTS (SELECT 1 FROM paper_tags pt JOIN tags t ON pt.tag_id = t.id WHERE pt.paper_id = papers.id AND t.name = ?)")
                 params.append(filters['tag'])
-            if filters.get('status'):
-                where_conditions.append("read_status = ?")
-                params.append(filters['status'])
             if filters.get('year'):
                 where_conditions.append("year = ?")
                 params.append(filters['year'])
@@ -242,26 +235,20 @@ class PaperRepository:
         """获取个人文献列表"""
         with get_db() as conn:
             cursor = conn.cursor()
-            where_conditions = ["owner_user_id = ?", "is_deleted = 0"]
+            where_conditions = ["owner_user_id = ?"]
             params = [user_id]
 
             if filters.get('keyword'):
                 where_conditions.append("title LIKE ?")
                 params.append(f"%{filters['keyword']}%")
-            if filters.get('status'):
-                where_conditions.append("read_status = ?")
-                params.append(filters['status'])
-            if filters.get('starred'):
-                where_conditions.append("is_starred = ?")
-                params.append(1 if filters['starred'] else 0)
 
             where_clause = "WHERE " + " AND ".join(where_conditions)
-            order_by = "upload_date DESC" if filters.get('sort') == 'newest' else "upload_date ASC"
+            order_by = "created_at DESC" if filters.get('sort') == 'newest' else "created_at ASC"
 
             query = f"""
                 SELECT id, title, authors, year, journal, doi, abstract,
-                       pdf_path, pdf_filename, file_size, owner_user_id,
-                       upload_date, download_count, read_status, is_starred, original_paper_id
+                       pdf_path, pdf_size, owner_user_id, source_paper_id,
+                       created_at, download_count
                 FROM personal_papers {where_clause}
                 ORDER BY {order_by}
                 LIMIT ? OFFSET ?
@@ -274,18 +261,12 @@ class PaperRepository:
         """获取个人文献总数"""
         with get_db() as conn:
             cursor = conn.cursor()
-            where_conditions = ["owner_user_id = ?", "is_deleted = 0"]
+            where_conditions = ["owner_user_id = ?"]
             params = [user_id]
 
             if filters.get('keyword'):
                 where_conditions.append("title LIKE ?")
                 params.append(f"%{filters['keyword']}%")
-            if filters.get('status'):
-                where_conditions.append("read_status = ?")
-                params.append(filters['status'])
-            if filters.get('starred'):
-                where_conditions.append("is_starred = ?")
-                params.append(1 if filters['starred'] else 0)
 
             where_clause = "WHERE " + " AND ".join(where_conditions)
             query = f"SELECT COUNT(*) FROM personal_papers {where_clause}"
@@ -296,7 +277,7 @@ class PaperRepository:
     def update_paper(paper_id: int, data: Dict[str, Any]) -> bool:
         """更新文献"""
         allowed_fields = ['title', 'authors', 'year', 'journal', 'doi', 'abstract',
-                          'arxiv_link', 'semantic_scholar_link', 'read_status']
+                          'arxiv_link', 'semantic_scholar_link']
         update_data = {k: v for k, v in data.items() if k in allowed_fields and v is not None}
 
         if not update_data:
@@ -313,7 +294,7 @@ class PaperRepository:
     def update_personal_paper(paper_id: int, data: Dict[str, Any]) -> bool:
         """更新个人文献"""
         allowed_fields = ['title', 'authors', 'year', 'journal', 'doi', 'abstract',
-                          'arxiv_link', 'semantic_scholar_link', 'read_status', 'is_starred']
+                          'arxiv_link', 'semantic_scholar_link']
         update_data = {k: v for k, v in data.items() if k in allowed_fields and v is not None}
 
         if not update_data:
@@ -395,15 +376,20 @@ class PaperRepository:
             cursor = conn.cursor()
             if library_type == 'private' or library_type == 'personal':
                 cursor.execute("""
-                    SELECT COUNT(*) as total, SUM(file_size) as total_size,
-                    COUNT(CASE WHEN is_starred = 1 THEN 1 END) as starred_count
-                    FROM personal_papers WHERE owner_user_id = ? AND is_deleted = 0
+                    SELECT COUNT(*) as total, SUM(pdf_size) as total_size
+                    FROM personal_papers WHERE owner_user_id = ?
                 """, (user_id,))
                 row = cursor.fetchone()
-                return {'total': row[0] or 0, 'total_size': row[1] or 0, 'starred_count': row[2] or 0}
+                # 查询收藏数
+                cursor.execute("""
+                    SELECT COUNT(*) FROM paper_user_relations
+                    WHERE user_id = ? AND personal_paper_id IS NOT NULL AND is_starred = 1
+                """, (user_id,))
+                starred_count = cursor.fetchone()[0] or 0
+                return {'total': row[0] or 0, 'total_size': row[1] or 0, 'starred_count': starred_count}
             else:
                 cursor.execute("""
-                    SELECT COUNT(*) as total, SUM(file_size) as total_size
+                    SELECT COUNT(*) as total, SUM(pdf_size) as total_size
                     FROM papers WHERE team_library = 1 AND is_deleted = 0
                 """)
                 row = cursor.fetchone()
@@ -507,7 +493,15 @@ class PaperRepository:
                         VALUES (?, ?, 'public', 'team_view', ?, 0, ?)
                     """, (paper_id, user_id, status, datetime.now().isoformat()))
             else:
-                cursor.execute("UPDATE personal_papers SET read_status = ? WHERE id = ? AND owner_user_id = ?", (status, paper_id, user_id))
+                relation = PaperRepository.get_paper_user_relation(paper_id, user_id, library_type)
+                if relation:
+                    cursor.execute("UPDATE paper_user_relations SET read_status = ? WHERE id = ?", (status, relation['id']))
+                else:
+                    cursor.execute("""
+                        INSERT INTO paper_user_relations
+                        (user_id, personal_paper_id, library_type, relation_type, read_status, is_starred, added_at)
+                        VALUES (?, ?, 'private', 'personal_owner', ?, 0, ?)
+                    """, (user_id, paper_id, status, datetime.now().isoformat()))
             return True
 
     @staticmethod

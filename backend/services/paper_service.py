@@ -123,8 +123,8 @@ class PaperService:
                 'title': title, 'authors': authors, 'year': year, 'journal': journal,
                 'doi': doi, 'abstract': abstract, 'arxiv_link': arxiv_link,
                 'semantic_scholar_link': semantic_scholar_link,
-                'pdf_path': str(file_path), 'pdf_filename': filename,
-                'file_hash': sha256_hash, 'file_size': len(pdf_data), 'uploader_id': uploader_id
+                'pdf_path': str(file_path),
+                'file_hash': sha256_hash, 'pdf_size': len(pdf_data), 'uploader_id': uploader_id
             }
             paper_id = PaperRepository.create_paper(paper_data)
 
@@ -137,7 +137,7 @@ class PaperService:
                 cls._process_tags(paper_id, tags, uploader_id, 'public')
 
             return {'id': paper_id, 'title': title, 'pdf_path': str(file_path),
-                    'file_size': len(pdf_data), 'library_type': 'public'}, None
+                    'pdf_size': len(pdf_data), 'library_type': 'public'}, None
         else:
             user_dir = cls.init_personal_directory(uploader_id)
             filename = f"{timestamp}_{original_filename}"
@@ -149,9 +149,9 @@ class PaperService:
                 'title': title, 'authors': authors, 'year': year, 'journal': journal,
                 'doi': doi, 'abstract': abstract, 'arxiv_link': arxiv_link,
                 'semantic_scholar_link': semantic_scholar_link,
-                'pdf_path': str(file_path), 'pdf_filename': filename,
-                'file_hash': sha256_hash, 'file_size': len(pdf_data),
-                'owner_user_id': uploader_id, 'original_paper_id': None
+                'pdf_path': str(file_path),
+                'file_hash': sha256_hash, 'pdf_size': len(pdf_data),
+                'owner_user_id': uploader_id, 'source_paper_id': None
             }
             paper_id = PaperRepository.create_personal_paper(paper_data)
 
@@ -159,7 +159,7 @@ class PaperService:
                 cls._process_tags(paper_id, tags, uploader_id, 'private')
 
             return {'id': paper_id, 'title': title, 'pdf_path': str(file_path),
-                    'file_size': len(pdf_data), 'library_type': 'private'}, None
+                    'pdf_size': len(pdf_data), 'library_type': 'private'}, None
 
     @classmethod
     def _process_tags(cls, paper_id: int, tags: Optional[List[str]], user_id: int, library_type: str) -> None:
@@ -302,7 +302,9 @@ class PaperService:
         # 复制文件到个人目录
         user_dir = cls.init_personal_directory(user_id)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        new_filename = f"{timestamp}_{paper['pdf_filename']}"
+        # 从 pdf_path 提取文件名
+        original_filename = os.path.basename(paper['pdf_path'])
+        new_filename = f"{timestamp}_{original_filename}"
         new_path = user_dir / new_filename
 
         if os.path.exists(paper['pdf_path']):
@@ -316,9 +318,9 @@ class PaperService:
             'title': paper['title'], 'authors': paper['authors'], 'year': paper['year'],
             'journal': paper['journal'], 'doi': paper['doi'], 'abstract': paper['abstract'],
             'arxiv_link': paper['arxiv_link'], 'semantic_scholar_link': paper['semantic_scholar_link'],
-            'pdf_path': str(new_path), 'pdf_filename': new_filename,
-            'file_hash': paper['file_hash'], 'file_size': paper['file_size'],
-            'owner_user_id': user_id, 'original_paper_id': paper_id
+            'pdf_path': str(new_path),
+            'file_hash': paper['file_hash'], 'pdf_size': paper['pdf_size'],
+            'owner_user_id': user_id, 'source_paper_id': paper_id
         }
         PaperRepository.create_personal_paper(personal_data)
 
@@ -341,7 +343,8 @@ class PaperService:
 
         # 复制文件到团队目录
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        new_filename = f"{timestamp}_{paper['pdf_filename']}"
+        original_filename = os.path.basename(paper['pdf_path'])
+        new_filename = f"{timestamp}_{original_filename}"
         new_path = cls.UPLOAD_DIR / new_filename
 
         if os.path.exists(paper['pdf_path']):
@@ -355,8 +358,8 @@ class PaperService:
             'title': paper['title'], 'authors': paper['authors'], 'year': paper['year'],
             'journal': paper['journal'], 'doi': paper['doi'], 'abstract': paper['abstract'],
             'arxiv_link': paper['arxiv_link'], 'semantic_scholar_link': paper['semantic_scholar_link'],
-            'pdf_path': str(new_path), 'pdf_filename': new_filename,
-            'file_hash': paper['file_hash'], 'file_size': paper['file_size'],
+            'pdf_path': str(new_path),
+            'file_hash': paper['file_hash'], 'pdf_size': paper['pdf_size'],
             'uploader_id': user_id
         }
         PaperRepository.create_paper(team_data)
