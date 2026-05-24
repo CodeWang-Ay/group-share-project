@@ -14,6 +14,9 @@ Repository 层初始化模块 (repositories/__init__.py)
     - MessageRepository    : 消息数据访问
     - FileRepository       : 文件数据访问
     - MeetingRepository    : 组会数据访问
+    - PaperRepository      : 文献数据访问
+    - ProgressRepository   : 研究进展数据访问
+    - TaskRepository       : 研究任务数据访问
 
 职责:
     - 只做数据库 CRUD 操作
@@ -31,6 +34,9 @@ from repositories.material_repository import MaterialRepository
 from repositories.message_repository import MessageRepository
 from repositories.file_repository import FileRepository
 from repositories.meeting_repository import MeetingRepository
+from repositories.paper_repository import PaperRepository
+from repositories.progress_repository import ProgressRepository
+from repositories.task_repository import TaskRepository
 
 __all__ = [
     'AuthRepository',
@@ -40,4 +46,7 @@ __all__ = [
     'MessageRepository',
     'FileRepository',
     'MeetingRepository',
+    'PaperRepository',
+    'ProgressRepository',
+    'TaskRepository',
 ]

@@ -1,14 +1,46 @@
 """
-研究任务业务逻辑服务
-"""
+================================================================================
+研究任务业务逻辑模块 (services/task_service.py)
+================================================================================
 
+模块名称: backend/services/task_service.py
+功能描述: 研究任务业务逻辑，返回 {status_code, content} 格式
+
+Service 类方法:
+    TaskService:
+        - create_task(...)                       : 创建任务
+        - get_task_by_id(task_id)                : 获取任务详情
+        - get_tasks(...)                         : 获取任务列表
+        - get_tasks_count(...)                   : 获取任务总数
+        - update_task(...)                       : 更新任务
+        - update_progress(...)                   : 更新任务进度
+        - delete_task(task_id)                   : 删除任务
+        - get_task_stats(...)                    : 获取统计信息
+        - check_permission(...)                  : 检查权限
+
+        - api_get_list(...)                      : API - 获取任务列表
+        - api_get_stats(...)                     : API - 获取统计
+        - api_create(...)                        : API - 创建任务
+        - api_get_detail(...)                    : API - 获取详情
+        - api_update(...)                        : API - 更新任务
+        - api_update_progress(...)               : API - 更新进度
+        - api_delete(...)                        : API - 删除任务
+
+职责:
+    - 所有业务逻辑写在这里
+    - 调用 TaskRepository 进行数据操作
+    - 返回 {status_code: int, content: dict} 格式
+
+作者: wjg
+创建日期: 2026-05-24
+================================================================================
+"""
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from dataclasses import dataclass
 
-from database.connection import get_db
+from repositories.task_repository import TaskRepository
+from repositories.user_repository import UserRepository
 from models.task import Task
-from loguru import logger
 
 
 class TaskService:
@@ -39,53 +71,43 @@ class TaskService:
         deadline: Optional[datetime] = None
     ) -> Task:
         """创建任务"""
-        with get_db() as conn:
-            cursor = conn.cursor()
+        data = {
+            'title': title,
+            'description': description,
+            'priority': priority,
+            'status': 'pending',
+            'progress': 0,
+            'assignee_id': assignee_id,
+            'creator_id': creator_id,
+            'task_type': task_type,
+            'deadline': deadline.isoformat() if deadline else None
+        }
 
-            cursor.execute("""
-                INSERT INTO research_tasks (
-                    title, description, priority, status, progress,
-                    assignee_id, creator_id, task_type, deadline,
-                    created_at, updated_at
-                ) VALUES (?, ?, ?, 'pending', 0, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-            """, (
-                title, description, priority, assignee_id, creator_id, task_type,
-                deadline.isoformat() if deadline else None
-            ))
+        task_id = TaskRepository.create_task(data)
+        now = datetime.now()
 
-            task_id = cursor.lastrowid
-
-            return Task(
-                id=task_id,
-                title=title,
-                description=description,
-                priority=priority,
-                status='pending',
-                progress=0,
-                assignee_id=assignee_id,
-                creator_id=creator_id,
-                task_type=task_type,
-                deadline=deadline,
-                created_at=datetime.now(),
-                updated_at=datetime.now()
-            )
+        return Task(
+            id=task_id,
+            title=title,
+            description=description,
+            priority=priority,
+            status='pending',
+            progress=0,
+            assignee_id=assignee_id,
+            creator_id=creator_id,
+            task_type=task_type,
+            deadline=deadline,
+            created_at=now,
+            updated_at=now
+        )
 
     @staticmethod
     def get_task_by_id(task_id: int) -> Optional[Task]:
         """根据ID获取任务"""
-        with get_db() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT id, title, description, priority, status, progress,
-                       assignee_id, creator_id, task_type, deadline,
-                       created_at, updated_at
-                FROM research_tasks WHERE id = ?
-            """, (task_id,))
-
-            row = cursor.fetchone()
-            if row:
-                return Task.from_dict(dict(row))
-            return None
+        row = TaskRepository.get_by_id(task_id)
+        if row:
+            return Task.from_dict(row)
+        return None
 
     @staticmethod
     def get_tasks(
@@ -101,94 +123,21 @@ class TaskService:
         limit: int = 10,
         offset: int = 0
     ) -> List[Task]:
-        """
-        获取任务列表
+        """获取任务列表"""
+        filters = {
+            'user_id': user_id,
+            'user_role': user_role,
+            'status': status,
+            'priority': priority,
+            'assignee_id': assignee_id,
+            'task_type': task_type,
+            'keyword': keyword,
+            'sort_by': sort_by,
+            'sort_order': sort_order
+        }
 
-        Args:
-            user_id: 当前用户ID
-            user_role: 当前用户角色
-            status: 状态筛选
-            priority: 优先级筛选
-            assignee_id: 负责人筛选
-            task_type: 任务类型筛选
-            keyword: 搜索关键词（标题模糊匹配）
-            sort_by: 排序字段
-            sort_order: 排序方向
-            limit: 返回数量
-            offset: 偏移量
-        """
-        with get_db() as conn:
-            cursor = conn.cursor()
-
-            # 构建查询条件
-            where_conditions = []
-            params = []
-
-            # 权限筛选：学生只能看到自己相关的任务，导师可以看到所有任务
-            if user_role not in ['admin', 'teacher']:
-                # 学生：只能看到自己是负责人或创建者的任务
-                where_conditions.append("(assignee_id = ? OR creator_id = ?)")
-                params.extend([user_id, user_id])
-
-            # 状态筛选：特殊处理 overdue（逾期）
-            if status:
-                if status == 'overdue':
-                    # 逾期状态：未完成 + 截止日期已过期
-                    where_conditions.append("status != 'completed' AND deadline IS NOT NULL AND deadline < CURRENT_TIMESTAMP")
-                else:
-                    where_conditions.append("status = ?")
-                    params.append(status)
-
-            if priority:
-                where_conditions.append("priority = ?")
-                params.append(priority)
-
-            if assignee_id:
-                where_conditions.append("assignee_id = ?")
-                params.append(assignee_id)
-
-            if task_type:
-                where_conditions.append("task_type = ?")
-                params.append(task_type)
-
-            if keyword:
-                where_conditions.append("title LIKE ?")
-                params.append(f"%{keyword}%")
-
-            where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
-
-            # 排序处理
-            valid_sort_fields = ['deadline', 'created_at', 'priority', 'updated_at']
-            sort_by = sort_by if sort_by in valid_sort_fields else 'deadline'
-            sort_order = 'DESC' if sort_order.lower() == 'desc' else 'ASC'
-
-            # 优先级排序需要特殊处理
-            if sort_by == 'priority':
-                priority_order = """
-                    CASE priority
-                        WHEN 'high' THEN 1
-                        WHEN 'middle' THEN 2
-                        WHEN 'low' THEN 3
-                    END
-                """
-                order_clause = f"ORDER BY {priority_order} {sort_order}"
-            else:
-                order_clause = f"ORDER BY {sort_by} {sort_order}"
-
-            query = f"""
-                SELECT id, title, description, priority, status, progress,
-                       assignee_id, creator_id, task_type, deadline,
-                       created_at, updated_at
-                FROM research_tasks
-                {where_clause}
-                {order_clause}
-                LIMIT ? OFFSET ?
-            """
-
-            cursor.execute(query, params + [limit, offset])
-            rows = cursor.fetchall()
-
-            return [Task.from_dict(dict(row)) for row in rows]
+        rows = TaskRepository.get_list(filters, limit, offset)
+        return [Task.from_dict(row) for row in rows]
 
     @staticmethod
     def get_tasks_count(
@@ -201,64 +150,23 @@ class TaskService:
         keyword: Optional[str] = None
     ) -> int:
         """获取任务总数"""
-        with get_db() as conn:
-            cursor = conn.cursor()
-
-            where_conditions = []
-            params = []
-
-            # 权限筛选
-            if user_role not in ['admin', 'teacher']:
-                where_conditions.append("(assignee_id = ? OR creator_id = ?)")
-                params.extend([user_id, user_id])
-
-            # 状态筛选：特殊处理 overdue（逾期）
-            if status:
-                if status == 'overdue':
-                    # 逾期状态：未完成 + 截止日期已过期
-                    where_conditions.append("status != 'completed' AND deadline IS NOT NULL AND deadline < CURRENT_TIMESTAMP")
-                else:
-                    where_conditions.append("status = ?")
-                    params.append(status)
-
-            if priority:
-                where_conditions.append("priority = ?")
-                params.append(priority)
-
-            if assignee_id:
-                where_conditions.append("assignee_id = ?")
-                params.append(assignee_id)
-
-            if task_type:
-                where_conditions.append("task_type = ?")
-                params.append(task_type)
-
-            if keyword:
-                where_conditions.append("title LIKE ?")
-                params.append(f"%{keyword}%")
-
-            where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
-
-            query = f"SELECT COUNT(*) FROM research_tasks {where_clause}"
-            cursor.execute(query, params)
-
-            return cursor.fetchone()[0]
+        filters = {
+            'user_id': user_id,
+            'user_role': user_role,
+            'status': status,
+            'priority': priority,
+            'assignee_id': assignee_id,
+            'task_type': task_type,
+            'keyword': keyword
+        }
+        return TaskRepository.get_count(filters)
 
     @staticmethod
     def update_task(task_id: int, **kwargs) -> Optional[Task]:
-        """
-        更新任务信息
-
-        Args:
-            task_id: 任务ID
-            **kwargs: 要更新的字段
-        """
-        allowed_fields = [
-            'title', 'description', 'priority', 'status', 'progress',
-            'assignee_id', 'deadline'
-        ]
-
+        """更新任务信息"""
         update_data = {}
+        allowed_fields = ['title', 'description', 'priority', 'status', 'progress', 'assignee_id', 'deadline']
+
         for field in allowed_fields:
             if field in kwargs and kwargs[field] is not None:
                 if field == 'deadline' and isinstance(kwargs[field], datetime):
@@ -269,39 +177,19 @@ class TaskService:
         if not update_data:
             return None
 
-        with get_db() as conn:
-            cursor = conn.cursor()
+        success = TaskRepository.update_task(task_id, update_data)
+        if not success:
+            return None
 
-            set_clause = ", ".join([f"{field} = ?" for field in update_data.keys()])
-            values = list(update_data.values()) + [task_id]
-
-            cursor.execute(f"""
-                UPDATE research_tasks
-                SET {set_clause}, updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            """, values)
-
-            if cursor.rowcount == 0:
-                return None
-
-            return TaskService.get_task_by_id(task_id)
+        return TaskService.get_task_by_id(task_id)
 
     @staticmethod
     def update_progress(task_id: int, progress: int, status: Optional[str] = None) -> Optional[Task]:
-        """
-        更新任务进度
-
-        Args:
-            task_id: 任务ID
-            progress: 进度值 (0-100)
-            status: 可选的状态更新
-        """
-        # 确保进度在有效范围内
+        """更新任务进度"""
         progress = max(0, min(100, progress))
 
         update_data = {'progress': progress}
 
-        # 自动更新状态
         if progress == 100:
             update_data['status'] = 'completed'
         elif progress > 0 and status != 'completed':
@@ -314,60 +202,12 @@ class TaskService:
     @staticmethod
     def delete_task(task_id: int) -> bool:
         """删除任务"""
-        with get_db() as conn:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM research_tasks WHERE id = ?", (task_id,))
-            return cursor.rowcount > 0
+        return TaskRepository.delete_task(task_id)
 
     @staticmethod
     def get_task_stats(user_id: int, user_role: str) -> Dict[str, int]:
-        """
-        获取任务统计信息
-
-        Args:
-            user_id: 当前用户ID
-            user_role: 当前用户角色
-        """
-        with get_db() as conn:
-            cursor = conn.cursor()
-
-            # 权限筛选
-            if user_role in ['admin', 'teacher']:
-                where_clause = ""
-                params = []
-            else:
-                where_clause = "WHERE (assignee_id = ? OR creator_id = ?)"
-                params = [user_id, user_id]
-
-            # 获取各状态统计
-            query = f"""
-                SELECT
-                    COUNT(*) as total,
-                    COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_count,
-                    COUNT(CASE WHEN status = 'ongoing' THEN 1 END) as ongoing_count,
-                    COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_count
-                FROM research_tasks
-                {where_clause}
-            """
-            cursor.execute(query, params)
-            row = cursor.fetchone()
-
-            # 计算逾期数量
-            overdue_query = f"""
-                SELECT COUNT(*) FROM research_tasks
-                {where_clause}
-                {' AND ' if where_clause else 'WHERE '} status != 'completed' AND deadline < CURRENT_TIMESTAMP
-            """
-            cursor.execute(overdue_query, params)
-            overdue_count = cursor.fetchone()[0]
-
-            return {
-                'total': row[0] or 0,
-                'pending_count': row[1] or 0,
-                'ongoing_count': row[2] or 0,
-                'completed_count': row[3] or 0,
-                'overdue_count': overdue_count
-            }
+        """获取任务统计信息"""
+        return TaskRepository.get_stats(user_id, user_role)
 
     @staticmethod
     def check_permission(
@@ -376,66 +216,46 @@ class TaskService:
         user_role: str,
         action: str
     ) -> bool:
-        """
-        检查用户对任务的操作权限
-
-        Args:
-            task: 任务对象
-            user_id: 用户ID
-            user_role: 用户角色
-            action: 操作类型 ('create', 'edit', 'delete', 'update_progress')
-
-        Returns:
-            bool: 是否有权限
-        """
+        """检查用户对任务的操作权限"""
         if action == 'create':
-            # 创建权限：学生只能创建个人任务，导师可以创建导师任务
             if user_role == 'admin':
                 return True
             elif user_role == 'teacher':
-                return True  # 导师可以创建任意类型任务
+                return True
             else:
-                return True  # 学生可以创建个人任务（assignee限制在API层处理）
+                return True
 
         elif action == 'edit':
-            # 编辑权限
             if user_role == 'admin':
                 return True
             elif user_role == 'teacher':
-                # 导师可以编辑导师任务，以及自己创建的个人任务
                 if task.task_type == 'assigned':
                     return True
                 else:
                     return task.creator_id == user_id
             else:
-                # 学生：导师任务只能更新进度，个人任务可以全部编辑
                 if task.task_type == 'assigned':
-                    return False  # 学生不能编辑导师任务（只能更新进度）
+                    return False
                 else:
                     return task.creator_id == user_id
 
         elif action == 'update_progress':
-            # 更新进度权限
             if user_role == 'admin':
                 return True
             elif user_role == 'teacher':
                 return True
             else:
-                # 学生：如果是任务的负责人，可以更新进度
                 return task.assignee_id == user_id
 
         elif action == 'delete':
-            # 删除权限
             if user_role == 'admin':
                 return True
             elif user_role == 'teacher':
-                # 导师可以删除导师任务，以及自己创建的个人任务
                 if task.task_type == 'assigned':
                     return True
                 else:
                     return task.creator_id == user_id
             else:
-                # 学生只能删除自己创建的个人任务
                 return task.task_type == 'personal' and task.creator_id == user_id
 
         return False
@@ -444,8 +264,6 @@ class TaskService:
 
     async def api_get_list(self, filters: Dict[str, Any], user_id: int, user_role: str) -> Dict[str, Any]:
         """获取任务列表 API"""
-        from repositories.user_repository import UserRepository
-
         page = filters.get('page', 1)
         limit = filters.get('limit', 10)
         offset = (page - 1) * limit
@@ -507,8 +325,6 @@ class TaskService:
 
     async def api_create(self, data: Dict[str, Any], user_id: int, user_role: str) -> Dict[str, Any]:
         """创建任务 API"""
-        from datetime import datetime
-
         title = data.get("title")
         if not title:
             return {"status_code": 400, "content": {"success": False, "message": "任务标题不能为空", "error": "VALIDATION_ERROR"}}
@@ -521,7 +337,6 @@ class TaskService:
             except:
                 pass
 
-        # 确定任务类型和负责人
         if user_role in ['admin', 'teacher']:
             task_type = data.get("task_type", "assigned")
             assignee_id = data.get("assignee_id") or user_id
@@ -539,8 +354,6 @@ class TaskService:
 
     async def api_get_detail(self, task_id: int, user_id: int, user_role: str) -> Dict[str, Any]:
         """获取任务详情 API"""
-        from repositories.user_repository import UserRepository
-
         task = TaskService.get_task_by_id(task_id)
         if not task:
             return {"status_code": 404, "content": {"success": False, "message": "任务不存在", "error": "NOT_FOUND"}}
@@ -566,8 +379,6 @@ class TaskService:
 
     async def api_update(self, task_id: int, data: Dict[str, Any], user_id: int, user_role: str) -> Dict[str, Any]:
         """更新任务 API"""
-        from datetime import datetime
-
         task = TaskService.get_task_by_id(task_id)
         if not task:
             return {"status_code": 404, "content": {"success": False, "message": "任务不存在", "error": "NOT_FOUND"}}
