@@ -15,10 +15,6 @@ Service 类方法:
         - get_progress_stats()                    : 获取统计信息
         - update_progress(...)                    : 更新进展
         - add_supervisor_feedback(...)            : 添加导师反馈
-        - _calculate_period_range(...)            : 计算周期时间范围
-        - _determine_status(completion_rate)      : 根据完成度判断状态
-
-    ProgressSettingService:
         - get_setting_by_user(user_id)            : 获取用户周期设置
         - create_or_update_setting(...)           : 创建或更新设置
         - batch_create_settings(...)              : 批量创建设置
@@ -262,6 +258,71 @@ class ResearchProgressService:
         return ResearchProgressService.get_progress_by_id(progress_id)
 
     @staticmethod
+    def get_setting_by_user(user_id: int) -> Optional[ProgressSetting]:
+        """获取用户的周期设置"""
+        row = ProgressRepository.get_setting_by_user(user_id)
+        if row:
+            return ProgressSetting.from_dict(row)
+        return None
+
+    @staticmethod
+    def create_or_update_setting(
+        user_id: int,
+        period_type: str,
+        reminder_enabled: bool,
+        reminder_days: int,
+        created_by: int
+    ) -> ProgressSetting:
+        """创建或更新周期设置"""
+        setting = ProgressSetting(
+            user_id=user_id,
+            period_type=period_type,
+            reminder_enabled=reminder_enabled,
+            reminder_days=reminder_days,
+            created_by=created_by
+        )
+        next_deadline = setting.calculate_next_deadline()
+
+        data = {
+            'user_id': user_id,
+            'period_type': period_type,
+            'reminder_enabled': reminder_enabled,
+            'reminder_days': reminder_days,
+            'next_deadline': next_deadline,
+            'created_by': created_by
+        }
+
+        ProgressRepository.create_or_update_setting(data)
+
+        row = ProgressRepository.get_setting_by_user(user_id)
+        if row:
+            return ProgressSetting.from_dict(row)
+        return setting
+
+    @staticmethod
+    def batch_create_settings(
+        user_ids: List[int],
+        period_type: str,
+        reminder_days: int,
+        created_by: int
+    ) -> List[ProgressSetting]:
+        """批量创建周期设置"""
+        ProgressRepository.batch_create_settings(user_ids, period_type, reminder_days, created_by)
+
+        results = []
+        for user_id in user_ids:
+            row = ProgressRepository.get_setting_by_user(user_id)
+            if row:
+                results.append(ProgressSetting.from_dict(row))
+        return results
+
+    @staticmethod
+    def get_all_settings() -> List[ProgressSetting]:
+        """获取所有学生的周期设置"""
+        rows = ProgressRepository.get_all_settings()
+        return [ProgressSetting.from_dict(row) for row in rows]
+
+    @staticmethod
     def _calculate_period_range(period_type: str, reference_date: datetime) -> tuple:
         """计算周期时间范围"""
         if period_type == 'weekly':
@@ -299,75 +360,6 @@ class ResearchProgressService:
             return ResearchProgressService.STATUS_WARNING
         else:
             return ResearchProgressService.STATUS_NORMAL
-
-
-class ProgressSettingService:
-    """提交周期设置服务类"""
-
-    @staticmethod
-    def get_setting_by_user(user_id: int) -> Optional[ProgressSetting]:
-        """获取用户的周期设置"""
-        row = ProgressRepository.get_setting_by_user(user_id)
-        if row:
-            return ProgressSetting.from_dict(row)
-        return None
-
-    @staticmethod
-    def create_or_update_setting(
-        user_id: int,
-        period_type: str,
-        reminder_enabled: bool,
-        reminder_days: int,
-        created_by: int
-    ) -> ProgressSetting:
-        """创建或更新周期设置"""
-        setting = ProgressSetting(
-            user_id=user_id,
-            period_type=period_type,
-            reminder_enabled=reminder_enabled,
-            reminder_days=reminder_days,
-            created_by=created_by
-        )
-        next_deadline = setting.calculate_next_deadline()
-
-        data = {
-            'user_id': user_id,
-            'period_type': period_type,
-            'reminder_enabled': reminder_enabled,
-            'reminder_days': reminder_days,
-            'next_deadline': next_deadline,
-            'created_by': created_by
-        }
-
-        setting_id = ProgressRepository.create_or_update_setting(data)
-
-        row = ProgressRepository.get_setting_by_user(user_id)
-        if row:
-            return ProgressSetting.from_dict(row)
-        return setting
-
-    @staticmethod
-    def batch_create_settings(
-        user_ids: List[int],
-        period_type: str,
-        reminder_days: int,
-        created_by: int
-    ) -> List[ProgressSetting]:
-        """批量创建周期设置"""
-        ProgressRepository.batch_create_settings(user_ids, period_type, reminder_days, created_by)
-
-        results = []
-        for user_id in user_ids:
-            row = ProgressRepository.get_setting_by_user(user_id)
-            if row:
-                results.append(ProgressSetting.from_dict(row))
-        return results
-
-    @staticmethod
-    def get_all_settings() -> List[ProgressSetting]:
-        """获取所有学生的周期设置"""
-        rows = ProgressRepository.get_all_settings()
-        return [ProgressSetting.from_dict(row) for row in rows]
 
     # ==================== API 异步方法（返回 {status_code, content}） ====================
 
@@ -411,7 +403,7 @@ class ProgressSettingService:
 
     async def api_get_settings(self, user_id: int) -> Dict[str, Any]:
         """获取提交周期设置 API"""
-        setting = ProgressSettingService.get_setting_by_user(user_id)
+        setting = ResearchProgressService.get_setting_by_user(user_id)
 
         if not setting:
             return {"status_code": 200, "content": {
@@ -466,7 +458,7 @@ class ProgressSettingService:
         if period_type not in ['weekly', 'biweekly', 'monthly']:
             return {"status_code": 400, "content": {"success": False, "message": "无效的周期类型", "error": "VALIDATION_ERROR"}}
 
-        setting = ProgressSettingService.create_or_update_setting(
+        setting = ResearchProgressService.create_or_update_setting(
             user_id=user_id,
             period_type=period_type,
             reminder_enabled=data.get("reminder_enabled", True),
@@ -485,7 +477,7 @@ class ProgressSettingService:
         if not user_ids:
             return {"status_code": 400, "content": {"success": False, "message": "请选择要设置的学生", "error": "VALIDATION_ERROR"}}
 
-        settings = ProgressSettingService.batch_create_settings(
+        settings = ResearchProgressService.batch_create_settings(
             user_ids=user_ids,
             period_type=data.get("period_type", "weekly"),
             reminder_days=data.get("reminder_days", 1),
@@ -555,3 +547,24 @@ class ProgressSettingService:
             return {"status_code": 404, "content": {"success": False, "message": "进展不存在", "error": "NOT_FOUND"}}
 
         return {"status_code": 200, "content": {"success": True, "message": "反馈发送成功", "data": progress.to_dict()}}
+
+
+# 保留 ProgressSettingService 用于向后兼容（如果其他地方有引用）
+class ProgressSettingService:
+    """提交周期设置服务类 - 已合并到 ResearchProgressService"""
+
+    @staticmethod
+    def get_setting_by_user(user_id: int) -> Optional[ProgressSetting]:
+        return ResearchProgressService.get_setting_by_user(user_id)
+
+    @staticmethod
+    def create_or_update_setting(user_id: int, period_type: str, reminder_enabled: bool, reminder_days: int, created_by: int) -> ProgressSetting:
+        return ResearchProgressService.create_or_update_setting(user_id, period_type, reminder_enabled, reminder_days, created_by)
+
+    @staticmethod
+    def batch_create_settings(user_ids: List[int], period_type: str, reminder_days: int, created_by: int) -> List[ProgressSetting]:
+        return ResearchProgressService.batch_create_settings(user_ids, period_type, reminder_days, created_by)
+
+    @staticmethod
+    def get_all_settings() -> List[ProgressSetting]:
+        return ResearchProgressService.get_all_settings()
