@@ -69,6 +69,26 @@ class SharedResourcesRepository:
             return [dict(row) for row in cursor.fetchall()]
 
     @staticmethod
+    def get_public_and_user(user_id: int, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+        """获取公开资料和用户资料列表（合并查询，正确分页）"""
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT * FROM files
+                WHERE (is_public = 1 OR uploader_id = ?) AND status = 'active'
+                ORDER BY upload_time DESC LIMIT ? OFFSET ?
+            """, (user_id, limit, offset))
+            return [dict(row) for row in cursor.fetchall()]
+
+    @staticmethod
+    def get_public_and_user_count(user_id: int) -> int:
+        """获取公开资料和用户资料总数"""
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM files WHERE (is_public = 1 OR uploader_id = ?) AND status = 'active'", (user_id,))
+            return cursor.fetchone()[0] or 0
+
+    @staticmethod
     def get_count_by_user(user_id: int) -> int:
         """获取用户资料总数"""
         with get_db() as conn:

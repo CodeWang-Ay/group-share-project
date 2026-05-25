@@ -102,21 +102,16 @@ class SharedResourcesService:
             files = SharedResourcesRepository.get_by_user(user_id, limit, offset)
             total = SharedResourcesRepository.get_count_by_user(user_id)
         elif scope == "public":
-            files = SharedResourcesRepository.get_public(limit, offset)
-            user_files = SharedResourcesRepository.get_by_user(user_id, limit, offset)
-            existing_ids = set(f['id'] for f in files)
-            for f in user_files:
-                if f['id'] not in existing_ids:
-                    files.append(f)
-            total = SharedResourcesRepository.get_public_count() + SharedResourcesRepository.get_count_by_user(user_id)
+            files = SharedResourcesRepository.get_public_and_user(user_id, limit, offset)
+            total = SharedResourcesRepository.get_public_and_user_count(user_id)
         elif scope == "all" and role == "admin":
             target_id = filters.get("user_id")
             if target_id:
                 files = SharedResourcesRepository.get_by_user(int(target_id), limit, offset)
                 total = SharedResourcesRepository.get_count_by_user(int(target_id))
             else:
-                files = SharedResourcesRepository.get_by_user(user_id, limit, offset) + SharedResourcesRepository.get_public(limit, offset)
-                total = SharedResourcesRepository.get_count_by_user(user_id) + SharedResourcesRepository.get_public_count()
+                files = SharedResourcesRepository.get_public_and_user(user_id, limit, offset)
+                total = SharedResourcesRepository.get_public_and_user_count(user_id)
 
         if keyword:
             files = SharedResourcesRepository.search(keyword, user_id if scope == "my" else None, limit, offset)
