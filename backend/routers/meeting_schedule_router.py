@@ -27,6 +27,8 @@ API 端点列表 (共10个):
 创建日期: 2026-05-23
 ================================================================================
 """
+import json
+from loguru import logger
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import JSONResponse
 from dependencies.auth import get_current_user
@@ -39,7 +41,9 @@ router = APIRouter(prefix="/api/meetings", tags=["组会"])
 async def get_meetings(request: Request, current_user=Depends(get_current_user), service: MeetingScheduleService = Depends()):
     """获取组会列表"""
     filters = dict(request.query_params)
+    logger.info(json.dumps(filters, ensure_ascii=False))
     result = await service.get_list(filters, current_user.id, current_user.role)
+    logger.info(json.dumps(result.get("content", {}).get("data", {}).get("meetings"), ensure_ascii=False))
     return JSONResponse(status_code=result["status_code"], content=result["content"])
 
 

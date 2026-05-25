@@ -617,9 +617,10 @@
                                     </div>
                                     <!-- 状态筛选 -->
                                     <div class="relative">
-                                        <select id="calendar-status-filter" onchange="renderCalendar()" class="appearance-none px-4 py-2 pr-8 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 shadow-sm cursor-pointer">
+                                        <select id="calendar-status-filter" onchange="syncCalendarStatusFilter()" class="appearance-none px-4 py-2 pr-8 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 shadow-sm cursor-pointer">
                                             <option value="">全部状态</option>
                                             <option value="scheduled">待召开</option>
+                                            <option value="ongoing">进行中</option>
                                             <option value="completed">已召开</option>
                                             <option value="cancelled">已废弃</option>
                                         </select>
@@ -1025,6 +1026,7 @@
         let meetingPerPage = 20; // 每页显示数量
         let meetingTotalPages = 1;
         let meetingTotalCount = 0;
+        let loadMeetingsRequestId = 0; // 请求ID，用于防止竞态条件
 
         // 加载组会统计
         async function loadMeetingStats() {
@@ -1045,6 +1047,19 @@
 
         // 加载组会列表
         async function loadMeetings() {
+            // 生成新的请求ID
+            const currentRequestId = ++loadMeetingsRequestId;
+            console.log('🚀 loadMeetings 开始, requestId:', currentRequestId, '状态筛选:', meetingCurrentStatus);
+
+            // 立即清空两个视图，显示统一的加载状态
+            const container = document.getElementById('meetings-container');
+            const tbody = document.getElementById('meetings-list-body');
+            const loadingHtml = '<div class="text-center py-12 text-gray-500"><i class="fa fa-spinner fa-spin mr-2"></i>加载中...</div>';
+            const loadingTableRow = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500"><i class="fa fa-spinner fa-spin mr-2"></i>加载中...</td></tr>';
+
+            if (container) container.innerHTML = loadingHtml;
+            if (tbody) tbody.innerHTML = loadingTableRow;
+
             try {
                 const params = new URLSearchParams();
                 params.append('page', meetingCurrentPage);
@@ -1053,11 +1068,21 @@
                 if (meetingCurrentType) params.append('meeting_type', meetingCurrentType);
                 if (meetingSearchKeyword) params.append('search', meetingSearchKeyword);
 
+                console.log('🔍 loadMeetings - API请求URL:', `${API_BASE_URL}/api/meetings?${params.toString()}`);
+
                 const response = await fetch(`${API_BASE_URL}/api/meetings?${params.toString()}`, {
                     credentials: 'include'
                 });
                 const result = await response.json();
-                console.log('组会列表响应:', result);
+
+                // 检查请求ID是否匹配，防止竞态条件
+                if (currentRequestId !== loadMeetingsRequestId) {
+                    console.log('⚠️ 请求被取消, requestId:', currentRequestId, '当前最新requestId:', loadMeetingsRequestId);
+                    return; // 不渲染旧请求的结果
+                }
+
+                console.log('✅ 组会列表响应 (requestId:', currentRequestId, '):', result);
+                console.log('📊 返回数据数量:', result.data?.meetings?.length);
                 if (result.success) {
                     renderMeetingList(result.data.meetings, result.data.pagination);
                     // 更新分页信息
@@ -1127,7 +1152,8 @@
             if (!container) return;
 
             if (!meetings || meetings.length === 0) {
-                container.innerHTML = '<div class="text-center py-12 text-gray-500"><p>暂无组会安排</p></div>';
+                container.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fa fa-calendar-o text-4xl mb-4 block"></i><p>暂无组会安排</p></div>';
+                renderMeetingTable(meetings, pagination); // 同步清空列表视图
                 return;
             }
 
@@ -1237,11 +1263,13 @@
 
         // 渲染列表视图表格
         function renderMeetingTable(meetings, pagination) {
+            console.log('📋 renderMeetingTable 被调用, 数据数量:', meetings?.length);
+
             const tbody = document.getElementById('meetings-list-body');
             if (!tbody) return;
 
             if (!meetings || meetings.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">暂无组会安排</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-12 text-center text-gray-500"><i class="fa fa-calendar-o text-4xl mb-4 block"></i>暂无组会安排</td></tr>';
                 return;
             }
 
@@ -1295,19 +1323,20 @@
             currentViewMode = 'grid';
             applyLayout('grid');
             localStorage.setItem('meeting_view_mode', 'grid');
+            // 不需要额外调用 loadMeetings()，因为筛选时会同时更新两种视图
         }
 
         function switchToList() {
             currentViewMode = 'list';
             applyLayout('list');
             localStorage.setItem('meeting_view_mode', 'list');
+            // 不需要额外调用 loadMeetings()，因为筛选时会同时更新两种视图
         }
 
         function switchToCalendar() {
             currentViewMode = 'calendar';
-            applyLayout('calendar');
+            applyLayout('calendar'); // applyLayout 内部会调用 renderCalendar
             localStorage.setItem('meeting_view_mode', 'calendar');
-            renderCalendar();
         }
 
         function applyLayout(layout) {
@@ -1348,7 +1377,7 @@
             } else if (layout === 'calendar') {
                 calendarView.classList.remove('hidden');
                 activateBtnStyle(calendarBtn);
-                renderCalendar();
+                renderCalendar(); // 渲染日历数据
             }
         }
 
@@ -1739,10 +1768,22 @@
 
         // 状态筛选函数
         function filterMeetingStatus(status) {
+            console.log('🎯 filterMeetingStatus 被调用, 参数:', status);
             meetingCurrentStatus = status;
             meetingCurrentPage = 1;
+
+            // 更新按钮样式
             updateFilterButtons();
-            loadMeetings();
+
+            // 同步日历视图筛选下拉框
+            const calendarStatusFilter = document.getElementById('calendar-status-filter');
+            if (calendarStatusFilter) {
+                calendarStatusFilter.value = status;
+            }
+
+            // 同时刷新所有视图
+            loadMeetings();       // 卡片/列表视图
+            renderCalendar();     // 日历视图
         }
 
         function updateFilterButtons() {
@@ -1756,6 +1797,18 @@
                     btn.className = 'px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors';
                 }
             });
+        }
+
+        // 日历下拉框筛选同步到按钮（只影响日历视图）
+        function syncCalendarStatusFilter() {
+            const calendarStatusFilter = document.getElementById('calendar-status-filter');
+            if (calendarStatusFilter) {
+                meetingCurrentStatus = calendarStatusFilter.value;
+                meetingCurrentPage = 1;
+                updateFilterButtons();
+                // 只刷新日历视图，不影响卡片/列表视图
+                renderCalendar();
+            }
         }
 
         // 从列表直接打开编辑模态框
