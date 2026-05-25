@@ -24,7 +24,7 @@ from typing import Optional, Dict, Any
 from database.connection import get_db
 
 
-class UserRepository:
+class UserProfileRepository:
     """用户数据访问类"""
 
     @staticmethod

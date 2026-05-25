@@ -7,17 +7,17 @@
 功能描述: Service 层统一导出，提供业务逻辑服务
 
 导出的 Service 类 (遵循 CLAUDE.md 命名规范: XxxService):
-    - AuthService           : 认证服务
-    - SessionManager        : 会话管理
-    - FileService           : 文件服务
-    - UserService           : 用户服务
-    - MemberService         : 成员服务
-    - MaterialService       : 材料服务
-    - MessageService        : 消息服务
-    - MeetingService        : 组会服务
-    - TaskService           : 任务服务
-    - PaperService          : 文献服务
-    - ResearchProgressService: 研究进展服务
+    - AuthService              : 认证服务
+    - SessionManager           : 会话管理
+    - SharedResourcesService   : 共享资料服务
+    - UserProfileService              : 用户服务
+    - MemberManagementService            : 成员服务
+    - MeetingMaterialService          : 材料服务
+    - MessageSystemService           : 消息服务
+    - MeetingScheduleService           : 组会服务
+    - ResearchTasksService              : 任务服务
+    - PaperService             : 文献服务
+    - ResearchProgressService  : 研究进展服务
 
 命名规范: snake_case + 层级后缀 (遵循 CLAUDE.md)
     - 文件名: xxx_service.py
@@ -33,13 +33,13 @@
 """
 from .auth_service import AuthService
 from .session_service import SessionManager, session_manager
-from .file_service import FileService
-from .user_service import UserService
-from .member_service import MemberService
-from .material_service import MaterialService
-from .message_service import MessageService
-from .meeting_service import MeetingService
-from .task_service import TaskService
+from .shared_resources_service import SharedResourcesService
+from .user_profile_service import UserProfileService
+from .member_management_service import MemberManagementService
+from .meeting_material_service import MeetingMaterialService
+from .message_system_service import MessageSystemService
+from .meeting_schedule_service import MeetingScheduleService
+from .research_tasks_service import ResearchTasksService
 from .paper_service import PaperService
 from .research_progress_service import ResearchProgressService
 
@@ -47,13 +47,13 @@ __all__ = [
     "AuthService",
     "SessionManager",
     "session_manager",
-    "FileService",
-    "UserService",
-    "MemberService",
-    "MaterialService",
-    "MessageService",
-    "MeetingService",
-    "TaskService",
+    "SharedResourcesService",
+    "UserProfileService",
+    "MemberManagementService",
+    "MeetingMaterialService",
+    "MessageSystemService",
+    "MeetingScheduleService",
+    "ResearchTasksService",
     "PaperService",
     "ResearchProgressService"
 ]

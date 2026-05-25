@@ -32,11 +32,11 @@ import bcrypt
 from typing import Dict, Any, List
 from loguru import logger
 
-from repositories.member_repository import MemberRepository
+from repositories.member_management_repository import MemberManagementRepository
 from models.user import User
 
 
-class MemberService:
+class MemberManagementService:
     """成员管理业务服务类"""
 
     async def get_list(self, filters: Dict[str, Any], pagination: Dict[str, int]) -> Dict[str, Any]:
@@ -47,8 +47,8 @@ class MemberService:
             per_page = 10
 
         offset = (page - 1) * per_page
-        members = MemberRepository.get_list(filters, offset, per_page)
-        total = MemberRepository.get_count(filters)
+        members = MemberManagementRepository.get_list(filters, offset, per_page)
+        total = MemberManagementRepository.get_count(filters)
 
         # 数据处理
         for member in members:
@@ -65,7 +65,7 @@ class MemberService:
 
     async def get_stats(self) -> Dict[str, Any]:
         """获取成员统计"""
-        stats = MemberRepository.get_stats()
+        stats = MemberManagementRepository.get_stats()
         return {"status_code": 200, "content": {"success": True, "data": stats}}
 
     async def create(self, data: Dict[str, Any], user_role: str, username: str) -> Dict[str, Any]:
@@ -99,10 +99,10 @@ class MemberService:
             return {"status_code": 400, "content": {"success": False, "message": "邮箱格式不正确", "error": "INVALID_EMAIL"}}
 
         # 4. 唯一性验证
-        if MemberRepository.check_username_exists(username):
+        if MemberManagementRepository.check_username_exists(username):
             return {"status_code": 400, "content": {"success": False, "message": "用户名已存在", "error": "USERNAME_EXISTS"}}
 
-        if MemberRepository.check_email_exists(email):
+        if MemberManagementRepository.check_email_exists(email):
             return {"status_code": 400, "content": {"success": False, "message": "邮箱已存在", "error": "EMAIL_EXISTS"}}
 
         # 5. 创建用户
@@ -113,7 +113,7 @@ class MemberService:
             'research_direction': data.get('research_direction'), 'personal_bio': data.get('personal_bio'),
             'gender': data.get('gender'), 'id_card': data.get('id_card'), 'bank_card': data.get('bank_card')
         }
-        user_id = MemberRepository.create(create_data)
+        user_id = MemberManagementRepository.create(create_data)
 
         logger.info(f"管理员 {username} 创建了新用户: {username} (ID: {user_id})")
         return {"status_code": 201, "content": {"success": True, "message": "成员添加成功",
@@ -137,14 +137,14 @@ class MemberService:
         if 'status' in update_data and update_data['status'] not in ['active', 'inactive']:
             return {"status_code": 400, "content": {"success": False, "message": "状态值无效", "error": "INVALID_STATUS"}}
 
-        member = MemberRepository.get_by_id(member_id)
+        member = MemberManagementRepository.get_by_id(member_id)
         if not member:
             return {"status_code": 404, "content": {"success": False, "message": "成员不存在", "error": "MEMBER_NOT_FOUND"}}
 
-        if 'username' in update_data and MemberRepository.check_username_exists(update_data['username'], member_id):
+        if 'username' in update_data and MemberManagementRepository.check_username_exists(update_data['username'], member_id):
             return {"status_code": 400, "content": {"success": False, "message": "用户名已存在", "error": "USERNAME_EXISTS"}}
 
-        success = MemberRepository.update(member_id, update_data)
+        success = MemberManagementRepository.update(member_id, update_data)
         if not success:
             return {"status_code": 500, "content": {"success": False, "message": "更新失败", "error": "UPDATE_FAILED"}}
 
@@ -156,11 +156,11 @@ class MemberService:
         if user_role != "admin":
             return {"status_code": 403, "content": {"success": False, "message": "没有权限删除成员", "error": "ACCESS_DENIED"}}
 
-        member = MemberRepository.get_by_id(member_id)
+        member = MemberManagementRepository.get_by_id(member_id)
         if not member:
             return {"status_code": 404, "content": {"success": False, "message": "成员不存在", "error": "MEMBER_NOT_FOUND"}}
 
-        MemberRepository.delete(member_id)
+        MemberManagementRepository.delete(member_id)
         logger.info(f"成员删除成功: member_id={member_id}")
         return {"status_code": 200, "content": {"success": True, "message": "成员删除成功"}}
 
@@ -172,11 +172,11 @@ class MemberService:
         if new_status not in ['active', 'inactive']:
             return {"status_code": 400, "content": {"success": False, "message": "状态值无效", "error": "INVALID_STATUS"}}
 
-        member = MemberRepository.get_by_id(member_id)
+        member = MemberManagementRepository.get_by_id(member_id)
         if not member:
             return {"status_code": 404, "content": {"success": False, "message": "成员不存在", "error": "MEMBER_NOT_FOUND"}}
 
-        MemberRepository.update_status(member_id, new_status)
+        MemberManagementRepository.update_status(member_id, new_status)
         logger.info(f"成员状态更新成功: member_id={member_id}, status={new_status}")
         return {"status_code": 200, "content": {"success": True, "message": "成员状态更新成功"}}
 
@@ -188,12 +188,12 @@ class MemberService:
         if len(password) < 6:
             return {"status_code": 400, "content": {"success": False, "message": "密码长度至少为6位", "error": "PASSWORD_TOO_SHORT"}}
 
-        member = MemberRepository.get_by_id(member_id)
+        member = MemberManagementRepository.get_by_id(member_id)
         if not member:
             return {"status_code": 404, "content": {"success": False, "message": "成员不存在", "error": "MEMBER_NOT_FOUND"}}
 
         password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        MemberRepository.update_password(member_id, password_hash)
+        MemberManagementRepository.update_password(member_id, password_hash)
 
         logger.info(f"管理员 {username} 重置了用户 {member.get('username')} 的密码")
         return {"status_code": 200, "content": {"success": True, "message": "密码重置成功",
@@ -210,7 +210,7 @@ class MemberService:
         if role not in ['admin', 'teacher', 'student']:
             return {"status_code": 400, "content": {"success": False, "message": "角色必须是admin、teacher或student", "error": "INVALID_ROLE"}}
 
-        updated_count = MemberRepository.batch_update_role(user_ids, role)
+        updated_count = MemberManagementRepository.batch_update_role(user_ids, role)
         logger.info(f"批量更新角色成功: {updated_count} 个成员")
         return {"status_code": 200, "content": {"success": True, "message": f"成功更新 {updated_count} 个成员的角色", "updated_count": updated_count}}
 
@@ -225,7 +225,7 @@ class MemberService:
         if status not in ['active', 'inactive']:
             return {"status_code": 400, "content": {"success": False, "message": "状态必须是active或inactive", "error": "INVALID_STATUS"}}
 
-        updated_count = MemberRepository.batch_update_status(user_ids, status)
+        updated_count = MemberManagementRepository.batch_update_status(user_ids, status)
         logger.info(f"批量更新状态成功: {updated_count} 个成员")
         return {"status_code": 200, "content": {"success": True, "message": f"成功更新 {updated_count} 个成员的状态", "updated_count": updated_count}}
 
@@ -237,6 +237,6 @@ class MemberService:
         if not user_ids:
             return {"status_code": 400, "content": {"success": False, "message": "缺少要删除的成员ID", "error": "MISSING_USER_IDS"}}
 
-        deleted_count = MemberRepository.batch_delete(user_ids)
+        deleted_count = MemberManagementRepository.batch_delete(user_ids)
         logger.info(f"批量删除成功: {deleted_count} 个成员")
         return {"status_code": 200, "content": {"success": True, "message": f"成功删除 {deleted_count} 个成员", "deleted_count": deleted_count}}

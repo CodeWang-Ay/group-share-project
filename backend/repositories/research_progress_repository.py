@@ -35,7 +35,7 @@ import json
 from database.connection import get_db
 
 
-class ProgressRepository:
+class ResearchProgressRepository:
     """研究进展数据访问类"""
 
     @staticmethod

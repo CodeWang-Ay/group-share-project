@@ -14,18 +14,18 @@
     5. 路由模块注册
 
 注册的路由模块 (共12个，遵循 CLAUDE.md 命名规范 xxx_router):
-    - health_router     : 健康检查端点
-    - page_router       : HTML 页面路由
-    - auth_router       : 用户认证 (登录、注册、登出)
-    - user_router       : 用户信息管理
-    - file_router       : 文件上传下载管理
-    - member_router     : 团队成员管理
-    - message_router    : 消息系统
-    - meeting_router    : 组会管理
-    - material_router   : 汇报材料管理
-    - task_router       : 研究任务管理
-    - paper_router      : 文献库管理
-    - progress_router   : 研究进展管理
+    - health_router           : 健康检查端点
+    - page_router             : HTML 页面路由
+    - auth_router             : 用户认证 (登录、注册、登出)
+    - user_profile_router             : 用户信息管理
+    - shared_resources_router : 共享资料管理
+    - member_management_router           : 团队成员管理
+    - message_system_router          : 消息系统
+    - meeting_schedule_router          : 组会管理
+    - meeting_material_router         : 汇报材料管理
+    - research_tasks_router             : 研究任务管理
+    - paper_router            : 文献库管理
+    - research_progress_router         : 研究进展管理
 
 目录结构 (遵循 CLAUDE.md):
     - routers/      : 只处理 HTTP 请求和响应
@@ -60,17 +60,17 @@ from config import Config
 # 导入所有路由模块 (遵循 CLAUDE.md 命名规范: xxx_router)
 from routers import (
     auth_router,
-    user_router,
-    file_router,
+    user_profile_router,
+    shared_resources_router,
     health_router,
     page_router,
-    meeting_router,
-    message_router,
-    task_router,
-    member_router,
-    material_router,
+    meeting_schedule_router,
+    message_system_router,
+    research_tasks_router,
+    member_management_router,
+    meeting_material_router,
     paper_router,
-    progress_router,
+    research_progress_router,
 )
 
 # 创建 FastAPI 应用
@@ -138,15 +138,15 @@ app.mount("/uploads", StaticFiles(directory=str(Config.UPLOAD_DIR)), name="uploa
 app.include_router(health_router)
 app.include_router(page_router)
 app.include_router(auth_router)
-app.include_router(user_router)
-app.include_router(file_router)
-app.include_router(member_router)
-app.include_router(message_router)
-app.include_router(meeting_router)
-app.include_router(material_router)
-app.include_router(task_router)
+app.include_router(user_profile_router)
+app.include_router(shared_resources_router)
+app.include_router(member_management_router)
+app.include_router(message_system_router)
+app.include_router(meeting_schedule_router)
+app.include_router(meeting_material_router)
+app.include_router(research_tasks_router)
 app.include_router(paper_router)
-app.include_router(progress_router)
+app.include_router(research_progress_router)
 
 
 # 启动事件

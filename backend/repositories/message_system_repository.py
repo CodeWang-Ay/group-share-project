@@ -26,7 +26,7 @@ from datetime import datetime
 from database.connection import get_db
 
 
-class MessageRepository:
+class MessageSystemRepository:
     """消息数据访问类"""
 
     @staticmethod

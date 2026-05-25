@@ -33,10 +33,10 @@ from pathlib import Path
 from datetime import datetime
 from loguru import logger
 
-from repositories.meeting_repository import MeetingRepository
+from repositories.meeting_schedule_repository import MeetingScheduleRepository
 
 
-class MeetingService:
+class MeetingScheduleService:
     """组会业务服务类"""
 
     async def get_list(self, filters: Dict[str, Any], user_id: int, role: str) -> Dict[str, Any]:
@@ -45,17 +45,17 @@ class MeetingService:
         limit = int(filters.get("limit", 10))
         offset = (page - 1) * limit
 
-        MeetingRepository.auto_update_status()
+        MeetingScheduleRepository.auto_update_status()
 
-        meetings = MeetingRepository.get_list(filters, limit, offset)
-        total = MeetingRepository.get_count(filters)
+        meetings = MeetingScheduleRepository.get_list(filters, limit, offset)
+        total = MeetingScheduleRepository.get_count(filters)
 
         meetings_with_presenters = []
         for m in meetings:
-            presenters = MeetingRepository.get_presenters(m['id'])
+            presenters = MeetingScheduleRepository.get_presenters(m['id'])
             presenter_list = []
             for p in presenters:
-                files = MeetingRepository.get_presenter_files(p['id'])
+                files = MeetingScheduleRepository.get_presenter_files(p['id'])
                 presenter_list.append({
                     "id": p['id'],
                     "user_id": p['user_id'],
@@ -107,24 +107,24 @@ class MeetingService:
             'notes': data.get("notes"),
             'minutes': data.get("minutes")
         }
-        meeting_id = MeetingRepository.create(create_data)
+        meeting_id = MeetingScheduleRepository.create(create_data)
 
         logger.info(f"创建组会成功: {data['title']} (ID: {meeting_id})")
         return {"status_code": 201, "content": {"success": True, "message": "组会创建成功", "data": {"id": meeting_id, "title": data["title"]}}}
 
     async def get_stats(self) -> Dict[str, Any]:
         """获取统计信息"""
-        MeetingRepository.auto_update_status()
-        stats = MeetingRepository.get_stats()
+        MeetingScheduleRepository.auto_update_status()
+        stats = MeetingScheduleRepository.get_stats()
         return {"status_code": 200, "content": {"success": True, "data": stats}}
 
     async def get_detail(self, meeting_id: int, user_id: int, role: str) -> Dict[str, Any]:
         """获取组会详情"""
-        meeting = MeetingRepository.get_by_id(meeting_id)
+        meeting = MeetingScheduleRepository.get_by_id(meeting_id)
         if not meeting:
             return {"status_code": 404, "content": {"success": False, "message": "组会不存在", "error": "MEETING_NOT_FOUND"}}
 
-        presenters = MeetingRepository.get_presenters(meeting_id)
+        presenters = MeetingScheduleRepository.get_presenters(meeting_id)
         presenter_list = []
         for p in presenters:
             presenter_list.append({
@@ -143,7 +143,7 @@ class MeetingService:
 
     async def update(self, meeting_id: int, data: Dict[str, Any], user_id: int, role: str) -> Dict[str, Any]:
         """更新组会"""
-        meeting = MeetingRepository.get_by_id(meeting_id)
+        meeting = MeetingScheduleRepository.get_by_id(meeting_id)
         if not meeting:
             return {"status_code": 404, "content": {"success": False, "message": "组会不存在", "error": "MEETING_NOT_FOUND"}}
 
@@ -161,7 +161,7 @@ class MeetingService:
             if field in data:
                 update_data[field] = data[field]
 
-        MeetingRepository.update(meeting_id, update_data)
+        MeetingScheduleRepository.update(meeting_id, update_data)
 
         logger.info(f"组会更新成功: meeting_id={meeting_id}")
         return {"status_code": 200, "content": {"success": True, "message": "组会更新成功"}}
@@ -171,11 +171,11 @@ class MeetingService:
         if role not in ['admin', 'teacher']:
             return {"status_code": 403, "content": {"success": False, "message": "没有权限删除组会", "error": "ACCESS_DENIED"}}
 
-        meeting = MeetingRepository.get_by_id(meeting_id)
+        meeting = MeetingScheduleRepository.get_by_id(meeting_id)
         if not meeting:
             return {"status_code": 404, "content": {"success": False, "message": "组会不存在", "error": "MEETING_NOT_FOUND"}}
 
-        MeetingRepository.delete(meeting_id)
+        MeetingScheduleRepository.delete(meeting_id)
         logger.info(f"组会删除成功: meeting_id={meeting_id}")
         return {"status_code": 200, "content": {"success": True, "message": "组会删除成功"}}
 
@@ -188,27 +188,27 @@ class MeetingService:
         if status not in valid_statuses:
             return {"status_code": 400, "content": {"success": False, "message": f"状态值无效，有效状态：{', '.join(valid_statuses)}", "error": "INVALID_STATUS"}}
 
-        meeting = MeetingRepository.get_by_id(meeting_id)
+        meeting = MeetingScheduleRepository.get_by_id(meeting_id)
         if not meeting:
             return {"status_code": 404, "content": {"success": False, "message": "组会不存在", "error": "MEETING_NOT_FOUND"}}
 
-        MeetingRepository.update(meeting_id, {'status': status})
+        MeetingScheduleRepository.update(meeting_id, {'status': status})
 
         if status == 'completed':
-            MeetingRepository.update_presenter_status(meeting_id, 'completed')
-            MeetingRepository.update_presenter_material_status(meeting_id, 'approved')
+            MeetingScheduleRepository.update_presenter_status(meeting_id, 'completed')
+            MeetingScheduleRepository.update_presenter_material_status(meeting_id, 'approved')
         elif status == 'cancelled':
-            MeetingRepository.reset_presenter_material_status(meeting_id)
+            MeetingScheduleRepository.reset_presenter_material_status(meeting_id)
 
         logger.info(f"组会状态更新成功: meeting_id={meeting_id}, status={status}")
         return {"status_code": 200, "content": {"success": True, "message": "组会状态更新成功"}}
 
     async def get_presenters(self, meeting_id: int) -> Dict[str, Any]:
         """获取汇报人列表"""
-        presenters = MeetingRepository.get_presenters(meeting_id)
+        presenters = MeetingScheduleRepository.get_presenters(meeting_id)
         presenter_list = []
         for p in presenters:
-            files = MeetingRepository.get_presenter_files(p['id'])
+            files = MeetingScheduleRepository.get_presenter_files(p['id'])
             presenter_list.append({
                 "id": p['id'],
                 "meeting_id": p['meeting_id'],
@@ -234,7 +234,7 @@ class MeetingService:
     async def add_presenter(self, meeting_id: int, data: Dict[str, Any], user_id: int, role: str) -> Dict[str, Any]:
         """添加汇报人"""
         if role not in ['admin', 'teacher']:
-            creator_id = MeetingRepository.get_meeting_creator(meeting_id)
+            creator_id = MeetingScheduleRepository.get_meeting_creator(meeting_id)
             if creator_id != user_id:
                 return {"status_code": 403, "content": {"success": False, "message": "只有导师、管理员或组会创建者可以分配汇报人", "error": "ACCESS_DENIED"}}
 
@@ -242,14 +242,14 @@ class MeetingService:
         if not user_id_to_add:
             return {"status_code": 400, "content": {"success": False, "message": "请选择汇报人", "error": "VALIDATION_ERROR"}}
 
-        if MeetingRepository.check_presenter_exists(meeting_id, user_id_to_add):
+        if MeetingScheduleRepository.check_presenter_exists(meeting_id, user_id_to_add):
             return {"status_code": 400, "content": {"success": False, "message": "该成员已是汇报人", "error": "ALREADY_EXISTS"}}
 
         presenter_type = data.get("presenter_type", "assigned")
         duration_minutes = data.get("duration_minutes", 20)
-        presenter_id = MeetingRepository.add_presenter(meeting_id, user_id_to_add, presenter_type, duration_minutes)
+        presenter_id = MeetingScheduleRepository.add_presenter(meeting_id, user_id_to_add, presenter_type, duration_minutes)
 
-        presenter = MeetingRepository.get_presenter_by_id(presenter_id)
+        presenter = MeetingScheduleRepository.get_presenter_by_id(presenter_id)
         logger.info(f"添加汇报人成功: meeting_id={meeting_id}, presenter_id={presenter_id}")
         return {"status_code": 200, "content": {"success": True, "message": "添加汇报人成功",
                                                  "data": {"id": presenter_id, "meeting_id": meeting_id,
@@ -262,11 +262,11 @@ class MeetingService:
     async def remove_presenter(self, meeting_id: int, presenter_id: int, user_id: int, role: str) -> Dict[str, Any]:
         """移除汇报人"""
         if role not in ['admin', 'teacher']:
-            creator_id = MeetingRepository.get_meeting_creator(meeting_id)
+            creator_id = MeetingScheduleRepository.get_meeting_creator(meeting_id)
             if creator_id != user_id:
                 return {"status_code": 403, "content": {"success": False, "message": "只有导师、管理员或组会创建者可以移除汇报人", "error": "ACCESS_DENIED"}}
 
-        if not MeetingRepository.remove_presenter(presenter_id, meeting_id):
+        if not MeetingScheduleRepository.remove_presenter(presenter_id, meeting_id):
             return {"status_code": 404, "content": {"success": False, "message": "汇报人不存在", "error": "NOT_FOUND"}}
 
         logger.info(f"移除汇报人成功: presenter_id={presenter_id}")

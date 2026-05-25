@@ -39,7 +39,7 @@ from typing import Optional
 from dependencies.auth import get_current_user
 from services.paper_service import PaperService
 
-router = APIRouter(prefix="/api/paper_database", tags=["文献库"])
+router = APIRouter(prefix="/api/paper_database", tags=["学术文献"])
 
 
 @router.get("/")

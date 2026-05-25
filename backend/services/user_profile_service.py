@@ -25,16 +25,16 @@ from pathlib import Path
 import time
 from loguru import logger
 
-from repositories.user_repository import UserRepository
+from repositories.user_profile_repository import UserProfileRepository
 from config import Config
 
 
-class UserService:
+class UserProfileService:
     """用户业务服务类"""
 
     async def get_profile(self, user_id: int) -> Dict[str, Any]:
         """获取用户资料"""
-        profile = UserRepository.get_profile(user_id)
+        profile = UserProfileRepository.get_profile(user_id)
         if not profile:
             return {"status_code": 404, "content": {"success": False, "message": "用户不存在", "error": "USER_NOT_FOUND"}}
         return {"status_code": 200, "content": {"success": True, "data": profile}}
@@ -50,7 +50,7 @@ class UserService:
         if not update_data:
             return {"status_code": 400, "content": {"success": False, "message": "没有提供要更新的数据", "error": "NO_DATA"}}
 
-        success = UserRepository.update_profile(user_id, update_data)
+        success = UserProfileRepository.update_profile(user_id, update_data)
         if not success:
             return {"status_code": 404, "content": {"success": False, "message": "用户不存在", "error": "USER_NOT_FOUND"}}
 
@@ -86,7 +86,7 @@ class UserService:
 
         # 4. 更新数据库
         avatar_url = f"/uploads/avatars/{avatar_filename}"
-        UserRepository.update_avatar(user_id, avatar_url)
+        UserProfileRepository.update_avatar(user_id, avatar_url)
 
         logger.info(f"头像上传成功: {avatar_url}")
         return {"status_code": 200, "content": {"success": True, "message": "头像上传成功", "data": {"avatar_url": avatar_url}}}

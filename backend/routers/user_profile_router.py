@@ -14,7 +14,7 @@ API 端点列表 (共3个):
 职责:
     - 只处理 HTTP 请求和响应（一行代码）
     - 不写任何业务逻辑
-    - 调用 UserService 处理业务
+    - 调用 UserProfileService 处理业务
 
 作者: wjg
 创建日期: 2026-05-23
@@ -23,20 +23,20 @@ API 端点列表 (共3个):
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import JSONResponse
 from dependencies.auth import get_current_user
-from services.user_service import UserService
+from services.user_profile_service import UserProfileService
 
 router = APIRouter(prefix="/api/user", tags=["用户"])
 
 
 @router.get("/profile")
-async def get_user_profile(request: Request, current_user=Depends(get_current_user), service: UserService = Depends()):
+async def get_user_profile(request: Request, current_user=Depends(get_current_user), service: UserProfileService = Depends()):
     """获取用户个人资料"""
     result = await service.get_profile(current_user.id)
     return JSONResponse(status_code=result["status_code"], content=result["content"])
 
 
 @router.put("/profile")
-async def update_user_profile(request: Request, current_user=Depends(get_current_user), service: UserService = Depends()):
+async def update_user_profile(request: Request, current_user=Depends(get_current_user), service: UserProfileService = Depends()):
     """更新用户个人资料"""
     data = await request.json()
     result = await service.update_profile(current_user.id, data)
@@ -44,7 +44,7 @@ async def update_user_profile(request: Request, current_user=Depends(get_current
 
 
 @router.post("/avatar")
-async def upload_avatar(request: Request, current_user=Depends(get_current_user), service: UserService = Depends()):
+async def upload_avatar(request: Request, current_user=Depends(get_current_user), service: UserProfileService = Depends()):
     """上传用户头像"""
     form = await request.form()
     result = await service.upload_avatar(current_user.id, form)

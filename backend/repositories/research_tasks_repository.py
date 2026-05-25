@@ -28,7 +28,7 @@ from datetime import datetime
 from database.connection import get_db
 
 
-class TaskRepository:
+class ResearchTasksRepository:
     """研究任务数据访问类"""
 
     @staticmethod

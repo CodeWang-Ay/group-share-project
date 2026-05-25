@@ -33,7 +33,7 @@ from datetime import datetime
 from database.connection import get_db
 
 
-class MemberRepository:
+class MemberManagementRepository:
     """成员数据访问类"""
 
     @staticmethod

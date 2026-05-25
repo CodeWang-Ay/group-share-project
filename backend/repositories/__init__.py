@@ -7,16 +7,16 @@ Repository 层初始化模块 (repositories/__init__.py)
 功能描述: Repository 层统一导出，提供数据访问接口
 
 导出的 Repository 类:
-    - AuthRepository       : 认证数据访问
-    - UserRepository       : 用户数据访问
-    - MemberRepository     : 成员数据访问
-    - MaterialRepository   : 材料数据访问
-    - MessageRepository    : 消息数据访问
-    - FileRepository       : 文件数据访问
-    - MeetingRepository    : 组会数据访问
-    - PaperRepository      : 文献数据访问
-    - ProgressRepository   : 研究进展数据访问
-    - TaskRepository       : 研究任务数据访问
+    - AuthRepository           : 认证数据访问
+    - UserProfileRepository           : 用户数据访问
+    - MemberManagementRepository         : 成员数据访问
+    - MeetingMaterialRepository       : 材料数据访问
+    - MessageSystemRepository        : 消息数据访问
+    - SharedResourcesRepository: 共享资料数据访问
+    - MeetingScheduleRepository        : 组会数据访问
+    - PaperRepository          : 文献数据访问
+    - ResearchProgressRepository       : 研究进展数据访问
+    - ResearchTasksRepository           : 研究任务数据访问
 
 职责:
     - 只做数据库 CRUD 操作
@@ -28,25 +28,25 @@ Repository 层初始化模块 (repositories/__init__.py)
 ================================================================================
 """
 from repositories.auth_repository import AuthRepository
-from repositories.user_repository import UserRepository
-from repositories.member_repository import MemberRepository
-from repositories.material_repository import MaterialRepository
-from repositories.message_repository import MessageRepository
-from repositories.file_repository import FileRepository
-from repositories.meeting_repository import MeetingRepository
+from repositories.user_profile_repository import UserProfileRepository
+from repositories.member_management_repository import MemberManagementRepository
+from repositories.meeting_material_repository import MeetingMaterialRepository
+from repositories.message_system_repository import MessageSystemRepository
+from repositories.shared_resources_repository import SharedResourcesRepository
+from repositories.meeting_schedule_repository import MeetingScheduleRepository
 from repositories.paper_repository import PaperRepository
-from repositories.progress_repository import ProgressRepository
-from repositories.task_repository import TaskRepository
+from repositories.research_progress_repository import ResearchProgressRepository
+from repositories.research_tasks_repository import ResearchTasksRepository
 
 __all__ = [
     'AuthRepository',
-    'UserRepository',
-    'MemberRepository',
-    'MaterialRepository',
-    'MessageRepository',
-    'FileRepository',
-    'MeetingRepository',
+    'UserProfileRepository',
+    'MemberManagementRepository',
+    'MeetingMaterialRepository',
+    'MessageSystemRepository',
+    'SharedResourcesRepository',
+    'MeetingScheduleRepository',
     'PaperRepository',
-    'ProgressRepository',
-    'TaskRepository',
+    'ResearchProgressRepository',
+    'ResearchTasksRepository',
 ]

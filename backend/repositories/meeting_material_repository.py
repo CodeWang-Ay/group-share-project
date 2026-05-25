@@ -29,7 +29,7 @@ from typing import Optional, Dict, Any, List
 from database.connection import get_db
 
 
-class MaterialRepository:
+class MeetingMaterialRepository:
     """材料数据访问类"""
 
     @staticmethod

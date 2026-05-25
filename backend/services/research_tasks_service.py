@@ -7,7 +7,7 @@
 功能描述: 研究任务业务逻辑，返回 {status_code, content} 格式
 
 Service 类方法:
-    TaskService:
+    ResearchTasksService:
         - create_task(...)                       : 创建任务
         - get_task_by_id(task_id)                : 获取任务详情
         - get_tasks(...)                         : 获取任务列表
@@ -28,7 +28,7 @@ Service 类方法:
 
 职责:
     - 所有业务逻辑写在这里
-    - 调用 TaskRepository 进行数据操作
+    - 调用 ResearchTasksRepository 进行数据操作
     - 返回 {status_code: int, content: dict} 格式
 
 作者: wjg
@@ -38,12 +38,12 @@ Service 类方法:
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 
-from repositories.task_repository import TaskRepository
-from repositories.user_repository import UserRepository
+from repositories.research_tasks_repository import ResearchTasksRepository
+from repositories.user_profile_repository import UserProfileRepository
 from models.task import Task
 
 
-class TaskService:
+class ResearchTasksService:
     """研究任务服务类"""
 
     # 优先级常量
@@ -83,7 +83,7 @@ class TaskService:
             'deadline': deadline.isoformat() if deadline else None
         }
 
-        task_id = TaskRepository.create_task(data)
+        task_id = ResearchTasksRepository.create_task(data)
         now = datetime.now()
 
         return Task(
@@ -104,7 +104,7 @@ class TaskService:
     @staticmethod
     def get_task_by_id(task_id: int) -> Optional[Task]:
         """根据ID获取任务"""
-        row = TaskRepository.get_by_id(task_id)
+        row = ResearchTasksRepository.get_by_id(task_id)
         if row:
             return Task.from_dict(row)
         return None
@@ -136,7 +136,7 @@ class TaskService:
             'sort_order': sort_order
         }
 
-        rows = TaskRepository.get_list(filters, limit, offset)
+        rows = ResearchTasksRepository.get_list(filters, limit, offset)
         return [Task.from_dict(row) for row in rows]
 
     @staticmethod
@@ -159,7 +159,7 @@ class TaskService:
             'task_type': task_type,
             'keyword': keyword
         }
-        return TaskRepository.get_count(filters)
+        return ResearchTasksRepository.get_count(filters)
 
     @staticmethod
     def update_task(task_id: int, **kwargs) -> Optional[Task]:
@@ -177,11 +177,11 @@ class TaskService:
         if not update_data:
             return None
 
-        success = TaskRepository.update_task(task_id, update_data)
+        success = ResearchTasksRepository.update_task(task_id, update_data)
         if not success:
             return None
 
-        return TaskService.get_task_by_id(task_id)
+        return ResearchTasksService.get_task_by_id(task_id)
 
     @staticmethod
     def update_progress(task_id: int, progress: int, status: Optional[str] = None) -> Optional[Task]:
@@ -197,17 +197,17 @@ class TaskService:
         elif status:
             update_data['status'] = status
 
-        return TaskService.update_task(task_id, **update_data)
+        return ResearchTasksService.update_task(task_id, **update_data)
 
     @staticmethod
     def delete_task(task_id: int) -> bool:
         """删除任务"""
-        return TaskRepository.delete_task(task_id)
+        return ResearchTasksRepository.delete_task(task_id)
 
     @staticmethod
     def get_task_stats(user_id: int, user_role: str) -> Dict[str, int]:
         """获取任务统计信息"""
-        return TaskRepository.get_stats(user_id, user_role)
+        return ResearchTasksRepository.get_stats(user_id, user_role)
 
     @staticmethod
     def check_permission(
@@ -268,7 +268,7 @@ class TaskService:
         limit = filters.get('limit', 10)
         offset = (page - 1) * limit
 
-        tasks = TaskService.get_tasks(
+        tasks = ResearchTasksService.get_tasks(
             user_id=user_id, user_role=user_role,
             status=filters.get('status'), priority=filters.get('priority'),
             assignee_id=int(filters.get('assignee_id')) if filters.get('assignee_id') else None,
@@ -277,7 +277,7 @@ class TaskService:
             limit=limit, offset=offset
         )
 
-        total = TaskService.get_tasks_count(
+        total = ResearchTasksService.get_tasks_count(
             user_id=user_id, user_role=user_role,
             status=filters.get('status'), priority=filters.get('priority'),
             assignee_id=int(filters.get('assignee_id')) if filters.get('assignee_id') else None,
@@ -293,11 +293,11 @@ class TaskService:
             task_dict['status_text'] = task.get_status_text()
             task_dict['priority_text'] = task.get_priority_text()
 
-            assignee_data = UserRepository.get_by_id(task.assignee_id)
+            assignee_data = UserProfileRepository.get_by_id(task.assignee_id)
             if assignee_data:
                 task_dict['assignee'] = {'id': assignee_data['id'], 'username': assignee_data['username']}
 
-            creator_data = UserRepository.get_by_id(task.creator_id)
+            creator_data = UserProfileRepository.get_by_id(task.creator_id)
             if creator_data:
                 task_dict['creator'] = {'id': creator_data['id'], 'username': creator_data['username']}
 
@@ -320,7 +320,7 @@ class TaskService:
 
     async def api_get_stats(self, user_id: int, user_role: str) -> Dict[str, Any]:
         """获取任务统计 API"""
-        stats = TaskService.get_task_stats(user_id, user_role)
+        stats = ResearchTasksService.get_task_stats(user_id, user_role)
         return {"status_code": 200, "content": {"success": True, "data": stats}}
 
     async def api_create(self, data: Dict[str, Any], user_id: int, user_role: str) -> Dict[str, Any]:
@@ -344,7 +344,7 @@ class TaskService:
             task_type = "personal"
             assignee_id = user_id
 
-        task = TaskService.create_task(
+        task = ResearchTasksService.create_task(
             title=title, creator_id=user_id, assignee_id=assignee_id,
             task_type=task_type, description=data.get("description"),
             priority=data.get("priority", "middle"), deadline=deadline
@@ -354,7 +354,7 @@ class TaskService:
 
     async def api_get_detail(self, task_id: int, user_id: int, user_role: str) -> Dict[str, Any]:
         """获取任务详情 API"""
-        task = TaskService.get_task_by_id(task_id)
+        task = ResearchTasksService.get_task_by_id(task_id)
         if not task:
             return {"status_code": 404, "content": {"success": False, "message": "任务不存在", "error": "NOT_FOUND"}}
 
@@ -367,11 +367,11 @@ class TaskService:
         task_dict['status_text'] = task.get_status_text()
         task_dict['priority_text'] = task.get_priority_text()
 
-        assignee_data = UserRepository.get_by_id(task.assignee_id)
+        assignee_data = UserProfileRepository.get_by_id(task.assignee_id)
         if assignee_data:
             task_dict['assignee'] = {'id': assignee_data['id'], 'username': assignee_data['username']}
 
-        creator_data = UserRepository.get_by_id(task.creator_id)
+        creator_data = UserProfileRepository.get_by_id(task.creator_id)
         if creator_data:
             task_dict['creator'] = {'id': creator_data['id'], 'username': creator_data['username']}
 
@@ -379,11 +379,11 @@ class TaskService:
 
     async def api_update(self, task_id: int, data: Dict[str, Any], user_id: int, user_role: str) -> Dict[str, Any]:
         """更新任务 API"""
-        task = TaskService.get_task_by_id(task_id)
+        task = ResearchTasksService.get_task_by_id(task_id)
         if not task:
             return {"status_code": 404, "content": {"success": False, "message": "任务不存在", "error": "NOT_FOUND"}}
 
-        if not TaskService.check_permission(task, user_id, user_role, 'edit'):
+        if not ResearchTasksService.check_permission(task, user_id, user_role, 'edit'):
             return {"status_code": 403, "content": {"success": False, "message": "无权限编辑此任务", "error": "ACCESS_DENIED"}}
 
         deadline_str = data.get("deadline")
@@ -394,7 +394,7 @@ class TaskService:
             except:
                 pass
 
-        updated_task = TaskService.update_task(
+        updated_task = ResearchTasksService.update_task(
             task_id,
             title=data.get("title"),
             description=data.get("description"),
@@ -412,14 +412,14 @@ class TaskService:
 
     async def api_update_progress(self, task_id: int, data: Dict[str, Any], user_id: int, user_role: str) -> Dict[str, Any]:
         """更新任务进度 API"""
-        task = TaskService.get_task_by_id(task_id)
+        task = ResearchTasksService.get_task_by_id(task_id)
         if not task:
             return {"status_code": 404, "content": {"success": False, "message": "任务不存在", "error": "NOT_FOUND"}}
 
-        if not TaskService.check_permission(task, user_id, user_role, 'update_progress'):
+        if not ResearchTasksService.check_permission(task, user_id, user_role, 'update_progress'):
             return {"status_code": 403, "content": {"success": False, "message": "无权限更新此任务进度", "error": "ACCESS_DENIED"}}
 
-        updated_task = TaskService.update_progress(task_id, data.get("progress", 0), data.get("status"))
+        updated_task = ResearchTasksService.update_progress(task_id, data.get("progress", 0), data.get("status"))
 
         if not updated_task:
             return {"status_code": 500, "content": {"success": False, "message": "更新进度失败", "error": "UPDATE_FAILED"}}
@@ -428,14 +428,14 @@ class TaskService:
 
     async def api_delete(self, task_id: int, user_id: int, user_role: str) -> Dict[str, Any]:
         """删除任务 API"""
-        task = TaskService.get_task_by_id(task_id)
+        task = ResearchTasksService.get_task_by_id(task_id)
         if not task:
             return {"status_code": 404, "content": {"success": False, "message": "任务不存在", "error": "NOT_FOUND"}}
 
-        if not TaskService.check_permission(task, user_id, user_role, 'delete'):
+        if not ResearchTasksService.check_permission(task, user_id, user_role, 'delete'):
             return {"status_code": 403, "content": {"success": False, "message": "无权限删除此任务", "error": "ACCESS_DENIED"}}
 
-        success = TaskService.delete_task(task_id)
+        success = ResearchTasksService.delete_task(task_id)
         if not success:
             return {"status_code": 500, "content": {"success": False, "message": "删除失败", "error": "DELETE_FAILED"}}
 

@@ -38,7 +38,7 @@ from datetime import datetime, date
 from database.connection import get_db
 
 
-class MeetingRepository:
+class MeetingScheduleRepository:
     """组会数据访问类"""
 
     @staticmethod

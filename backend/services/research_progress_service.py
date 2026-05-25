@@ -33,7 +33,7 @@ Service 类方法:
 
 职责:
     - 所有业务逻辑写在这里
-    - 调用 ProgressRepository 进行数据操作
+    - 调用 ResearchProgressRepository 进行数据操作
     - 返回 {status_code: int, content: dict} 格式
 
 作者: wjg
@@ -44,8 +44,8 @@ from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 import calendar
 
-from repositories.progress_repository import ProgressRepository
-from repositories.user_repository import UserRepository
+from repositories.research_progress_repository import ResearchProgressRepository
+from repositories.user_profile_repository import UserProfileRepository
 from models.research_progress import ResearchProgress, ProgressSetting
 
 
@@ -93,7 +93,7 @@ class ResearchProgressService:
             'status': status
         }
 
-        progress_id = ProgressRepository.create_progress(data)
+        progress_id = ResearchProgressRepository.create_progress(data)
 
         return ResearchProgress(
             id=progress_id,
@@ -116,7 +116,7 @@ class ResearchProgressService:
     @staticmethod
     def get_progress_by_id(progress_id: int) -> Optional[ResearchProgress]:
         """根据ID获取进展"""
-        row = ProgressRepository.get_by_id(progress_id)
+        row = ResearchProgressRepository.get_by_id(progress_id)
         if row:
             return ResearchProgress.from_dict(row)
         return None
@@ -129,10 +129,10 @@ class ResearchProgressService:
         order: str = 'desc'
     ) -> Dict[str, Any]:
         """获取用户的进展历史列表"""
-        total = ProgressRepository.get_user_count(user_id)
+        total = ResearchProgressRepository.get_user_count(user_id)
         offset = (page - 1) * limit
 
-        rows = ProgressRepository.get_user_list(user_id, limit, offset, order)
+        rows = ResearchProgressRepository.get_user_list(user_id, limit, offset, order)
         items = [ResearchProgress.from_dict(row) for row in rows]
 
         total_pages = (total + limit - 1) // limit if total > 0 else 1
@@ -165,10 +165,10 @@ class ResearchProgressService:
             'updated_within': updated_within
         }
 
-        total = ProgressRepository.get_team_count(filters)
+        total = ResearchProgressRepository.get_team_count(filters)
         offset = (page - 1) * limit
 
-        rows = ProgressRepository.get_team_list(filters, limit, offset)
+        rows = ResearchProgressRepository.get_team_list(filters, limit, offset)
 
         result = []
         for row in rows:
@@ -197,7 +197,7 @@ class ResearchProgressService:
     @staticmethod
     def get_progress_stats() -> Dict[str, int]:
         """获取进展统计数据"""
-        return ProgressRepository.get_stats()
+        return ResearchProgressRepository.get_stats()
 
     @staticmethod
     def update_progress(
@@ -241,7 +241,7 @@ class ResearchProgressService:
         if not update_data:
             return progress
 
-        ProgressRepository.update_progress(progress_id, update_data)
+        ResearchProgressRepository.update_progress(progress_id, update_data)
 
         return ResearchProgressService.get_progress_by_id(progress_id)
 
@@ -252,7 +252,7 @@ class ResearchProgressService:
         supervisor_id: int
     ) -> Optional[ResearchProgress]:
         """添加导师反馈"""
-        success = ProgressRepository.add_feedback(progress_id, feedback, supervisor_id)
+        success = ResearchProgressRepository.add_feedback(progress_id, feedback, supervisor_id)
         if not success:
             return None
         return ResearchProgressService.get_progress_by_id(progress_id)
@@ -260,7 +260,7 @@ class ResearchProgressService:
     @staticmethod
     def get_setting_by_user(user_id: int) -> Optional[ProgressSetting]:
         """获取用户的周期设置"""
-        row = ProgressRepository.get_setting_by_user(user_id)
+        row = ResearchProgressRepository.get_setting_by_user(user_id)
         if row:
             return ProgressSetting.from_dict(row)
         return None
@@ -292,9 +292,9 @@ class ResearchProgressService:
             'created_by': created_by
         }
 
-        ProgressRepository.create_or_update_setting(data)
+        ResearchProgressRepository.create_or_update_setting(data)
 
-        row = ProgressRepository.get_setting_by_user(user_id)
+        row = ResearchProgressRepository.get_setting_by_user(user_id)
         if row:
             return ProgressSetting.from_dict(row)
         return setting
@@ -307,11 +307,11 @@ class ResearchProgressService:
         created_by: int
     ) -> List[ProgressSetting]:
         """批量创建周期设置"""
-        ProgressRepository.batch_create_settings(user_ids, period_type, reminder_days, created_by)
+        ResearchProgressRepository.batch_create_settings(user_ids, period_type, reminder_days, created_by)
 
         results = []
         for user_id in user_ids:
-            row = ProgressRepository.get_setting_by_user(user_id)
+            row = ResearchProgressRepository.get_setting_by_user(user_id)
             if row:
                 results.append(ProgressSetting.from_dict(row))
         return results
@@ -319,7 +319,7 @@ class ResearchProgressService:
     @staticmethod
     def get_all_settings() -> List[ProgressSetting]:
         """获取所有学生的周期设置"""
-        rows = ProgressRepository.get_all_settings()
+        rows = ResearchProgressRepository.get_all_settings()
         return [ProgressSetting.from_dict(row) for row in rows]
 
     @staticmethod
@@ -499,7 +499,7 @@ class ResearchProgressService:
         if user_role == 'student' and progress.user_id != user_id:
             return {"status_code": 403, "content": {"success": False, "message": "无权查看此进展", "error": "FORBIDDEN"}}
 
-        user_data = UserRepository.get_by_id(progress.user_id)
+        user_data = UserProfileRepository.get_by_id(progress.user_id)
         result = progress.to_dict()
         if user_data:
             result["user_info"] = {

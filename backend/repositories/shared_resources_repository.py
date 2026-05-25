@@ -1,20 +1,20 @@
 """
 ================================================================================
-文件数据访问模块 (repositories/file_repository.py)
+共享资料数据访问模块 (repositories/shared_resources_repository.py)
 ================================================================================
 
-模块名称: backend/repositories/file_repository.py
-功能描述: 文件数据 CRUD 操作，不包含业务逻辑
+模块名称: backend/repositories/shared_resources_repository.py
+功能描述: 共享资料数据 CRUD 操作，不包含业务逻辑
 
 Repository 类方法:
-    - get_by_id(file_id)                    : 根据ID获取文件
-    - get_by_filename(filename)             : 根据文件名获取文件
-    - get_by_user(user_id, limit, offset)   : 获取用户文件列表
-    - get_public(limit, offset)             : 获取公开文件列表
-    - create(data)                          : 创建文件记录
-    - update(file_id, data)                 : 更新文件信息
-    - delete(file_id)                       : 删除文件
-    - search(keyword, user_id, limit, offset): 搜索文件
+    - get_by_id(file_id)                    : 根据ID获取资料
+    - get_by_filename(filename)             : 根据文件名获取资料
+    - get_by_user(user_id, limit, offset)   : 获取用户资料列表
+    - get_public(limit, offset)             : 获取公开资料列表
+    - create(data)                          : 创建资料记录
+    - update(file_id, data)                 : 更新资料信息
+    - delete(file_id)                       : 删除资料
+    - search(keyword, user_id, limit, offset): 搜索资料
     - get_stats(user_id)                    : 获取统计信息
     - increment_download(file_id)           : 增加下载次数
 
@@ -23,7 +23,7 @@ Repository 类方法:
     - 不写业务判断逻辑
 
 作者: wjg
-创建日期: 2026-05-23
+创建日期: 2026-05-25
 ================================================================================
 """
 from typing import Optional, Dict, Any, List
@@ -31,12 +31,12 @@ from datetime import datetime
 from database.connection import get_db
 
 
-class FileRepository:
-    """文件数据访问类"""
+class SharedResourcesRepository:
+    """共享资料数据访问类"""
 
     @staticmethod
     def get_by_id(file_id: int) -> Optional[Dict[str, Any]]:
-        """根据ID获取文件"""
+        """根据ID获取资料"""
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM files WHERE id = ? AND status = 'active'", (file_id,))
@@ -45,7 +45,7 @@ class FileRepository:
 
     @staticmethod
     def get_by_filename(filename: str) -> Optional[Dict[str, Any]]:
-        """根据文件名获取文件"""
+        """根据文件名获取资料"""
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT id, filename, file_path, file_type, uploader_id FROM files WHERE filename = ? AND status = 'active'", (filename,))
@@ -54,7 +54,7 @@ class FileRepository:
 
     @staticmethod
     def get_by_user(user_id: int, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
-        """获取用户文件列表"""
+        """获取用户资料列表"""
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM files WHERE uploader_id = ? AND status = 'active' ORDER BY upload_time DESC LIMIT ? OFFSET ?", (user_id, limit, offset))
@@ -62,7 +62,7 @@ class FileRepository:
 
     @staticmethod
     def get_public(limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
-        """获取公开文件列表"""
+        """获取公开资料列表"""
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM files WHERE is_public = 1 AND status = 'active' ORDER BY upload_time DESC LIMIT ? OFFSET ?", (limit, offset))
@@ -70,7 +70,7 @@ class FileRepository:
 
     @staticmethod
     def get_count_by_user(user_id: int) -> int:
-        """获取用户文件总数"""
+        """获取用户资料总数"""
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT COUNT(*) FROM files WHERE uploader_id = ? AND status = 'active'", (user_id,))
@@ -78,7 +78,7 @@ class FileRepository:
 
     @staticmethod
     def get_public_count() -> int:
-        """获取公开文件总数"""
+        """获取公开资料总数"""
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT COUNT(*) FROM files WHERE is_public = 1 AND status = 'active'")
@@ -86,7 +86,7 @@ class FileRepository:
 
     @staticmethod
     def create(data: Dict[str, Any]) -> int:
-        """创建文件记录，返回文件ID"""
+        """创建资料记录，返回资料ID"""
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -98,7 +98,7 @@ class FileRepository:
 
     @staticmethod
     def update(file_id: int, data: Dict[str, Any]) -> bool:
-        """更新文件信息"""
+        """更新资料信息"""
         with get_db() as conn:
             cursor = conn.cursor()
             updates = [f"{k} = ?" for k in data.keys()]
@@ -109,7 +109,7 @@ class FileRepository:
 
     @staticmethod
     def delete(file_id: int) -> bool:
-        """删除文件记录"""
+        """删除资料记录"""
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM files WHERE id = ?", (file_id,))
@@ -117,7 +117,7 @@ class FileRepository:
 
     @staticmethod
     def search(keyword: str, user_id: Optional[int], limit: int, offset: int) -> List[Dict[str, Any]]:
-        """搜索文件"""
+        """搜索资料"""
         with get_db() as conn:
             cursor = conn.cursor()
             pattern = f"%{keyword}%"
@@ -153,7 +153,7 @@ class FileRepository:
 
     @staticmethod
     def get_stats(user_id: Optional[int] = None) -> Dict[str, Any]:
-        """获取文件统计"""
+        """获取资料统计"""
         with get_db() as conn:
             cursor = conn.cursor()
             if user_id:
