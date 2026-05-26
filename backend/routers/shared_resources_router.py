@@ -26,7 +26,9 @@ API 端点列表 (共9个):
 创建日期: 2026-05-25
 ================================================================================
 """
-from fastapi import APIRouter, Request, Depends
+import json
+from loguru     import logger 
+from fastapi    import APIRouter, Request, Depends
 from fastapi.responses import JSONResponse, FileResponse
 from dependencies.auth import get_current_user
 from services.shared_resources_service import SharedResourcesService
@@ -55,7 +57,10 @@ async def download_file_by_name(filename: str, request: Request, current_user=De
 async def get_files(request: Request, current_user=Depends(get_current_user), service: SharedResourcesService = Depends()):
     """获取资料列表"""
     filters = dict(request.query_params)
+    logger.info(json.dumps(filters, ensure_ascii=False))
     result = await service.get_list(filters, current_user.id, current_user.role)
+    result_list = result["content"]["data"]["files"]
+    logger.info(len(result_list))
     return JSONResponse(status_code=result["status_code"], content=result["content"])
 
 

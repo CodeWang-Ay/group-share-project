@@ -53,32 +53,46 @@ class SharedResourcesRepository:
             return dict(row) if row else None
 
     @staticmethod
-    def get_by_user(user_id: int, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+    def get_by_user(user_id: int, limit: int = 50, offset: int = 0, sort: str = 'newest') -> List[Dict[str, Any]]:
         """获取用户资料列表"""
+        order_by = SharedResourcesRepository._get_order_by(sort)
         with get_db() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM files WHERE uploader_id = ? AND status = 'active' ORDER BY upload_time DESC LIMIT ? OFFSET ?", (user_id, limit, offset))
+            cursor.execute(f"SELECT * FROM files WHERE uploader_id = ? AND status = 'active' ORDER BY {order_by} LIMIT ? OFFSET ?", (user_id, limit, offset))
             return [dict(row) for row in cursor.fetchall()]
 
     @staticmethod
-    def get_public(limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+    def get_public(limit: int = 50, offset: int = 0, sort: str = 'newest') -> List[Dict[str, Any]]:
         """获取公开资料列表"""
+        order_by = SharedResourcesRepository._get_order_by(sort)
         with get_db() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM files WHERE is_public = 1 AND status = 'active' ORDER BY upload_time DESC LIMIT ? OFFSET ?", (limit, offset))
+            cursor.execute(f"SELECT * FROM files WHERE is_public = 1 AND status = 'active' ORDER BY {order_by} LIMIT ? OFFSET ?", (limit, offset))
             return [dict(row) for row in cursor.fetchall()]
 
     @staticmethod
-    def get_public_and_user(user_id: int, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+    def get_public_and_user(user_id: int, limit: int = 50, offset: int = 0, sort: str = 'newest') -> List[Dict[str, Any]]:
         """获取公开资料和用户资料列表（合并查询，正确分页）"""
+        order_by = SharedResourcesRepository._get_order_by(sort)
         with get_db() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT * FROM files
                 WHERE (is_public = 1 OR uploader_id = ?) AND status = 'active'
-                ORDER BY upload_time DESC LIMIT ? OFFSET ?
+                ORDER BY {order_by} LIMIT ? OFFSET ?
             """, (user_id, limit, offset))
             return [dict(row) for row in cursor.fetchall()]
+
+    @staticmethod
+    def _get_order_by(sort: str) -> str:
+        """根据排序参数返回 ORDER BY 子句"""
+        sort_map = {
+            'newest': 'upload_time DESC',
+            'oldest': 'upload_time ASC',
+            'name': 'filename ASC',
+            'size': 'file_size DESC'
+        }
+        return sort_map.get(sort, 'upload_time DESC')
 
     @staticmethod
     def get_public_and_user_count(user_id: int) -> int:
@@ -136,20 +150,21 @@ class SharedResourcesRepository:
             return cursor.rowcount > 0
 
     @staticmethod
-    def search(keyword: str, user_id: Optional[int], limit: int, offset: int) -> List[Dict[str, Any]]:
+    def search(keyword: str, user_id: Optional[int], limit: int, offset: int, sort: str = 'newest') -> List[Dict[str, Any]]:
         """搜索资料"""
+        order_by = SharedResourcesRepository._get_order_by(sort)
         with get_db() as conn:
             cursor = conn.cursor()
             pattern = f"%{keyword}%"
             if user_id:
-                cursor.execute("""
+                cursor.execute(f"""
                     SELECT * FROM files WHERE status = 'active' AND (uploader_id = ? OR is_public = 1)
-                    AND (filename LIKE ? OR description LIKE ? OR tags LIKE ?) ORDER BY upload_time DESC LIMIT ? OFFSET ?
+                    AND (filename LIKE ? OR description LIKE ? OR tags LIKE ?) ORDER BY {order_by} LIMIT ? OFFSET ?
                 """, (user_id, pattern, pattern, pattern, limit, offset))
             else:
-                cursor.execute("""
+                cursor.execute(f"""
                     SELECT * FROM files WHERE status = 'active' AND is_public = 1
-                    AND (filename LIKE ? OR description LIKE ? OR tags LIKE ?) ORDER BY upload_time DESC LIMIT ? OFFSET ?
+                    AND (filename LIKE ? OR description LIKE ? OR tags LIKE ?) ORDER BY {order_by} LIMIT ? OFFSET ?
                 """, (pattern, pattern, pattern, limit, offset))
             return [dict(row) for row in cursor.fetchall()]
 

@@ -91,6 +91,7 @@ class SharedResourcesService:
         """获取资料列表"""
         scope = filters.get("scope", "my")
         keyword = filters.get("keyword", "")
+        sort = filters.get("sort", "newest")
         page = int(filters.get("page", 1))
         limit = int(filters.get("limit", 5))
         if limit not in [5, 10, 20, 100]:
@@ -99,22 +100,22 @@ class SharedResourcesService:
 
         files, total = [], 0
         if scope == "my":
-            files = SharedResourcesRepository.get_by_user(user_id, limit, offset)
+            files = SharedResourcesRepository.get_by_user(user_id, limit, offset, sort)
             total = SharedResourcesRepository.get_count_by_user(user_id)
         elif scope == "public":
-            files = SharedResourcesRepository.get_public_and_user(user_id, limit, offset)
+            files = SharedResourcesRepository.get_public_and_user(user_id, limit, offset, sort)
             total = SharedResourcesRepository.get_public_and_user_count(user_id)
         elif scope == "all" and role == "admin":
             target_id = filters.get("user_id")
             if target_id:
-                files = SharedResourcesRepository.get_by_user(int(target_id), limit, offset)
+                files = SharedResourcesRepository.get_by_user(int(target_id), limit, offset, sort)
                 total = SharedResourcesRepository.get_count_by_user(int(target_id))
             else:
-                files = SharedResourcesRepository.get_public_and_user(user_id, limit, offset)
+                files = SharedResourcesRepository.get_public_and_user(user_id, limit, offset, sort)
                 total = SharedResourcesRepository.get_public_and_user_count(user_id)
 
         if keyword:
-            files = SharedResourcesRepository.search(keyword, user_id if scope == "my" else None, limit, offset)
+            files = SharedResourcesRepository.search(keyword, user_id if scope == "my" else None, limit, offset, sort)
             total = SharedResourcesRepository.get_search_count(keyword, user_id if scope == "my" else None)
 
         # 添加上传者名字

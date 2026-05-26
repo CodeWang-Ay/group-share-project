@@ -1821,6 +1821,12 @@
                 const sortBy = sortFilter.value;
                 const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
 
+                // 排序变化时重新从 API 加载
+                if (window.fileManager && window.fileManager.loadFiles) {
+                    window.fileManager.pagination.current_page = 1;
+                    window.fileManager.loadFiles();
+                }
+
                 // 获取当前布局
                 const layoutManager = window.fileManager ? window.fileManager.layoutManager : null;
                 const currentLayout = layoutManager ? layoutManager.getCurrentLayout() : 'list';
@@ -1865,24 +1871,6 @@
 
                     if (typeMatch && searchMatch) {
                         filteredElements.push(element);
-                    }
-                });
-
-                // 排序
-                filteredElements.sort((a, b) => {
-                    switch (sortBy) {
-                        case 'newest':
-                            return 0;
-                        case 'oldest':
-                            return 0;
-                        case 'name':
-                            const aTitle = a.querySelector('h3').textContent;
-                            const bTitle = b.querySelector('h3').textContent;
-                            return aTitle.localeCompare(bTitle);
-                        case 'size':
-                            return 0;
-                        default:
-                            return 0;
                     }
                 });
 
@@ -2088,10 +2076,15 @@
                     // 显示加载状态
                     this.showLoadingState();
 
+                    // 获取当前排序方式
+                    const sortFilter = document.getElementById('sort-filter');
+                    const sortBy = sortFilter ? sortFilter.value : 'newest';
+
                     const params = new URLSearchParams({
                         scope: 'public',  // 公开共享文件
                         limit: this.pagination.per_page.toString(),
-                        page: this.pagination.current_page.toString()
+                        page: this.pagination.current_page.toString(),
+                        sort: sortBy
                     });
 
                     const response = await fetch(`${API_BASE_URL}/api/files?${params}`, getAuthFetchOptions({
