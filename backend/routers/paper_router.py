@@ -32,6 +32,8 @@ API 端点列表 (共15个):
 创建日期: 2026-05-23
 ================================================================================
 """
+import json
+from loguru import logger
 from fastapi import APIRouter, Request, Query, Depends
 from fastapi.responses import JSONResponse, FileResponse
 from typing import Optional
@@ -54,6 +56,7 @@ async def get_papers(request: Request, current_user=Depends(get_current_user),
     filters = {"keyword": keyword, "tag": tag, "status": status, "year": year,
                "starred": starred, "library_type": library_type, "sort": sort,
                "limit": limit, "offset": offset}
+    logger.info(json.dumps(filters, ensure_ascii=False))
     result = await service.api_get_list(filters, current_user.id)
     return JSONResponse(status_code=result["status_code"], content=result["content"])
 

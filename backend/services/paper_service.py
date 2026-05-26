@@ -53,7 +53,7 @@ class PaperService:
                    starred: Optional[bool] = None, library_type: Optional[str] = None,
                    sort: str = 'newest', limit: int = 20, offset: int = 0) -> Tuple[List[Dict], int]:
         """获取文献列表"""
-        filters = {'keyword': keyword, 'tag': tag, 'status': status, 'year': year, 'sort': sort}
+        filters = {'keyword': keyword, 'tag': tag, 'status': status, 'year': year, 'sort': sort, 'starred': starred}
 
         if library_type == 'private' or library_type == 'personal':
             papers = PaperRepository.get_personal_paper_list(user_id, filters, limit, offset)
@@ -63,17 +63,30 @@ class PaperService:
                 p['tags'] = PaperRepository.get_personal_paper_tags(p['id'])
                 p['uploader_name'] = PaperRepository.get_user_name(p['owner_user_id'])
                 p['library_type'] = 'private'
+                # 如果查询时已经关联了 paper_user_relations，直接使用返回的 read_status 和 is_starred
+                if 'read_status' in p:
+                    p['read_status'] = p.get('read_status') or 'unread'
+                    p['is_starred'] = p.get('is_starred', 0)
+                else:
+                    relation = PaperRepository.get_paper_user_relation(p['id'], user_id, 'private')
+                    p['read_status'] = relation.get('read_status', 'unread') if relation else 'unread'
+                    p['is_starred'] = relation.get('is_starred', 0) if relation else 0
         else:
-            papers = PaperRepository.get_paper_list(filters, limit, offset)
-            total = PaperRepository.get_paper_count(filters)
+            papers = PaperRepository.get_paper_list(filters, limit, offset, user_id)
+            total = PaperRepository.get_paper_count(filters, user_id)
             # 添加标签和关系信息
             for p in papers:
                 p['tags'] = PaperRepository.get_paper_tags(p['id'])
                 p['uploader_name'] = PaperRepository.get_user_name(p['uploader_id'])
                 p['library_type'] = 'public'
-                relation = PaperRepository.get_paper_user_relation(p['id'], user_id, 'public')
-                p['is_starred'] = relation.get('is_starred', 0) if relation else 0
-                p['read_status'] = relation.get('read_status', 'unread') if relation else 'unread'
+                # 如果查询时已经关联了 paper_user_relations，直接使用返回的 read_status 和 is_starred
+                if 'read_status' in p:
+                    p['read_status'] = p.get('read_status') or 'unread'
+                    p['is_starred'] = p.get('is_starred', 0)
+                else:
+                    relation = PaperRepository.get_paper_user_relation(p['id'], user_id, 'public')
+                    p['is_starred'] = relation.get('is_starred', 0) if relation else 0
+                    p['read_status'] = relation.get('read_status', 'unread') if relation else 'unread'
 
         return papers, total
 

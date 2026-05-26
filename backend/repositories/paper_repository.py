@@ -176,57 +176,119 @@ class PaperRepository:
             return dict(row) if row else None
 
     @staticmethod
-    def get_paper_list(filters: Dict[str, Any], limit: int, offset: int) -> List[Dict[str, Any]]:
+    def get_paper_list(filters: Dict[str, Any], limit: int, offset: int, user_id: Optional[int] = None) -> List[Dict[str, Any]]:
         """获取团队文献列表"""
         with get_db() as conn:
             cursor = conn.cursor()
-            where_conditions = ["team_library = 1", "is_deleted = 0"]
+            where_conditions = ["p.team_library = 1", "p.is_deleted = 0"]
             params = []
 
             if filters.get('keyword'):
-                where_conditions.append("title LIKE ?")
+                where_conditions.append("p.title LIKE ?")
                 params.append(f"%{filters['keyword']}%")
             if filters.get('tag'):
-                where_conditions.append("EXISTS (SELECT 1 FROM paper_tags pt JOIN tags t ON pt.tag_id = t.id WHERE pt.paper_id = papers.id AND t.name = ?)")
+                where_conditions.append("EXISTS (SELECT 1 FROM paper_tags pt JOIN tags t ON pt.tag_id = t.id WHERE pt.paper_id = p.id AND t.name = ?)")
                 params.append(filters['tag'])
             if filters.get('year'):
-                where_conditions.append("year = ?")
+                where_conditions.append("p.year = ?")
                 params.append(filters['year'])
 
-            where_clause = "WHERE " + " AND ".join(where_conditions)
-            order_by = "created_at DESC" if filters.get('sort') == 'newest' else "created_at ASC"
+            # 阅读状态筛选（需要关联 paper_user_relations 表）
+            if filters.get('status') and user_id:
+                status = filters.get('status')
+                if status == 'unread':
+                    # 未读：没有关联记录 或 关联记录的 read_status = 'unread'
+                    where_conditions.append("(pur.read_status = 'unread' OR pur.id IS NULL)")
+                elif status == 'reading':
+                    where_conditions.append("pur.read_status = 'reading'")
+                elif status == 'read':
+                    where_conditions.append("pur.read_status = 'read'")
 
-            query = f"""
-                SELECT id, title, authors, year, journal, doi, abstract,
-                       pdf_path, pdf_size, uploader_id,
-                       created_at, download_count
-                FROM papers {where_clause}
-                ORDER BY {order_by}
-                LIMIT ? OFFSET ?
-            """
-            cursor.execute(query, params + [limit, offset])
+            # 收藏筛选
+            if filters.get('starred') is not None and user_id:
+                starred = filters.get('starred')
+                if starred:
+                    where_conditions.append("pur.is_starred = 1")
+                else:
+                    where_conditions.append("(pur.is_starred = 0 OR pur.id IS NULL)")
+
+            where_clause = "WHERE " + " AND ".join(where_conditions)
+            order_by = "p.created_at DESC" if filters.get('sort') == 'newest' else "p.created_at ASC"
+
+            # 如果有状态或收藏筛选，需要 LEFT JOIN paper_user_relations
+            need_join = (filters.get('status') and user_id) or (filters.get('starred') is not None and user_id)
+            if need_join:
+                query = f"""
+                    SELECT p.id, p.title, p.authors, p.year, p.journal, p.doi, p.abstract,
+                           p.pdf_path, p.pdf_size, p.uploader_id,
+                           p.created_at, p.download_count, pur.read_status, pur.is_starred
+                    FROM papers p
+                    LEFT JOIN paper_user_relations pur ON p.id = pur.paper_id AND pur.user_id = ?
+                    {where_clause}
+                    ORDER BY {order_by}
+                    LIMIT ? OFFSET ?
+                """
+                params = [user_id] + params + [limit, offset]
+            else:
+                query = f"""
+                    SELECT p.id, p.title, p.authors, p.year, p.journal, p.doi, p.abstract,
+                           p.pdf_path, p.pdf_size, p.uploader_id,
+                           p.created_at, p.download_count
+                    FROM papers p
+                    {where_clause}
+                    ORDER BY {order_by}
+                    LIMIT ? OFFSET ?
+                """
+                params = params + [limit, offset]
+
+            cursor.execute(query, params)
             return [dict(row) for row in cursor.fetchall()]
 
     @staticmethod
-    def get_paper_count(filters: Dict[str, Any]) -> int:
+    def get_paper_count(filters: Dict[str, Any], user_id: Optional[int] = None) -> int:
         """获取团队文献总数"""
         with get_db() as conn:
             cursor = conn.cursor()
-            where_conditions = ["team_library = 1", "is_deleted = 0"]
+            where_conditions = ["p.team_library = 1", "p.is_deleted = 0"]
             params = []
 
             if filters.get('keyword'):
-                where_conditions.append("title LIKE ?")
+                where_conditions.append("p.title LIKE ?")
                 params.append(f"%{filters['keyword']}%")
             if filters.get('tag'):
-                where_conditions.append("EXISTS (SELECT 1 FROM paper_tags pt JOIN tags t ON pt.tag_id = t.id WHERE pt.paper_id = papers.id AND t.name = ?)")
+                where_conditions.append("EXISTS (SELECT 1 FROM paper_tags pt JOIN tags t ON pt.tag_id = t.id WHERE pt.paper_id = p.id AND t.name = ?)")
                 params.append(filters['tag'])
             if filters.get('year'):
-                where_conditions.append("year = ?")
+                where_conditions.append("p.year = ?")
                 params.append(filters['year'])
 
+            # 阅读状态筛选
+            if filters.get('status') and user_id:
+                status = filters.get('status')
+                if status == 'unread':
+                    where_conditions.append("(pur.read_status = 'unread' OR pur.id IS NULL)")
+                elif status == 'reading':
+                    where_conditions.append("pur.read_status = 'reading'")
+                elif status == 'read':
+                    where_conditions.append("pur.read_status = 'read'")
+
+            # 收藏筛选
+            if filters.get('starred') is not None and user_id:
+                starred = filters.get('starred')
+                if starred:
+                    where_conditions.append("pur.is_starred = 1")
+                else:
+                    where_conditions.append("(pur.is_starred = 0 OR pur.id IS NULL)")
+
             where_clause = "WHERE " + " AND ".join(where_conditions)
-            query = f"SELECT COUNT(*) FROM papers {where_clause}"
+
+            need_join = (filters.get('status') and user_id) or (filters.get('starred') is not None and user_id)
+            if need_join:
+                query = f"SELECT COUNT(*) FROM papers p LEFT JOIN paper_user_relations pur ON p.id = pur.paper_id AND pur.user_id = ? {where_clause}"
+                params = [user_id] + params
+            else:
+                query = f"SELECT COUNT(*) FROM papers p {where_clause}"
+
             cursor.execute(query, params)
             return cursor.fetchone()[0] or 0
 
@@ -235,25 +297,61 @@ class PaperRepository:
         """获取个人文献列表"""
         with get_db() as conn:
             cursor = conn.cursor()
-            where_conditions = ["owner_user_id = ?"]
+            where_conditions = ["pp.owner_user_id = ?"]
             params = [user_id]
 
             if filters.get('keyword'):
-                where_conditions.append("title LIKE ?")
+                where_conditions.append("pp.title LIKE ?")
                 params.append(f"%{filters['keyword']}%")
 
-            where_clause = "WHERE " + " AND ".join(where_conditions)
-            order_by = "created_at DESC" if filters.get('sort') == 'newest' else "created_at ASC"
+            # 阅读状态筛选（需要关联 paper_user_relations 表）
+            if filters.get('status'):
+                status = filters.get('status')
+                if status == 'unread':
+                    where_conditions.append("(pur.read_status = 'unread' OR pur.id IS NULL)")
+                elif status == 'reading':
+                    where_conditions.append("pur.read_status = 'reading'")
+                elif status == 'read':
+                    where_conditions.append("pur.read_status = 'read'")
 
-            query = f"""
-                SELECT id, title, authors, year, journal, doi, abstract,
-                       pdf_path, pdf_size, owner_user_id, source_paper_id,
-                       created_at, download_count
-                FROM personal_papers {where_clause}
-                ORDER BY {order_by}
-                LIMIT ? OFFSET ?
-            """
-            cursor.execute(query, params + [limit, offset])
+            # 收藏筛选
+            if filters.get('starred') is not None:
+                starred = filters.get('starred')
+                if starred:
+                    where_conditions.append("pur.is_starred = 1")
+                else:
+                    where_conditions.append("(pur.is_starred = 0 OR pur.id IS NULL)")
+
+            where_clause = "WHERE " + " AND ".join(where_conditions)
+            order_by = "pp.created_at DESC" if filters.get('sort') == 'newest' else "pp.created_at ASC"
+
+            # 如果有状态或收藏筛选，需要 LEFT JOIN paper_user_relations
+            need_join = filters.get('status') or (filters.get('starred') is not None)
+            if need_join:
+                query = f"""
+                    SELECT pp.id, pp.title, pp.authors, pp.year, pp.journal, pp.doi, pp.abstract,
+                           pp.pdf_path, pp.pdf_size, pp.owner_user_id, pp.source_paper_id,
+                           pp.created_at, pp.download_count, pur.read_status, pur.is_starred
+                    FROM personal_papers pp
+                    LEFT JOIN paper_user_relations pur ON pp.id = pur.personal_paper_id AND pur.user_id = ?
+                    {where_clause}
+                    ORDER BY {order_by}
+                    LIMIT ? OFFSET ?
+                """
+                params = [user_id] + params + [limit, offset]
+            else:
+                query = f"""
+                    SELECT pp.id, pp.title, pp.authors, pp.year, pp.journal, pp.doi, pp.abstract,
+                           pp.pdf_path, pp.pdf_size, pp.owner_user_id, pp.source_paper_id,
+                           pp.created_at, pp.download_count
+                    FROM personal_papers pp
+                    {where_clause}
+                    ORDER BY {order_by}
+                    LIMIT ? OFFSET ?
+                """
+                params = params + [limit, offset]
+
+            cursor.execute(query, params)
             return [dict(row) for row in cursor.fetchall()]
 
     @staticmethod
@@ -261,15 +359,40 @@ class PaperRepository:
         """获取个人文献总数"""
         with get_db() as conn:
             cursor = conn.cursor()
-            where_conditions = ["owner_user_id = ?"]
+            where_conditions = ["pp.owner_user_id = ?"]
             params = [user_id]
 
             if filters.get('keyword'):
-                where_conditions.append("title LIKE ?")
+                where_conditions.append("pp.title LIKE ?")
                 params.append(f"%{filters['keyword']}%")
 
+            # 阅读状态筛选
+            if filters.get('status'):
+                status = filters.get('status')
+                if status == 'unread':
+                    where_conditions.append("(pur.read_status = 'unread' OR pur.id IS NULL)")
+                elif status == 'reading':
+                    where_conditions.append("pur.read_status = 'reading'")
+                elif status == 'read':
+                    where_conditions.append("pur.read_status = 'read'")
+
+            # 收藏筛选
+            if filters.get('starred') is not None:
+                starred = filters.get('starred')
+                if starred:
+                    where_conditions.append("pur.is_starred = 1")
+                else:
+                    where_conditions.append("(pur.is_starred = 0 OR pur.id IS NULL)")
+
             where_clause = "WHERE " + " AND ".join(where_conditions)
-            query = f"SELECT COUNT(*) FROM personal_papers {where_clause}"
+
+            need_join = filters.get('status') or (filters.get('starred') is not None)
+            if need_join:
+                query = f"SELECT COUNT(*) FROM personal_papers pp LEFT JOIN paper_user_relations pur ON pp.id = pur.personal_paper_id AND pur.user_id = ? {where_clause}"
+                params = [user_id] + params
+            else:
+                query = f"SELECT COUNT(*) FROM personal_papers pp {where_clause}"
+
             cursor.execute(query, params)
             return cursor.fetchone()[0] or 0
 
@@ -375,25 +498,69 @@ class PaperRepository:
         with get_db() as conn:
             cursor = conn.cursor()
             if library_type == 'private' or library_type == 'personal':
+                # 个人文献库总数
                 cursor.execute("""
                     SELECT COUNT(*) as total, SUM(pdf_size) as total_size
                     FROM personal_papers WHERE owner_user_id = ?
                 """, (user_id,))
                 row = cursor.fetchone()
-                # 查询收藏数
+                total = row[0] or 0
+
+                # 未读数量：没有关联记录或 read_status='unread'
+                cursor.execute("""
+                    SELECT COUNT(*) FROM personal_papers pp
+                    LEFT JOIN paper_user_relations pur ON pp.id = pur.personal_paper_id AND pur.user_id = ?
+                    WHERE pp.owner_user_id = ? AND (pur.read_status = 'unread' OR pur.id IS NULL)
+                """, (user_id, user_id))
+                unread = cursor.fetchone()[0] or 0
+
+                # 收藏数
                 cursor.execute("""
                     SELECT COUNT(*) FROM paper_user_relations
                     WHERE user_id = ? AND personal_paper_id IS NOT NULL AND is_starred = 1
                 """, (user_id,))
-                starred_count = cursor.fetchone()[0] or 0
-                return {'total': row[0] or 0, 'total_size': row[1] or 0, 'starred_count': starred_count}
+                starred = cursor.fetchone()[0] or 0
+
+                # 近30天新增
+                cursor.execute("""
+                    SELECT COUNT(*) FROM personal_papers
+                    WHERE owner_user_id = ? AND created_at >= date('now', '-30 days')
+                """, (user_id,))
+                recent = cursor.fetchone()[0] or 0
+
+                return {'total': total, 'total_size': row[1] or 0, 'unread': unread, 'starred': starred, 'recent': recent}
             else:
+                # 团队文献库总数
                 cursor.execute("""
                     SELECT COUNT(*) as total, SUM(pdf_size) as total_size
                     FROM papers WHERE team_library = 1 AND is_deleted = 0
                 """)
                 row = cursor.fetchone()
-                return {'total': row[0] or 0, 'total_size': row[1] or 0}
+                total = row[0] or 0
+
+                # 未读数量：没有关联记录或 read_status='unread'
+                cursor.execute("""
+                    SELECT COUNT(*) FROM papers p
+                    LEFT JOIN paper_user_relations pur ON p.id = pur.paper_id AND pur.user_id = ?
+                    WHERE p.team_library = 1 AND p.is_deleted = 0 AND (pur.read_status = 'unread' OR pur.id IS NULL)
+                """, (user_id,))
+                unread = cursor.fetchone()[0] or 0
+
+                # 收藏数
+                cursor.execute("""
+                    SELECT COUNT(*) FROM paper_user_relations
+                    WHERE user_id = ? AND paper_id IS NOT NULL AND is_starred = 1
+                """, (user_id,))
+                starred = cursor.fetchone()[0] or 0
+
+                # 近30天新增
+                cursor.execute("""
+                    SELECT COUNT(*) FROM papers
+                    WHERE team_library = 1 AND is_deleted = 0 AND created_at >= date('now', '-30 days')
+                """)
+                recent = cursor.fetchone()[0] or 0
+
+                return {'total': total, 'total_size': row[1] or 0, 'unread': unread, 'starred': starred, 'recent': recent}
 
     @staticmethod
     def get_paper_user_relation(paper_id: int, user_id: int, library_type: str) -> Optional[Dict[str, Any]]:
@@ -516,28 +683,28 @@ class PaperRepository:
             return cursor.rowcount > 0
 
     @staticmethod
-    def get_paper_tags(paper_id: int) -> List[str]:
-        """获取文献标签名称列表"""
+    def get_paper_tags(paper_id: int) -> List[Dict[str, Any]]:
+        """获取文献标签列表（返回带name和tag_type的对象）"""
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT t.name FROM tags t
+                SELECT t.id, t.name, t.tag_type FROM tags t
                 JOIN paper_tags pt ON t.id = pt.tag_id
                 WHERE pt.paper_id = ?
             """, (paper_id,))
-            return [row[0] for row in cursor.fetchall()]
+            return [{'id': row[0], 'name': row[1], 'tag_type': row[2]} for row in cursor.fetchall()]
 
     @staticmethod
-    def get_personal_paper_tags(paper_id: int) -> List[str]:
-        """获取个人文献标签名称列表"""
+    def get_personal_paper_tags(paper_id: int) -> List[Dict[str, Any]]:
+        """获取个人文献标签列表（返回带name和tag_type的对象）"""
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT t.name FROM tags t
+                SELECT t.id, t.name, t.tag_type FROM tags t
                 JOIN personal_paper_tags pt ON t.id = pt.tag_id
                 WHERE pt.personal_paper_id = ?
             """, (paper_id,))
-            return [row[0] for row in cursor.fetchall()]
+            return [{'id': row[0], 'name': row[1], 'tag_type': row[2]} for row in cursor.fetchall()]
 
     @staticmethod
     def check_user_exists(user_id: int) -> bool:
