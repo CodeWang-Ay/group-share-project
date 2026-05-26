@@ -102,36 +102,65 @@ class MeetingMaterialRepository:
         with get_db() as conn:
             cursor = conn.cursor()
 
-            # 获取所有组会
-            cursor.execute("""
+            # 构建组会筛选条件
+            where_conditions = ["m.status != 'cancelled'"]
+            params = []
+
+            # 组会状态筛选
+            if filters.get('status'):
+                where_conditions.append("m.status = ?")
+                params.append(filters['status'])
+
+            # 组会类型筛选
+            if filters.get('meeting_type'):
+                where_conditions.append("m.meeting_type = ?")
+                params.append(filters['meeting_type'])
+
+            where_clause = "WHERE " + " AND ".join(where_conditions)
+
+            # 获取组会列表
+            cursor.execute(f"""
                 SELECT m.id, m.title, m.scheduled_at, m.meeting_type, m.status, m.location,
                        m.duration_total, m.description
                 FROM meetings m
-                WHERE m.status != 'cancelled'
+                {where_clause}
                 ORDER BY m.scheduled_at DESC
-            """)
+            """, params)
             meetings_rows = cursor.fetchall()
+
+            # 材料状态筛选参数
+            material_status_filter = filters.get('material_status')
 
             meetings = []
             for row in meetings_rows:
                 meeting = dict(row)
 
-                # 搜索过滤（在 repository 层不做过滤，返回数据让 service 处理）
-                # 但为了效率，这里保留基础过滤
+                # 搜索过滤
                 search_keyword = filters.get('search', '')
                 if search_keyword and search_keyword.lower() not in (meeting.get('title', '') or '').lower():
                     continue
 
-                # 获取该组会的汇报人
-                cursor.execute("""
+                # 获取该组会的汇报人（根据材料状态筛选）
+                presenter_where = "mp.meeting_id = ?"
+                presenter_params = [meeting['id']]
+
+                if material_status_filter:
+                    presenter_where += " AND mp.material_status = ?"
+                    presenter_params.append(material_status_filter)
+
+                cursor.execute(f"""
                     SELECT mp.id, mp.user_id, mp.presenter_type, mp.duration_minutes,
                            mp.material_status, mp.status, u.username
                     FROM meeting_presenters mp
                     LEFT JOIN users u ON mp.user_id = u.id
-                    WHERE mp.meeting_id = ?
+                    WHERE {presenter_where}
                     ORDER BY mp.created_at ASC
-                """, (meeting['id'],))
+                """, presenter_params)
                 presenters_rows = cursor.fetchall()
+
+                # 如果筛选了材料状态但没有汇报人，跳过该组会
+                if material_status_filter and len(presenters_rows) == 0:
+                    continue
 
                 presenters = []
                 for p_row in presenters_rows:

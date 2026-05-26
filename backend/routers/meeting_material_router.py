@@ -25,6 +25,8 @@ API 端点列表 (共8个):
 创建日期: 2026-05-23
 ================================================================================
 """
+import json
+from loguru import logger
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import JSONResponse, FileResponse
 from dependencies.auth import get_current_user
@@ -37,7 +39,9 @@ router = APIRouter(prefix="/api", tags=["汇报材料"])
 async def get_materials(request: Request, current_user=Depends(get_current_user), service: MeetingMaterialService = Depends()):
     """获取汇报材料列表"""
     filters = dict(request.query_params)
+    logger.info(json.dumps(filters, ensure_ascii=False))
     result = await service.get_list(filters)
+    logger.info(json.dumps(result.get("content", {}).get("data", {}).get("meetings"), ensure_ascii=False))
     return JSONResponse(status_code=result["status_code"], content=result["content"])
 
 
@@ -45,7 +49,11 @@ async def get_materials(request: Request, current_user=Depends(get_current_user)
 async def get_meetings_with_materials(request: Request, current_user=Depends(get_current_user), service: MeetingMaterialService = Depends()):
     """获取组会列表及汇报人材料状态"""
     filters = dict(request.query_params)
+    logger.info(json.dumps(filters, ensure_ascii=False))
     result = await service.get_meetings_with_materials(filters)
+    meeting_result = result.get("content", {}).get("data", {}).get("meetings")
+    # logger.info(json.dumps(meeting_result, ensure_ascii=False))
+    logger.info(len(meeting_result))
     return JSONResponse(status_code=result["status_code"], content=result["content"])
 
 
