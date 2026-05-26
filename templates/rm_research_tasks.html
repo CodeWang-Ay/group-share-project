@@ -457,12 +457,62 @@
                         <div class="divide-y divide-gray-100" id="tasks-list-container">
                             <!-- 任务列表将通过JavaScript动态加载 -->
                         </div>
+                        <!-- 列表视图分页 -->
+                        <div id="list-pagination" class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div class="flex items-center gap-2">
+                                        <label for="list-per-page-select" class="text-sm text-gray-600">每页显示</label>
+                                        <select id="list-per-page-select" onchange="changeTaskPerPage()" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                            <option value="10">10条</option>
+                                            <option value="20" selected>20条</option>
+                                            <option value="50">50条</option>
+                                        </select>
+                                    </div>
+                                    <div class="text-sm text-gray-600" id="list-pagination-info">显示第 1-20 条，共 0 条</div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button id="list-prev-page-btn" onclick="prevTaskPage()" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                        <i class="fa fa-chevron-left mr-1"></i>上一页
+                                    </button>
+                                    <span class="px-3 py-1 text-sm text-gray-600" id="list-current-page-info">第 1 页</span>
+                                    <button id="list-next-page-btn" onclick="nextTaskPage()" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                        下一页<i class="fa fa-chevron-right ml-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- 网格视图（卡片布局） -->
                     <div id="grid-view">
                         <div id="tasks-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                             <!-- 任务卡片将通过 JavaScript 动态加载 -->
+                        </div>
+                        <!-- 网格视图分页 -->
+                        <div id="grid-pagination" class="mt-6 px-4 py-3 bg-white rounded-lg border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div class="flex items-center gap-2">
+                                        <label for="grid-per-page-select" class="text-sm text-gray-600">每页显示</label>
+                                        <select id="grid-per-page-select" onchange="changeTaskPerPage()" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                            <option value="10">10条</option>
+                                            <option value="20" selected>20条</option>
+                                            <option value="50">50条</option>
+                                        </select>
+                                    </div>
+                                    <div class="text-sm text-gray-600" id="grid-pagination-info">显示第 1-20 条，共 0 条</div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button id="grid-prev-page-btn" onclick="prevTaskPage()" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                        <i class="fa fa-chevron-left mr-1"></i>上一页
+                                    </button>
+                                    <span class="px-3 py-1 text-sm text-gray-600" id="grid-current-page-info">第 1 页</span>
+                                    <button id="grid-next-page-btn" onclick="nextTaskPage()" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                        下一页<i class="fa fa-chevron-right ml-1"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -676,6 +726,9 @@
 
         // 任务管理变量
         let taskCurrentPage = 1;
+        let taskPerPage = 20;
+        let taskTotalCount = 0;
+        let taskTotalPages = 1;
         let taskCurrentStatus = '';
         let taskCurrentPriority = '';
         let taskCurrentAssignee = '';
@@ -874,7 +927,7 @@
             try {
                 const params = new URLSearchParams();
                 params.append('page', taskCurrentPage);
-                params.append('limit', 20);
+                params.append('limit', taskPerPage);
                 if (taskCurrentStatus) params.append('status', taskCurrentStatus);
                 if (taskCurrentPriority) params.append('priority', taskCurrentPriority);
                 if (taskCurrentAssignee) params.append('assignee_id', taskCurrentAssignee);
@@ -888,7 +941,13 @@
                 });
                 const result = await response.json();
                 if (result.success) {
-                    renderTaskList(result.data.tasks, result.data.pagination);
+                    // 更新分页变量
+                    const pagination = result.data.pagination;
+                    taskTotalCount = pagination.total || 0;
+                    taskTotalPages = pagination.total_pages || 1;
+
+                    renderTaskList(result.data.tasks, pagination);
+                    updateTaskPaginationDisplay();
                 } else {
                     const gridContainer = document.getElementById('tasks-grid-container');
                     const listContainer = document.getElementById('tasks-list-container');
@@ -1012,6 +1071,96 @@
                     </div>
                 </div>`;
             }).join('');
+        }
+
+        // 更新分页显示
+        function updateTaskPaginationDisplay() {
+            // 计算显示范围
+            const startItem = (taskCurrentPage - 1) * taskPerPage + 1;
+            const endItem = Math.min(taskCurrentPage * taskPerPage, taskTotalCount);
+
+            // 更新网格视图分页
+            const gridPaginationInfo = document.getElementById('grid-pagination-info');
+            const gridCurrentPageInfo = document.getElementById('grid-current-page-info');
+            const gridPerPageSelect = document.getElementById('grid-per-page-select');
+            const gridPrevBtn = document.getElementById('grid-prev-page-btn');
+            const gridNextBtn = document.getElementById('grid-next-page-btn');
+            const gridPagination = document.getElementById('grid-pagination');
+
+            if (gridPaginationInfo) gridPaginationInfo.textContent = `显示第 ${startItem}-${endItem} 条，共 ${taskTotalCount} 条`;
+            if (gridCurrentPageInfo) gridCurrentPageInfo.textContent = `第 ${taskCurrentPage} 页`;
+            if (gridPerPageSelect) gridPerPageSelect.value = taskPerPage;
+            if (gridPrevBtn) {
+                gridPrevBtn.disabled = taskCurrentPage <= 1;
+                if (taskCurrentPage <= 1) gridPrevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                else gridPrevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            if (gridNextBtn) {
+                gridNextBtn.disabled = taskCurrentPage >= taskTotalPages;
+                if (taskCurrentPage >= taskTotalPages) gridNextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                else gridNextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            if (gridPagination) gridPagination.classList.toggle('hidden', taskTotalCount === 0);
+
+            // 更新列表视图分页
+            const listPaginationInfo = document.getElementById('list-pagination-info');
+            const listCurrentPageInfo = document.getElementById('list-current-page-info');
+            const listPerPageSelect = document.getElementById('list-per-page-select');
+            const listPrevBtn = document.getElementById('list-prev-page-btn');
+            const listNextBtn = document.getElementById('list-next-page-btn');
+            const listPagination = document.getElementById('list-pagination');
+
+            if (listPaginationInfo) listPaginationInfo.textContent = `显示第 ${startItem}-${endItem} 条，共 ${taskTotalCount} 条`;
+            if (listCurrentPageInfo) listCurrentPageInfo.textContent = `第 ${taskCurrentPage} 页`;
+            if (listPerPageSelect) listPerPageSelect.value = taskPerPage;
+            if (listPrevBtn) {
+                listPrevBtn.disabled = taskCurrentPage <= 1;
+                if (taskCurrentPage <= 1) listPrevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                else listPrevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            if (listNextBtn) {
+                listNextBtn.disabled = taskCurrentPage >= taskTotalPages;
+                if (taskCurrentPage >= taskTotalPages) listNextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                else listNextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            if (listPagination) listPagination.classList.toggle('hidden', taskTotalCount === 0);
+        }
+
+        // 分页操作
+        function prevTaskPage() {
+            if (taskCurrentPage > 1) {
+                taskCurrentPage--;
+                loadTasks();
+            }
+        }
+
+        function nextTaskPage() {
+            if (taskCurrentPage < taskTotalPages) {
+                taskCurrentPage++;
+                loadTasks();
+            }
+        }
+
+        function changeTaskPerPage() {
+            // 根据当前视图模式获取正确的select元素
+            const gridView = document.getElementById('grid-view');
+            const isGridMode = gridView && !gridView.classList.contains('hidden');
+
+            const selectId = isGridMode ? 'grid-per-page-select' : 'list-per-page-select';
+            const otherSelectId = isGridMode ? 'list-per-page-select' : 'grid-per-page-select';
+
+            const selectEl = document.getElementById(selectId);
+            const otherSelectEl = document.getElementById(otherSelectId);
+
+            if (selectEl) {
+                taskPerPage = parseInt(selectEl.value);
+                // 同步另一个select的值
+                if (otherSelectEl) {
+                    otherSelectEl.value = taskPerPage;
+                }
+            }
+            taskCurrentPage = 1;
+            loadTasks();
         }
 
         // 查看任务详情
