@@ -243,25 +243,56 @@
                     <div id="meetings-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         <div class="text-center py-12 text-gray-500"><p>加载中...</p></div>
                     </div>
+                    <!-- 卡片视图分页 -->
+                    <div id="grid-pagination" class="mt-6 bg-white rounded-xl shadow-sm border border-gray-100 px-6 py-4 flex items-center justify-between">
+                        <div class="text-sm text-gray-500">共 <span id="grid-total-count">0</span> 条记录</div>
+                        <div class="flex items-center gap-2">
+                            <select id="grid-per-page" onchange="changePerPage()" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 focus:ring-2 focus:ring-primary/30">
+                                <option value="10">10条/页</option>
+                                <option value="20" selected>20条/页</option>
+                                <option value="50">50条/页</option>
+                            </select>
+                            <div id="grid-page-buttons" class="flex items-center gap-1">
+                                <!-- 页码按钮动态生成 -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 列表视图 -->
-                <div id="list-view" class="hidden bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <table class="w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">组会</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">时间</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">类型</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">汇报人</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">材料状态</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="meetings-list-body" class="divide-y divide-gray-100">
-                            <tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">加载中...</td></tr>
-                        </tbody>
-                    </table>
+                <div id="list-view" class="hidden">
+                    <!-- 表格 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">组会</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">时间</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">类型</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">汇报人</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">材料状态</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="meetings-list-body" class="divide-y divide-gray-100">
+                                <tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                        <!-- 列表视图分页 -->
+                        <div id="list-pagination" class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                            <div class="text-sm text-gray-500">共 <span id="list-total-count">0</span> 条记录</div>
+                            <div class="flex items-center gap-2">
+                                <select id="list-per-page" onchange="changePerPage()" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 focus:ring-2 focus:ring-primary/30">
+                                    <option value="10">10条/页</option>
+                                    <option value="20" selected>20条/页</option>
+                                    <option value="50">50条/页</option>
+                                </select>
+                                <div id="list-page-buttons" class="flex items-center gap-1">
+                                    <!-- 页码按钮动态生成 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -367,6 +398,12 @@
         let currentUserRole = '{{ user.role }}';
         let currentUserId = {{ user.id }};
 
+        // 分页变量
+        let currentPage = 1;
+        let perPage = 20;
+        let totalCount = 0;
+        let totalPages = 1;
+
         // Toast提示函数
         function showToast(message, type = 'success', duration = 2000) {
             const container = document.getElementById('toast-container');
@@ -409,10 +446,14 @@
         // 加载组会列表（带汇报人材料状态）
         async function loadMeetings() {
             const container = document.getElementById('meetings-container');
-            container.innerHTML = '<div class="text-center py-12 text-gray-500"><p>加载中...</p></div>';
+            const tbody = document.getElementById('meetings-list-body');
+            container.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fa fa-spinner fa-spin mr-2"></i>加载中...</div>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500"><i class="fa fa-spinner fa-spin mr-2"></i>加载中...</td></tr>';
 
             try {
                 const params = new URLSearchParams();
+                params.append('page', currentPage);
+                params.append('limit', perPage);
                 if (currentStatusFilter !== 'all') params.append('material_status', currentStatusFilter);
                 if (currentSearchKeyword) params.append('search', currentSearchKeyword);
 
@@ -426,7 +467,13 @@
 
                 if (result.success) {
                     allMeetingsCache = result.data.meetings;
+                    totalCount = result.data.pagination?.total || 0;
+                    totalPages = result.data.pagination?.total_pages || 1;
                     updateStats(result.data.stats);
+                    updatePaginationDisplay();
+                    renderMeetingCards(allMeetingsCache);
+                    renderMeetingTable(allMeetingsCache);
+                    updateFilterButtons();
                     renderMeetingCards(allMeetingsCache);
                     renderMeetingTable(allMeetingsCache);
                     updateFilterButtons();
@@ -453,6 +500,146 @@
             document.querySelector('.stats-submitted').textContent = stats.submitted || 0;
             document.querySelector('.stats-approved').textContent = stats.approved || 0;
         }
+
+        // 更新分页显示
+        function updatePaginationDisplay() {
+            // 更新卡片视图分页
+            const gridTotalCount = document.getElementById('grid-total-count');
+            const gridPerPage = document.getElementById('grid-per-page');
+            const gridPagination = document.getElementById('grid-pagination');
+
+            if (gridTotalCount) gridTotalCount.textContent = totalCount;
+            if (gridPerPage) gridPerPage.value = perPage;
+            if (gridPagination) gridPagination.classList.toggle('hidden', totalCount === 0);
+
+            // 更新列表视图分页
+            const listTotalCount = document.getElementById('list-total-count');
+            const listPerPage = document.getElementById('list-per-page');
+            const listPagination = document.getElementById('list-pagination');
+
+            if (listTotalCount) listTotalCount.textContent = totalCount;
+            if (listPerPage) listPerPage.value = perPage;
+            if (listPagination) listPagination.classList.toggle('hidden', totalCount === 0);
+
+            // 生成页码按钮
+            const gridPageButtons = document.getElementById('grid-page-buttons');
+            const listPageButtons = document.getElementById('list-page-buttons');
+
+            if (gridPageButtons || listPageButtons) {
+                let pageButtonsHtml = generatePageButtons();
+                if (gridPageButtons) gridPageButtons.innerHTML = pageButtonsHtml;
+                if (listPageButtons) listPageButtons.innerHTML = pageButtonsHtml;
+            }
+        }
+
+        // 生成页码按钮
+        function generatePageButtons() {
+            if (totalPages <= 1) return '<span class="px-3 py-1.5 text-sm text-gray-600">第 1 页</span>';
+
+            let html = '';
+
+            // 上一页按钮
+            html += `<button onclick="prevPage()" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed ${currentPage <= 1 ? 'opacity-50 cursor-not-allowed' : ''}" ${currentPage <= 1 ? 'disabled' : ''}>
+                <i class="fa fa-chevron-left"></i>
+            </button>`;
+
+            // 计算显示的页码范围
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+
+            // 如果总页数小于等于7，显示所有页码
+            if (totalPages <= 7) {
+                startPage = 1;
+                endPage = totalPages;
+            } else {
+                // 确保至少显示5个页码
+                if (endPage - startPage < 4) {
+                    if (startPage === 1) {
+                        endPage = Math.min(5, totalPages);
+                    } else if (endPage === totalPages) {
+                        startPage = Math.max(totalPages - 4, 1);
+                    }
+                }
+            }
+
+            // 第一页按钮（如果不在范围内）
+            if (startPage > 1) {
+                html += `<button onclick="goToPage(1)" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">1</button>`;
+                if (startPage > 2) {
+                    html += `<span class="px-2 py-1.5 text-gray-400">...</span>`;
+                }
+            }
+
+            // 页码按钮
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === currentPage) {
+                    html += `<button class="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium">${i}</button>`;
+                } else {
+                    html += `<button onclick="goToPage(${i})" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">${i}</button>`;
+                }
+            }
+
+            // 最后一页按钮（如果不在范围内）
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    html += `<span class="px-2 py-1.5 text-gray-400">...</span>`;
+                }
+                html += `<button onclick="goToPage(${totalPages})" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">${totalPages}</button>`;
+            }
+
+            // 下一页按钮
+            html += `<button onclick="nextPage()" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed ${currentPage >= totalPages ? 'opacity-50 cursor-not-allowed' : ''}" ${currentPage >= totalPages ? 'disabled' : ''}>
+                <i class="fa fa-chevron-right"></i>
+            </button>`;
+
+            return html;
+        }
+
+        // 分页操作
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadMeetings();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadMeetings();
+            }
+        }
+
+        function goToPage(page) {
+            if (page >= 1 && page <= totalPages && page !== currentPage) {
+                currentPage = page;
+                loadMeetings();
+            }
+        }
+
+        function changePerPage() {
+            // 根据当前视图模式获取正确的select元素
+            const gridView = document.getElementById('grid-view');
+            const isGridMode = gridView && !gridView.classList.contains('hidden');
+
+            const selectId = isGridMode ? 'grid-per-page' : 'list-per-page';
+            const otherSelectId = isGridMode ? 'list-per-page' : 'grid-per-page';
+
+            const selectEl = document.getElementById(selectId);
+            const otherSelectEl = document.getElementById(otherSelectId);
+
+            if (selectEl) {
+                perPage = parseInt(selectEl.value);
+                // 同步另一个select的值
+                if (otherSelectEl) {
+                    otherSelectEl.value = perPage;
+                }
+            }
+            currentPage = 1;
+            loadMeetings();
+        }
+
+        // 视图切换
 
         // 渲染组会卡片
         function renderMeetingCards(meetings) {
@@ -1081,19 +1268,21 @@
         // 状态筛选
         function filterByStatus(status) {
             currentStatusFilter = status;
+            currentPage = 1; // 重置页码
             loadMeetings();
         }
 
         function updateFilterButtons() {
             ['all', 'pending', 'submitted', 'approved'].forEach(s => {
                 const btn = document.getElementById(`filter-${s}`);
-                if (!btn) return;
-                if (s === currentStatusFilter) {
-                    btn.classList.add('bg-primary', 'text-white');
-                    btn.classList.remove('bg-gray-100', 'text-gray-600');
-                } else {
-                    btn.classList.remove('bg-primary', 'text-white');
-                    btn.classList.add('bg-gray-100', 'text-gray-600');
+                if (btn) {
+                    if (s === currentStatusFilter) {
+                        btn.classList.add('bg-primary', 'text-white');
+                        btn.classList.remove('bg-gray-100', 'text-gray-600');
+                    } else {
+                        btn.classList.remove('bg-primary', 'text-white');
+                        btn.classList.add('bg-gray-100', 'text-gray-600');
+                    }
                 }
             });
         }

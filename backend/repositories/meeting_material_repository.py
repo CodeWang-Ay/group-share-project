@@ -97,7 +97,7 @@ class MeetingMaterialRepository:
             return materials
 
     @staticmethod
-    def get_meetings_with_presenters(filters: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def get_meetings_with_presenters(filters: Dict[str, Any], limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
         """获取组会列表及汇报人"""
         with get_db() as conn:
             cursor = conn.cursor()
@@ -118,18 +118,31 @@ class MeetingMaterialRepository:
 
             where_clause = "WHERE " + " AND ".join(where_conditions)
 
-            # 获取组会列表
-            cursor.execute(f"""
-                SELECT m.id, m.title, m.scheduled_at, m.meeting_type, m.status, m.location,
-                       m.duration_total, m.description
-                FROM meetings m
-                {where_clause}
-                ORDER BY m.scheduled_at DESC
-            """, params)
-            meetings_rows = cursor.fetchall()
-
             # 材料状态筛选参数
             material_status_filter = filters.get('material_status')
+
+            # 如果有材料状态筛选，使用子查询只获取有匹配汇报人的组会
+            if material_status_filter:
+                cursor.execute(f"""
+                    SELECT DISTINCT m.id, m.title, m.scheduled_at, m.meeting_type, m.status, m.location,
+                           m.duration_total, m.description
+                    FROM meetings m
+                    INNER JOIN meeting_presenters mp ON m.id = mp.meeting_id
+                    {where_clause} AND mp.material_status = ?
+                    ORDER BY m.scheduled_at DESC
+                    LIMIT ? OFFSET ?
+                """, params + [material_status_filter, limit, offset])
+            else:
+                cursor.execute(f"""
+                    SELECT m.id, m.title, m.scheduled_at, m.meeting_type, m.status, m.location,
+                           m.duration_total, m.description
+                    FROM meetings m
+                    {where_clause}
+                    ORDER BY m.scheduled_at DESC
+                    LIMIT ? OFFSET ?
+                """, params + [limit, offset])
+
+            meetings_rows = cursor.fetchall()
 
             meetings = []
             for row in meetings_rows:
@@ -179,6 +192,49 @@ class MeetingMaterialRepository:
                 meeting['presenters'] = presenters
                 meetings.append(meeting)
             return meetings
+
+    @staticmethod
+    def get_meetings_count(filters: Dict[str, Any]) -> int:
+        """获取符合条件的组会总数"""
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            where_conditions = ["m.status != 'cancelled'"]
+            params = []
+
+            if filters.get('status'):
+                where_conditions.append("m.status = ?")
+                params.append(filters['status'])
+
+            if filters.get('meeting_type'):
+                where_conditions.append("m.meeting_type = ?")
+                params.append(filters['meeting_type'])
+
+            material_status_filter = filters.get('material_status')
+
+            where_clause = "WHERE " + " AND ".join(where_conditions)
+
+            # 搜索关键词筛选（需要在SQL层面处理才能正确计数）
+            search_keyword = filters.get('search', '')
+            if search_keyword:
+                where_conditions.append("m.title LIKE ?")
+                params.append(f"%{search_keyword}%")
+
+            if material_status_filter:
+                cursor.execute(f"""
+                    SELECT COUNT(DISTINCT m.id)
+                    FROM meetings m
+                    INNER JOIN meeting_presenters mp ON m.id = mp.meeting_id
+                    {where_clause} AND mp.material_status = ?
+                """, params + [material_status_filter])
+            else:
+                cursor.execute(f"""
+                    SELECT COUNT(*)
+                    FROM meetings m
+                    {where_clause}
+                """, params)
+
+            return cursor.fetchone()[0] or 0
 
     @staticmethod
     def get_presenter_files(presenter_id: int) -> List[Dict[str, Any]]:

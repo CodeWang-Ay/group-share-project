@@ -53,7 +53,16 @@ class MeetingMaterialService:
 
     async def get_meetings_with_materials(self, filters: Dict[str, Any]) -> Dict[str, Any]:
         """获取组会列表及汇报人材料状态"""
-        meetings = MeetingMaterialRepository.get_meetings_with_presenters(filters)
+        # 分页参数
+        page = int(filters.get('page', 1))
+        limit = int(filters.get('limit', 20))
+        offset = (page - 1) * limit
+
+        # 获取数据和总数
+        meetings = MeetingMaterialRepository.get_meetings_with_presenters(filters, limit, offset)
+        total = MeetingMaterialRepository.get_meetings_count(filters)
+        total_pages = (total + limit - 1) // limit if total > 0 else 1
+
         total_pending = total_submitted = total_approved = 0
         for m in meetings:
             for p in m.get('presenters', []):
@@ -63,9 +72,13 @@ class MeetingMaterialService:
                 if status == 'pending': total_pending += 1
                 elif status == 'submitted': total_submitted += 1
                 elif status == 'approved': total_approved += 1
+
         return {"status_code": 200, "content": {"success": True, "data": {
-            "meetings": meetings, "stats": {"total_meetings": len(meetings), "pending": total_pending,
-                                            "submitted": total_submitted, "approved": total_approved}}}}
+            "meetings": meetings,
+            "stats": {"total_meetings": total, "pending": total_pending,
+                      "submitted": total_submitted, "approved": total_approved},
+            "pagination": {"current_page": page, "per_page": limit, "total": total,
+                           "total_pages": total_pages, "has_next": page < total_pages, "has_prev": page > 1}}}}
 
     async def get_presenter_files(self, presenter_id: int) -> Dict[str, Any]:
         """获取汇报人的文件列表"""
