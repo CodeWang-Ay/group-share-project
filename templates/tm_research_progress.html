@@ -325,23 +325,26 @@
                                 <p class="text-sm">点击上方按钮开始提交你的研究进展</p>
                             </div>
                             <!-- 我的进展分页组件 -->
-                            <div id="my-pagination-container" class="px-4 py-4 flex items-center justify-between">
-                                <div class="text-sm text-gray-500">
-                                    共 <span id="my-total-count">0</span> 条记录
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <select id="my-per-page" class="px-2 py-1 border border-gray-300 rounded text-sm">
-                                        <option value="10" selected>10条/页</option>
-                                        <option value="20">20条/页</option>
-                                        <option value="50">50条/页</option>
-                                    </select>
-                                    <div class="flex items-center gap-1">
-                                        <button id="my-prev-page" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-                                            <i class="fa fa-chevron-left"></i>
+                            <div id="my-pagination-container" class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex items-center gap-2">
+                                            <label for="my-per-page-select" class="text-sm text-gray-600">每页显示</label>
+                                            <select id="my-per-page-select" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                                <option value="10" selected>10条</option>
+                                                <option value="20">20条</option>
+                                                <option value="50">50条</option>
+                                            </select>
+                                        </div>
+                                        <div class="text-sm text-gray-600" id="my-pagination-info">显示第 1-10 条，共 0 条</div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button id="my-prev-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                            <i class="fa fa-chevron-left mr-1"></i>上一页
                                         </button>
-                                        <span class="px-3 py-1 text-sm">第 <span id="my-current-page">1</span> / <span id="my-total-pages">1</span> 页</span>
-                                        <button id="my-next-page" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-                                            <i class="fa fa-chevron-right"></i>
+                                        <span class="px-3 py-1 text-sm text-gray-600" id="my-current-page-info">第 1 页</span>
+                                        <button id="my-next-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                            下一页<i class="fa fa-chevron-right ml-1"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -432,23 +435,26 @@
                                 </table>
                             </div>
                             <!-- 分页组件 -->
-                            <div id="student-pagination-container" class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-                                <div class="text-sm text-gray-500">
-                                    共 <span id="student-total-count">0</span> 条记录
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <select id="student-per-page" class="px-2 py-1 border border-gray-300 rounded text-sm">
-                                        <option value="10">10条/页</option>
-                                        <option value="20" selected>20条/页</option>
-                                        <option value="50">50条/页</option>
-                                    </select>
-                                    <div class="flex items-center gap-1">
-                                        <button id="student-prev-page" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-                                            <i class="fa fa-chevron-left"></i>
+                            <div id="student-pagination-container" class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex items-center gap-2">
+                                            <label for="student-per-page-select" class="text-sm text-gray-600">每页显示</label>
+                                            <select id="student-per-page-select" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                                <option value="10">10条</option>
+                                                <option value="20" selected>20条</option>
+                                                <option value="50">50条</option>
+                                            </select>
+                                        </div>
+                                        <div class="text-sm text-gray-600" id="student-pagination-info">显示第 1-20 条，共 0 条</div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button id="student-prev-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                            <i class="fa fa-chevron-left mr-1"></i>上一页
                                         </button>
-                                        <span class="px-3 py-1 text-sm">第 <span id="student-current-page">1</span> / <span id="student-total-pages">1</span> 页</span>
-                                        <button id="student-next-page" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-                                            <i class="fa fa-chevron-right"></i>
+                                        <span class="px-3 py-1 text-sm text-gray-600" id="student-current-page-info">第 1 页</span>
+                                        <button id="student-next-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                            下一页<i class="fa fa-chevron-right ml-1"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -547,23 +553,26 @@
                             </table>
                         </div>
                         <!-- 分页组件 -->
-                        <div id="team-pagination-container" class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-                            <div class="text-sm text-gray-500">
-                                共 <span id="team-total-count">0</span> 条记录
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <select id="team-per-page" class="px-2 py-1 border border-gray-300 rounded text-sm">
-                                    <option value="10">10条/页</option>
-                                    <option value="20" selected>20条/页</option>
-                                    <option value="50">50条/页</option>
-                                </select>
-                                <div class="flex items-center gap-1">
-                                    <button id="team-prev-page" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-                                        <i class="fa fa-chevron-left"></i>
+                        <div id="team-pagination-container" class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div class="flex items-center gap-2">
+                                        <label for="team-per-page-select" class="text-sm text-gray-600">每页显示</label>
+                                        <select id="team-per-page-select" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                            <option value="10">10条</option>
+                                            <option value="20" selected>20条</option>
+                                            <option value="50">50条</option>
+                                        </select>
+                                    </div>
+                                    <div class="text-sm text-gray-600" id="team-pagination-info">显示第 1-20 条，共 0 条</div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button id="team-prev-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                        <i class="fa fa-chevron-left mr-1"></i>上一页
                                     </button>
-                                    <span class="px-3 py-1 text-sm">第 <span id="team-current-page">1</span> / <span id="team-total-pages">1</span> 页</span>
-                                    <button id="team-next-page" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-                                        <i class="fa fa-chevron-right"></i>
+                                    <span class="px-3 py-1 text-sm text-gray-600" id="team-current-page-info">第 1 页</span>
+                                    <button id="team-next-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                        下一页<i class="fa fa-chevron-right ml-1"></i>
                                     </button>
                                 </div>
                             </div>
@@ -891,13 +900,23 @@
                         studentTotalPages = result.pagination.total_pages;
                         studentCurrentPage = result.pagination.page;
 
-                        document.getElementById('student-total-count').textContent = studentTotalCount;
-                        document.getElementById('student-current-page').textContent = studentCurrentPage;
-                        document.getElementById('student-total-pages').textContent = studentTotalPages;
+                        // 计算显示范围
+                        const startItem = (studentCurrentPage - 1) * studentPerPage + 1;
+                        const endItem = Math.min(studentCurrentPage * studentPerPage, studentTotalCount);
+
+                        // 更新分页信息
+                        document.getElementById('student-pagination-info').textContent = `显示第 ${startItem}-${endItem} 条，共 ${studentTotalCount} 条`;
+                        document.getElementById('student-current-page-info').textContent = `第 ${studentCurrentPage} 页`;
 
                         // 更新按钮状态
-                        document.getElementById('student-prev-page').disabled = studentCurrentPage <= 1;
-                        document.getElementById('student-next-page').disabled = studentCurrentPage >= studentTotalPages;
+                        const prevBtn = document.getElementById('student-prev-page-btn');
+                        const nextBtn = document.getElementById('student-next-page-btn');
+                        prevBtn.disabled = studentCurrentPage <= 1;
+                        nextBtn.disabled = studentCurrentPage >= studentTotalPages;
+                        if (studentCurrentPage <= 1) prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        else prevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        if (studentCurrentPage >= studentTotalPages) nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        else nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                     }
 
                     renderStudentTeamProgress(allStudentTeamData, searchTerm);
@@ -1045,13 +1064,23 @@
                         teamTotalPages = result.pagination.total_pages;
                         teamCurrentPage = result.pagination.page;
 
-                        document.getElementById('team-total-count').textContent = teamTotalCount;
-                        document.getElementById('team-current-page').textContent = teamCurrentPage;
-                        document.getElementById('team-total-pages').textContent = teamTotalPages;
+                        // 计算显示范围
+                        const startItem = (teamCurrentPage - 1) * teamPerPage + 1;
+                        const endItem = Math.min(teamCurrentPage * teamPerPage, teamTotalCount);
+
+                        // 更新分页信息
+                        document.getElementById('team-pagination-info').textContent = `显示第 ${startItem}-${endItem} 条，共 ${teamTotalCount} 条`;
+                        document.getElementById('team-current-page-info').textContent = `第 ${teamCurrentPage} 页`;
 
                         // 更新按钮状态
-                        document.getElementById('team-prev-page').disabled = teamCurrentPage <= 1;
-                        document.getElementById('team-next-page').disabled = teamCurrentPage >= teamTotalPages;
+                        const prevBtn = document.getElementById('team-prev-page-btn');
+                        const nextBtn = document.getElementById('team-next-page-btn');
+                        prevBtn.disabled = teamCurrentPage <= 1;
+                        nextBtn.disabled = teamCurrentPage >= teamTotalPages;
+                        if (teamCurrentPage <= 1) prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        else prevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        if (teamCurrentPage >= teamTotalPages) nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        else nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                     }
 
                     renderTeamProgress(allTeacherTeamData, searchTerm);
@@ -1172,13 +1201,23 @@
                     myTotalPages = result.pagination.total_pages;
                     myCurrentPage = result.pagination.page;
 
-                    document.getElementById('my-total-count').textContent = myTotalCount;
-                    document.getElementById('my-current-page').textContent = myCurrentPage;
-                    document.getElementById('my-total-pages').textContent = myTotalPages;
+                    // 计算显示范围
+                    const startItem = (myCurrentPage - 1) * myPerPage + 1;
+                    const endItem = Math.min(myCurrentPage * myPerPage, myTotalCount);
+
+                    // 更新分页信息
+                    document.getElementById('my-pagination-info').textContent = `显示第 ${startItem}-${endItem} 条，共 ${myTotalCount} 条`;
+                    document.getElementById('my-current-page-info').textContent = `第 ${myCurrentPage} 页`;
 
                     // 更新按钮状态
-                    document.getElementById('my-prev-page').disabled = myCurrentPage <= 1;
-                    document.getElementById('my-next-page').disabled = myCurrentPage >= myTotalPages;
+                    const prevBtn = document.getElementById('my-prev-page-btn');
+                    const nextBtn = document.getElementById('my-next-page-btn');
+                    prevBtn.disabled = myCurrentPage <= 1;
+                    nextBtn.disabled = myCurrentPage >= myTotalPages;
+                    if (myCurrentPage <= 1) prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    else prevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    if (myCurrentPage >= myTotalPages) nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    else nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 }
 
                 renderMyProgress(allMyProgressData);
@@ -1738,42 +1777,42 @@
                 });
 
                 // 学生端分页事件
-                document.getElementById('student-prev-page').addEventListener('click', function() {
+                document.getElementById('student-prev-page-btn').addEventListener('click', function() {
                     if (studentCurrentPage > 1) {
                         studentCurrentPage--;
                         fetchStudentTeamProgressFromFilter(currentStudentFilter, searchTeamStudentInput.value, studentCurrentPage);
                     }
                 });
 
-                document.getElementById('student-next-page').addEventListener('click', function() {
+                document.getElementById('student-next-page-btn').addEventListener('click', function() {
                     if (studentCurrentPage < studentTotalPages) {
                         studentCurrentPage++;
                         fetchStudentTeamProgressFromFilter(currentStudentFilter, searchTeamStudentInput.value, studentCurrentPage);
                     }
                 });
 
-                document.getElementById('student-per-page').addEventListener('change', function() {
+                document.getElementById('student-per-page-select').addEventListener('change', function() {
                     studentPerPage = parseInt(this.value);
                     studentCurrentPage = 1;
                     fetchStudentTeamProgressFromFilter(currentStudentFilter, searchTeamStudentInput.value, studentCurrentPage);
                 });
 
                 // 我的进展分页事件
-                document.getElementById('my-prev-page').addEventListener('click', function() {
+                document.getElementById('my-prev-page-btn').addEventListener('click', function() {
                     if (myCurrentPage > 1) {
                         myCurrentPage--;
                         fetchMyProgress(myCurrentPage);
                     }
                 });
 
-                document.getElementById('my-next-page').addEventListener('click', function() {
+                document.getElementById('my-next-page-btn').addEventListener('click', function() {
                     if (myCurrentPage < myTotalPages) {
                         myCurrentPage++;
                         fetchMyProgress(myCurrentPage);
                     }
                 });
 
-                document.getElementById('my-per-page').addEventListener('change', function() {
+                document.getElementById('my-per-page-select').addEventListener('change', function() {
                     myPerPage = parseInt(this.value);
                     myCurrentPage = 1;
                     fetchMyProgress(myCurrentPage);
@@ -1917,21 +1956,21 @@
                 });
 
                 // 分页事件
-                document.getElementById('team-prev-page').addEventListener('click', function() {
+                document.getElementById('team-prev-page-btn').addEventListener('click', function() {
                     if (teamCurrentPage > 1) {
                         teamCurrentPage--;
                         fetchTeamProgress(currentFilter, searchTeamTeacherInput.value, teamCurrentPage);
                     }
                 });
 
-                document.getElementById('team-next-page').addEventListener('click', function() {
+                document.getElementById('team-next-page-btn').addEventListener('click', function() {
                     if (teamCurrentPage < teamTotalPages) {
                         teamCurrentPage++;
                         fetchTeamProgress(currentFilter, searchTeamTeacherInput.value, teamCurrentPage);
                     }
                 });
 
-                document.getElementById('team-per-page').addEventListener('change', function() {
+                document.getElementById('team-per-page-select').addEventListener('change', function() {
                     teamPerPage = parseInt(this.value);
                     teamCurrentPage = 1;
                     fetchTeamProgress(currentFilter, searchTeamTeacherInput.value, teamCurrentPage);

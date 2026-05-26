@@ -581,8 +581,30 @@
                 </div>
 
                 <!-- 分页区域 -->
-                <div id="pagination-container" class="flex justify-center items-center gap-2 mt-6">
-                    <!-- 分页将通过JavaScript动态渲染 -->
+                <div id="pagination-container" class="mt-6 px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2">
+                                <label for="per-page-select" class="text-sm text-gray-600">每页显示</label>
+                                <select id="per-page-select" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                    <option value="5" selected>5条</option>
+                                    <option value="10">10条</option>
+                                    <option value="20">20条</option>
+                                    <option value="50">50条</option>
+                                </select>
+                            </div>
+                            <div class="text-sm text-gray-600" id="pagination-info">显示第 1-5 条，共 0 条</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="prev-page-btn" onclick="prevRecordPage()" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <i class="fa fa-chevron-left mr-1"></i>上一页
+                            </button>
+                            <span class="px-3 py-1 text-sm text-gray-600" id="current-page-info">第 1 页</span>
+                            <button id="next-page-btn" onclick="nextRecordPage()" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                下一页<i class="fa fa-chevron-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -959,7 +981,7 @@
 
         // ========== 组会记录页面专用功能 ==========
         let recordCurrentPage = 1;
-        const recordPageSize = 8;
+        let recordPageSize = 5;
         let currentMinutesFilter = 'all';  // 纪要筛选状态：all, filled, empty
         let currentSearchKeyword = '';     // 搜索关键词
         let allRecordsCache = [];          // 缓存所有记录用于本地筛选
@@ -1359,41 +1381,70 @@
 
         // 渲染分页
         function renderPagination(pagination) {
-            const container = document.getElementById('pagination-container');
-            if (!container || !pagination) return;
+            const paginationInfo = document.getElementById('pagination-info');
+            const currentPageInfo = document.getElementById('current-page-info');
+            const prevBtn = document.getElementById('prev-page-btn');
+            const nextBtn = document.getElementById('next-page-btn');
+            const perPageSelect = document.getElementById('per-page-select');
+            const paginationContainer = document.getElementById('pagination-container');
 
-            if (pagination.total_pages <= 1) {
-                container.innerHTML = '';
+            if (!pagination || pagination.total === 0) {
+                if (paginationInfo) paginationInfo.textContent = '显示第 0-0 条，共 0 条';
+                if (currentPageInfo) currentPageInfo.textContent = '第 0 页';
+                if (prevBtn) {
+                    prevBtn.disabled = true;
+                    prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+                if (nextBtn) {
+                    nextBtn.disabled = true;
+                    nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
                 return;
             }
 
-            let html = '';
+            // 计算显示范围
+            const startItem = (pagination.current_page - 1) * recordPageSize + 1;
+            const endItem = Math.min(pagination.current_page * recordPageSize, pagination.total);
 
-            // 上一页按钮
-            if (pagination.has_prev) {
-                html += `<button onclick="goToRecordPage(${pagination.current_page - 1})" class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"><i class="fa fa-chevron-left"></i> 上一页</button>`;
+            if (paginationInfo) paginationInfo.textContent = `显示第 ${startItem}-${endItem} 条，共 ${pagination.total} 条`;
+            if (currentPageInfo) currentPageInfo.textContent = `第 ${pagination.current_page} 页`;
+            if (perPageSelect) perPageSelect.value = recordPageSize;
+
+            if (prevBtn) {
+                prevBtn.disabled = !pagination.has_prev;
+                if (!pagination.has_prev) prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                else prevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
-
-            // 页码
-            const totalPages = pagination.total_pages;
-            const currentPage = pagination.current_page;
-            const startPage = Math.max(1, currentPage - 2);
-            const endPage = Math.min(totalPages, currentPage + 2);
-
-            for (let i = startPage; i <= endPage; i++) {
-                if (i === currentPage) {
-                    html += `<span class="px-3 py-1 text-sm bg-primary text-white rounded-lg">${i}</span>`;
-                } else {
-                    html += `<button onclick="goToRecordPage(${i})" class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">${i}</button>`;
-                }
+            if (nextBtn) {
+                nextBtn.disabled = !pagination.has_next;
+                if (!pagination.has_next) nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                else nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
+        }
 
-            // 下一页按钮
-            if (pagination.has_next) {
-                html += `<button onclick="goToRecordPage(${pagination.current_page + 1})" class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">下一页 <i class="fa fa-chevron-right"></i></button>`;
+        // 分页操作
+        function prevRecordPage() {
+            if (recordCurrentPage > 1) {
+                recordCurrentPage--;
+                loadRecords();
             }
+        }
 
-            container.innerHTML = html;
+        function nextRecordPage() {
+            const totalPages = Math.ceil(allRecordsData.length / recordPageSize) || 1;
+            if (recordCurrentPage < totalPages) {
+                recordCurrentPage++;
+                loadRecords();
+            }
+        }
+
+        function changeRecordPerPage() {
+            const selectEl = document.getElementById('per-page-select');
+            if (selectEl) {
+                recordPageSize = parseInt(selectEl.value);
+                recordCurrentPage = 1;
+                loadRecords();
+            }
         }
 
         // 切换页码
@@ -2126,6 +2177,16 @@
                         if (searchTimeout) clearTimeout(searchTimeout);
                         handleSearch();
                     }
+                });
+            }
+
+            // 分页每页选择器事件
+            const perPageSelect = document.getElementById('per-page-select');
+            if (perPageSelect) {
+                perPageSelect.addEventListener('change', function() {
+                    recordPageSize = parseInt(this.value);
+                    recordCurrentPage = 1;
+                    loadRecords();
                 });
             }
 

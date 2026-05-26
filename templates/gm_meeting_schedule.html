@@ -518,23 +518,26 @@
                         </div>
                     </div>
                     <!-- 卡片视图分页组件 -->
-                    <div id="grid-pagination-container" class="mt-6 bg-white rounded-xl shadow-sm border border-gray-100 px-6 py-4 flex items-center justify-between">
-                        <div class="text-sm text-gray-500">
-                            共 <span id="grid-total-count">0</span> 条记录
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <select id="grid-per-page" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 focus:ring-2 focus:ring-primary/30">
-                                <option value="10">10条/页</option>
-                                <option value="20" selected>20条/页</option>
-                                <option value="50">50条/页</option>
-                            </select>
-                            <div class="flex items-center gap-1">
-                                <button id="grid-prev-page" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                                    <i class="fa fa-chevron-left"></i>
+                    <div id="grid-pagination-container" class="mt-6 px-4 py-3 bg-white rounded-lg border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-2">
+                                    <label for="grid-per-page-select" class="text-sm text-gray-600">每页显示</label>
+                                    <select id="grid-per-page-select" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                        <option value="10">10条</option>
+                                        <option value="20" selected>20条</option>
+                                        <option value="50">50条</option>
+                                    </select>
+                                </div>
+                                <div class="text-sm text-gray-600" id="grid-pagination-info">显示第 1-20 条，共 0 条</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button id="grid-prev-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <i class="fa fa-chevron-left mr-1"></i>上一页
                                 </button>
-                                <span class="px-3 py-1.5 text-sm text-gray-600">第 <span id="grid-current-page">1</span> / <span id="grid-total-pages">1</span> 页</span>
-                                <button id="grid-next-page" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                                    <i class="fa fa-chevron-right"></i>
+                                <span class="px-3 py-1 text-sm text-gray-600" id="grid-current-page-info">第 1 页</span>
+                                <button id="grid-next-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    下一页<i class="fa fa-chevron-right ml-1"></i>
                                 </button>
                             </div>
                         </div>
@@ -559,23 +562,26 @@
                         </tbody>
                     </table>
                     <!-- 列表视图分页组件 -->
-                    <div id="list-pagination-container" class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-                        <div class="text-sm text-gray-500">
-                            共 <span id="list-total-count">0</span> 条记录
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <select id="list-per-page" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 focus:ring-2 focus:ring-primary/30">
-                                <option value="10">10条/页</option>
-                                <option value="20" selected>20条/页</option>
-                                <option value="50">50条/页</option>
-                            </select>
-                            <div class="flex items-center gap-1">
-                                <button id="list-prev-page" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                                    <i class="fa fa-chevron-left"></i>
+                    <div id="list-pagination-container" class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-2">
+                                    <label for="list-per-page-select" class="text-sm text-gray-600">每页显示</label>
+                                    <select id="list-per-page-select" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                                        <option value="10">10条</option>
+                                        <option value="20" selected>20条</option>
+                                        <option value="50">50条</option>
+                                    </select>
+                                </div>
+                                <div class="text-sm text-gray-600" id="list-pagination-info">显示第 1-20 条，共 0 条</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button id="list-prev-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <i class="fa fa-chevron-left mr-1"></i>上一页
                                 </button>
-                                <span class="px-3 py-1.5 text-sm text-gray-600">第 <span id="list-current-page">1</span> / <span id="list-total-pages">1</span> 页</span>
-                                <button id="list-next-page" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                                    <i class="fa fa-chevron-right"></i>
+                                <span class="px-3 py-1 text-sm text-gray-600" id="list-current-page-info">第 1 页</span>
+                                <button id="list-next-page-btn" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    下一页<i class="fa fa-chevron-right ml-1"></i>
                                 </button>
                             </div>
                         </div>
@@ -1109,40 +1115,54 @@
 
         // 更新分页信息显示
         function updateMeetingPagination() {
-            // 更新卡片视图分页
-            const gridTotalCount = document.getElementById('grid-total-count');
-            const gridCurrentPage = document.getElementById('grid-current-page');
-            const gridTotalPages = document.getElementById('grid-total-pages');
-            const gridPrevBtn = document.getElementById('grid-prev-page');
-            const gridNextBtn = document.getElementById('grid-next-page');
-            const gridPerPageSelect = document.getElementById('grid-per-page');
+            // 计算显示范围
+            const startItem = (meetingCurrentPage - 1) * meetingPerPage + 1;
+            const endItem = Math.min(meetingCurrentPage * meetingPerPage, meetingTotalCount);
 
-            if (gridTotalCount) gridTotalCount.textContent = meetingTotalCount;
-            if (gridCurrentPage) gridCurrentPage.textContent = meetingCurrentPage;
-            if (gridTotalPages) gridTotalPages.textContent = meetingTotalPages;
-            if (gridPrevBtn) gridPrevBtn.disabled = meetingCurrentPage <= 1;
-            if (gridNextBtn) gridNextBtn.disabled = meetingCurrentPage >= meetingTotalPages;
+            // 更新卡片视图分页
+            const gridPaginationInfo = document.getElementById('grid-pagination-info');
+            const gridCurrentPageInfo = document.getElementById('grid-current-page-info');
+            const gridPerPageSelect = document.getElementById('grid-per-page-select');
+            const gridPrevBtn = document.getElementById('grid-prev-page-btn');
+            const gridNextBtn = document.getElementById('grid-next-page-btn');
+            const gridPagination = document.getElementById('grid-pagination-container');
+
+            if (gridPaginationInfo) gridPaginationInfo.textContent = `显示第 ${startItem}-${endItem} 条，共 ${meetingTotalCount} 条`;
+            if (gridCurrentPageInfo) gridCurrentPageInfo.textContent = `第 ${meetingCurrentPage} 页`;
             if (gridPerPageSelect) gridPerPageSelect.value = meetingPerPage;
+            if (gridPrevBtn) {
+                gridPrevBtn.disabled = meetingCurrentPage <= 1;
+                if (meetingCurrentPage <= 1) gridPrevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                else gridPrevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            if (gridNextBtn) {
+                gridNextBtn.disabled = meetingCurrentPage >= meetingTotalPages;
+                if (meetingCurrentPage >= meetingTotalPages) gridNextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                else gridNextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            if (gridPagination) gridPagination.classList.toggle('hidden', meetingTotalCount === 0);
 
             // 更新列表视图分页
-            const listTotalCount = document.getElementById('list-total-count');
-            const listCurrentPage = document.getElementById('list-current-page');
-            const listTotalPages = document.getElementById('list-total-pages');
-            const listPrevBtn = document.getElementById('list-prev-page');
-            const listNextBtn = document.getElementById('list-next-page');
-            const listPerPageSelect = document.getElementById('list-per-page');
-
-            if (listTotalCount) listTotalCount.textContent = meetingTotalCount;
-            if (listCurrentPage) listCurrentPage.textContent = meetingCurrentPage;
-            if (listTotalPages) listTotalPages.textContent = meetingTotalPages;
-            if (listPrevBtn) listPrevBtn.disabled = meetingCurrentPage <= 1;
-            if (listNextBtn) listNextBtn.disabled = meetingCurrentPage >= meetingTotalPages;
-            if (listPerPageSelect) listPerPageSelect.value = meetingPerPage;
-
-            // 显示/隐藏分页组件
-            const gridPagination = document.getElementById('grid-pagination-container');
+            const listPaginationInfo = document.getElementById('list-pagination-info');
+            const listCurrentPageInfo = document.getElementById('list-current-page-info');
+            const listPerPageSelect = document.getElementById('list-per-page-select');
+            const listPrevBtn = document.getElementById('list-prev-page-btn');
+            const listNextBtn = document.getElementById('list-next-page-btn');
             const listPagination = document.getElementById('list-pagination-container');
-            if (gridPagination) gridPagination.classList.toggle('hidden', meetingTotalCount === 0);
+
+            if (listPaginationInfo) listPaginationInfo.textContent = `显示第 ${startItem}-${endItem} 条，共 ${meetingTotalCount} 条`;
+            if (listCurrentPageInfo) listCurrentPageInfo.textContent = `第 ${meetingCurrentPage} 页`;
+            if (listPerPageSelect) listPerPageSelect.value = meetingPerPage;
+            if (listPrevBtn) {
+                listPrevBtn.disabled = meetingCurrentPage <= 1;
+                if (meetingCurrentPage <= 1) listPrevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                else listPrevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            if (listNextBtn) {
+                listNextBtn.disabled = meetingCurrentPage >= meetingTotalPages;
+                if (meetingCurrentPage >= meetingTotalPages) listNextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                else listNextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
             if (listPagination) listPagination.classList.toggle('hidden', meetingTotalCount === 0);
         }
 
@@ -2848,9 +2868,9 @@
             applyLayout(savedMode);
 
             // 卡片视图分页事件
-            const gridPrevBtn = document.getElementById('grid-prev-page');
-            const gridNextBtn = document.getElementById('grid-next-page');
-            const gridPerPageSelect = document.getElementById('grid-per-page');
+            const gridPrevBtn = document.getElementById('grid-prev-page-btn');
+            const gridNextBtn = document.getElementById('grid-next-page-btn');
+            const gridPerPageSelect = document.getElementById('grid-per-page-select');
 
             if (gridPrevBtn) {
                 gridPrevBtn.addEventListener('click', function() {
@@ -2879,9 +2899,9 @@
             }
 
             // 列表视图分页事件
-            const listPrevBtn = document.getElementById('list-prev-page');
-            const listNextBtn = document.getElementById('list-next-page');
-            const listPerPageSelect = document.getElementById('list-per-page');
+            const listPrevBtn = document.getElementById('list-prev-page-btn');
+            const listNextBtn = document.getElementById('list-next-page-btn');
+            const listPerPageSelect = document.getElementById('list-per-page-select');
 
             if (listPrevBtn) {
                 listPrevBtn.addEventListener('click', function() {
