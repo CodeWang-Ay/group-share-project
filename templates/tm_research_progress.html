@@ -833,14 +833,20 @@
                 });
                 const result = await response.json();
                 if (result.success) {
-                    document.getElementById('stats-total').textContent = result.data.total;
-                    document.getElementById('stats-normal').textContent = result.data.normal;
-                    document.getElementById('stats-delayed').textContent = result.data.warning;
-                    document.getElementById('stats-not_updated').textContent = result.data.not_updated;
+                    const data = result.data;
+                    document.getElementById('stats-total').textContent = data.total_students || 0;
+                    document.getElementById('stats-normal').textContent = data.normal_count || 0;
+                    document.getElementById('stats-delayed').textContent = data.warning_count || data.delayed_count || 0;
+                    document.getElementById('stats-not_updated').textContent = data.not_updated_count || 0;
                 }
             } catch (error) {
                 console.error('获取统计数据失败:', error);
             }
+        }
+
+        // 管理员端获取统计数据（别名）
+        async function fetchTeamStats() {
+            await fetchStats();
         }
 
         // 学生端获取统计数据
@@ -852,10 +858,11 @@
                 });
                 const result = await response.json();
                 if (result.success) {
-                    document.getElementById('stats-total-student').textContent = result.data.total;
-                    document.getElementById('stats-normal-student').textContent = result.data.normal;
-                    document.getElementById('stats-delayed-student').textContent = result.data.warning;
-                    document.getElementById('stats-not_updated-student').textContent = result.data.not_updated;
+                    const data = result.data;
+                    document.getElementById('stats-total-student').textContent = data.total_students || 0;
+                    document.getElementById('stats-normal-student').textContent = data.normal_count || 0;
+                    document.getElementById('stats-delayed-student').textContent = data.warning_count || data.delayed_count || 0;
+                    document.getElementById('stats-not_updated-student').textContent = data.not_updated_count || 0;
                 }
             } catch (error) {
                 console.error('获取统计数据失败:', error);
@@ -1704,6 +1711,27 @@
 
             // 如果都没有 token，但用户信息已渲染（说明后端已验证登录），则不跳转
             // 只在真正未登录时才跳转（这里我们信任后端的登录验证）
+
+            // 处理 tab 参数，切换到团队进展
+            const tabParam = url.searchParams.get('tab');
+            const user_idParam = url.searchParams.get('user_id');
+            if (tabParam === 'team' || user_idParam) {
+                // 自动切换到团队进展标签
+                document.getElementById('tab-my-progress').classList.remove('bg-primary', 'text-white');
+                document.getElementById('tab-my-progress').classList.add('bg-gray-100', 'text-gray-600');
+                document.getElementById('tab-team-progress').classList.add('bg-primary', 'text-white');
+                document.getElementById('tab-team-progress').classList.remove('bg-gray-100', 'text-gray-600');
+                document.getElementById('team-progress-section').classList.remove('hidden');
+                document.getElementById('my-progress-section').classList.add('hidden');
+                // 自动加载团队进展数据
+                if (USER_ROLE === 'student') {
+                    fetchStudentTeamProgressFromFilter('all', '', 1);
+                    fetchStudentTeamStats();
+                } else if (USER_ROLE === 'admin' || USER_ROLE === 'teacher') {
+                    fetchTeamProgress();
+                    fetchTeamStats();
+                }
+            }
 
             // 根据角色加载不同内容
             if (USER_ROLE === 'student') {

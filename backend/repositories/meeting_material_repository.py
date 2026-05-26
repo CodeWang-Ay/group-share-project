@@ -354,3 +354,48 @@ class MeetingMaterialRepository:
                     "files": files
                 })
             return materials
+
+    @staticmethod
+    def get_pending_count(user_id: int, role: str) -> int:
+        """获取待审阅材料数量"""
+        with get_db() as conn:
+            cursor = conn.cursor()
+            if role == 'admin' or role == 'teacher':
+                # 管理员和导师可以看到所有待审阅的材料
+                cursor.execute("""
+                    SELECT COUNT(*) FROM meeting_presenters mp
+                    JOIN meeting_files mf ON mp.id = mf.presenter_id
+                    WHERE mp.material_status = 'submitted' AND mf.filename IS NOT NULL
+                """)
+            else:
+                # 学生只能看到自己的待审阅材料
+                cursor.execute("""
+                    SELECT COUNT(*) FROM meeting_presenters mp
+                    JOIN meeting_files mf ON mp.id = mf.presenter_id
+                    WHERE mp.user_id = ? AND mp.material_status = 'submitted' AND mf.filename IS NOT NULL
+                """, (user_id,))
+            return cursor.fetchone()[0] or 0
+
+    @staticmethod
+    def get_recent_files(user_id: int, role: str, limit: int = 5) -> List[Dict[str, Any]]:
+        """获取最近提交的材料"""
+        with get_db() as conn:
+            cursor = conn.cursor()
+            if role == 'admin' or role == 'teacher':
+                cursor.execute("""
+                    SELECT mf.id, mf.filename, mf.file_type, mf.file_size, mf.uploaded_at,
+                           mf.uploaded_by as uploader_id, mf.meeting_id, mf.presenter_id
+                    FROM meeting_files mf
+                    WHERE mf.filename IS NOT NULL
+                    ORDER BY mf.uploaded_at DESC LIMIT ?
+                """, (limit,))
+            else:
+                cursor.execute("""
+                    SELECT mf.id, mf.filename, mf.file_type, mf.file_size, mf.uploaded_at,
+                           mf.uploaded_by as uploader_id, mf.meeting_id, mf.presenter_id
+                    FROM meeting_files mf
+                    JOIN meeting_presenters mp ON mf.presenter_id = mp.id
+                    WHERE mf.filename IS NOT NULL AND mp.user_id = ?
+                    ORDER BY mf.uploaded_at DESC LIMIT ?
+                """, (user_id, limit))
+            return [dict(row) for row in cursor.fetchall()]

@@ -114,28 +114,29 @@ class MemberManagementRepository:
         with get_db() as conn:
             cursor = conn.cursor()
 
-            cursor.execute("SELECT COUNT(*) FROM users")
-            total_members = cursor.fetchone()[0]
-
             cursor.execute("SELECT COUNT(*) FROM users WHERE status = 'active'")
-            active_members = cursor.fetchone()[0]
+            total = cursor.fetchone()[0] or 0
 
-            cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'student'")
-            student_count = cursor.fetchone()[0]
+            cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'student' AND status = 'active'")
+            student_count = cursor.fetchone()[0] or 0
 
-            cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'teacher'")
-            teacher_count = cursor.fetchone()[0]
+            cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'teacher' AND status = 'active'")
+            teacher_count = cursor.fetchone()[0] or 0
 
-            cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")
-            admin_count = cursor.fetchone()[0]
+            # 博士和硕士统计（使用中文值）
+            cursor.execute("SELECT COUNT(*) FROM users WHERE degree_type LIKE '%博士%' AND status = 'active'")
+            phd_count = cursor.fetchone()[0] or 0
+
+            cursor.execute("SELECT COUNT(*) FROM users WHERE degree_type LIKE '%硕士%' AND status = 'active'")
+            master_count = cursor.fetchone()[0] or 0
 
             return {
-                "total_members": total_members,
-                "active_members": active_members,
+                "total_members": total,
+                "active_members": total,  # 目前只统计活跃用户，所以等于总数
                 "student_count": student_count,
                 "teacher_count": teacher_count,
-                "admin_count": admin_count,
-                "inactive_members": total_members - active_members
+                "phd_count": phd_count,
+                "master_count": master_count
             }
 
     @staticmethod
@@ -144,6 +145,15 @@ class MemberManagementRepository:
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT id, username FROM users WHERE id = ?", (member_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    @staticmethod
+    def get_user_by_id(user_id: int) -> Optional[Dict[str, Any]]:
+        """获取用户信息"""
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, username, role, degree_type FROM users WHERE id = ?", (user_id,))
             row = cursor.fetchone()
             return dict(row) if row else None
 

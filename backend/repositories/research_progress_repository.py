@@ -238,22 +238,27 @@ class ResearchProgressRepository:
             cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'student' AND status = 'active'")
             total_students = cursor.fetchone()[0] or 0
 
-            # 本周提交数
+            # 进度正常：最近7天内提交了进展的学生数
             cursor.execute("""
-                SELECT COUNT(*) FROM research_progress
-                WHERE submission_date >= DATE('now', '-7 days')
+                SELECT COUNT(DISTINCT rp.user_id) FROM research_progress rp
+                JOIN users u ON rp.user_id = u.id
+                WHERE u.role = 'student' AND u.status = 'active'
+                AND rp.submission_date >= DATE('now', '-7 days')
+                AND rp.status = 'normal'
             """)
-            weekly_submissions = cursor.fetchone()[0] or 0
+            normal_count = cursor.fetchone()[0] or 0
 
-            # 状态统计
+            # 进度预警：最近7天内提交但状态为warning，或超过7天未提交的学生
             cursor.execute("""
-                SELECT status, COUNT(*) FROM research_progress
-                WHERE submission_date >= DATE('now', '-30 days')
-                GROUP BY status
+                SELECT COUNT(DISTINCT rp.user_id) FROM research_progress rp
+                JOIN users u ON rp.user_id = u.id
+                WHERE u.role = 'student' AND u.status = 'active'
+                AND rp.submission_date >= DATE('now', '-7 days')
+                AND rp.status IN ('warning', 'delayed')
             """)
-            status_counts = dict(cursor.fetchall())
+            warning_count = cursor.fetchone()[0] or 0
 
-            # 未更新学生数
+            # 未更新本周：最近7天没有提交进展的学生数
             cursor.execute("""
                 SELECT COUNT(*) FROM users u
                 WHERE u.role = 'student' AND u.status = 'active'
@@ -262,15 +267,22 @@ class ResearchProgressRepository:
                     WHERE rp.user_id = u.id AND rp.submission_date >= DATE('now', '-7 days')
                 )
             """)
-            not_updated = cursor.fetchone()[0] or 0
+            not_updated_count = cursor.fetchone()[0] or 0
+
+            # 本周提交数
+            cursor.execute("""
+                SELECT COUNT(*) FROM research_progress
+                WHERE submission_date >= DATE('now', '-7 days')
+            """)
+            weekly_submissions = cursor.fetchone()[0] or 0
 
             return {
                 'total_students': total_students,
                 'weekly_submissions': weekly_submissions,
-                'delayed_count': status_counts.get('delayed', 0),
-                'warning_count': status_counts.get('warning', 0),
-                'normal_count': status_counts.get('normal', 0),
-                'not_updated_count': not_updated
+                'normal_count': normal_count,
+                'warning_count': warning_count,
+                'delayed_count': 0,
+                'not_updated_count': not_updated_count
             }
 
     @staticmethod

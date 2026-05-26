@@ -713,3 +713,38 @@ class PaperRepository:
             cursor = conn.cursor()
             cursor.execute("SELECT id FROM users WHERE id = ? AND status = 'active'", (user_id,))
             return cursor.fetchone() is not None
+
+    @staticmethod
+    def get_count_by_date_range(start_date: datetime, end_date: datetime) -> int:
+        """获取指定日期范围内新增的文献数量"""
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT COUNT(*) FROM papers
+                WHERE created_at >= ? AND created_at <= ? AND is_deleted = 0 AND team_library = 1
+            """, (start_date.isoformat(), end_date.isoformat()))
+            return cursor.fetchone()[0] or 0
+
+    @staticmethod
+    def get_recent_papers(user_id: int, role: str, limit: int = 5) -> List[Dict[str, Any]]:
+        """获取最近的文献"""
+        with get_db() as conn:
+            cursor = conn.cursor()
+            if role == 'admin':
+                cursor.execute("""
+                    SELECT p.id, p.title, p.authors, p.year, p.journal, p.abstract, p.uploader_id,
+                           p.created_at, p.download_count
+                    FROM papers p
+                    WHERE p.is_deleted = 0 AND p.team_library = 1
+                    ORDER BY p.created_at DESC LIMIT ?
+                """, (limit,))
+            else:
+                # 获取用户可见的文献（团队库的 + 自己上传的）
+                cursor.execute("""
+                    SELECT p.id, p.title, p.authors, p.year, p.journal, p.abstract, p.uploader_id,
+                           p.created_at, p.download_count
+                    FROM papers p
+                    WHERE p.is_deleted = 0 AND (p.team_library = 1 OR p.uploader_id = ?)
+                    ORDER BY p.created_at DESC LIMIT ?
+                """, (user_id, limit))
+            return [dict(row) for row in cursor.fetchall()]

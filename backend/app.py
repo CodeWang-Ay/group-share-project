@@ -71,6 +71,7 @@ from routers import (
     meeting_material_router,
     paper_router,
     research_progress_router,
+    dashboard_router,
 )
 
 # 创建 FastAPI 应用
@@ -147,6 +148,7 @@ app.include_router(meeting_material_router)
 app.include_router(research_tasks_router)
 app.include_router(paper_router)
 app.include_router(research_progress_router)
+app.include_router(dashboard_router)
 
 
 # 启动事件

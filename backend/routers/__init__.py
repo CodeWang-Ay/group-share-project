@@ -51,6 +51,7 @@ from .member_management_router import router as member_management_router
 from .meeting_material_router import router as meeting_material_router
 from .paper_router import router as paper_router
 from .research_progress_router import router as research_progress_router
+from .dashboard_router import router as dashboard_router
 
 __all__ = [
     'auth_router',
@@ -64,5 +65,6 @@ __all__ = [
     'member_management_router',
     'meeting_material_router',
     'paper_router',
-    'research_progress_router'
+    'research_progress_router',
+    'dashboard_router'
 ]

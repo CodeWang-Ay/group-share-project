@@ -340,3 +340,51 @@ class MeetingScheduleRepository:
             cursor.execute("SELECT created_by FROM meetings WHERE id = ?", (meeting_id,))
             row = cursor.fetchone()
             return row[0] if row else None
+
+    @staticmethod
+    def get_count_by_date_range(start_date: datetime, end_date: datetime) -> int:
+        """获取指定日期范围内的组会数量"""
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT COUNT(*) FROM meetings
+                WHERE scheduled_at >= ? AND scheduled_at <= ? AND status != 'cancelled'
+            """, (start_date, end_date))
+            return cursor.fetchone()[0] or 0
+
+    @staticmethod
+    def get_upcoming_meetings(start_date: datetime, end_date: datetime, user_id: int, role: str) -> List[Dict[str, Any]]:
+        """获取即将到来的组会"""
+        with get_db() as conn:
+            cursor = conn.cursor()
+            if role == 'admin':
+                cursor.execute("""
+                    SELECT * FROM meetings
+                    WHERE scheduled_at >= ? AND scheduled_at <= ? AND status != 'cancelled'
+                    ORDER BY scheduled_at ASC LIMIT 5
+                """, (start_date, end_date))
+            else:
+                # 获取用户参与的组会（作为汇报人）
+                cursor.execute("""
+                    SELECT DISTINCT m.* FROM meetings m
+                    LEFT JOIN meeting_presenters mp ON m.id = mp.meeting_id
+                    WHERE m.scheduled_at >= ? AND m.scheduled_at <= ? AND m.status != 'cancelled'
+                    AND mp.user_id = ?
+                    ORDER BY m.scheduled_at ASC LIMIT 5
+                """, (start_date, end_date, user_id))
+            return [dict(row) for row in cursor.fetchall()]
+
+    @staticmethod
+    def get_meeting_presenters(meeting_id: int) -> List[Dict[str, Any]]:
+        """获取组会的汇报人列表"""
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT mp.id, mp.user_id, mp.presenter_type, mp.duration_minutes, mp.status, mp.material_status,
+                       u.username, u.role, u.research_direction
+                FROM meeting_presenters mp
+                LEFT JOIN users u ON mp.user_id = u.id
+                WHERE mp.meeting_id = ?
+                ORDER BY mp.created_at
+            """, (meeting_id,))
+            return [dict(row) for row in cursor.fetchall()]
