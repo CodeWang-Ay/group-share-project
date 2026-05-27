@@ -55,9 +55,9 @@ class MemberManagementRepository:
                 where_conditions.append("degree_type = ?")
                 params.append(filters['degree'])
             if filters.get('search'):
-                where_conditions.append("(username LIKE ? OR id LIKE ? OR student_id LIKE ? OR real_name LIKE ?)")
+                where_conditions.append("(username LIKE ? OR id LIKE ? OR student_id LIKE ?)")
                 search = filters['search']
-                params.extend([f"%{search}%", f"%{search}%", f"%{search}%", f"%{search}%"])
+                params.extend([f"%{search}%", f"%{search}%", f"%{search}%"])
 
             where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
 
@@ -99,9 +99,9 @@ class MemberManagementRepository:
                 where_conditions.append("degree_type = ?")
                 params.append(filters['degree'])
             if filters.get('search'):
-                where_conditions.append("(username LIKE ? OR id LIKE ? OR student_id LIKE ? OR real_name LIKE ?)")
+                where_conditions.append("(username LIKE ? OR id LIKE ? OR student_id LIKE ?)")
                 search = filters['search']
-                params.extend([f"%{search}%", f"%{search}%", f"%{search}%", f"%{search}%"])
+                params.extend([f"%{search}%", f"%{search}%", f"%{search}%"])
 
             where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
 
