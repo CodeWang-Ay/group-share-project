@@ -1,0 +1,107 @@
+[project]
+name = "group-share-project"
+version = "1.0.0"
+description = "研究生组会管理系统 - 基于 FastAPI 的组会管理与文件共享平台"
+authors = [
+    { name = "wjg", email = "your-email@example.com" }
+]
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+keywords = ["fastapi", "meeting", "research", "management"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: FastAPI",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+# =============================================================================
+# 核心依赖
+# =============================================================================
+dependencies = [
+    # Web 框架和服务器
+    "fastapi==0.136.3",
+    "uvicorn[standard]==0.48.0",
+
+    # 数据验证
+    "pydantic==2.13.4",
+
+    # 模板引擎
+    "jinja2==3.1.6",
+
+    # 文件处理
+    "aiofiles==25.1.0",
+    "python-multipart==0.0.29",
+
+    # 安全和认证
+    "bcrypt==5.0.0",
+
+    # 日志
+    "loguru==0.7.3",
+
+    # 配置管理
+    "python-dotenv==1.2.2",
+]
+
+# =============================================================================
+# 可选依赖组
+# =============================================================================
+[project.optional-dependencies]
+dev = [
+    # 测试
+    "pytest==9.0.3",
+    "pytest-asyncio==1.4.0",
+    "httpx==0.28.1",
+]
+
+prod = [
+    # 生产部署
+    "gunicorn==26.0.0",
+]
+
+# =============================================================================
+# 项目 URLs
+# =============================================================================
+[project.urls]
+Homepage = "https://github.com/your-username/group-share-project"
+Documentation = "https://github.com/your-username/group-share-project#readme"
+Repository = "https://github.com/your-username/group-share-project"
+
+# =============================================================================
+# uv 配置
+# =============================================================================
+[tool.uv]
+# 开发依赖默认安装
+dev-dependencies = [
+    "pytest==9.0.3",
+    "pytest-asyncio==1.4.0",
+    "httpx==0.28.1",
+    "gunicorn==26.0.0",
+]
+
+# =============================================================================
+# pytest 配置
+# =============================================================================
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+# =============================================================================
+# 构建系统
+# =============================================================================
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# =============================================================================
+# hatch 配置
+# =============================================================================
+[tool.hatch.build.targets.wheel]
+packages = ["backend"]
