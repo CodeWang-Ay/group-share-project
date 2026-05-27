@@ -235,7 +235,7 @@
                                 <h3 class="font-medium">登录密码</h3>
                                 <p class="text-sm text-gray-500 mt-0.5">上次更新于 2023-06-15</p>
                             </div>
-                            <a href="change-password.html" class="text-primary hover:text-primary/80 text-sm flex items-center gap-1">
+                            <a href="/edit_password" class="text-primary hover:text-primary/80 text-sm flex items-center gap-1">
                                 <span>修改密码</span>
                                 <i class="fa fa-chevron-right text-xs"></i>
                             </a>
@@ -509,6 +509,15 @@
     </div>
 
     <script>
+        const API_BASE_URL = 'http://localhost:8081';
+
+        function getAuthHeaders() {
+            const token = localStorage.getItem('session_token');
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            return headers;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             // DOM元素
             const deleteAccountBtn = document.getElementById('delete-account-btn');
@@ -521,6 +530,46 @@
             const toastIcon = document.getElementById('toast-icon');
             const toggleSwitches = document.querySelectorAll('input[type="checkbox"]');
             const selectElements = document.querySelectorAll('select');
+
+            // 退出登录功能
+            const logoutBtn = document.getElementById('logout-btn');
+            const logoutBtnMobile = document.getElementById('logout-btn-mobile');
+
+            const doLogout = async () => {
+                try {
+                    await fetch(`${API_BASE_URL}/api/auth/logout`, {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: getAuthHeaders()
+                    });
+                    localStorage.removeItem('session_token');
+                    localStorage.removeItem('user_info');
+                    window.location.href = '/login';
+                } catch (e) {
+                    localStorage.removeItem('session_token');
+                    localStorage.removeItem('user_info');
+                    window.location.href = '/login';
+                }
+            };
+
+            if (logoutBtn) logoutBtn.addEventListener('click', doLogout);
+            if (logoutBtnMobile) logoutBtnMobile.addEventListener('click', doLogout);
+
+            // 移动端侧边栏
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('mobile-sidebar-toggle');
+            const closeBtn = document.getElementById('mobile-sidebar-close');
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    sidebar.classList.remove('-translate-x-full');
+                });
+            }
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    sidebar.classList.add('-translate-x-full');
+                });
+            }
             
             // 显示提示框
             function showToast(title, message, type = 'success') {
@@ -594,9 +643,12 @@
             });
             
             // 登录历史查看按钮
-            document.querySelector('button:contains("查看详情")').addEventListener('click', function() {
-                showToast('登录历史', '最近登录：2023-09-20 08:45 (本机Chrome浏览器)');
-            });
+            const loginHistoryBtn = document.querySelector('.setting-item button');
+            if (loginHistoryBtn && loginHistoryBtn.textContent.includes('查看详情')) {
+                loginHistoryBtn.addEventListener('click', function() {
+                    showToast('登录历史', '最近登录：2026-05-27 08:45 (本机Chrome浏览器)');
+                });
+            }
         });
     </script>
 </body>
