@@ -106,9 +106,8 @@ def _redirect_to_login():
 
 
 def _render_page(template_name: str, request: Request, user):
-    """渲染页面模板"""
-    return templates.TemplateResponse(template_name, {
-        "request": request,
+    """渲染页面模板 (Starlette 1.0+ 新签名)"""
+    return templates.TemplateResponse(request, template_name, {
         "user": user
     })
 
@@ -125,7 +124,7 @@ async def index(request: Request):
 
     if not current_user:
         logger.info("用户未登录，显示登录页面")
-        return templates.TemplateResponse("login.html", {"request": request})
+        return templates.TemplateResponse(request, "login.html")
 
     if url_token:
         response = RedirectResponse(url="/", status_code=302)
@@ -139,8 +138,7 @@ async def index(request: Request):
         return response
 
     logger.info(f"用户已登录: {current_user.username}")
-    return templates.TemplateResponse("index.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "index.html", {
         "user": current_user
     })
 
@@ -149,14 +147,14 @@ async def index(request: Request):
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     """登录页面"""
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(request, "login.html")
 
 
 # 注册页面
 @router.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request):
     """注册页面"""
-    return templates.TemplateResponse("register.html", {"request": request})
+    return templates.TemplateResponse(request, "register.html")
 
 
 # 共享文件页面

@@ -1,22 +1,2 @@
-# FastAPI Web框架
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-
-# 数据库
-sqlalchemy==2.0.23
-
-# 密码哈希
-bcrypt==4.1.2
-
-# 模板引擎
-jinja2==3.1.2
-
-# 会话管理
-python-multipart==0.0.6
-
-# CORS支持
-python-dotenv==1.0.0
-
-# 开发和测试
-pytest==7.4.3
-pytest-asyncio==0.21.1
+# 同根目录 requirements.txt，保持一致
+-r ../requirements.txt

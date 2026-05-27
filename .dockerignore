@@ -1,0 +1,61 @@
+# =============================================================================
+# Docker 构建排除文件
+# =============================================================================
+# 避免将不必要的文件复制到Docker镜像中
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# 虚拟环境
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 测试
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 日志和临时文件
+logs/
+*.log
+*.tmp
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# 文档
+*.md
+docs/
+
+# 其他
+*.bak
+*.backup
+.claude/
