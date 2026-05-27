@@ -34,11 +34,21 @@ router = APIRouter(prefix="/api/auth", tags=["认证"])
 
 @router.post("/login")
 async def login(request: Request, service: AuthService = Depends()):
-    """用户登录"""
+    """用户登录 - 返回 JSON，前端处理重定向"""
     data = await request.json()
     result = await service.login(data)
-    if result.get("redirect"):
-        response = RedirectResponse(url=result["redirect"], status_code=302)
+    if result.get("success"):
+        # 返回 JSON，包含 session_token，前端处理 cookie 和重定向
+        response = JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": "登录成功",
+                "session_token": result["cookie"]["value"],
+                "max_age": result["cookie"]["max_age"]
+            }
+        )
+        # 后端也设置 cookie，作为备份
         response.set_cookie(**result["cookie"])
         return response
     return JSONResponse(status_code=result["status_code"], content=result["content"])

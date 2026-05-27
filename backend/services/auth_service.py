@@ -85,8 +85,9 @@ class AuthService:
         session_token = session_manager.create_session(user.id, user.username, user.role, remember_me)
         logger.info(f"登录成功: {user.username}")
 
-        # 4. 返回重定向响应
+        # 4. 返回登录成功响应（不再重定向，由前端处理）
         return {
+            "success": True,
             "status_code": 200,
             "redirect": f"/?session_token={session_token}",
             "cookie": {
@@ -96,7 +97,7 @@ class AuthService:
                 "httponly": True,
                 "samesite": "lax"
             },
-            "content": {"success": True}
+            "content": {"success": True, "message": "登录成功", "session_token": session_token}
         }
 
     async def register(self, data: Dict[str, Any]) -> Dict[str, Any]:

@@ -200,23 +200,29 @@
                             username: username,
                             password: password
                         }),
-                        redirect: 'follow'  // 允许重定向
+                        credentials: 'include'  // 包含 cookie
                     });
 
-                    // 检查响应状态
-                    if (response.redirected) {
-                        // 如果后端返回重定向，则跟随重定向
-                        window.location.href = response.url;
+                    // 解析 JSON 响应
+                    const result = await response.json();
+
+                    if (result.success && result.session_token) {
+                        // 登录成功，保存 session_token 到 localStorage
+                        localStorage.setItem('session_token', result.session_token);
+                        localStorage.setItem('user_info', JSON.stringify({username: username}));
+
+                        // 显示成功消息
+                        showMessage('登录成功，正在跳转...', 'success');
+
+                        // 跳转到首页，带 session_token 参数确保首次能识别登录状态
+                        setTimeout(() => {
+                            window.location.href = `http://localhost:8081/?session_token=${result.session_token}`;
+                        }, 500);
                         return;
                     }
 
-                    // 如果没有重定向，解析JSON响应（用于错误处理）
-                    const result = await response.json();
-
-                    if (!result.success) {
-                        // 登录失败，显示错误消息
-                        showMessage(result.message || '登录失败', 'error');
-                    }
+                    // 登录失败，显示错误消息
+                    showMessage(result.message || '登录失败', 'error');
                 } catch (error) {
                     console.error('登录请求失败:', error);
                     showMessage('网络错误，请稍后重试', 'error');
