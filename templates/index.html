@@ -455,15 +455,8 @@
 
     <!-- JavaScript -->
     <script>
-        // API基础URL - 根据当前环境自动检测
-        let API_BASE_URL = '';
-        if (window.location.hostname === 'localhost') {
-            if (window.location.port === '8081' || window.location.port === '8000') {
-                API_BASE_URL = `http://localhost:${window.location.port}`;
-            } else if (window.location.port === '3000' || window.location.port === '3001') {
-                API_BASE_URL = 'http://localhost:8081';
-            }
-        }
+        // API基础URL - 使用当前页面的域名，避免跨域 cookie 问题
+        const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
 
         // 移动端侧边栏功能
         function initMobileSidebar() {
@@ -843,12 +836,32 @@
             // 处理URL中的session_token（登录后跳转）
             const urlParams = new URLSearchParams(window.location.search);
             const sessionToken = urlParams.get('session_token');
+
+            // 调试：检查 token 来源
+            console.log('[DEBUG] URL session_token:', sessionToken);
+            console.log('[DEBUG] localStorage session_token:', localStorage.getItem('session_token'));
+            console.log('[DEBUG] Cookie session_token:', document.cookie);
+
             if (sessionToken) {
                 localStorage.setItem('session_token', sessionToken);
+                console.log('[DEBUG] 已保存 token 到 localStorage');
                 // 清除URL中的session_token参数
                 const url = new URL(window.location);
                 url.searchParams.delete('session_token');
                 window.history.replaceState({}, document.title, url.toString());
+            }
+
+            // 如果 localStorage 没有 token，尝试从 cookie 获取
+            if (!localStorage.getItem('session_token')) {
+                const cookies = document.cookie.split(';');
+                for (const cookie of cookies) {
+                    const [name, value] = cookie.trim().split('=');
+                    if (name === 'session_token' && value) {
+                        localStorage.setItem('session_token', value);
+                        console.log('[DEBUG] 从 cookie 保存 token 到 localStorage');
+                        break;
+                    }
+                }
             }
 
             // 初始化移动端侧边栏

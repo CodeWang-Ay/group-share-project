@@ -49,34 +49,49 @@ from database.connection import get_db
 async def get_current_user(request: Request) -> Optional[User]:
     """
     获取当前登录用户
-    从请求头、cookie或URL参数中获取会话令牌并验证
-
-    Args:
-        request: FastAPI 请求对象
-
-    Returns:
-        User 对象或 None（未登录）
+    尝试所有可能的 token 来源，使用有效的那个
     """
-    # 从请求头中获取会话令牌
-    session_token = request.headers.get("Authorization")
-    if session_token and session_token.startswith("Bearer "):
-        session_token = session_token[7:]  # 移除 "Bearer " 前缀
+    # 收集所有可能的 token 来源
+    tokens_to_try = []
 
-    # 如果请求头中没有，尝试从cookie中获取
-    if not session_token:
-        session_token = request.cookies.get("session_token")
+    # URL 参数（最新登录传递的）
+    url_token = request.query_params.get("session_token")
+    if url_token:
+        tokens_to_try.append(url_token)
 
-    # 如果cookie中也没有，尝试从URL参数中获取
-    if not session_token:
-        session_token = request.query_params.get("session_token")
+    # Authorization 请求头
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        header_token = auth_header[7:]
+        if header_token not in tokens_to_try:
+            tokens_to_try.append(header_token)
 
-    if not session_token:
-        return None
+    # Cookie
+    cookie_token = request.cookies.get("session_token")
+    if cookie_token and cookie_token not in tokens_to_try:
+        tokens_to_try.append(cookie_token)
 
-    # 验证会话令牌
-    session = session_manager.validate_session(session_token)
-    if not session:
-        return None
+    # 尝试所有 token，找到有效的
+    for session_token in tokens_to_try:
+        session = session_manager.validate_session(session_token)
+        if session:
+            # 找到有效 session，获取用户
+            try:
+                with get_db() as conn:
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        "SELECT id, username, password_hash, role, email, phone, "
+                        "student_id, research_direction, status, avatar, created_at, updated_at "
+                        "FROM users WHERE id = ?",
+                        (session["user_id"],)
+                    )
+                    user_row = cursor.fetchone()
+                    if user_row:
+                        return User.from_dict(dict(user_row))
+            except Exception:
+                pass
+
+    return None
 
     # 从数据库获取用户信息
     try:

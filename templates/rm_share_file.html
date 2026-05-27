@@ -662,7 +662,7 @@
     <!-- JavaScript -->
     <script>
         // API基础URL配置
-        const API_BASE_URL = 'http://localhost:8081';
+        const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
 
         // 认证辅助函数
         function getAuthHeaders() {

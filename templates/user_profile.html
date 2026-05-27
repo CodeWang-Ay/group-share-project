@@ -489,7 +489,7 @@
             if (window.location.port === '8081' || window.location.port === '8000') {
                 API_BASE_URL = `http://localhost:${window.location.port}`;
             } else if (window.location.port === '3000' || window.location.port === '3001') {
-                API_BASE_URL = 'http://localhost:8081';
+                const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
             }
         }
 

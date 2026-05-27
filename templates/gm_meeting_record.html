@@ -828,7 +828,7 @@
     <!-- JavaScript -->
     <script>
         // API基础URL配置
-        const API_BASE_URL = 'http://localhost:8081';
+        const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
 
         // Toast 通知函数
         function showToast(message, type = 'success') {

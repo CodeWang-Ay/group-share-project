@@ -497,13 +497,13 @@
 
     <!-- JavaScript -->
     <script>
-        const API_BASE_URL = 'http://localhost:8081';
+        const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
         let allMeetingsCache = [];
         let currentStatusFilter = 'all';
         let currentSearchKeyword = '';
         let currentMeetingId = null;
         let currentUserRole = '{{ user.role }}';
-        let currentUserId = {{ user.id }};
+        let currentUserId = {{user.id}};
 
         // 分页变量
         let currentPage = 1;
@@ -1401,7 +1401,6 @@
                 localStorage.removeItem('user_info');
                 document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
                 window.location.href = '/login';
-                }
             };
 
             if (logoutBtn) logoutBtn.addEventListener('click', doLogout);

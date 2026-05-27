@@ -939,7 +939,7 @@
 
     <!-- JavaScript -->
     <script>
-        const API_BASE_URL = 'http://localhost:8081';
+        const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
 
         // 文献管理类
         const PaperManager = {
