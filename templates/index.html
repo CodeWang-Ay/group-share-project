@@ -872,7 +872,8 @@
                         headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${localStorage.getItem('session_token')}`
-                        }
+                        },
+                        credentials: 'include'  // 包含 cookie，让后端能清除它
                     });
 
                     const result = await response.json();
@@ -882,6 +883,9 @@
                     localStorage.removeItem('session_token');
                     localStorage.removeItem('user_info');
                     localStorage.removeItem('remember_me');
+
+                    // 手动清除 cookie（作为备份）
+                    document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 
                     console.log('✅ 登出成功，跳转到登录页面');
 

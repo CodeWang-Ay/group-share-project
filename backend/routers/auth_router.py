@@ -64,9 +64,12 @@ async def register(request: Request, service: AuthService = Depends()):
 
 @router.post("/logout")
 async def logout(request: Request, service: AuthService = Depends()):
-    """用户登出"""
+    """用户登出 - 清除 session 和 cookie"""
     result = await service.logout(request)
-    return JSONResponse(status_code=result["status_code"], content=result["content"])
+    response = JSONResponse(status_code=result["status_code"], content=result["content"])
+    # 清除 cookie
+    response.delete_cookie(key="session_token", httponly=True, samesite="lax")
+    return response
 
 
 @router.get("/me")
