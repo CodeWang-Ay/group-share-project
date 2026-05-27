@@ -792,41 +792,16 @@
 
     <!-- 添加/编辑文献模态框 -->
     <div id="paper-edit-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
                 <h3 id="edit-modal-title" class="font-semibold text-gray-800">添加文献</h3>
                 <button onclick="PaperManager.closeEditModal()" class="p-2 hover:bg-gray-100 rounded-lg">
                     <i class="fa fa-times text-gray-500"></i>
                 </button>
             </div>
-            <div class="p-6 overflow-y-auto space-y-4">
-                <!-- 导入方式 -->
-                <div class="flex items-center gap-3 mb-4">
-                    <button id="import-doi-btn" class="px-4 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors">
-                        <i class="fa fa-link mr-1"></i>DOI导入
-                    </button>
-                    <button id="import-manual-btn" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
-                        <i class="fa fa-edit mr-1"></i>手动录入
-                    </button>
-                </div>
-
-                <!-- DOI导入 -->
-                <div id="doi-import-section" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">DOI</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="doi-input" placeholder="输入DOI，如：10.48550/arXiv.1706.03762"
-                                   class="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30">
-                            <button onclick="PaperManager.fetchByDOI()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
-                                <i class="fa fa-search"></i>获取
-                            </button>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1">自动从CrossRef/arXiv获取文献信息</p>
-                    </div>
-                </div>
-
+            <div class="p-6 overflow-y-auto flex-1 space-y-4">
                 <!-- 手动录入表单 -->
-                <div id="manual-input-section" class="hidden space-y-4">
+                <div id="manual-input-section" class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">标题 *</label>
                         <input type="text" id="paper-title" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30">
@@ -844,14 +819,6 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">期刊/会议</label>
                             <input type="text" id="paper-journal" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30">
                         </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">DOI</label>
-                        <input type="text" id="paper-doi" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">摘要</label>
-                        <textarea id="paper-abstract" rows="4" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 resize-none"></textarea>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">标签</label>
@@ -881,12 +848,27 @@
                     </div>
                     <div id="pdf-upload-area">
                         <label class="block text-sm font-medium text-gray-700 mb-1">PDF文件</label>
-                        <div class="flex items-center gap-2">
-                            <input type="file" id="paper-pdf" accept=".pdf" class="hidden">
+                        <div id="paper-drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer">
+                            <i class="fa fa-cloud-upload text-3xl text-gray-400 mb-3"></i>
+                            <p class="text-gray-600 mb-1">拖拽PDF文件到此处上传</p>
+                            <p class="text-sm text-gray-500 mb-3">或者</p>
                             <button onclick="document.getElementById('paper-pdf').click()" class="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                <i class="fa fa-upload mr-1"></i>上传PDF
+                                <i class="fa fa-folder-open mr-1"></i>选择文件
                             </button>
-                            <span id="pdf-file-name" class="text-sm text-gray-500">未选择文件</span>
+                            <input type="file" id="paper-pdf" accept=".pdf" class="hidden">
+                            <p class="text-xs text-gray-500 mt-3">仅支持PDF格式，最大50MB</p>
+                        </div>
+                        <div id="pdf-file-info" class="mt-3 hidden">
+                            <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa fa-file-pdf-o text-red-500"></i>
+                                    <span id="pdf-file-name" class="text-sm text-gray-700"></span>
+                                    <span id="pdf-file-size" class="text-xs text-gray-500"></span>
+                                </div>
+                                <button onclick="PaperManager.removePdf()" class="text-red-500 hover:text-red-700">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div>
@@ -898,7 +880,7 @@
                     </div>
                 </div>
             </div>
-            <div class="p-4 border-t border-gray-200 flex items-center justify-end gap-3">
+            <div class="p-4 border-t border-gray-200 flex items-center justify-end gap-3 flex-shrink-0 bg-white">
                 <button onclick="PaperManager.closeEditModal()" class="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">取消</button>
                 <button onclick="PaperManager.savePaper()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
                     <i class="fa fa-check mr-1"></i>保存
@@ -1250,10 +1232,66 @@
                     }
                 });
                 document.getElementById('add-paper-btn').addEventListener('click', () => this.openEditModal());
-                document.getElementById('import-doi-btn').addEventListener('click', () => this.switchImportMode('doi'));
-                document.getElementById('import-manual-btn').addEventListener('click', () => this.switchImportMode('manual'));
-                document.getElementById('paper-pdf').addEventListener('change', (e) => { document.getElementById('pdf-file-name').textContent = e.target.files[0]?.name || '未选择文件'; });
+                document.getElementById('paper-pdf').addEventListener('change', (e) => { this.handlePdfFile(e.target.files[0]); });
+                this.setupDragAndDrop();
                 this.setupMobileSidebar();
+            },
+
+            setupDragAndDrop() {
+                const dropZone = document.getElementById('paper-drop-zone');
+
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('border-primary', 'bg-primary/5');
+                });
+
+                dropZone.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('border-primary', 'bg-primary/5');
+                });
+
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('border-primary', 'bg-primary/5');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const file = files[0];
+                        if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                            this.handlePdfFile(file);
+                        } else {
+                            this.showToast('仅支持PDF格式文件', 'error');
+                        }
+                    }
+                });
+            },
+
+            handlePdfFile(file) {
+                if (!file) {
+                    document.getElementById('pdf-file-info').classList.add('hidden');
+                    return;
+                }
+
+                // 检查文件大小 (50MB)
+                const maxSize = 50 * 1024 * 1024;
+                if (file.size > maxSize) {
+                    this.showToast('文件大小超过50MB限制', 'error');
+                    return;
+                }
+
+                // 显示文件信息
+                document.getElementById('pdf-file-name').textContent = file.name;
+                document.getElementById('pdf-file-size').textContent = `(${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                document.getElementById('pdf-file-info').classList.remove('hidden');
+
+                // 更新input的files（需要用DataTransfer）
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                document.getElementById('paper-pdf').files = dataTransfer.files;
+            },
+
+            removePdf() {
+                document.getElementById('paper-pdf').value = '';
+                document.getElementById('pdf-file-info').classList.add('hidden');
             },
 
             setupMobileSidebar() {
@@ -1445,8 +1483,6 @@
                             document.getElementById('paper-authors').value = paper.authors || '';
                             document.getElementById('paper-year').value = paper.year || '';
                             document.getElementById('paper-journal').value = paper.journal || '';
-                            document.getElementById('paper-doi').value = paper.doi || '';
-                            document.getElementById('paper-abstract').value = paper.abstract || '';
                             document.getElementById('paper-tags').value = (paper.tags || []).map(t => t.name).join(', ');
                             document.getElementById('paper-read-status').value = paper.read_status || 'unread';
                             // 显示已有PDF文件名
@@ -1474,7 +1510,6 @@
                     // 设置默认存储位置为当前浏览的库类型
                     document.getElementById('paper-library-type').value = this.currentLibraryType;
                 }
-                this.switchImportMode('manual');
                 modal.classList.remove('hidden');
             },
 
@@ -1485,42 +1520,10 @@
                 document.getElementById('paper-authors').value = '';
                 document.getElementById('paper-year').value = '';
                 document.getElementById('paper-journal').value = '';
-                document.getElementById('paper-doi').value = '';
-                document.getElementById('paper-abstract').value = '';
                 document.getElementById('paper-tags').value = '';
                 document.getElementById('paper-read-status').value = 'unread';
-                document.getElementById('pdf-file-name').textContent = '未选择文件';
+                document.getElementById('pdf-file-info').classList.add('hidden');
                 document.getElementById('paper-pdf').value = '';
-                document.getElementById('doi-input').value = '';
-            },
-
-            switchImportMode(mode) {
-                const doiBtn = document.getElementById('import-doi-btn');
-                const manualBtn = document.getElementById('import-manual-btn');
-                const doiSection = document.getElementById('doi-import-section');
-                const manualSection = document.getElementById('manual-input-section');
-                if (mode === 'doi') {
-                    doiBtn.classList.add('bg-primary/10', 'text-primary');
-                    doiBtn.classList.remove('bg-gray-100', 'text-gray-600');
-                    manualBtn.classList.remove('bg-primary/10', 'text-primary');
-                    manualBtn.classList.add('bg-gray-100', 'text-gray-600');
-                    doiSection.classList.remove('hidden');
-                    manualSection.classList.add('hidden');
-                } else {
-                    manualBtn.classList.add('bg-primary/10', 'text-primary');
-                    manualBtn.classList.remove('bg-gray-100', 'text-gray-600');
-                    doiBtn.classList.remove('bg-primary/10', 'text-primary');
-                    doiBtn.classList.add('bg-gray-100', 'text-gray-600');
-                    manualSection.classList.remove('hidden');
-                    doiSection.classList.add('hidden');
-                }
-            },
-
-            fetchByDOI() {
-                const doi = document.getElementById('doi-input').value;
-                if (!doi) { this.showToast('请输入DOI', 'error'); return; }
-                this.showToast('DOI导入功能开发中，请手动录入', 'info');
-                this.switchImportMode('manual');
             },
 
             addTag(tag) {
@@ -1550,8 +1553,6 @@
                                 authors: document.getElementById('paper-authors').value,
                                 year: document.getElementById('paper-year').value,
                                 journal: document.getElementById('paper-journal').value,
-                                doi: document.getElementById('paper-doi').value,
-                                abstract: document.getElementById('paper-abstract').value,
                                 tags: document.getElementById('paper-tags').value,
                                 read_status: document.getElementById('paper-read-status').value,
                                 library_type: this.currentLibraryType
@@ -1576,8 +1577,6 @@
                         formData.append('authors', document.getElementById('paper-authors').value);
                         formData.append('year', document.getElementById('paper-year').value);
                         formData.append('journal', document.getElementById('paper-journal').value);
-                        formData.append('doi', document.getElementById('paper-doi').value);
-                        formData.append('abstract', document.getElementById('paper-abstract').value);
                         formData.append('tags', document.getElementById('paper-tags').value);
                         formData.append('library_type', document.getElementById('paper-library-type').value);
                         formData.append('pdf', pdfFile);
