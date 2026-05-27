@@ -45,13 +45,13 @@ class DashboardService:
 
         # 获取团队成员数量
         member_stats = MemberManagementRepository.get_stats()
-        team_members = member_stats.get('total', 0)
+        team_members = member_stats.get('total_members', 0)
         phd_count = member_stats.get('phd_count', 0)
         master_count = member_stats.get('master_count', 0)
 
         # 获取共享文献数量
         paper_stats = PaperRepository.get_paper_stats(user_id if role != 'admin' else None)
-        total_papers = paper_stats.get('total_files', 0)
+        total_papers = paper_stats.get('total', 0)
 
         # 获取本月新增文献
         month_new_papers = PaperRepository.get_count_by_date_range(month_start, now)
@@ -74,11 +74,10 @@ class DashboardService:
         }
 
     async def get_upcoming_meetings(self, user_id: int, role: str) -> Dict[str, Any]:
-        """获取即将到来的组会（未来7天内）"""
+        """获取即将到来的组会（查询大于当前时间的最近组会）"""
         now = datetime.now()
-        end_date = now + timedelta(days=7)
 
-        meetings = MeetingScheduleRepository.get_upcoming_meetings(now, end_date, user_id, role)
+        meetings = MeetingScheduleRepository.get_upcoming_meetings(now, None, user_id, role)
 
         # 为每个组会添加汇报人信息和材料状态
         for meeting in meetings:

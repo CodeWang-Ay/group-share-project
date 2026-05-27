@@ -37,7 +37,7 @@ async def get_upcoming_meetings(request: Request, current_user=Depends(get_curre
     """获取即将到来的组会"""
     result = await service.get_upcoming_meetings(current_user.id, current_user.role)
     meeting_list = result["content"]["data"]["meetings"]
-    logger.info(f"最新文献个数 {len(meeting_list)}")
+    logger.info(f"最新会议个数 {len(meeting_list)}")
     return result
 
 
@@ -46,7 +46,7 @@ async def get_recent_files(request: Request, current_user=Depends(get_current_us
     """获取最近提交的材料"""
     result = await service.get_recent_files(current_user.id, current_user.role)
     material_list = result["content"]["data"]
-    logger.info(f"最新文献个数 {len(material_list)}")
+    logger.info(f"最新材料个数 {len(material_list)}")
     return result
 
 

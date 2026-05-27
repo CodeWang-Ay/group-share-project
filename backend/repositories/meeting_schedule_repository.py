@@ -354,24 +354,22 @@ class MeetingScheduleRepository:
 
     @staticmethod
     def get_upcoming_meetings(start_date: datetime, end_date: datetime, user_id: int, role: str) -> List[Dict[str, Any]]:
-        """获取即将到来的组会"""
+        """获取即将到来的组会（所有用户都能看到）"""
         with get_db() as conn:
             cursor = conn.cursor()
-            if role == 'admin':
+            # 所有用户都能看到即将到来的组会，不限制汇报人
+            if end_date:
                 cursor.execute("""
                     SELECT * FROM meetings
                     WHERE scheduled_at >= ? AND scheduled_at <= ? AND status != 'cancelled'
                     ORDER BY scheduled_at ASC LIMIT 5
-                """, (start_date, end_date))
+                """, (start_date.isoformat(), end_date.isoformat()))
             else:
-                # 获取用户参与的组会（作为汇报人）
                 cursor.execute("""
-                    SELECT DISTINCT m.* FROM meetings m
-                    LEFT JOIN meeting_presenters mp ON m.id = mp.meeting_id
-                    WHERE m.scheduled_at >= ? AND m.scheduled_at <= ? AND m.status != 'cancelled'
-                    AND mp.user_id = ?
-                    ORDER BY m.scheduled_at ASC LIMIT 5
-                """, (start_date, end_date, user_id))
+                    SELECT * FROM meetings
+                    WHERE scheduled_at >= ? AND status != 'cancelled'
+                    ORDER BY scheduled_at ASC LIMIT 5
+                """, (start_date.isoformat(),))
             return [dict(row) for row in cursor.fetchall()]
 
     @staticmethod
