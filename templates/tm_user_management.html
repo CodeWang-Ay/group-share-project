@@ -90,84 +90,84 @@
 <body class="bg-gray-50 font-sans antialiased">
     <!-- 顶部导航栏 -->
     <header class="bg-white shadow-sm border-b border-gray-200 fixed top-0 left-0 right-0 z-30">
-        <div class="h-16 flex items-center justify-between px-4 lg:px-6">
-            <!-- Logo和侧边栏切换 -->
-            <div class="flex items-center gap-4">
-                <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100 transition-colors lg:hidden">
-                    <i class="fa fa-bars text-gray-600"></i>
-                </button>
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center">
-                        <i class="fa fa-graduation-cap text-sm"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-lg font-semibold text-gray-800">研究生组会系统</h1>
-                        <p class="text-xs text-gray-500 hidden sm:inline">成员管理</p>
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <!-- 左侧Logo和标题 -->
+                <div class="flex items-center">
+                    <!-- 移动端侧边栏切换按钮 -->
+                    <button id="mobile-sidebar-toggle" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 mr-2 transition-colors">
+                        <i class="fa fa-bars text-gray-600"></i>
+                    </button>
+
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <i class="fa fa-flask text-primary text-2xl"></i>
+                        <span class="hidden sm:inline-block text-xl font-semibold text-gray-800">智能计算实验室</span>
+                        <span class="sm:hidden text-lg font-semibold text-gray-800">实验室</span>
                     </div>
                 </div>
-            </div>
 
-            <div class="flex items-center gap-2 sm:gap-4">
-                <!-- 搜索框 - 移动端隐藏 -->
-                <div class="relative hidden md:block">
-                    <input type="text" id="search-input" placeholder="搜索文件..."
-                            class="py-2 pl-10 pr-4 rounded-lg bg-gray-100 border-0 focus:ring-2 focus:ring-primary/30 focus:bg-white w-48 lg:w-64 transition-all">
-                    <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                </div>
-
-                <!-- 移动端搜索按钮 -->
-                <button class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                    <i class="fa fa-search text-gray-600"></i>
-                </button>
-
-                <!-- 留言 -->
-                <div id="messages-btn" class="relative cursor-pointer p-2 rounded-full hover:bg-gray-100 transition-colors">
-                    <i class="fa fa-comment-o text-gray-600"></i>
-                    <span id="unread-badge" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full hidden"></span>
-                </div>
-
-                <!-- 用户信息 -->
-                <div class="relative group">
-                    <div class="flex items-center gap-2 cursor-pointer">
-                        <img src="{% if user.avatar %}{{ user.avatar }}{% else %}https://picsum.photos/id/{{ user.id }}/200/200{% endif %}" alt="{{ user.username }}头像" class="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm">
-                        <span class="hidden md:inline-block font-medium">{{ user.username }}</span>
-                        <i class="fa fa-chevron-down text-xs text-gray-500"></i>
+                <!-- 右侧用户信息和操作 -->
+                <div class="flex items-center gap-2 sm:gap-4">
+                    <!-- 搜索框 - 移动端隐藏 -->
+                    <div class="relative hidden md:block">
+                        <input type="text" placeholder="搜索文献、汇报材料..."
+                               class="py-2 pl-10 pr-4 rounded-lg bg-gray-100 border-0 focus:ring-2 focus:ring-primary/30 focus:bg-white w-48 lg:w-64 transition-all">
+                        <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                     </div>
 
-                    <!-- 下拉菜单 -->
-                    <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right scale-95 group-hover:scale-100">
-                        <div class="px-4 py-2 border-b border-gray-100">
-                            <p class="font-medium">{{ user.username }}</p>
-                            <p class="text-xs text-gray-500">
-                                {% if user.role == 'admin' %}管理员
-                                {% elif user.role == 'teacher' %}导师
-                                {% else %}学生{% endif %}
-                            </p>
+                    <!-- 移动端搜索按钮 -->
+                    <button class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-search text-gray-600"></i>
+                    </button>
+
+                    <!-- 通知 -->
+                    <div class="relative cursor-pointer p-2 rounded-full hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-bell-o text-gray-600"></i>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </div>
+
+                    <!-- 用户信息 -->
+                    <div class="relative group">
+                        <div class="flex items-center gap-2 cursor-pointer">
+                            <img src="{% if user.avatar %}{{ user.avatar }}{% else %}https://picsum.photos/id/{{ user.id }}/200/200{% endif %}" alt="{{ user.username }}头像" class="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm">
+                            <span class="hidden md:inline-block font-medium">{{ user.username }}</span>
+                            <i class="fa fa-chevron-down text-xs text-gray-500"></i>
                         </div>
-                        <a href="/user_profile" class="block px-4 py-2 text-sm hover:bg-gray-100">
-                            <i class="fa fa-user-o mr-2 text-gray-500"></i>个人资料
-                        </a>
-                        <a href="/edit_password" class="block px-4 py-2 text-sm hover:bg-gray-100">
-                            <i class="fa fa-key mr-2 text-gray-500"></i>修改密码
-                        </a>
-                        <a href="/settings" class="block px-4 py-2 text-sm hover:bg-gray-100">
-                            <i class="fa fa-cog mr-2 text-gray-500"></i>设置
-                        </a>
+
+                        <!-- 下拉菜单 -->
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right scale-95 group-hover:scale-100">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p class="font-medium">{{ user.username }}</p>
+                                <p class="text-xs text-gray-500">
+                                    {% if user.role == 'admin' %}管理员
+                                    {% elif user.role == 'teacher' %}导师
+                                    {% else %}学生{% endif %}
+                                </p>
+                            </div>
+                            <a href="/user_profile" class="block px-4 py-2 text-sm hover:bg-gray-100">
+                                <i class="fa fa-user-o mr-2 text-gray-500"></i>个人资料
+                            </a>
+                            <a href="/edit_password" class="block px-4 py-2 text-sm hover:bg-gray-100">
+                                <i class="fa fa-key mr-2 text-gray-500"></i>修改密码
+                            </a>
+                            <a href="/settings" class="block px-4 py-2 text-sm hover:bg-gray-100">
+                                <i class="fa fa-cog mr-2 text-gray-500"></i>设置
+                            </a>
+                        </div>
                     </div>
+
+                    <!-- 退出登录按钮 -->
+                    <button id="logout-btn" class="hidden sm:flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                        <i class="fa fa-sign-out"></i>
+                        <span>退出登录</span>
+                    </button>
+
+                    <!-- 移动端退出登录按钮 -->
+                    <button id="logout-btn-mobile" class="sm:hidden p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors">
+                        <i class="fa fa-sign-out"></i>
+                    </button>
                 </div>
-
-                <!-- 退出登录按钮 -->
-                <button id="logout-btn" class="hidden sm:flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                    <i class="fa fa-sign-out"></i>
-                    <span>退出登录</span>
-                </button>
-
-                <!-- 移动端退出登录按钮 -->
-                <button id="logout-btn-mobile" class="sm:hidden p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors">
-                    <i class="fa fa-sign-out"></i>
-                </button>
             </div>
-            <!-- </div> -->
         </div>
     </header>
 
