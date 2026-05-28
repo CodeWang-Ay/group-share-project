@@ -29,7 +29,7 @@
         <ul class="space-y-1">
           <MenuItem icon="fa-dashboard" text="工作台" to="/" />
           <MenuItem icon="fa-calendar" text="组会安排" to="/meeting-schedule" />
-          <MenuItem icon="fa-file-text-o" text="汇报材料" href="/gm_report_materials" />
+          <MenuItem icon="fa-file-text-o" text="汇报材料" to="/report-materials" />
           <MenuItem icon="fa-comments-o" text="组会记录" href="/gm_meeting_record" />
         </ul>
 

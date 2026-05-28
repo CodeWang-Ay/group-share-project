@@ -116,6 +116,12 @@ class MeetingMaterialRepository:
                 where_conditions.append("m.meeting_type = ?")
                 params.append(filters['meeting_type'])
 
+            # 搜索关键词筛选（SQL层面）
+            search_keyword = filters.get('search', '')
+            if search_keyword:
+                where_conditions.append("m.title LIKE ?")
+                params.append(f"%{search_keyword}%")
+
             where_clause = "WHERE " + " AND ".join(where_conditions)
 
             # 材料状态筛选参数
@@ -147,11 +153,6 @@ class MeetingMaterialRepository:
             meetings = []
             for row in meetings_rows:
                 meeting = dict(row)
-
-                # 搜索过滤
-                search_keyword = filters.get('search', '')
-                if search_keyword and search_keyword.lower() not in (meeting.get('title', '') or '').lower():
-                    continue
 
                 # 获取该组会的汇报人（根据材料状态筛选）
                 presenter_where = "mp.meeting_id = ?"
@@ -210,15 +211,15 @@ class MeetingMaterialRepository:
                 where_conditions.append("m.meeting_type = ?")
                 params.append(filters['meeting_type'])
 
-            material_status_filter = filters.get('material_status')
-
-            where_clause = "WHERE " + " AND ".join(where_conditions)
-
-            # 搜索关键词筛选（需要在SQL层面处理才能正确计数）
+            # 搜索关键词筛选（在where_clause创建之前添加）
             search_keyword = filters.get('search', '')
             if search_keyword:
                 where_conditions.append("m.title LIKE ?")
                 params.append(f"%{search_keyword}%")
+
+            material_status_filter = filters.get('material_status')
+
+            where_clause = "WHERE " + " AND ".join(where_conditions)
 
             if material_status_filter:
                 cursor.execute(f"""
