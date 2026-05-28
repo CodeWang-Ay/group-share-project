@@ -22,25 +22,25 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="bg-white rounded-xl p-4 border">
           <div class="flex items-center justify-between">
-            <div><p class="text-sm text-gray-600">总成员数</p><h3 class="text-2xl font-bold mt-1">{{ stats.total || 0 }}</h3></div>
+            <div><p class="text-sm text-gray-600">总成员数</p><h3 class="text-2xl font-bold mt-1">{{ stats.total_members || 0 }}</h3></div>
             <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600"><i class="fa fa-users"></i></div>
           </div>
         </div>
         <div class="bg-white rounded-xl p-4 border">
           <div class="flex items-center justify-between">
-            <div><p class="text-sm text-gray-600">激活成员</p><h3 class="text-2xl font-bold mt-1 text-green-600">{{ stats.active || 0 }}</h3></div>
+            <div><p class="text-sm text-gray-600">激活成员</p><h3 class="text-2xl font-bold mt-1 text-green-600">{{ stats.active_members || 0 }}</h3></div>
             <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600"><i class="fa fa-check-circle"></i></div>
           </div>
         </div>
         <div class="bg-white rounded-xl p-4 border">
           <div class="flex items-center justify-between">
-            <div><p class="text-sm text-gray-600">导师数量</p><h3 class="text-2xl font-bold mt-1 text-purple-600">{{ stats.teacher || 0 }}</h3></div>
+            <div><p class="text-sm text-gray-600">导师数量</p><h3 class="text-2xl font-bold mt-1 text-purple-600">{{ stats.teacher_count || 0 }}</h3></div>
             <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600"><i class="fa fa-graduation-cap"></i></div>
           </div>
         </div>
         <div class="bg-white rounded-xl p-4 border">
           <div class="flex items-center justify-between">
-            <div><p class="text-sm text-gray-600">研究生</p><h3 class="text-2xl font-bold mt-1 text-orange-600">{{ stats.student || 0 }}</h3></div>
+            <div><p class="text-sm text-gray-600">研究生</p><h3 class="text-2xl font-bold mt-1 text-orange-600">{{ stats.student_count || 0 }}</h3></div>
             <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600"><i class="fa fa-graduation-cap"></i></div>
           </div>
         </div>
