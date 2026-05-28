@@ -3,6 +3,7 @@ import Dashboard from '../views/Dashboard.vue'
 import MeetingSchedule from '../views/MeetingSchedule.vue'
 import ReportMaterials from '../views/ReportMaterials.vue'
 import MeetingRecord from '../views/MeetingRecord.vue'
+import UserManagement from '../views/UserManagement.vue'
 
 const routes = [
   {
@@ -24,6 +25,11 @@ const routes = [
     path: '/meeting-record',
     name: 'MeetingRecord',
     component: MeetingRecord
+  },
+  {
+    path: '/user-management',
+    name: 'UserManagement',
+    component: UserManagement
   }
 ]
 
