@@ -4,6 +4,7 @@ import MeetingSchedule from '../views/MeetingSchedule.vue'
 import ReportMaterials from '../views/ReportMaterials.vue'
 import MeetingRecord from '../views/MeetingRecord.vue'
 import UserManagement from '../views/UserManagement.vue'
+import AcademicTools from '../views/AcademicTools.vue'
 
 const routes = [
   {
@@ -30,6 +31,11 @@ const routes = [
     path: '/user-management',
     name: 'UserManagement',
     component: UserManagement
+  },
+  {
+    path: '/academic-tools',
+    name: 'AcademicTools',
+    component: AcademicTools
   }
 ]
 

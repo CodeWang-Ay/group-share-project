@@ -43,7 +43,7 @@
         <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6">团队管理</p>
         <ul class="space-y-1">
           <MenuItem icon="fa-users" text="成员管理" to="/user-management" />
-          <MenuItem icon="fa-graduation-cap" text="学术工具" href="/tm_academic_website" />
+          <MenuItem icon="fa-graduation-cap" text="学术工具" to="/academic-tools" />
           <MenuItem icon="fa-line-chart" text="研究进展" href="/tm_research_progress" />
         </ul>
       </nav>
