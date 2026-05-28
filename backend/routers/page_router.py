@@ -112,35 +112,17 @@ def _render_page(template_name: str, request: Request, user):
     })
 
 
-# 主页面
+# 主页面 - 重定向到 Vue 前端
 @router.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    """主页面 - 根据登录状态显示不同页面"""
-    url_token = request.query_params.get("session_token")
-    logger.info("检查用户登录状态...")
-
+    """主页面 - 重定向到 Vue 前端工作台"""
     current_user = await get_current_user(request)
-    logger.info(f"Current user: {current_user}")
-
     if not current_user:
         logger.info("用户未登录，显示登录页面")
         return templates.TemplateResponse(request, "login.html")
 
-    if url_token:
-        response = RedirectResponse(url="/", status_code=302)
-        response.set_cookie(
-            key="session_token",
-            value=url_token,
-            max_age=86400,
-            httponly=True,
-            samesite="lax"
-        )
-        return response
-
-    logger.info(f"用户已登录: {current_user.username}")
-    return templates.TemplateResponse(request, "index.html", {
-        "user": current_user
-    })
+    # 已登录，重定向到 Vue 前端
+    return RedirectResponse(url="http://localhost:3001", status_code=302)
 
 
 # 登录页面

@@ -145,8 +145,8 @@
                 .then(response => response.json())
                 .then(result => {
                     if (result.success && result.data.authenticated) {
-                        // 已登录且会话有效，直接跳转到后端主页
-                        window.location.href = `http://localhost:8081/?session_token=${sessionToken}`;
+                        // 已登录且会话有效，直接跳转到 Vue 前端
+                        window.location.href = `http://localhost:3001/?session_token=${sessionToken}`;
                         return;
                     }
                     // 会话无效，清除本地存储
@@ -214,9 +214,9 @@
                         // 显示成功消息
                         showMessage('登录成功，正在跳转...', 'success');
 
-                        // 跳转到首页，带 session_token 参数确保首次能识别登录状态
+                        // 跳转到 Vue 前端首页
                         setTimeout(() => {
-                            window.location.href = `http://localhost:8081/?session_token=${result.session_token}`;
+                            window.location.href = `http://localhost:3001/?session_token=${result.session_token}`;
                         }, 500);
                         return;
                     }
