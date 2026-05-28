@@ -10,20 +10,25 @@
     </div>
 
     <div class="p-4 overflow-y-auto h-full">
-      <div class="bg-primary/10 text-primary rounded-lg p-3 mb-6">
-        <div class="flex items-center justify-between">
-          <span class="font-medium">当前角色</span>
-          <span class="text-sm bg-primary text-white px-2 py-1 rounded-full">
-            {{ userStore.roleText }}
-          </span>
+      <!-- 用户信息 -->
+      <div class="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-4 mb-6">
+        <div class="flex items-center gap-3">
+          <img :src="avatarUrl"
+               class="w-12 h-12 rounded-full border-2 border-white shadow-sm object-cover">
+          <div>
+            <p class="font-semibold text-gray-800">{{ userStore.username }}</p>
+            <span class="text-sm bg-primary text-white px-2 py-0.5 rounded-full">
+              {{ userStore.roleText }}
+            </span>
+          </div>
         </div>
       </div>
 
       <nav>
         <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3">组会管理</p>
         <ul class="space-y-1">
-          <MenuItem icon="fa-dashboard" text="工作台" active />
-          <MenuItem icon="fa-calendar" text="组会安排" href="/gm_meeting_schedule" />
+          <MenuItem icon="fa-dashboard" text="工作台" to="/" />
+          <MenuItem icon="fa-calendar" text="组会安排" to="/meeting-schedule" />
           <MenuItem icon="fa-file-text-o" text="汇报材料" href="/gm_report_materials" />
           <MenuItem icon="fa-comments-o" text="组会记录" href="/gm_meeting_record" />
         </ul>
@@ -57,6 +62,17 @@ const userStore = useUserStore()
 const visible = defineModel()
 
 const isMobile = ref(window.innerWidth < 1024)
+
+// 头像URL处理
+const avatarUrl = computed(() => {
+  if (userStore.avatar) {
+    if (userStore.avatar.startsWith('/uploads')) {
+      return `http://localhost:8081${userStore.avatar}`
+    }
+    return userStore.avatar
+  }
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(userStore.username || 'User')}&background=2563eb&color=fff&size=128`
+})
 
 const sidebarClass = computed(() => [
   'fixed lg:sticky top-16 left-0 z-40 w-64 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 overflow-y-auto transition-transform duration-300',

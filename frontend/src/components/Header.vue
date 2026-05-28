@@ -62,9 +62,18 @@ import { authApi } from '../api/dashboard'
 const userStore = useUserStore()
 const sidebarVisible = defineModel()
 
-const avatarUrl = computed(() =>
-  userStore.avatar || `https://picsum.photos/id/${userStore.userId}/200/200`
-)
+// 头像URL处理：如果有avatar就用，否则生成默认头像
+const avatarUrl = computed(() => {
+  if (userStore.avatar) {
+    // 如果是相对路径，加上后端地址
+    if (userStore.avatar.startsWith('/uploads')) {
+      return `http://localhost:8081${userStore.avatar}`
+    }
+    return userStore.avatar
+  }
+  // 使用UI Avatars生成默认头像
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(userStore.username || 'User')}&background=2563eb&color=fff&size=128`
+})
 
 function toggleSidebar() {
   sidebarVisible.value = !sidebarVisible.value
@@ -74,10 +83,10 @@ async function logout() {
   try {
     await authApi.logout()
     userStore.clear()
-    window.location.href = '/login'
+    window.location.href = 'http://localhost:8081/login'
   } catch (e) {
     userStore.clear()
-    window.location.href = '/login'
+    window.location.href = 'http://localhost:8081/login'
   }
 }
 </script>

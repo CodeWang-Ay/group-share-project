@@ -1,9 +1,10 @@
 <template>
   <div class="min-h-screen flex flex-col bg-gray-50">
+    <Toast />
     <Header v-model="sidebarVisible" />
     <main class="flex-1 flex">
       <Sidebar v-model="sidebarVisible" />
-      <Dashboard />
+      <router-view />
     </main>
     <footer class="bg-white border-t border-gray-200 py-4">
       <div class="container mx-auto px-4 text-center text-sm text-gray-500">
@@ -19,7 +20,7 @@ import { useUserStore } from './stores/user'
 import { authApi } from './api/dashboard'
 import Header from './components/Header.vue'
 import Sidebar from './components/Sidebar.vue'
-import Dashboard from './views/Dashboard.vue'
+import Toast from './components/Toast.vue'
 
 const userStore = useUserStore()
 const sidebarVisible = ref(false)
@@ -39,8 +40,8 @@ onMounted(async () => {
   if (userStore.token && !userStore.username) {
     try {
       const res = await authApi.getMe()
-      if (res.data.content?.success) {
-        userStore.setUserInfo(res.data.content.data)
+      if (res.data.success && res.data.data.user) {
+        userStore.setUserInfo(res.data.data.user)
       }
     } catch (e) {
       console.error('获取用户信息失败:', e)

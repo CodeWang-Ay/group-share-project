@@ -131,28 +131,28 @@ async function loadData() {
       dashboardApi.getRecentProgress()
     ])
 
-    if (statsRes.data.content?.success) {
-      stats.value = statsRes.data.content.data
+    if (statsRes.data.success) {
+      stats.value = statsRes.data.data
       loading.value.stats = false
     }
 
-    if (upcomingRes.data.content?.success) {
-      upcomingMeeting.value = upcomingRes.data.content.data.meetings?.[0]
+    if (upcomingRes.data.success) {
+      upcomingMeeting.value = upcomingRes.data.data.meetings?.[0]
       loading.value.upcoming = false
     }
 
-    if (filesRes.data.content?.success) {
-      recentFiles.value = filesRes.data.content.data.files || []
+    if (filesRes.data.success) {
+      recentFiles.value = filesRes.data.data.files || []
       loading.value.files = false
     }
 
-    if (papersRes.data.content?.success) {
-      recentPapers.value = papersRes.data.content.data.papers || []
+    if (papersRes.data.success) {
+      recentPapers.value = papersRes.data.data.papers || []
       loading.value.papers = false
     }
 
-    if (progressRes.data.content?.success) {
-      recentProgress.value = progressRes.data.content.data.progress || []
+    if (progressRes.data.success) {
+      recentProgress.value = progressRes.data.data.progress || []
       loading.value.progress = false
     }
   } catch (e) {

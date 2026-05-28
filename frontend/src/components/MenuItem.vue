@@ -1,5 +1,9 @@
 <template>
-  <a :href="href" :class="itemClass" @click="onClick">
+  <router-link v-if="to" :to="to" :class="itemClass">
+    <i :class="['fa', icon, 'w-5 text-center']"></i>
+    <span>{{ text }}</span>
+  </router-link>
+  <a v-else :href="href" :class="itemClass">
     <i :class="['fa', icon, 'w-5 text-center']"></i>
     <span>{{ text }}</span>
   </a>
@@ -7,24 +11,23 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 
 const props = defineProps({
   icon: String,
   text: String,
   href: { type: String, default: '#' },
-  active: Boolean
+  to: String
 })
 
-const emit = defineEmits(['click'])
+const route = useRoute()
+
+const isActive = computed(() => props.to && route.path === props.to)
 
 const itemClass = computed(() => [
   'flex items-center gap-3 p-3 rounded-lg transition-all cursor-pointer',
-  props.active
+  isActive.value
     ? 'bg-primary/10 text-primary font-medium'
     : 'hover:bg-gray-100'
 ])
-
-function onClick(e) {
-  emit('click', e)
-}
 </script>

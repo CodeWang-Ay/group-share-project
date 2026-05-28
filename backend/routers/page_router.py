@@ -194,15 +194,14 @@ async def rm_paper_database_page(request: Request):
     return _render_page("rm_paper_database.html", request, current_user)
 
 
-# 组会安排页面
+# 组会安排页面 - 重定向到 Vue 前端
 @router.get("/gm_meeting_schedule", response_class=HTMLResponse)
 async def gm_meeting_schedule_page(request: Request):
-    """组会安排页面"""
-    logger.info("组会安排页面")
+    """组会安排页面 - 重定向到 Vue 前端"""
     current_user = await get_current_user(request)
     if not current_user:
         return _redirect_to_login()
-    return _render_page("gm_meeting_schedule.html", request, current_user)
+    return RedirectResponse(url="http://localhost:3001/meeting-schedule", status_code=302)
 
 
 # 汇报材料页面
