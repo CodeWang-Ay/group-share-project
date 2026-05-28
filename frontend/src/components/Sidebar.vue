@@ -36,7 +36,7 @@
         <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6">资源管理</p>
         <ul class="space-y-1">
           <MenuItem icon="fa-book" text="学术文献" href="/rm_paper_database" />
-          <MenuItem icon="fa-folder-open-o" text="共享资料" href="/rm_share_file" />
+          <MenuItem icon="fa-folder-open-o" text="共享资料" to="/share-file" />
           <MenuItem icon="fa-tasks" text="研究任务" to="/research-tasks" />
         </ul>
 

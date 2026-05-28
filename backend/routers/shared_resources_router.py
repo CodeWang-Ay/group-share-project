@@ -97,6 +97,8 @@ async def delete_file(file_id: int, request: Request, current_user=Depends(get_c
 @router.get("/{file_id}/download")
 async def download_file(file_id: int, request: Request, current_user=Depends(get_current_user), service: SharedResourcesService = Depends()):
     """按 ID 下载资料"""
+    if not current_user:
+        return JSONResponse(status_code=401, content={"success": False, "message": "请先登录"})
     result = await service.download(file_id, current_user.id, current_user.role)
     if result.get("error"):
         return JSONResponse(status_code=result["status_code"], content=result["content"])
@@ -106,6 +108,9 @@ async def download_file(file_id: int, request: Request, current_user=Depends(get
 @router.get("/{file_id}/view")
 async def view_file(file_id: int, request: Request, current_user=Depends(get_current_user), service: SharedResourcesService = Depends()):
     """资料预览"""
+    if not current_user:
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=401, content={"success": False, "message": "请先登录"})
     result = await service.view(file_id, current_user.id, current_user.role)
     if result.get("error"):
         return JSONResponse(status_code=result["status_code"], content=result["content"])

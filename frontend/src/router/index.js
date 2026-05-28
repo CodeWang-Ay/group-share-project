@@ -7,6 +7,7 @@ import UserManagement from '../views/UserManagement.vue'
 import AcademicTools from '../views/AcademicTools.vue'
 import ResearchProgress from '../views/ResearchProgress.vue'
 import ResearchTasks from '../views/ResearchTasks.vue'
+import ShareFile from '../views/ShareFile.vue'
 
 const routes = [
   {
@@ -48,6 +49,11 @@ const routes = [
     path: '/research-tasks',
     name: 'ResearchTasks',
     component: ResearchTasks
+  },
+  {
+    path: '/share-file',
+    name: 'ShareFile',
+    component: ShareFile
   }
 ]
 

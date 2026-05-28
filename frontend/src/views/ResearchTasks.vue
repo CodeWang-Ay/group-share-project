@@ -269,7 +269,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
 import { taskApi } from '../api/research_tasks'
 import { memberApi } from '../api/member'
