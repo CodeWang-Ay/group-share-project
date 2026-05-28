@@ -30,7 +30,7 @@
           <MenuItem icon="fa-dashboard" text="工作台" to="/" />
           <MenuItem icon="fa-calendar" text="组会安排" to="/meeting-schedule" />
           <MenuItem icon="fa-file-text-o" text="汇报材料" to="/report-materials" />
-          <MenuItem icon="fa-comments-o" text="组会记录" href="/gm_meeting_record" />
+          <MenuItem icon="fa-comments-o" text="组会记录" to="/meeting-record" />
         </ul>
 
         <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3 mt-6">资源管理</p>
