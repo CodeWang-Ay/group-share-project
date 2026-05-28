@@ -4,7 +4,9 @@
     <Header v-model="sidebarVisible" />
     <main class="flex-1 flex">
       <Sidebar v-model="sidebarVisible" />
-      <router-view />
+      <div class="flex-1 overflow-y-auto w-full">
+        <router-view />
+      </div>
     </main>
     <footer class="bg-white border-t border-gray-200 py-4">
       <div class="container mx-auto px-4 text-center text-sm text-gray-500">

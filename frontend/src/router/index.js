@@ -5,6 +5,7 @@ import ReportMaterials from '../views/ReportMaterials.vue'
 import MeetingRecord from '../views/MeetingRecord.vue'
 import UserManagement from '../views/UserManagement.vue'
 import AcademicTools from '../views/AcademicTools.vue'
+import ResearchProgress from '../views/ResearchProgress.vue'
 
 const routes = [
   {
@@ -36,6 +37,11 @@ const routes = [
     path: '/academic-tools',
     name: 'AcademicTools',
     component: AcademicTools
+  },
+  {
+    path: '/research-progress',
+    name: 'ResearchProgress',
+    component: ResearchProgress
   }
 ]
 

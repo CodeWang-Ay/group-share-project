@@ -41,7 +41,7 @@ class Config:
     # 目录配置
     BASE_DIR = Path(__file__).parent
     UPLOAD_DIR = BASE_DIR.parent / "uploads"
-    TEMPLATES_DIR = BASE_DIR.parent / "templates"
+    TEMPLATES_DIR = BASE_DIR.parent / "templates-html"
 
     # 会话配置
     SESSION_EXPIRE_HOURS = 24  # 普通登录
