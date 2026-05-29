@@ -8,6 +8,7 @@ import AcademicTools from '../views/AcademicTools.vue'
 import ResearchProgress from '../views/ResearchProgress.vue'
 import ResearchTasks from '../views/ResearchTasks.vue'
 import ShareFile from '../views/ShareFile.vue'
+import PaperDatabase from '../views/PaperDatabase.vue'
 
 const routes = [
   {
@@ -54,6 +55,11 @@ const routes = [
     path: '/share-file',
     name: 'ShareFile',
     component: ShareFile
+  },
+  {
+    path: '/paper-database',
+    name: 'PaperDatabase',
+    component: PaperDatabase
   }
 ]
 
