@@ -24,7 +24,19 @@
         </div>
       </div>
 
-      <nav>
+      <!-- 个人中心菜单（个人资料/修改密码/设置页面） -->
+      <nav v-if="isPersonalPage">
+        <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3">个人中心</p>
+        <ul class="space-y-1">
+          <MenuItem icon="fa-user-o" text="个人资料" to="/user-profile" :active="currentRoute === '/user-profile'" />
+          <MenuItem icon="fa-key" text="修改密码" to="/edit-password" :active="currentRoute === '/edit-password'" />
+          <MenuItem icon="fa-cog" text="设置" to="/settings" :active="currentRoute === '/settings'" />
+          <MenuItem icon="fa-reply" text="返回主页面" to="/" />
+        </ul>
+      </nav>
+
+      <!-- 常规菜单 -->
+      <nav v-else>
         <p class="text-xs uppercase text-gray-500 font-medium mb-2 px-3">组会管理</p>
         <ul class="space-y-1">
           <MenuItem icon="fa-dashboard" text="工作台" to="/" />
@@ -55,14 +67,24 @@
 
 <script setup>
 import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import MenuItem from './MenuItem.vue'
 import { getAvatarUrl } from '../config'
 
+const route = useRoute()
 const userStore = useUserStore()
 const visible = defineModel()
 
 const isMobile = ref(window.innerWidth < 1024)
+
+// 当前路由路径
+const currentRoute = computed(() => route.path)
+
+// 是否是个人中心页面
+const isPersonalPage = computed(() => {
+  return currentRoute.value === '/user-profile' || currentRoute.value === '/edit-password' || currentRoute.value === '/settings'
+})
 
 // 头像URL处理
 const avatarUrl = computed(() => getAvatarUrl(userStore.avatar, userStore.username))

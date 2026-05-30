@@ -41,6 +41,9 @@
               <router-link to="/edit-password" class="block px-4 py-2 text-sm hover:bg-gray-100">
                 <i class="fa fa-key mr-2 text-gray-500"></i>修改密码
               </router-link>
+              <router-link to="/settings" class="block px-4 py-2 text-sm hover:bg-gray-100">
+                <i class="fa fa-cog mr-2 text-gray-500"></i>设置
+              </router-link>
             </div>
           </div>
 

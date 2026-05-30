@@ -296,12 +296,24 @@ async def edit_password_page(request: Request):
         return RedirectResponse(url="http://localhost:3001/edit-password", status_code=302)
 
 
-# 设置页面
+# 设置页面 - 重定向到 Vue 前端
 @router.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request):
-    """设置页面"""
-    logger.info("设置页面")
+    """设置页面 - 重定向到 Vue 前端"""
     current_user = await get_current_user(request)
     if not current_user:
         return _redirect_to_login()
-    return _render_page("settings.html", request, current_user)
+
+    # 获取 session_token
+    session_token = request.query_params.get("session_token")
+    if not session_token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            session_token = auth_header[7:]
+    if not session_token:
+        session_token = request.cookies.get("session_token")
+
+    if session_token:
+        return RedirectResponse(url=f"http://localhost:3001/settings?session_token={session_token}", status_code=302)
+    else:
+        return RedirectResponse(url="http://localhost:3001/settings", status_code=302)
