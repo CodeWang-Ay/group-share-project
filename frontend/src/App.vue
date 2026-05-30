@@ -1,5 +1,11 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-gray-50">
+  <!-- 公开页面（如注册）不显示布局 -->
+  <div v-if="isPublicPage" class="min-h-screen bg-gray-50">
+    <router-view />
+  </div>
+
+  <!-- 需要登录的页面显示完整布局 -->
+  <div v-else class="min-h-screen flex flex-col bg-gray-50">
     <Toast />
     <Header v-model="sidebarVisible" />
     <main class="flex-1 flex">
@@ -17,15 +23,20 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useUserStore } from './stores/user'
 import { authApi } from './api/dashboard'
 import Header from './components/Header.vue'
 import Sidebar from './components/Sidebar.vue'
 import Toast from './components/Toast.vue'
 
+const route = useRoute()
 const userStore = useUserStore()
 const sidebarVisible = ref(false)
+
+// 是否是公开页面（不需要登录和布局）
+const isPublicPage = computed(() => route.meta?.public === true)
 
 // 从 URL 参数获取 session_token
 const urlParams = new URLSearchParams(window.location.search)

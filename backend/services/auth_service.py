@@ -146,7 +146,7 @@ class AuthService:
         user_id = AuthRepository.create_user(create_data)
 
         # 7. 构建用户对象
-        user = User(id=user_id, username=username, role=role, email=data.get('email'), created_at=datetime.now(), updated_at=datetime.now())
+        user = User(id=user_id, username=username, password_hash=password_hash, role=role, email=data.get('email'), phone=data.get('phone'), created_at=datetime.now(), updated_at=datetime.now())
         logger.info(f"注册成功: {username}")
 
         return {"status_code": 201, "content": {"success": True, "message": "注册成功", "data": {"user": user.to_dict()}}}

@@ -145,11 +145,12 @@ async def login_page(request: Request):
     return templates.TemplateResponse(request, "login.html")
 
 
-# 注册页面
+# 注册页面 - 重定向到 Vue 前端
 @router.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request):
-    """注册页面"""
-    return templates.TemplateResponse(request, "register.html")
+    """注册页面 - 重定向到 Vue 前端"""
+    # 注册页面不需要登录检查，直接重定向
+    return RedirectResponse(url="http://localhost:3001/register", status_code=302)
 
 
 # 共享文件页面

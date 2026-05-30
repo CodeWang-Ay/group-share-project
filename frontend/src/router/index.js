@@ -14,8 +14,15 @@ import PaperDatabase from '../views/PaperDatabase.vue'
 import UserProfile from '../views/UserProfile.vue'
 import EditPassword from '../views/EditPassword.vue'
 import Settings from '../views/Settings.vue'
+import Register from '../views/Register.vue'
 
 const routes = [
+  {
+    path: '/register',
+    name: 'Register',
+    component: Register,
+    meta: { public: true }  // 公开页面，不需要登录
+  },
   {
     path: '/',
     name: 'Dashboard',
@@ -90,6 +97,12 @@ const router = createRouter({
 
 // 全局路由守卫：未登录用户重定向到登录页
 router.beforeEach((to, from, next) => {
+  // 公开页面直接放行
+  if (to.meta?.public) {
+    next()
+    return
+  }
+
   const userStore = useUserStore()
 
   // 如果 URL 中有 session_token 参数，说明刚从登录页回来，允许通过
