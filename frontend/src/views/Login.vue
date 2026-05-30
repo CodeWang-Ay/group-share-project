@@ -6,52 +6,52 @@
     <div class="fixed inset-0 bg-gradient-to-r from-blue-900/40 via-transparent to-transparent"></div>
     <div class="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 via-purple-400 to-transparent opacity-60"></div>
 
-    <!-- 左侧品牌区域 (60%) -->
-    <div class="hidden lg:flex lg:w-[60%] relative z-10 flex-col">
-      <div class="flex flex-col justify-between h-full px-16 py-12 text-white">
-        <!-- 顶部品牌标识 -->
-        <div>
-          <div class="flex items-center gap-4 mb-6">
-            <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-              <i class="fa fa-users text-3xl"></i>
+    <!-- 左侧品牌区域 (50%) -->
+    <div class="hidden lg:flex lg:w-1/2 relative z-10 flex-col items-center">
+      <div class="flex flex-col h-full px-16 py-12 text-white">
+        <!-- 顶部品牌标识 - 与登录卡片齐平 -->
+        <div class="flex-1 flex items-center justify-center -mt-60 ml-[150px]">
+          <div class="text-center">
+            <div class="flex items-center gap-5 mb-6 justify-center">
+              <div class="w-20 h-20 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <i class="fa fa-users text-5xl"></i>
+              </div>
+              <div>
+                <div class="text-5xl font-bold tracking-wide" style="color: #1e3a5f;">组会管理系统</div>
+                <div class="text-base text-white/70 tracking-[0.2em] mt-2" style="color: #1e3a5f;">GROUP MEETING MANAGEMENT SYSTEM</div>
+              </div>
             </div>
-            <div>
-              <div class="text-3xl font-bold tracking-wide">组会管理系统</div>
-              <div class="text-sm text-white/70 tracking-[0.2em] mt-1">GROUP MEETING MANAGEMENT SYSTEM</div>
-            </div>
+            <div class="text-xl text-white/60 font-light mt-4 tracking-[0.5em]" style="color: #1e3a5f;">高效协作 · 有序管理 · 智慧组会</div>
           </div>
-          <div class="text-lg text-white/60 font-light mt-4">高效协作 · 有序管理 · 智慧组会</div>
         </div>
 
-        <!-- 中景场景元素（由背景图片承载） -->
-
         <!-- 底部功能亮点区 -->
-        <div>
+        <div class="ml-[150px] pb-4">
           <!-- 四个功能图标 -->
-          <div class="flex gap-10 mb-8">
+          <div class="flex gap-12 mb-8">
             <div class="flex flex-col items-center">
-              <div class="w-14 h-14 bg-white/15 rounded-xl flex items-center justify-center mb-3 backdrop-blur-sm hover:bg-white/25 transition-colors">
-                <i class="fa fa-calendar text-xl"></i>
+              <div class="w-18 h-18 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm hover:bg-white/25 transition-colors" style="width: 72px; height: 72px;">
+                <i class="fa fa-calendar text-2xl"></i>
               </div>
-              <span class="text-sm text-white/80">组会计划</span>
+              <span class="text-base text-white/80">组会计划</span>
             </div>
             <div class="flex flex-col items-center">
-              <div class="w-14 h-14 bg-white/15 rounded-xl flex items-center justify-center mb-3 backdrop-blur-sm hover:bg-white/25 transition-colors">
-                <i class="fa fa-users text-xl"></i>
+              <div class="w-18 h-18 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm hover:bg-white/25 transition-colors" style="width: 72px; height: 72px;">
+                <i class="fa fa-users text-2xl"></i>
               </div>
-              <span class="text-sm text-white/80">协作共享</span>
+              <span class="text-base text-white/80">协作共享</span>
             </div>
             <div class="flex flex-col items-center">
-              <div class="w-14 h-14 bg-white/15 rounded-xl flex items-center justify-center mb-3 backdrop-blur-sm hover:bg-white/25 transition-colors">
-                <i class="fa fa-line-chart text-xl"></i>
+              <div class="w-18 h-18 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm hover:bg-white/25 transition-colors" style="width: 72px; height: 72px;">
+                <i class="fa fa-line-chart text-2xl"></i>
               </div>
-              <span class="text-sm text-white/80">进度跟踪</span>
+              <span class="text-base text-white/80">进度跟踪</span>
             </div>
             <div class="flex flex-col items-center">
-              <div class="w-14 h-14 bg-white/15 rounded-xl flex items-center justify-center mb-3 backdrop-blur-sm hover:bg-white/25 transition-colors">
-                <i class="fa fa-shield text-xl"></i>
+              <div class="w-18 h-18 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm hover:bg-white/25 transition-colors" style="width: 72px; height: 72px;">
+                <i class="fa fa-shield text-2xl"></i>
               </div>
-              <span class="text-sm text-white/80">规范管理</span>
+              <span class="text-base text-white/80">规范管理</span>
             </div>
           </div>
 
@@ -63,9 +63,9 @@
       </div>
     </div>
 
-    <!-- 右侧登录区域 (40%) -->
-    <div class="w-full lg:w-[40%] flex items-center justify-center relative z-10">
-      <div class="w-full max-w-sm mx-8">
+    <!-- 右侧登录区域 (50%) -->
+    <div class="w-full lg:w-1/2 flex items-center justify-center relative z-10">
+      <div class="w-full max-w-md mx-8 -ml-16">
         <!-- 移动端Logo -->
         <div class="lg:hidden text-center mb-8">
           <div class="inline-flex items-center justify-center w-16 h-16 bg-white/90 rounded-xl mb-4 shadow-lg backdrop-blur-sm">
@@ -75,7 +75,7 @@
         </div>
 
         <!-- 登录卡片 -->
-        <div class="bg-white/85 backdrop-blur-xl rounded-3xl shadow-2xl p-8 relative overflow-hidden">
+        <div class="bg-white/85 backdrop-blur-xl rounded-3xl shadow-2xl p-8 pb-16 relative overflow-hidden min-h-[550px] flex flex-col">
           <!-- 右上角语言选择 -->
           <div class="absolute top-4 right-4">
             <select class="bg-gray-100 text-sm text-gray-600 px-3 py-1.5 rounded-lg border-0 focus:outline-none cursor-pointer">
@@ -132,6 +132,12 @@
             </button>
           </form>
 
+        <!-- 注册链接 -->
+        <div class="mt-6 text-center text-sm">
+          <span class="text-gray-400">还没有账号?</span>
+          <a href="/register" class="text-blue-500 font-medium hover:text-blue-600 ml-1 transition-colors">立即注册</a>
+        </div>
+
           <!-- 其他登录方式 -->
           <div class="mt-8 pt-6 border-t border-gray-100">
             <div class="text-center text-sm text-gray-500 mb-4">其他登录方式</div>
@@ -160,11 +166,6 @@
           </div>
         </div>
 
-        <!-- 注册链接 -->
-        <div class="mt-6 text-center text-sm">
-          <span class="text-gray-400">还没有账号?</span>
-          <a href="/register" class="text-blue-500 font-medium hover:text-blue-600 ml-1 transition-colors">立即注册</a>
-        </div>
       </div>
     </div>
   </div>
@@ -174,7 +175,7 @@
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
 import axios from 'axios'
-import bgImage from '../../images/image.png'
+import bgImage from '../../images/Common.png'
 
 const userStore = useUserStore()
 
