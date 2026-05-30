@@ -3,7 +3,7 @@ import { useUserStore } from '../stores/user'
 
 const api = axios.create({
   baseURL: '/api',
-  timeout: 10000
+  timeout: 30000  // 增加到 30 秒
 })
 
 api.interceptors.request.use(config => {
@@ -13,6 +13,19 @@ api.interceptors.request.use(config => {
   }
   return config
 })
+
+// 401 响应拦截器：token 过期或无效时自动跳转登录页
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      const userStore = useUserStore()
+      userStore.clear()
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
 
 export const dashboardApi = {
   getStats() {

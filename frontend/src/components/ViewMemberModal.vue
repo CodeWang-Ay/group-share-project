@@ -75,6 +75,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { getAvatarUrl } from '../config'
 
 const props = defineProps({
   member: Object
@@ -90,13 +91,7 @@ const roleText = computed(() => roleMap[props.member?.role] || '未设置')
 const statusText = computed(() => statusMap[props.member?.status] || '未设置')
 const genderText = computed(() => genderMap[props.member?.gender] || '未设置')
 
-const avatarUrl = computed(() => {
-  if (props.member?.avatar) {
-    if (props.member.avatar.startsWith('/uploads')) return `http://localhost:8081${props.member.avatar}`
-    return props.member.avatar
-  }
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(props.member?.username || 'User')}&background=random&size=128`
-})
+const avatarUrl = computed(() => getAvatarUrl(props.member?.avatar, props.member?.username))
 
 function formatDate(dateStr) {
   if (!dateStr) return '未设置'
@@ -104,4 +99,3 @@ function formatDate(dateStr) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
 </script>
-}

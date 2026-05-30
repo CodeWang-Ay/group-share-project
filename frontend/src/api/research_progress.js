@@ -1,68 +1,41 @@
-import axios from 'axios'
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('session_token')
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
+import api from './dashboard'
 
 // 获取我的研究进展设置
-export const getMySettings = () => axios.get('/api/research_progress/settings', {
-  headers: getAuthHeaders()
-})
+export const getMySettings = () => api.get('/research_progress/settings')
 
 // 获取我的研究进展列表
-export const getMyProgress = (params) => axios.get('/api/research_progress/my', {
-  params,
-  headers: getAuthHeaders()
-})
+export const getMyProgress = (params) => api.get('/research_progress/my', { params })
 
 // 提交研究进展
-export const submitProgress = (data) => axios.post('/api/research_progress/submit', data, {
-  headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
-})
+export const submitProgress = (data) => api.post('/research_progress/submit', data)
 
 // 更新研究进展
-export const updateProgress = (id, data) => axios.put(`/api/research_progress/${id}`, data, {
-  headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
-})
+export const updateProgress = (id, data) => api.put(`/research_progress/${id}`, data)
 
 // 删除研究进展
-export const deleteProgress = (id) => axios.delete(`/api/research_progress/${id}`, {
-  headers: getAuthHeaders()
-})
+export const deleteProgress = (id) => api.delete(`/research_progress/${id}`)
 
 // 获取进展详情
-export const getProgressDetail = (id) => axios.get(`/api/research_progress/${id}`, {
-  headers: getAuthHeaders()
-})
+export const getProgressDetail = (id) => api.get(`/research_progress/${id}`)
 
 // 获取团队进展统计
-export const getTeamStats = () => axios.get('/api/research_progress/stats', {
-  headers: getAuthHeaders()
-})
+export const getTeamStats = () => api.get('/research_progress/stats')
 
 // 获取团队进展列表
-export const getTeamProgress = (params) => axios.get('/api/research_progress/team', {
-  params,
-  headers: getAuthHeaders()
-})
+export const getTeamProgress = (params) => api.get('/research_progress/team', { params })
 
 // 发送反馈
-export const sendFeedback = (id, feedback) => axios.post(`/api/research_progress/${id}/feedback`, { feedback }, {
-  headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
-})
+export const sendFeedback = (id, feedback) => api.post(`/research_progress/${id}/feedback`, { feedback })
 
 // 批量设置提交周期
-export const batchSetSettings = (data) => axios.post('/api/research_progress/settings/batch', data, {
-  headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
-})
+export const batchSetSettings = (data) => api.post('/research_progress/settings/batch', data)
 
 // 上传文件
 export const uploadFile = (file) => {
   const formData = new FormData()
   formData.append('file', file)
-  return axios.post('/api/files/upload', formData, {
-    headers: { ...getAuthHeaders(), 'Content-Type': 'multipart/form-data' }
+  return api.post('/files/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
   })
 }
 

@@ -122,41 +122,76 @@ const meetingsTrendText = computed(() => {
 })
 
 async function loadData() {
-  try {
-    const [statsRes, upcomingRes, filesRes, papersRes, progressRes] = await Promise.all([
-      dashboardApi.getStats(),
-      dashboardApi.getUpcoming(),
-      dashboardApi.getRecentFiles(),
-      dashboardApi.getRecentPapers(),
-      dashboardApi.getRecentProgress()
-    ])
+  // 独立加载每个数据块，避免一个失败导致全部失败
+  loadStats()
+  loadUpcoming()
+  loadFiles()
+  loadPapers()
+  loadProgress()
+}
 
-    if (statsRes.data.success) {
-      stats.value = statsRes.data.data
+async function loadStats() {
+  try {
+    const res = await dashboardApi.getStats()
+    if (res.data.success) {
+      stats.value = res.data.data
       loading.value.stats = false
     }
+  } catch (e) {
+    console.error('加载统计数据失败:', e)
+    loading.value.stats = false
+  }
+}
 
-    if (upcomingRes.data.success) {
-      upcomingMeeting.value = upcomingRes.data.data.meetings?.[0]
+async function loadUpcoming() {
+  try {
+    const res = await dashboardApi.getUpcoming()
+    if (res.data.success) {
+      upcomingMeeting.value = res.data.data.meetings?.[0]
       loading.value.upcoming = false
     }
+  } catch (e) {
+    console.error('加载组会数据失败:', e)
+    loading.value.upcoming = false
+  }
+}
 
-    if (filesRes.data.success) {
-      recentFiles.value = filesRes.data.data.files || []
+async function loadFiles() {
+  try {
+    const res = await dashboardApi.getRecentFiles()
+    if (res.data.success) {
+      recentFiles.value = res.data.data.files || []
       loading.value.files = false
     }
+  } catch (e) {
+    console.error('加载材料数据失败:', e)
+    loading.value.files = false
+  }
+}
 
-    if (papersRes.data.success) {
-      recentPapers.value = papersRes.data.data.papers || []
+async function loadPapers() {
+  try {
+    const res = await dashboardApi.getRecentPapers()
+    if (res.data.success) {
+      recentPapers.value = res.data.data.papers || []
       loading.value.papers = false
     }
+  } catch (e) {
+    console.error('加载文献数据失败:', e)
+    loading.value.papers = false
+  }
+}
 
-    if (progressRes.data.success) {
-      recentProgress.value = progressRes.data.data.progress || []
+async function loadProgress() {
+  try {
+    const res = await dashboardApi.getRecentProgress()
+    if (res.data.success) {
+      recentProgress.value = res.data.data.progress || []
       loading.value.progress = false
     }
   } catch (e) {
-    console.error('加载仪表盘数据失败:', e)
+    console.error('加载进展数据失败:', e)
+    loading.value.progress = false
   }
 }
 

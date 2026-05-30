@@ -136,7 +136,7 @@
             const sessionToken = localStorage.getItem('session_token');
             if (sessionToken) {
                 // 验证会话是否有效
-                fetch('http://localhost:8081/api/auth/session-status', {
+                fetch('http://localhost:8088/api/auth/session-status', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${sessionToken}`
@@ -145,8 +145,8 @@
                 .then(response => response.json())
                 .then(result => {
                     if (result.success && result.data.authenticated) {
-                        // 已登录且会话有效，直接跳转到 Vue 前端
-                        window.location.href = `http://localhost:3001/?session_token=${sessionToken}`;
+                        // 已登录且会话有效，直接跳转到后端主页
+                        window.location.href = `http://localhost:8088/?session_token=${sessionToken}`;
                         return;
                     }
                     // 会话无效，清除本地存储
@@ -191,7 +191,7 @@
 
                 try {
                     // 发送登录请求到后端API
-                    const response = await fetch('http://localhost:8081/api/auth/login', {
+                    const response = await fetch('http://localhost:8088/api/auth/login', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -214,9 +214,9 @@
                         // 显示成功消息
                         showMessage('登录成功，正在跳转...', 'success');
 
-                        // 跳转到 Vue 前端首页
+                        // 跳转到首页，带 session_token 参数确保首次能识别登录状态
                         setTimeout(() => {
-                            window.location.href = `http://localhost:3001/?session_token=${result.session_token}`;
+                            window.location.href = `http://localhost:8088/?session_token=${result.session_token}`;
                         }, 500);
                         return;
                     }
@@ -248,7 +248,7 @@
 
             // 注册按钮点击事件
             registerBtn.addEventListener('click', function() {
-                window.location.href = 'http://localhost:8081/register';
+                window.location.href = 'http://localhost:8088/register';
             });
 
             // 回车键登录

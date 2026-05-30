@@ -167,4 +167,5 @@ async def shutdown_event():
 # 模型入口函数
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.app:app", host="127.0.0.1", port=8081, reload=True)
+    from config import Config
+    uvicorn.run("backend.app:app", host=Config.HOST, port=Config.PORT, reload=True)

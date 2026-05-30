@@ -992,10 +992,10 @@ git commit -m "feat: add meetings CRUD API endpoints"
     // API基础URL
     let API_BASE_URL = '';
     if (window.location.hostname === 'localhost') {
-        if (window.location.port === '8081' || window.location.port === '8000') {
+        if (window.location.port === '8088' || window.location.port === '8000') {
             API_BASE_URL = `http://localhost:${window.location.port}`;
         } else if (window.location.port === '3000' || window.location.port === '3001') {
-            API_BASE_URL = 'http://localhost:8081';
+            API_BASE_URL = 'http://localhost:8088';
         }
     }
 
@@ -1395,13 +1395,13 @@ git commit -m "feat: update meeting schedule page with real API data"
 - [ ] **Step 1: 启动后端服务**
 
 Run: `cd backend && python main.py`
-Expected: 服务启动成功，监听8081端口
+Expected: 服务启动成功，监听8088端口
 
 - [ ] **Step 2: 测试创建组会API**
 
 Run: 
 ```bash
-curl -X POST http://localhost:8081/api/meetings \
+curl -X POST http://localhost:8088/api/meetings \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <session_token>" \
   -d '{"title":"测试组会","meeting_type":"regular","scheduled_at":"2026-05-10T14:00:00"}'
@@ -1412,14 +1412,14 @@ Expected: 返回 `{"success": true, "message": "组会创建成功", ...}`
 
 Run:
 ```bash
-curl http://localhost:8081/api/meetings \
+curl http://localhost:8088/api/meetings \
   -H "Authorization: Bearer <session_token>"
 ```
 Expected: 返回组会列表数据
 
 - [ ] **Step 4: 验证前端页面**
 
-打开浏览器访问 `http://localhost:8081/gm_meeting_schedule`
+打开浏览器访问 `http://localhost:8088/gm_meeting_schedule`
 Expected: 页面正常显示，统计数据和组会列表从API加载
 
 ---

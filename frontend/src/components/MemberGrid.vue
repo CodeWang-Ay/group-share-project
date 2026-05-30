@@ -51,6 +51,8 @@
 </template>
 
 <script setup>
+import { getAvatarUrl } from '../config'
+
 const props = defineProps({
   members: Array,
   isAdmin: Boolean
@@ -62,11 +64,7 @@ const roleMap = { admin: '管理员', teacher: '导师', student: '学生' }
 const statusMap = { active: '激活', inactive: '停用' }
 
 function avatarUrl(m) {
-  if (m.avatar) {
-    if (m.avatar.startsWith('/uploads')) return `http://localhost:8081${m.avatar}`
-    return m.avatar
-  }
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(m.username || 'User')}&background=random&size=128`
+  return getAvatarUrl(m.avatar, m.username)
 }
 
 function roleText(role) { return roleMap[role] || role }
@@ -87,4 +85,3 @@ function statusClass(status) {
     : 'inline-flex px-2 py-1 text-xs font-medium rounded-full text-red-600 bg-red-100'
 }
 </script>
-}

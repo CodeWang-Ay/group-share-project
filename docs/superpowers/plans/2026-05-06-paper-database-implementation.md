@@ -1349,12 +1349,12 @@ git commit -m "feat: connect PaperManager to backend APIs"
 cd backend && python main.py
 ```
 
-Expected: Server running on http://localhost:8081
+Expected: Server running on http://localhost:8088
 
 - [ ] **Step 2: Test database initialization**
 
 ```bash
-curl http://localhost:8081/health
+curl http://localhost:8088/health
 ```
 
 Expected: JSON response with database status healthy
@@ -1362,7 +1362,7 @@ Expected: JSON response with database status healthy
 - [ ] **Step 3: Login to get session token**
 
 ```bash
-curl -X POST http://localhost:8081/api/auth/login \
+curl -X POST http://localhost:8088/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin"}'
 ```
@@ -1372,7 +1372,7 @@ Expected: JSON with session_token
 - [ ] **Step 4: Test GET papers API**
 
 ```bash
-curl http://localhost:8081/api/paper_database/ \
+curl http://localhost:8088/api/paper_database/ \
   -H "Authorization: Bearer <session_token>"
 ```
 
@@ -1381,7 +1381,7 @@ Expected: Empty papers list (success: true, data: [])
 - [ ] **Step 5: Test GET tags API**
 
 ```bash
-curl http://localhost:8081/api/paper_database/tags \
+curl http://localhost:8088/api/paper_database/tags \
   -H "Authorization: Bearer <session_token>"
 ```
 
@@ -1390,7 +1390,7 @@ Expected: List of 6 system tags
 - [ ] **Step 6: Open frontend in browser**
 
 ```bash
-open http://localhost:8081/rm_paper_database?session_token=<token>
+open http://localhost:8088/rm_paper_database?session_token=<token>
 ```
 
 Expected: Paper database page loads without errors

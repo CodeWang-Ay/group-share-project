@@ -112,7 +112,7 @@ def _render_page(template_name: str, request: Request, user):
     })
 
 
-# 主页面 - 重定向到 Vue 前端
+# 主页面 - 重定向到 Vue 前端（带 session_token）
 @router.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     """主页面 - 重定向到 Vue 前端工作台"""
@@ -121,8 +121,21 @@ async def index(request: Request):
         logger.info("用户未登录，显示登录页面")
         return templates.TemplateResponse(request, "login.html")
 
-    # 已登录，重定向到 Vue 前端
-    return RedirectResponse(url="http://localhost:3001", status_code=302)
+    # 已登录，获取 session_token 并重定向到 Vue 前端
+    # 从 URL 参数、Authorization header 或 Cookie 获取 token
+    session_token = request.query_params.get("session_token")
+    if not session_token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            session_token = auth_header[7:]
+    if not session_token:
+        session_token = request.cookies.get("session_token")
+
+    # 重定向到 Vue 前端，带上 session_token
+    if session_token:
+        return RedirectResponse(url=f"http://localhost:3001/?session_token={session_token}", status_code=302)
+    else:
+        return RedirectResponse(url="http://localhost:3001", status_code=302)
 
 
 # 登录页面

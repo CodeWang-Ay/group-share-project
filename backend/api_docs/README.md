@@ -15,7 +15,7 @@
 
 ## API 基础信息
 
-- **Base URL:** `http://localhost:8081/api`
+- **Base URL:** `http://localhost:8088/api`
 - **认证方式:** Session Cookie
 - **响应格式:** JSON
 

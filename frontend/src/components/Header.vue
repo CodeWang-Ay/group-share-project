@@ -58,22 +58,13 @@
 import { computed } from 'vue'
 import { useUserStore } from '../stores/user'
 import { authApi } from '../api/dashboard'
+import { getAvatarUrl, getLoginUrl } from '../config'
 
 const userStore = useUserStore()
 const sidebarVisible = defineModel()
 
 // 头像URL处理：如果有avatar就用，否则生成默认头像
-const avatarUrl = computed(() => {
-  if (userStore.avatar) {
-    // 如果是相对路径，加上后端地址
-    if (userStore.avatar.startsWith('/uploads')) {
-      return `http://localhost:8081${userStore.avatar}`
-    }
-    return userStore.avatar
-  }
-  // 使用UI Avatars生成默认头像
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(userStore.username || 'User')}&background=2563eb&color=fff&size=128`
-})
+const avatarUrl = computed(() => getAvatarUrl(userStore.avatar, userStore.username))
 
 function toggleSidebar() {
   sidebarVisible.value = !sidebarVisible.value
@@ -83,10 +74,10 @@ async function logout() {
   try {
     await authApi.logout()
     userStore.clear()
-    window.location.href = 'http://localhost:8081/login'
+    window.location.href = getLoginUrl()
   } catch (e) {
     userStore.clear()
-    window.location.href = 'http://localhost:8081/login'
+    window.location.href = getLoginUrl()
   }
 }
 </script>

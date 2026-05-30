@@ -126,7 +126,7 @@ cd backend
 python app.py
 ```
 
-访问 http://localhost:8081 即可使用系统。
+访问 http://localhost:8088 即可使用系统。
 
 默认管理员账号：`admin` / `admin`
 
@@ -160,8 +160,8 @@ docker-compose down
 ## API 文档
 
 启动服务后访问：
-- Swagger UI: http://localhost:8081/docs
-- ReDoc: http://localhost:8081/redoc
+- Swagger UI: http://localhost:8088/docs
+- ReDoc: http://localhost:8088/redoc
 
 ## 环境要求
 

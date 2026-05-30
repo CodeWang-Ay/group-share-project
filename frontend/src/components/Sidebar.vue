@@ -57,6 +57,7 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '../stores/user'
 import MenuItem from './MenuItem.vue'
+import { getAvatarUrl } from '../config'
 
 const userStore = useUserStore()
 const visible = defineModel()
@@ -64,15 +65,7 @@ const visible = defineModel()
 const isMobile = ref(window.innerWidth < 1024)
 
 // 头像URL处理
-const avatarUrl = computed(() => {
-  if (userStore.avatar) {
-    if (userStore.avatar.startsWith('/uploads')) {
-      return `http://localhost:8081${userStore.avatar}`
-    }
-    return userStore.avatar
-  }
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(userStore.username || 'User')}&background=2563eb&color=fff&size=128`
-})
+const avatarUrl = computed(() => getAvatarUrl(userStore.avatar, userStore.username))
 
 const sidebarClass = computed(() => [
   'fixed lg:sticky top-16 left-0 z-40 w-64 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 overflow-y-auto transition-transform duration-300',

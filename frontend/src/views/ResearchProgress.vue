@@ -209,7 +209,7 @@
                 <tr v-for="item in filteredStudentTeamList" :key="item.user_id">
                   <td class="px-6 py-4">
                     <div class="flex items-center gap-2">
-                      <img :src="getAvatarUrl(item)" class="w-8 h-8 rounded-full object-cover">
+                      <img :src="getAvatarUrl(item.avatar, item.username)" class="w-8 h-8 rounded-full object-cover">
                       <span>{{ item.username }}</span>
                     </div>
                   </td>
@@ -352,7 +352,7 @@
               <tr v-for="item in filteredTeamList" :key="item.user_id">
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-2">
-                    <img :src="getAvatarUrl(item)" class="w-8 h-8 rounded-full object-cover">
+                    <img :src="getAvatarUrl(item.avatar, item.username)" class="w-8 h-8 rounded-full object-cover">
                     <span>{{ item.username }}</span>
                   </div>
                 </td>
@@ -451,6 +451,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
 import * as api from '../api/research_progress'
+import { getAvatarUrl } from '../config'
 import SubmitModal from '../components/SubmitModal.vue'
 import ProgressDetailModal from '../components/ProgressDetailModal.vue'
 import BatchSettingsModal from '../components/BatchSettingsModal.vue'
@@ -584,15 +585,7 @@ const formatDate = (dateStr) => {
   return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
 }
 
-const getAvatarUrl = (item) => {
-  if (item.avatar) {
-    if (item.avatar.startsWith('/uploads')) {
-      return `http://localhost:8081${item.avatar}`
-    }
-    return item.avatar
-  }
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(item.username || 'User')}&background=2563eb&color=fff&size=64`
-}
+const getAvatarUrl2 = (item) => getAvatarUrl(item.avatar, item.username)
 
 const showToast = (message, type = 'success') => {
   toast.value = { show: true, message, type }
