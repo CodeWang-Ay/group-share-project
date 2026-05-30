@@ -12,6 +12,7 @@ import ResearchTasks from '../views/ResearchTasks.vue'
 import ShareFile from '../views/ShareFile.vue'
 import PaperDatabase from '../views/PaperDatabase.vue'
 import UserProfile from '../views/UserProfile.vue'
+import EditPassword from '../views/EditPassword.vue'
 
 const routes = [
   {
@@ -68,6 +69,11 @@ const routes = [
     path: '/user-profile',
     name: 'UserProfile',
     component: UserProfile
+  },
+  {
+    path: '/edit-password',
+    name: 'EditPassword',
+    component: EditPassword
   }
 ]
 

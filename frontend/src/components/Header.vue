@@ -38,9 +38,9 @@
               <router-link to="/user-profile" class="block px-4 py-2 text-sm hover:bg-gray-100">
                 <i class="fa fa-user-o mr-2 text-gray-500"></i>个人资料
               </router-link>
-              <a href="/edit_password" class="block px-4 py-2 text-sm hover:bg-gray-100">
+              <router-link to="/edit-password" class="block px-4 py-2 text-sm hover:bg-gray-100">
                 <i class="fa fa-key mr-2 text-gray-500"></i>修改密码
-              </a>
+              </router-link>
             </div>
           </div>
 
