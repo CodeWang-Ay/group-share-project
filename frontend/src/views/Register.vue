@@ -1,177 +1,224 @@
 <template>
-  <div class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
-    <!-- 注册面板 -->
-    <div class="w-full max-w-md">
-      <div class="bg-white rounded-xl p-8 shadow-lg shadow-gray-200/50">
-        <!-- 顶部Logo与标题 -->
-        <div class="flex items-center gap-3 mb-6">
-          <i class="fa fa-flask text-primary text-2xl"></i>
-          <h1 class="text-gray-800 text-xl font-bold">智能计算实验室</h1>
-        </div>
+  <div class="min-h-screen flex relative overflow-hidden">
+    <!-- 全屏背景图片 -->
+    <img :src="bgImage" class="fixed inset-0 w-full h-full object-cover" alt="background">
+    <!-- 科技光效点缀 -->
+    <div class="fixed inset-0 bg-gradient-to-r from-blue-900/40 via-transparent to-transparent"></div>
+    <div class="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 via-purple-400 to-transparent opacity-60"></div>
 
-        <!-- 注册标题 -->
-        <div class="mb-6 text-center">
-          <h2 class="text-2xl font-bold text-gray-800 mb-1">创建账号</h2>
-          <p class="text-gray-500">填写信息完成注册，需管理员审核后激活</p>
-        </div>
-
-        <!-- 注册表单 -->
-        <form @submit.prevent="handleRegister">
-          <!-- 用户名 -->
-          <div class="mb-5">
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              用户名 <span class="text-red-500">*</span>
-            </label>
-            <div class="flex items-center gap-3">
-              <i class="fa fa-user text-gray-400 w-5 text-center"></i>
-              <input type="text" v-model="form.username"
-                     :class="inputClass('username')"
-                     placeholder="3-50个字符，含字母、数字、下划线" required>
+    <!-- 左侧品牌区域 (50%) -->
+    <div class="hidden lg:flex lg:w-1/2 relative z-10 flex-col items-center">
+      <div class="flex flex-col h-full px-16 py-12 text-white">
+        <!-- 顶部品牌标识 - 与登录卡片齐平 -->
+        <div class="flex-1 flex items-center justify-center -mt-60 ml-[150px]">
+          <div class="text-center">
+            <div class="flex items-center gap-5 mb-6 justify-center">
+              <div class="w-20 h-20 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <i class="fa fa-users text-5xl"></i>
+              </div>
+              <div>
+                <div class="text-5xl font-bold tracking-wide" style="color: #1e3a5f;">组会管理系统</div>
+                <div class="text-base text-white/70 tracking-[0.2em] mt-2" style="color: #1e3a5f;">GROUP MEETING MANAGEMENT SYSTEM</div>
+              </div>
             </div>
-            <p v-if="errors.username" class="text-xs text-red-500 mt-1">{{ errors.username }}</p>
+            <div class="text-xl text-white/60 font-light mt-4 tracking-[0.5em]" style="color: #1e3a5f;">高效协作 · 有序管理 · 智慧组会</div>
+          </div>
+        </div>
+
+        <!-- 底部功能亮点区 -->
+        <div class="ml-[150px] pb-4">
+          <!-- 四个功能图标 -->
+          <div class="flex gap-12 mb-8">
+            <div class="flex flex-col items-center">
+              <div class="feature-icon w-18 h-18 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm hover:bg-white/25 transition-colors cursor-pointer" style="width: 72px; height: 72px;">
+                <i class="fa fa-calendar text-2xl"></i>
+              </div>
+              <span class="text-base text-white/80">组会计划</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <div class="feature-icon w-18 h-18 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm hover:bg-white/25 transition-colors cursor-pointer" style="width: 72px; height: 72px;">
+                <i class="fa fa-users text-2xl"></i>
+              </div>
+              <span class="text-base text-white/80">协作共享</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <div class="feature-icon w-18 h-18 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm hover:bg-white/25 transition-colors cursor-pointer" style="width: 72px; height: 72px;">
+                <i class="fa fa-line-chart text-2xl"></i>
+              </div>
+              <span class="text-base text-white/80">进度跟踪</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <div class="feature-icon w-18 h-18 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm hover:bg-white/25 transition-colors cursor-pointer" style="width: 72px; height: 72px;">
+                <i class="fa fa-shield text-2xl"></i>
+              </div>
+              <span class="text-base text-white/80">规范管理</span>
+            </div>
           </div>
 
-          <!-- 身份角色 -->
-          <div class="mb-5">
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              身份角色 <span class="text-red-500">*</span>
-            </label>
-            <div class="flex items-center gap-3">
-              <i class="fa fa-id-card-o text-gray-400 w-5 text-center"></i>
+          <!-- 品牌标语 -->
+          <div class="text-white/50 text-sm italic border-l-2 border-white/30 pl-4">
+            "思想的碰撞，驱动创新的未来"
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右侧注册区域 (50%) -->
+    <div class="w-full lg:w-1/2 flex items-center justify-center relative z-10">
+      <div class="w-full max-w-md mx-8 -ml-16">
+        <!-- 移动端Logo -->
+        <div class="lg:hidden text-center mb-8">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-white/90 rounded-xl mb-4 shadow-lg backdrop-blur-sm">
+            <i class="fa fa-users text-blue-600 text-2xl"></i>
+          </div>
+          <h1 class="text-xl font-bold text-white">组会管理系统</h1>
+        </div>
+
+        <!-- 注册卡片 -->
+        <div class="login-card bg-white/85 backdrop-blur-xl rounded-3xl shadow-2xl p-8 pb-16 relative overflow-hidden min-h-[550px] flex flex-col">
+          <!-- 右上角语言选择 -->
+          <div class="absolute top-4 right-4">
+            <select class="bg-gray-100 text-sm text-gray-600 px-3 py-1.5 rounded-lg border-0 focus:outline-none cursor-pointer">
+              <option value="zh">简体中文</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+
+          <!-- 卡片标题 -->
+          <div class="mb-8">
+            <div class="text-2xl font-bold text-gray-800">创建账号</div>
+            <div class="text-sm text-gray-500 mt-1">填写信息完成注册，需管理员审核后激活</div>
+          </div>
+
+          <!-- 表单 -->
+          <form @submit.prevent="handleRegister" class="space-y-5">
+            <!-- 用户名 -->
+            <div class="relative">
+              <i class="fa fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <input type="text" v-model="form.username"
+                     class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                     placeholder="请输入用户名（3-50字符）">
+            </div>
+
+            <!-- 身份角色 -->
+            <div class="relative">
+              <i class="fa fa-id-card-o absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
               <select v-model="form.role"
-                      class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none" required>
+                      class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 appearance-none">
                 <option value="">选择身份</option>
                 <option value="teacher">老师</option>
                 <option value="student">学生</option>
               </select>
             </div>
-          </div>
 
-          <!-- 性别 -->
-          <div class="mb-5">
-            <label class="block text-sm font-medium text-gray-700 mb-1">性别</label>
-            <div class="flex items-center gap-3">
-              <i class="fa fa-user text-gray-400 w-5 text-center"></i>
-              <select v-model="form.gender"
-                      class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none">
-                <option value="">选择性别</option>
-                <option value="male">男</option>
-                <option value="female">女</option>
-              </select>
+            <!-- 性别 -->
+            <div class="relative">
+              <i class="fa fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <div class="pl-12 flex gap-2">
+                <button type="button" @click="form.gender = 'male'"
+                        :class="form.gender === 'male' ? 'bg-blue-500 text-white border-blue-500' : 'bg-gray-50 text-gray-600 border-gray-200'"
+                        class="py-2 px-5 rounded-lg border text-sm font-medium transition-all hover:border-blue-400">
+                  <i class="fa fa-male mr-1"></i>男
+                </button>
+                <button type="button" @click="form.gender = 'female'"
+                        :class="form.gender === 'female' ? 'bg-blue-500 text-white border-blue-500' : 'bg-gray-50 text-gray-600 border-gray-200'"
+                        class="py-2 px-5 rounded-lg border text-sm font-medium transition-all hover:border-blue-400">
+                  <i class="fa fa-female mr-1"></i>女
+                </button>
+              </div>
             </div>
-          </div>
 
-          <!-- 手机号码 -->
-          <div class="mb-5">
-            <label class="block text-sm font-medium text-gray-700 mb-1">手机号码</label>
-            <div class="flex items-center gap-3">
-              <i class="fa fa-phone text-gray-400 w-5 text-center"></i>
+            <!-- 手机号码 -->
+            <div class="relative">
+              <i class="fa fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
               <input type="tel" v-model="form.phone"
-                     :class="inputClass('phone')"
+                     class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                      placeholder="请输入手机号码">
             </div>
-            <p v-if="errors.phone" class="text-xs text-red-500 mt-1">{{ errors.phone }}</p>
-          </div>
 
-          <!-- 学位类型（学生才显示） -->
-          <div class="mb-5" v-if="form.role === 'student'">
-            <label class="block text-sm font-medium text-gray-700 mb-1">学位类型</label>
-            <div class="flex items-center gap-3">
-              <i class="fa fa-graduation-cap text-gray-400 w-5 text-center"></i>
+            <!-- 学位类型（学生才显示） -->
+            <div class="relative" v-if="form.role === 'student'">
+              <i class="fa fa-graduation-cap absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
               <select v-model="form.degree_type"
-                      class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none">
+                      class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 appearance-none">
                 <option value="">选择学位类型</option>
                 <option value="博士">博士</option>
                 <option value="硕士">硕士</option>
                 <option value="本科">本科</option>
               </select>
             </div>
-          </div>
 
-          <!-- 电子邮箱 -->
-          <div class="mb-5">
-            <label class="block text-sm font-medium text-gray-700 mb-1">电子邮箱</label>
-            <div class="flex items-center gap-3">
-              <i class="fa fa-envelope-o text-gray-400 w-5 text-center"></i>
+            <!-- 电子邮箱 -->
+            <div class="relative">
+              <i class="fa fa-envelope-o absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
               <input type="email" v-model="form.email"
-                     :class="inputClass('email')"
-                     placeholder="建议使用学校官方邮箱">
+                     class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                     placeholder="请输入邮箱（建议使用学校邮箱）">
             </div>
-            <p class="text-xs text-gray-500 mt-1">用于接收审核通知与重要消息</p>
-            <p v-if="errors.email" class="text-xs text-red-500 mt-1">{{ errors.email }}</p>
-          </div>
 
-          <!-- 密码 -->
-          <div class="mb-5">
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              设置密码 <span class="text-red-500">*</span>
-            </label>
-            <div class="flex items-center gap-3">
-              <i class="fa fa-lock text-gray-400 w-5 text-center"></i>
-              <input type="password" v-model="form.password"
-                     :class="inputClass('password')"
-                     placeholder="至少6位，含字母和数字" required>
+            <!-- 密码 -->
+            <div class="relative">
+              <i class="fa fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <input :type="showPassword ? 'text' : 'password'" v-model="form.password"
+                     class="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                     placeholder="请输入密码（至少6位）">
+              <button type="button" @click="showPassword = !showPassword"
+                      class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors">
+                <i :class="showPassword ? 'fa fa-eye-slash' : 'fa fa-eye'"></i>
+              </button>
             </div>
-            <p v-if="errors.password" class="text-xs text-red-500 mt-1">{{ errors.password }}</p>
-          </div>
 
-          <!-- 确认密码 -->
-          <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              确认密码 <span class="text-red-500">*</span>
-            </label>
-            <div class="flex items-center gap-3">
-              <i class="fa fa-lock text-gray-400 w-5 text-center"></i>
+            <!-- 确认密码 -->
+            <div class="relative">
+              <i class="fa fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
               <input type="password" v-model="form.confirmPassword"
-                     :class="inputClass('confirmPassword')"
-                     placeholder="再次输入密码" required>
+                     class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                     placeholder="请确认密码">
             </div>
-            <p v-if="errors.confirmPassword" class="text-xs text-red-500 mt-1">{{ errors.confirmPassword }}</p>
-          </div>
 
-          <!-- 用户协议 -->
-          <div class="mb-6">
-            <label class="flex items-start">
-              <input type="checkbox" v-model="form.agreement" class="mt-1 text-primary focus:ring-primary/30 rounded">
-              <span class="ml-2 text-sm text-gray-600">
-                我已阅读并同意<a href="#" class="text-primary hover:underline">用户协议</a>
+            <!-- 用户协议 -->
+            <div class="flex items-center gap-2 text-sm">
+              <input type="checkbox" v-model="form.agreement" class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500/30">
+              <span class="text-gray-600">我已阅读并同意<a href="#" class="text-blue-500 hover:underline">用户协议</a></span>
+            </div>
+
+            <!-- 注册按钮 -->
+            <button type="submit" :disabled="loading"
+                    class="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+              <span v-if="!loading">注册账号</span>
+              <span v-else class="flex items-center justify-center gap-2">
+                <i class="fa fa-spinner fa-spin"></i>
+                <span>注册中...</span>
               </span>
-            </label>
-            <p v-if="errors.agreement" class="text-xs text-red-500 mt-1">{{ errors.agreement }}</p>
+            </button>
+          </form>
+
+          <!-- 登录链接 -->
+        <div class="mt-6 text-center text-sm">
+          <span class="text-gray-400">已有账号?</span>
+          <button type="button" @click="goToLogin" class="text-blue-500 font-medium hover:text-blue-600 ml-1 transition-colors cursor-pointer underline">立即登录</button>
+        </div>
+
+          <!-- 底部山水剪影装饰 -->
+          <div class="absolute bottom-0 left-0 right-0 h-16 overflow-hidden opacity-10 pointer-events-none">
+            <svg viewBox="0 0 400 60" class="w-full h-full fill-gray-400">
+              <path d="M0,60 L0,40 Q50,20 100,35 T200,25 T300,40 T400,30 L400,60 Z"></path>
+              <path d="M0,60 L0,50 Q80,30 160,45 T280,35 T400,50 L400,60 Z"></path>
+            </svg>
           </div>
-
-          <!-- 提交按钮 -->
-          <button type="submit" :disabled="loading"
-                  class="w-full bg-primary text-white rounded-lg py-3 font-medium hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed">
-            <span v-if="!loading">注册账号</span>
-            <span v-else class="flex items-center justify-center gap-2">
-              <i class="fa fa-spinner fa-spin"></i>
-              <span>注册中...</span>
-            </span>
-          </button>
-
-          <!-- 已有账号 -->
-          <div class="text-center text-sm text-gray-500 mt-4">
-            <p>已有账号? <a href="/login" class="text-primary hover:text-primary/80 font-medium">立即登录</a></p>
-          </div>
-        </form>
-
-        <!-- 底部提示 -->
-        <div class="mt-6 pt-6 border-t border-gray-100 text-center text-xs text-gray-500">
-          <p>疑问联系：<a href="mailto:admin@lab.example.com" class="text-primary hover:underline">admin@lab.example.com</a></p>
         </div>
       </div>
     </div>
 
     <!-- 成功提示弹窗 -->
     <div v-if="showSuccessModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 max-w-sm mx-4 text-center">
-        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <i class="fa fa-check text-green-600 text-xl"></i>
+      <div class="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-xl">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fa fa-check text-green-600 text-2xl"></i>
         </div>
-        <h3 class="text-lg font-semibold text-gray-800 mb-2">注册成功！</h3>
-        <p class="text-sm text-gray-600 mb-4">您的账号已提交，等待管理员审核后即可登录使用</p>
-        <button @click="goToLogin" class="w-full bg-primary text-white rounded-lg py-2 hover:bg-primary/90 transition-colors">
+        <h3 class="text-xl font-bold text-gray-800 mb-2">注册成功！</h3>
+        <p class="text-sm text-gray-600 mb-6">您的账号已提交，等待管理员审核后即可登录使用</p>
+        <button @click="goToLogin" class="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all">
           前往登录
         </button>
       </div>
@@ -180,11 +227,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import axios from 'axios'
+import bgImage from '../../images/Common.png'
 
 const loading = ref(false)
 const showSuccessModal = ref(false)
+const showPassword = ref(false)
 
 const form = reactive({
   username: '',
@@ -202,161 +251,64 @@ const errors = reactive({
   username: '',
   password: '',
   confirmPassword: '',
-  email: '',
-  phone: '',
-  agreement: ''
+  email: ''
 })
 
-// 输入框样式（根据验证状态）
-const inputClass = (field) => {
-  const base = 'w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all'
-  if (errors[field]) {
-    return `${base} border-red-500`
-  }
-  // 实时验证成功的字段显示绿色边框
-  if (form[field] && !errors[field] && fieldValid[field]) {
-    return `${base} border-green-500`
-  }
-  return base
-}
-
-// 实时验证状态
-const fieldValid = reactive({
-  username: false,
-  password: false,
-  confirmPassword: false,
-  email: false,
-  phone: false
+// 实时验证
+watch(() => form.username, (val) => {
+  const v = val.trim()
+  errors.username = v.length > 0 && (v.length < 3 || v.length > 50 || !/^[a-zA-Z0-9_]+$/.test(v))
+    ? '用户名需要3-50个字符，只含字母数字下划线' : ''
 })
 
-// 实时验证用户名
-const validateUsername = () => {
-  const value = form.username.trim()
-  if (value.length === 0) {
-    errors.username = ''
-    fieldValid.username = false
-  } else if (value.length < 3 || value.length > 50) {
-    errors.username = '用户名长度必须在3-50个字符之间'
-    fieldValid.username = false
-  } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
-    errors.username = '用户名只能包含字母、数字和下划线'
-    fieldValid.username = false
-  } else {
-    errors.username = ''
-    fieldValid.username = true
+watch(() => form.password, (val) => {
+  const v = val.trim()
+  errors.password = v.length > 0 && v.length < 6 ? '密码至少6位' : ''
+  if (form.confirmPassword) {
+    errors.confirmPassword = form.confirmPassword !== val ? '密码不一致' : ''
   }
-}
+})
 
-// 实时验证密码
-const validatePassword = () => {
-  const value = form.password.trim()
-  if (value.length === 0) {
-    errors.password = ''
-    fieldValid.password = false
-  } else if (value.length < 6) {
-    errors.password = '密码长度至少为6位'
-    fieldValid.password = false
-  } else {
-    errors.password = ''
-    fieldValid.password = true
-  }
-  // 同时验证确认密码
-  if (form.confirmPassword) validateConfirmPassword()
-}
+watch(() => form.confirmPassword, (val) => {
+  errors.confirmPassword = val && val !== form.password ? '密码不一致' : ''
+})
 
-// 实时验证确认密码
-const validateConfirmPassword = () => {
-  const value = form.confirmPassword.trim()
-  if (value.length === 0) {
-    errors.confirmPassword = ''
-    fieldValid.confirmPassword = false
-  } else if (value !== form.password) {
-    errors.confirmPassword = '两次输入的密码不一致'
-    fieldValid.confirmPassword = false
-  } else {
-    errors.confirmPassword = ''
-    fieldValid.confirmPassword = true
-  }
-}
-
-// 实时验证邮箱
-const validateEmail = () => {
-  const value = form.email.trim()
-  if (value.length === 0) {
-    errors.email = ''
-    fieldValid.email = false
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-    errors.email = '请输入有效的电子邮箱地址'
-    fieldValid.email = false
-  } else {
-    errors.email = ''
-    fieldValid.email = true
-  }
-}
-
-// 实时验证手机号
-const validatePhone = () => {
-  const value = form.phone.trim()
-  if (value.length === 0) {
-    errors.phone = ''
-    fieldValid.phone = false
-  } else if (!/^1[3-9]\d{9}$/.test(value)) {
-    errors.phone = '请输入有效的手机号码'
-    fieldValid.phone = false
-  } else {
-    errors.phone = ''
-    fieldValid.phone = true
-  }
-}
-
-// 监听输入变化进行实时验证
-import { watch } from 'vue'
-watch(() => form.username, validateUsername)
-watch(() => form.password, validatePassword)
-watch(() => form.confirmPassword, validateConfirmPassword)
-watch(() => form.email, validateEmail)
-watch(() => form.phone, validatePhone)
+watch(() => form.email, (val) => {
+  const v = val.trim()
+  errors.email = v.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? '邮箱格式不正确' : ''
+})
 
 // 提交表单
 async function handleRegister() {
-  // 清除所有错误
-  Object.keys(errors).forEach(key => errors[key] = '')
-
-  // 基础验证
   if (!form.username.trim()) {
-    errors.username = '请填写用户名'
+    window.$toast?.('请输入用户名', 'error')
+    return
   }
   if (!form.password.trim()) {
-    errors.password = '请填写密码'
+    window.$toast?.('请输入密码', 'error')
+    return
   }
   if (!form.confirmPassword.trim()) {
-    errors.confirmPassword = '请确认密码'
+    window.$toast?.('请确认密码', 'error')
+    return
+  }
+  if (form.password !== form.confirmPassword) {
+    window.$toast?.('两次密码不一致', 'error')
+    return
   }
   if (!form.role) {
-    window.$toast?.('请选择身份角色', 'error')
+    window.$toast?.('请选择身份', 'error')
     return
   }
   if (!form.agreement) {
-    errors.agreement = '请同意用户协议'
+    window.$toast?.('请同意用户协议', 'error')
+    return
   }
-
-  // 检查是否有错误
-  const hasError = Object.values(errors).some(e => e)
-  if (hasError) return
-
-  // 重复验证（确保实时验证通过）
-  validateUsername()
-  validatePassword()
-  validateConfirmPassword()
-  if (form.email) validateEmail()
-  if (form.phone) validatePhone()
-
-  if (Object.values(errors).some(e => e)) return
 
   loading.value = true
 
   try {
-    const response = await axios.post('/api/auth/register', {
+    const res = await axios.post('/api/auth/register', {
       username: form.username.trim(),
       password: form.password.trim(),
       role: form.role,
@@ -366,13 +318,13 @@ async function handleRegister() {
       degree_type: form.degree_type
     })
 
-    if (response.data.success) {
+    if (res.data.success) {
       showSuccessModal.value = true
     } else {
-      window.$toast?.(response.data.message || '注册失败，请重试', 'error')
+      window.$toast?.(res.data.message || '注册失败', 'error')
     }
-  } catch (err) {
-    const message = err.response?.data?.message || '网络错误，请检查连接后重试'
+  } catch (e) {
+    const message = e.response?.data?.message || '网络错误，请稍后重试'
     window.$toast?.(message, 'error')
   } finally {
     loading.value = false
@@ -380,6 +332,51 @@ async function handleRegister() {
 }
 
 function goToLogin() {
+  console.log('=== goToLogin 点击触发 ===')
+  console.log('当前路径:', window.location.pathname)
   window.location.href = '/login'
+  console.log('=== 正在跳转到 /login ===')
 }
 </script>
+
+<style scoped>
+/* 页面加载动画 */
+.login-card {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.login-card > * {
+  animation: fadeIn 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.login-card > *:nth-child(1) { animation-delay: 0.1s; }
+.login-card > *:nth-child(2) { animation-delay: 0.2s; }
+.login-card > *:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 功能图标悬浮动画 */
+.feature-icon {
+  transition: all 0.3s ease;
+}
+
+.feature-icon:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(255, 255, 255, 0.2);
+}
+</style>

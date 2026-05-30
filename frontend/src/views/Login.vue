@@ -30,25 +30,25 @@
           <!-- 四个功能图标 -->
           <div class="flex gap-12 mb-8">
             <div class="flex flex-col items-center">
-              <div class="w-18 h-18 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm hover:bg-white/25 transition-colors" style="width: 72px; height: 72px;">
+              <div class="feature-icon w-18 h-18 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm hover:bg-white/25 transition-colors cursor-pointer" style="width: 72px; height: 72px;">
                 <i class="fa fa-calendar text-2xl"></i>
               </div>
               <span class="text-base text-white/80">组会计划</span>
             </div>
             <div class="flex flex-col items-center">
-              <div class="w-18 h-18 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm hover:bg-white/25 transition-colors" style="width: 72px; height: 72px;">
+              <div class="feature-icon w-18 h-18 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm hover:bg-white/25 transition-colors cursor-pointer" style="width: 72px; height: 72px;">
                 <i class="fa fa-users text-2xl"></i>
               </div>
               <span class="text-base text-white/80">协作共享</span>
             </div>
             <div class="flex flex-col items-center">
-              <div class="w-18 h-18 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm hover:bg-white/25 transition-colors" style="width: 72px; height: 72px;">
+              <div class="feature-icon w-18 h-18 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm hover:bg-white/25 transition-colors cursor-pointer" style="width: 72px; height: 72px;">
                 <i class="fa fa-line-chart text-2xl"></i>
               </div>
               <span class="text-base text-white/80">进度跟踪</span>
             </div>
             <div class="flex flex-col items-center">
-              <div class="w-18 h-18 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm hover:bg-white/25 transition-colors" style="width: 72px; height: 72px;">
+              <div class="feature-icon w-18 h-18 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm hover:bg-white/25 transition-colors cursor-pointer" style="width: 72px; height: 72px;">
                 <i class="fa fa-shield text-2xl"></i>
               </div>
               <span class="text-base text-white/80">规范管理</span>
@@ -75,7 +75,7 @@
         </div>
 
         <!-- 登录卡片 -->
-        <div class="bg-white/85 backdrop-blur-xl rounded-3xl shadow-2xl p-8 pb-16 relative overflow-hidden min-h-[550px] flex flex-col">
+        <div class="login-card bg-white/85 backdrop-blur-xl rounded-3xl shadow-2xl p-8 pb-16 relative overflow-hidden min-h-[550px] flex flex-col">
           <!-- 右上角语言选择 -->
           <div class="absolute top-4 right-4">
             <select class="bg-gray-100 text-sm text-gray-600 px-3 py-1.5 rounded-lg border-0 focus:outline-none cursor-pointer">
@@ -244,3 +244,46 @@ async function handleLogin() {
   }
 }
 </script>
+
+<style scoped>
+/* 页面加载动画 */
+.login-card {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.login-card > * {
+  animation: fadeIn 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.login-card > *:nth-child(1) { animation-delay: 0.1s; }
+.login-card > *:nth-child(2) { animation-delay: 0.2s; }
+.login-card > *:nth-child(3) { animation-delay: 0.3s; }
+.login-card > *:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 功能图标悬浮动画 */
+.feature-icon {
+  transition: all 0.3s ease;
+}
+
+.feature-icon:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(255, 255, 255, 0.2);
+}
+</style>
