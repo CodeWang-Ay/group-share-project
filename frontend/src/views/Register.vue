@@ -95,25 +95,28 @@
             <!-- 用户名 -->
             <div class="relative">
               <i class="fa fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-red-500 text-xs">*必填</span>
               <input type="text" v-model="form.username"
-                     class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                     class="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                      placeholder="请输入用户名（3-50字符）">
             </div>
 
             <!-- 身份角色 -->
             <div class="relative">
               <i class="fa fa-id-card-o absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-red-500 text-xs">*必填</span>
               <select v-model="form.role"
-                      class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 appearance-none">
+                      class="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 appearance-none">
                 <option value="">选择身份</option>
                 <option value="teacher">老师</option>
                 <option value="student">学生</option>
               </select>
             </div>
 
-            <!-- 性别 -->
+            <!-- 性别（选填） -->
             <div class="relative">
               <i class="fa fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs">选填</span>
               <div class="pl-12 flex gap-2">
                 <button type="button" @click="form.gender = 'male'"
                         :class="form.gender === 'male' ? 'bg-blue-500 text-white border-blue-500' : 'bg-gray-50 text-gray-600 border-gray-200'"
@@ -128,19 +131,21 @@
               </div>
             </div>
 
-            <!-- 手机号码 -->
+            <!-- 手机号码（选填） -->
             <div class="relative">
               <i class="fa fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs">选填</span>
               <input type="tel" v-model="form.phone"
-                     class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                     class="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                      placeholder="请输入手机号码">
             </div>
 
-            <!-- 学位类型（学生才显示） -->
+            <!-- 学位类型（学生才显示，选填） -->
             <div class="relative" v-if="form.role === 'student'">
               <i class="fa fa-graduation-cap absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs">选填</span>
               <select v-model="form.degree_type"
-                      class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 appearance-none">
+                      class="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 appearance-none">
                 <option value="">选择学位类型</option>
                 <option value="博士">博士</option>
                 <option value="硕士">硕士</option>
@@ -148,19 +153,21 @@
               </select>
             </div>
 
-            <!-- 电子邮箱 -->
+            <!-- 电子邮箱（选填） -->
             <div class="relative">
               <i class="fa fa-envelope-o absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs">选填</span>
               <input type="email" v-model="form.email"
-                     class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                     class="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                      placeholder="请输入邮箱（建议使用学校邮箱）">
             </div>
 
             <!-- 密码 -->
             <div class="relative">
               <i class="fa fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <span class="absolute right-16 top-1/2 -translate-y-1/2 text-red-500 text-xs">*必填</span>
               <input :type="showPassword ? 'text' : 'password'" v-model="form.password"
-                     class="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                     class="w-full pl-12 pr-16 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                      placeholder="请输入密码（至少6位）">
               <button type="button" @click="showPassword = !showPassword"
                       class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors">
@@ -171,8 +178,9 @@
             <!-- 确认密码 -->
             <div class="relative">
               <i class="fa fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-red-500 text-xs">*必填</span>
               <input type="password" v-model="form.confirmPassword"
-                     class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                     class="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                      placeholder="请确认密码">
             </div>
 

@@ -1,6 +1,7 @@
 <template>
-  <!-- 公开页面（如注册）不显示布局 -->
+  <!-- 公开页面（如注册）不显示布局，但需要Toast -->
   <div v-if="isPublicPage" class="min-h-screen bg-gray-50">
+    <Toast />
     <router-view />
   </div>
 
