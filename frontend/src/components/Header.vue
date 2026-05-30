@@ -35,9 +35,9 @@
                 <p class="font-medium">{{ userStore.username }}</p>
                 <p class="text-xs text-gray-500">{{ userStore.roleText }}</p>
               </div>
-              <a href="/user_profile" class="block px-4 py-2 text-sm hover:bg-gray-100">
+              <router-link to="/user-profile" class="block px-4 py-2 text-sm hover:bg-gray-100">
                 <i class="fa fa-user-o mr-2 text-gray-500"></i>个人资料
-              </a>
+              </router-link>
               <a href="/edit_password" class="block px-4 py-2 text-sm hover:bg-gray-100">
                 <i class="fa fa-key mr-2 text-gray-500"></i>修改密码
               </a>

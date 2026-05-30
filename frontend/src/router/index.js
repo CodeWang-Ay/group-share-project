@@ -11,6 +11,7 @@ import ResearchProgress from '../views/ResearchProgress.vue'
 import ResearchTasks from '../views/ResearchTasks.vue'
 import ShareFile from '../views/ShareFile.vue'
 import PaperDatabase from '../views/PaperDatabase.vue'
+import UserProfile from '../views/UserProfile.vue'
 
 const routes = [
   {
@@ -62,6 +63,11 @@ const routes = [
     path: '/paper-database',
     name: 'PaperDatabase',
     component: PaperDatabase
+  },
+  {
+    path: '/user-profile',
+    name: 'UserProfile',
+    component: UserProfile
   }
 ]
 

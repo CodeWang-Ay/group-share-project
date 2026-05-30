@@ -250,15 +250,27 @@ async def rm_research_tasks_page(request: Request):
     return _render_page("rm_research_tasks.html", request, current_user)
 
 
-# 个人资料页面
+# 个人资料页面 - 重定向到 Vue 前端
 @router.get("/user_profile", response_class=HTMLResponse)
 async def user_profile_page(request: Request):
-    """个人资料页面"""
-    logger.info("个人资料页面")
+    """个人资料页面 - 重定向到 Vue 前端"""
     current_user = await get_current_user(request)
     if not current_user:
         return _redirect_to_login()
-    return _render_page("user_profile.html", request, current_user)
+
+    # 获取 session_token
+    session_token = request.query_params.get("session_token")
+    if not session_token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            session_token = auth_header[7:]
+    if not session_token:
+        session_token = request.cookies.get("session_token")
+
+    if session_token:
+        return RedirectResponse(url=f"http://localhost:3001/user-profile?session_token={session_token}", status_code=302)
+    else:
+        return RedirectResponse(url="http://localhost:3001/user-profile", status_code=302)
 
 
 # 修改密码页面
