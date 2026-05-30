@@ -138,11 +138,12 @@ async def index(request: Request):
         return RedirectResponse(url="http://localhost:3001", status_code=302)
 
 
-# 登录页面
+# 登录页面 - 重定向到 Vue 前端
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    """登录页面"""
-    return templates.TemplateResponse(request, "login.html")
+    """登录页面 - 重定向到 Vue 前端"""
+    # 登录页面不需要登录检查，直接重定向
+    return RedirectResponse(url="http://localhost:3001/login", status_code=302)
 
 
 # 注册页面 - 重定向到 Vue 前端

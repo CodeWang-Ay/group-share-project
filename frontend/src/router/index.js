@@ -15,8 +15,15 @@ import UserProfile from '../views/UserProfile.vue'
 import EditPassword from '../views/EditPassword.vue'
 import Settings from '../views/Settings.vue'
 import Register from '../views/Register.vue'
+import Login from '../views/Login.vue'
 
 const routes = [
+  {
+    path: '/login',
+    name: 'Login',
+    component: Login,
+    meta: { public: true }  // 公开页面，不需要登录
+  },
   {
     path: '/register',
     name: 'Register',
