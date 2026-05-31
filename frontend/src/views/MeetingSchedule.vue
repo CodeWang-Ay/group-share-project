@@ -6,8 +6,8 @@
       <p class="text-gray-500">管理实验室组会日程和安排</p>
     </div>
 
-    <!-- 统计卡片（日历视图时隐藏，因为侧边栏已有统计） -->
-    <div v-if="viewMode !== 'calendar'" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <!-- 统计卡片 -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
       <div class="bg-white rounded-lg shadow-sm p-4 border">
         <div class="flex items-center justify-between">
           <div>
