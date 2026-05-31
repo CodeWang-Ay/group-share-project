@@ -51,7 +51,8 @@ if (sessionToken) {
 
 // 获取用户信息
 onMounted(async () => {
-  if (userStore.token && !userStore.username) {
+  // 如果有 token 但缺少用户信息（username 或 avatar），则获取完整信息
+  if (userStore.token && (!userStore.username || !userStore.avatar)) {
     try {
       const res = await authApi.getMe()
       if (res.data.success && res.data.data.user) {

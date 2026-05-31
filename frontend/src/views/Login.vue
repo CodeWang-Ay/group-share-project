@@ -223,8 +223,27 @@ async function handleLogin() {
 
     if (res.data.success && res.data.session_token) {
       localStorage.setItem('session_token', res.data.session_token)
-      localStorage.setItem('user_info', JSON.stringify({ username: username.value.trim() }))
       userStore.setToken(res.data.session_token)
+
+      // 获取用户信息（包括头像）
+      try {
+        const userRes = await axios.get('/api/auth/me', {
+          headers: { Authorization: `Bearer ${res.data.session_token}` }
+        })
+        if (userRes.data.success && userRes.data.data) {
+          const userInfo = {
+            id: userRes.data.data.id,
+            username: userRes.data.data.username,
+            role: userRes.data.data.role,
+            avatar: userRes.data.data.avatar
+          }
+          localStorage.setItem('user_info', JSON.stringify(userInfo))
+          userStore.setUserInfo(userInfo)
+        }
+      } catch (e) {
+        // 如果获取用户信息失败，至少保存 username
+        localStorage.setItem('user_info', JSON.stringify({ username: username.value.trim() }))
+      }
 
       window.$toast?.('登录成功', 'success')
 
