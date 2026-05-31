@@ -290,7 +290,8 @@ class ResearchProgressRepository:
         """更新进展"""
         allowed_fields = ['research_direction', 'weekly_progress', 'next_goal', 'difficulties',
                           'completion_rate', 'attachments', 'status']
-        update_data = {k: v for k, v in data.items() if k in allowed_fields and v is not None}
+        # 保留所有允许的字段，包括空字符串
+        update_data = {k: v for k, v in data.items() if k in allowed_fields}
 
         if 'attachments' in update_data and isinstance(update_data['attachments'], list):
             update_data['attachments'] = json.dumps(update_data['attachments'])

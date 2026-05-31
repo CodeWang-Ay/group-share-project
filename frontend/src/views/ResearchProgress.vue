@@ -89,10 +89,21 @@
                   </div>
                   <span :class="statusBadgeClass(item.status || 'normal')">{{ statusText(item.status || 'normal') }}</span>
                 </div>
-                <p class="text-sm text-gray-600 line-clamp-2 mb-2">{{ item.weekly_progress }}</p>
-                <div class="flex gap-2">
-                  <button @click="viewDetail(item.id)" class="text-primary hover:underline text-sm">查看详情</button>
-                  <button @click="editProgress(item.id)" class="text-gray-600 hover:underline text-sm">编辑</button>
+                <p class="text-sm text-gray-600 mb-1"><span class="font-medium text-gray-700">本周进展：</span>{{ item.weekly_progress }}</p>
+                <p v-if="item.difficulties" class="text-sm text-orange-600 mb-2"><span class="font-medium text-gray-700">遇到的困难：</span>{{ item.difficulties }}</p>
+                <p v-if="item.next_goal" class="text-sm text-gray-600 mb-2"><span class="font-medium text-gray-700">下周计划：</span>{{ item.next_goal }}</p>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2 text-sm text-gray-500">
+                    <span>完成度：{{ item.completion_rate }}%</span>
+                  </div>
+                  <div class="flex gap-2">
+                    <button @click="viewDetail(item.id)" class="px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-primary hover:text-white transition-all">
+                      <i class="fa fa-eye mr-1"></i>查看详情
+                    </button>
+                    <button @click="editProgress(item.id)" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-500 hover:text-white transition-all">
+                      <i class="fa fa-edit mr-1"></i>编辑
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -203,6 +214,7 @@
                   <th class="px-6 py-4 font-medium">完成度</th>
                   <th class="px-6 py-4 font-medium">状态</th>
                   <th class="px-6 py-4 font-medium">最后更新</th>
+                  <th class="px-6 py-4 font-medium">操作</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100 text-sm">
@@ -228,10 +240,16 @@
                   <td class="px-6 py-4">
                     <span :class="statusBadgeClass(item.computed_status || item.status || 'normal')">{{ statusText(item.computed_status || item.status || 'normal') }}</span>
                   </td>
-                  <td class="px-6 py-4 text-gray-500">{{ formatDate(item.last_update_time) }}</td>
+                  <td class="px-6 py-4 text-gray-500">{{ formatDate(item.submission_date) }}</td>
+                  <td class="px-6 py-4">
+                    <button v-if="item.progress_id" @click="viewDetail(item.progress_id)" class="w-8 h-8 bg-primary/10 text-primary rounded-lg hover:bg-primary hover:text-white transition-all flex items-center justify-center" title="查看详情">
+                      <i class="fa fa-eye"></i>
+                    </button>
+                    <span v-else class="text-gray-400 text-sm">暂无进展</span>
+                  </td>
                 </tr>
                 <tr v-if="filteredStudentTeamList.length === 0">
-                  <td colspan="8" class="px-6 py-8 text-center text-gray-500">
+                  <td colspan="9" class="px-6 py-8 text-center text-gray-500">
                     <i class="fa fa-inbox text-4xl mb-4"></i>
                     <p>暂无团队进展数据</p>
                   </td>
@@ -371,11 +389,17 @@
                 <td class="px-6 py-4">
                   <span :class="statusBadgeClass(item.computed_status || item.status || 'normal')">{{ statusText(item.computed_status || item.status || 'normal') }}</span>
                 </td>
-                <td class="px-6 py-4 text-gray-500">{{ formatDate(item.last_update_time) }}</td>
+                <td class="px-6 py-4 text-gray-500">{{ formatDate(item.submission_date) }}</td>
                 <td class="px-6 py-4">
-                  <button v-if="item.latest_progress_id" @click="viewDetail(item.latest_progress_id)" class="text-primary hover:underline mr-2">查看详情</button>
-                  <button v-if="item.latest_progress_id" @click="viewDetail(item.latest_progress_id)" class="text-secondary hover:underline">沟通</button>
-                  <span v-else class="text-gray-400">暂无进展</span>
+                  <div v-if="item.progress_id" class="flex gap-2">
+                    <button @click="viewDetail(item.progress_id)" class="w-8 h-8 bg-primary/10 text-primary rounded-lg hover:bg-primary hover:text-white transition-all flex items-center justify-center" title="查看详情">
+                      <i class="fa fa-eye"></i>
+                    </button>
+                    <button @click="viewDetail(item.progress_id)" class="w-8 h-8 bg-green-100 text-green-600 rounded-lg hover:bg-green-500 hover:text-white transition-all flex items-center justify-center" title="沟通">
+                      <i class="fa fa-comment"></i>
+                    </button>
+                  </div>
+                  <span v-else class="text-gray-400 text-sm">暂无进展</span>
                 </td>
               </tr>
               <tr v-if="filteredTeamList.length === 0">
@@ -713,9 +737,12 @@ const editProgress = async (id) => {
       editingData.value = res.data.data
       existingAttachments.value = res.data.data.attachments || []
       showSubmitModal.value = true
+    } else {
+      showToast(res.data.message || '获取详情失败', 'error')
     }
   } catch (e) {
-    showToast('获取详情失败', 'error')
+    const message = e.response?.data?.message || '网络错误，请稍后重试'
+    showToast(message, 'error')
   }
 }
 
@@ -725,9 +752,12 @@ const viewDetail = async (id) => {
     if (res.data.success) {
       detailData.value = res.data.data
       showDetailModal.value = true
+    } else {
+      showToast(res.data.message || '获取详情失败', 'error')
     }
   } catch (e) {
-    showToast('获取详情失败', 'error')
+    const message = e.response?.data?.message || '网络错误，请稍后重试'
+    showToast(message, 'error')
   }
 }
 

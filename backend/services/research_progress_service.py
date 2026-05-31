@@ -224,11 +224,11 @@ class ResearchProgressService:
                 return None
 
         update_data = {}
-        if research_direction:
+        if research_direction is not None:
             update_data['research_direction'] = research_direction
-        if weekly_progress:
+        if weekly_progress is not None:
             update_data['weekly_progress'] = weekly_progress
-        if next_goal:
+        if next_goal is not None:
             update_data['next_goal'] = next_goal
         if difficulties is not None:
             update_data['difficulties'] = difficulties
