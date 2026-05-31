@@ -54,19 +54,48 @@
 
         <!-- 汇报材料区域 -->
         <div class="bg-purple-50 rounded-lg p-4 mb-4">
-          <div class="flex justify-between items-center mb-2">
+          <div class="flex justify-between items-center mb-3">
             <div class="flex items-center gap-2">
               <i class="fa fa-file-powerpoint-o text-purple-600"></i>
               <span class="font-medium text-gray-800">汇报材料</span>
+              <span class="text-xs text-gray-500">{{ submittedCount }}/{{ presenterMaterials.length }} 人已提交</span>
             </div>
             <button @click="loadMaterials" class="text-sm text-primary hover:text-primary/80"><i class="fa fa-refresh"></i> 刷新</button>
           </div>
+
+          <!-- 加载状态 -->
           <div v-if="loadingMaterials" class="text-sm text-gray-400"><i class="fa fa-spinner fa-spin"></i> 加载中...</div>
-          <div v-else-if="materials.length === 0" class="text-sm text-gray-400">暂无材料</div>
-          <div v-else class="space-y-2">
-            <div v-for="f in materials" :key="f.id" class="flex items-center justify-between p-2 bg-white rounded">
-              <span class="text-sm"><i class="fa fa-file-o mr-1 text-gray-400"></i>{{ f.filename }}</span>
-              <button @click="downloadFile(f.id, f.filename)" class="text-xs text-primary hover:underline"><i class="fa fa-download"></i></button>
+
+          <!-- 无汇报人 -->
+          <div v-else-if="presenterMaterials.length === 0" class="text-sm text-gray-400">暂无汇报人</div>
+
+          <!-- 按汇报人分组显示 -->
+          <div v-else class="space-y-3">
+            <div v-for="pm in presenterMaterials" :key="pm.presenterId" class="bg-white rounded-lg p-3">
+              <div class="flex justify-between items-center mb-2">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                    <i class="fa fa-user text-xs"></i>
+                  </div>
+                  <span class="font-medium text-gray-700">{{ pm.presenterName }}</span>
+                  <span class="text-xs text-gray-400">{{ pm.durationMinutes }}分钟</span>
+                </div>
+                <span v-if="pm.files.length > 0" class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
+                  <i class="fa fa-check-circle mr-1"></i>{{ pm.files.length }} 个文件
+                </span>
+                <span v-else class="bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded-full">
+                  <i class="fa fa-exclamation-circle mr-1"></i>未提交
+                </span>
+              </div>
+
+              <!-- 文件列表 -->
+              <div v-if="pm.files.length > 0" class="space-y-1 pl-8">
+                <div v-for="f in pm.files" :key="f.id" class="flex items-center justify-between py-1">
+                  <span class="text-sm text-gray-600"><i class="fa fa-file-o mr-1 text-gray-400"></i>{{ f.filename }}</span>
+                  <button @click="downloadFile(f.id, f.filename)" class="text-xs text-primary hover:underline"><i class="fa fa-download"></i></button>
+                </div>
+              </div>
+              <div v-else class="pl-8 text-xs text-gray-400 italic">暂无提交材料</div>
             </div>
           </div>
         </div>
@@ -98,7 +127,7 @@ const props = defineProps({
 
 defineEmits(['close', 'edit'])
 
-const materials = ref([])
+const presenterMaterials = ref([]) // 按汇报人分组的材料数据
 const loadingMaterials = ref(false)
 
 const typeMap = { regular: '常规组会', paper_reading: '论文研读', discussion: '专题讨论' }
@@ -119,17 +148,32 @@ const renderedMinutes = computed(() => {
   return marked.parse(props.meeting.minutes)
 })
 
+// 已提交人数统计
+const submittedCount = computed(() => {
+  return presenterMaterials.value.filter(pm => pm.files.length > 0).length
+})
+
 async function loadMaterials() {
   loadingMaterials.value = true
-  materials.value = []
+  presenterMaterials.value = []
   for (const p of presenters.value) {
     try {
       const res = await recordApi.getPresenterFiles(p.id)
-      if (res.data.files) {
-        materials.value.push(...res.data.files)
-      }
+      presenterMaterials.value.push({
+        presenterId: p.id,
+        presenterName: p.real_name || p.username,
+        durationMinutes: p.duration_minutes,
+        files: res.data.files || []
+      })
     } catch (e) {
       console.error('加载材料失败:', e)
+      // 即使失败也添加一个空条目，显示"未提交"
+      presenterMaterials.value.push({
+        presenterId: p.id,
+        presenterName: p.real_name || p.username,
+        durationMinutes: p.duration_minutes,
+        files: []
+      })
     }
   }
   loadingMaterials.value = false
