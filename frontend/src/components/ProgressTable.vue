@@ -64,16 +64,19 @@
 </template>
 
 <script setup>
+import { getAvatarUrl } from '../config'
+
 const props = defineProps({
   progress: { type: Array, default: [] },
   loading: { type: Boolean, default: false }
 })
 
 function avatarUrl(p) {
-  return p.avatar || `https://picsum.photos/id/${p.user_id % 100}/200/200`
+  return getAvatarUrl(p.avatar, p.username || 'User')
 }
 
 function truncate(text, len) {
+  if (!text) return '暂无'
   return text.length > len ? text.substring(0, len) + '...' : text
 }
 
