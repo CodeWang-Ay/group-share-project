@@ -2,6 +2,34 @@
 
 一个面向实验室研究团队的组会管理平台，支持组会安排、材料提交、文献管理、研究进展跟踪等功能。
 
+## 系统截图
+
+### 用户认证
+
+| 登录 | 注册 |
+|:---:|:---:|
+| ![登录](images/01_login.png) | ![注册](images/02_register.png) |
+
+### 核心功能
+
+| 工作台 | 组会安排 | 汇报材料 | 组会记录 |
+|:---:|:---:|:---:|:---:|
+| ![工作台](images/03_dashboard.png) | ![组会安排](images/04_meeting_schedule.png) | ![汇报材料](images/05_ReportMaterials.png) | ![组会记录](images/06_meeting_record.png) |
+
+### 资源管理
+
+| 学术文献 | 共享资料 | 研究任务 | 研究进展 |
+|:---:|:---:|:---:|:---:|
+| ![学术文献](images/07_paper_database.png) | ![共享资料](images/08_share_file.png) | ![研究任务](images/09_research_tasks.png) | ![研究进展](images/12_research_progress.png) |
+
+### 团队管理
+
+| 成员管理 | 学术工具 |
+|:---:|:---:|
+| ![成员管理](images/10_user_management.png) | ![学术工具](images/11_academic_tools.png) |
+
+---
+
 ## 功能模块
 
 ### 用户认证
@@ -23,20 +51,15 @@
 | **学术文献** | 团队文献库、个人文献库、文献分享、标签管理、阅读状态 |
 | **共享资料** | 文件上传/下载、权限控制、文件预览、按汇报人分组显示材料 |
 | **研究任务** | 任务创建/分配、进度跟踪、状态管理 |
+| **研究进展** | 进展提交、导师反馈、进度统计、附件上传/删除 |
 
 ### 团队管理
 | 模块 | 功能 |
 |------|------|
 | **成员管理** | 用户列表、角色分配、成员信息管理 |
 | **学术工具** | 学术资源链接、工具推荐 |
-| **研究进展** | 进展提交、导师反馈、进度统计、附件上传/删除 |
 
-### 个人中心
-| 模块 | 功能 |
-|------|------|
-| **个人资料** | 用户信息编辑、头像设置 |
-| **修改密码** | 安全密码修改 |
-| **设置** | 个人偏好设置 |
+---
 
 ## 技术栈
 
@@ -62,6 +85,8 @@
 | bcrypt | 5.0 | 密码加密 |
 | Pydantic | 2.13 | 数据验证 |
 
+---
+
 ## 项目结构
 
 ```
@@ -69,94 +94,24 @@ group-share-project/
 ├── frontend/                    # Vue 3 前端
 │   ├── src/
 │   │   ├── views/              # 页面组件 (15个)
-│   │   │   ├── Dashboard.vue   # 工作台
-│   │   │   ├── MeetingSchedule.vue  # 组会安排
-│   │   │   ├── ReportMaterials.vue  # 汇报材料
-│   │   │   ├── MeetingRecord.vue    # 组会记录
-│   │   │   ├── PaperDatabase.vue    # 学术文献
-│   │   │   ├── ShareFile.vue        # 共享资料
-│   │   │   ├── ResearchTasks.vue    # 研究任务
-│   │   │   ├── UserManagement.vue   # 成员管理
-│   │   │   ├── AcademicTools.vue    # 学术工具
-│   │   │   ├── ResearchProgress.vue # 研究进展
-│   │   │   ├── UserProfile.vue      # 个人资料
-│   │   │   ├── EditPassword.vue     # 修改密码
-│   │   │   ├── Settings.vue         # 设置
-│   │   │   ├── Login.vue            # 登录
-│   │   │   └── Register.vue         # 注册
-│   │   ├── components/          # 公共组件
-│   │   │   ├── Header.vue       # 顶部导航栏
-│   │   │   ├── Sidebar.vue      # 侧边栏菜单
-│   │   │   ├── MenuItem.vue     # 菜单项
-│   │   │   ├── Toast.vue        # 消息提示
-│   │   │   ├── MeetingCard.vue  # 组会卡片
-│   │   │   ├── MeetingCalendar.vue # 日历视图
-│   │   │   ├── MeetingGrid.vue  # 卡片视图
-│   │   │   ├── MeetingList.vue  # 列表视图
-│   │   │   ├── MeetingModal.vue # 创建/编辑弹窗
-│   │   │   ├── MeetingDetail.vue # 详情弹窗
-│   │   │   ├── StatCard.vue     # 统计卡片
-│   │   │   ├── FileList.vue     # 文件列表
-│   │   │   ├── PaperList.vue    # 文献列表
-│   │   │   └── ProgressTable.vue # 进展表格
-│   │   ├── api/                 # API 接口
-│   │   │   ├── dashboard.js     # 工作台 API
-│   │   │   ├── meeting.js       # 组会 API
-│   │   │   ├── paper.js         # 文献 API
-│   │   │   ├── research_progress.js # 进展 API
-│   │   │   └── record.js        # 记录 API
-│   │   ├── stores/              # Pinia 状态
-│   │   │   └── user.js          # 用户状态
-│   │   ├── router/              # 路由配置
-│   │   │   └── index.js         # 路由定义
-│   │   ├── config/              # 配置文件
-│   │   ├── App.vue              # 应用入口
-│   │   └── main.js              # 启动文件
-│   ├── public/                  # 静态资源
-│   ├── index.html               # HTML 入口
-│   ├── package.json             # NPM 配置
-│   ├── vite.config.js           # Vite 配置
-│   ├── tailwind.config.js       # Tailwind 配置
-│   └── postcss.config.js        # PostCSS 配置
+│   │   ├── components/         # 公共组件 (45个)
+│   │   ├── api/                # API 接口封装
+│   │   ├── stores/             # Pinia 状态管理
+│   │   ├── router/             # 路由配置
+│   │   └── config/             # 配置文件
+│   ├── package.json
+│   ├── vite.config.js
+│   └── tailwind.config.js
 │
 ├── backend/                     # FastAPI 后端
-│   ├── app.py                   # 应用入口
-│   ├── config.py                # 配置文件
-│   ├── routers/                 # API 路由 (13个)
-│   │   ├── auth_router.py       # 认证路由
-│   │   ├── dashboard_router.py  # 工作台路由
-│   │   ├── health_router.py     # 健康检查
-│   │   ├── meeting_material_router.py  # 组会材料
-│   │   ├── meeting_schedule_router.py  # 组会安排
-│   │   ├── member_management_router.py # 成员管理
-│   │   ├── message_system_router.py    # 消息系统
-│   │   ├── page_router.py       # 页面路由
-│   │   ├── paper_router.py      # 学术文献
-│   │   ├── research_progress_router.py # 研究进展
-│   │   ├── research_tasks_router.py    # 研究任务
-│   │   ├── shared_resources_router.py  # 共享资源
-│   │   └── user_profile_router.py      # 用户资料
+│   ├── routers/                 # API 路由 (14个)
 │   ├── services/                # 业务逻辑层
-│   │   ├── auth_service.py      # 认证服务
-│   │   ├── meeting_service.py   # 组会服务
-│   │   ├── paper_service.py     # 文献服务
-│   │   ├── shared_resources_service.py # 共享资源服务
-│   │   ├── research_progress_service.py # 研究进展服务
-│   │   └── user_service.py      # 用户服务
 │   ├── repositories/            # 数据访问层
-│   │   ├── meeting_repository.py # 组会数据
-│   │   ├── paper_repository.py  # 文献数据
-│   │   ├── shared_resources_repository.py # 共享资源数据
-│   │   └── user_repository.py   # 用户数据
 │   ├── models/                  # 数据模型
-│   │   ├── user.py              # 用户模型
-│   │   ├── file.py              # 文件模型
-│   │   └── paper.py             # 文献模型
+│   ├── schemas/                 # 数据验证
 │   ├── dependencies/            # 依赖注入
-│   │   └── auth.py              # 认证依赖
-│   └── database/                # 数据库配置
-│       ├── connection.py        # 数据库连接
-│       └── app.db               # SQLite 数据库
+│   ├── database/                # 数据库配置
+│   └── config.py                # 应用配置
 │
 ├── uploads/                     # 上传文件目录
 │   ├── share_files/            # 共享资料
@@ -165,13 +120,15 @@ group-share-project/
 │   ├── progress_files/         # 研究进展附件
 │   └── avatars/                 # 用户头像
 │
+├── images/                      # 系统截图
 ├── docs/                        # 文档目录
-├── requirements.txt             # Python 依赖
-├── CLAUDE.md                    # 开发规范
 ├── Dockerfile                   # Docker 镜像
 ├── docker-compose.yml           # Docker 编排
+├── CLAUDE.md                    # 开发规范
 └── README.md                    # 项目说明
 ```
+
+---
 
 ## 快速启动
 
@@ -200,20 +157,9 @@ uvicorn app:app --reload --host 0.0.0.0 --port 8088
 ### 前端启动
 
 ```bash
-# 进入前端目录
 cd frontend
-
-# 安装依赖
 npm install
-
-# 开发模式启动
 npm run dev
-
-# 生产构建
-npm run build
-
-# 预览生产版本
-npm run preview
 ```
 
 前端开发服务将在 `http://localhost:3001` 运行。
@@ -221,19 +167,14 @@ npm run preview
 ### Docker 部署
 
 ```bash
-# 构建并启动
 docker-compose up -d
-
-# 查看日志
-docker-compose logs -f
-
-# 停止服务
-docker-compose down
 ```
 
 访问 `http://localhost:8088` 即可使用系统。
 
 **默认管理员账号：** `admin` / `admin`
+
+---
 
 ## 用户角色权限
 
@@ -242,6 +183,8 @@ docker-compose down
 | **管理员 (admin)** | 全部功能、成员管理、系统设置、所有数据操作 |
 | **导师 (teacher)** | 组会管理、材料审阅、进展反馈、查看所有学生数据 |
 | **学生 (student)** | 材料提交、进展提交、个人文献管理、查看团队文献 |
+
+---
 
 ## API 文档
 
@@ -285,7 +228,6 @@ docker-compose down
 - `GET /` - 文件列表
 - `GET /{file_id}` - 文件详情
 - `DELETE /{file_id}` - 删除文件
-- `DELETE /by_filename/{filename}` - 按文件名删除
 - `GET /{file_id}/download` - 下载文件
 
 #### 研究进展 `/api/research_progress`
@@ -296,6 +238,8 @@ docker-compose down
 - `GET /team` - 团队进展
 - `GET /stats` - 进展统计
 - `POST /{id}/feedback` - 导师反馈
+
+---
 
 ## 数据库表结构
 
@@ -315,6 +259,8 @@ docker-compose down
 | progress_settings | 提交周期设置（提醒天数） |
 | messages | 消息留言（类型、内容） |
 
+---
+
 ## 开发规范
 
 详见 [CLAUDE.md](./CLAUDE.md)
@@ -330,15 +276,7 @@ docker-compose down
 - **api/** - API 请求封装
 - **stores/** - 全局状态管理
 
-### 命名规范
-- 文件名：`snake_case + 层级后缀`，如 `meeting_service.py`
-- 类名：`PascalCase + 层级后缀`，如 `MeetingService`
-- 函数名：`snake_case`，如 `get_meeting_by_id`
-
-### 开发规则
-- 禁止在 router 层直接操作数据库
-- 禁止在 repository 层写业务判断逻辑
-- 新增模块必须同时创建三层文件
+---
 
 ## 版本历史
 
@@ -348,6 +286,8 @@ docker-compose down
 | v0.0.2 | 组会管理、汇报材料 |
 | v0.0.3 | 学术文献、共享资料、研究任务 |
 | v0.0.4 | 研究进展、分页优化、Vue 前端重构 |
+
+---
 
 ## 作者
 
