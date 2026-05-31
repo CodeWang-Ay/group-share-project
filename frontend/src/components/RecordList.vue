@@ -7,7 +7,7 @@
           <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">时间</th>
           <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">纪要状态</th>
           <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">汇报人</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+          <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">操作</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-100">
@@ -27,11 +27,17 @@
             <span v-else class="bg-orange-100 text-orange-600 text-xs px-2 py-1 rounded-full">待填写</span>
           </td>
           <td class="px-4 py-3 text-sm text-gray-500">{{ presenterNames(m.presenters) }}</td>
-          <td class="px-4 py-3">
-            <div class="flex gap-2">
-              <button @click="$emit('view', m)" class="text-primary hover:underline text-sm">查看</button>
-              <button @click="$emit('edit', m.id, m.title, m.minutes)" class="text-green-600 hover:underline text-sm">编辑纪要</button>
-              <button @click="$emit('materials', m.id, m.title)" class="text-purple-600 hover:underline text-sm">材料</button>
+          <td class="px-4 py-3 text-right">
+            <div class="flex gap-2 justify-end">
+              <button @click="$emit('view', m)" class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center justify-center transition-colors" title="查看详情">
+                <i class="fa fa-eye"></i>
+              </button>
+              <button v-if="canEdit" @click="$emit('edit', m.id, m.title, m.minutes)" class="w-8 h-8 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 flex items-center justify-center transition-colors" title="编辑纪要">
+                <i class="fa fa-edit"></i>
+              </button>
+              <button @click="$emit('materials', m.id, m.title)" class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 flex items-center justify-center transition-colors" title="查看材料">
+                <i class="fa fa-file-text-o"></i>
+              </button>
             </div>
           </td>
         </tr>
@@ -41,6 +47,9 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useUserStore } from '../stores/user'
+
 const props = defineProps({
   records: Array,
   searchKeyword: String,
@@ -48,6 +57,12 @@ const props = defineProps({
 })
 
 defineEmits(['view', 'edit', 'materials'])
+
+const userStore = useUserStore()
+
+const canEdit = computed(() => {
+  return userStore.role === 'admin' || userStore.role === 'teacher'
+})
 
 const typeMap = { regular: '常规组会', paper_reading: '论文研读', discussion: '专题讨论' }
 

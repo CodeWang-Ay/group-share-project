@@ -38,14 +38,21 @@
           </div>
         </div>
         <!-- 底部操作区域 -->
-        <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between">
+        <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
           <div class="flex items-center gap-2 text-sm text-gray-500">
             <i class="fa fa-clock-o"></i>
             <span>{{ m.duration_total }}分钟</span>
           </div>
-          <div class="flex gap-3">
-            <button @click="$emit('view', m)" class="text-gray-400 hover:text-primary"><i class="fa fa-eye"></i> 查看</button>
-            <button @click="$emit('edit', m.id, m.title, m.minutes)" class="text-gray-400 hover:text-green-600"><i class="fa fa-edit"></i> 编辑纪要</button>
+          <div class="flex gap-2">
+            <button @click="$emit('view', m)" class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center justify-center transition-colors" title="查看详情">
+              <i class="fa fa-eye"></i>
+            </button>
+            <button v-if="canEdit" @click="$emit('edit', m.id, m.title, m.minutes)" class="w-8 h-8 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 flex items-center justify-center transition-colors" title="编辑纪要">
+              <i class="fa fa-edit"></i>
+            </button>
+            <button @click="$emit('loadMaterials', m.id)" class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 flex items-center justify-center transition-colors" title="查看材料">
+              <i class="fa fa-file-text-o"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -54,7 +61,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useUserStore } from '../stores/user'
 import { recordApi } from '../api/record'
 
 const props = defineProps({
@@ -64,6 +72,12 @@ const props = defineProps({
 })
 
 defineEmits(['view', 'edit', 'loadMaterials'])
+
+const userStore = useUserStore()
+
+const canEdit = computed(() => {
+  return userStore.role === 'admin' || userStore.role === 'teacher'
+})
 
 const typeMap = { regular: '常规组会', paper_reading: '论文研读', discussion: '专题讨论' }
 const loadedMaterials = ref({})
