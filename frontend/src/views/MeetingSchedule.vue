@@ -89,7 +89,7 @@
           <option value="paper_reading">论文研读</option>
           <option value="discussion">专题讨论</option>
         </select>
-        <button @click="handleCreateClick" class="bg-gradient-to-r from-primary to-primary/80 text-white px-4 py-2 rounded-lg hover:from-primary/90 hover:to-primary/70 shadow-sm">
+        <button v-if="canManage" @click="handleCreateClick" class="bg-gradient-to-r from-primary to-primary/80 text-white px-4 py-2 rounded-lg hover:from-primary/90 hover:to-primary/70 shadow-sm">
           <i class="fa fa-plus mr-1"></i>新建组会
         </button>
       </div>
@@ -107,47 +107,32 @@
     <MeetingGrid v-else-if="viewMode === 'grid'" :meetings="meetings" @view="viewMeeting" @edit="editMeeting" @delete="deleteMeeting" />
 
     <!-- 日历视图 -->
-    <MeetingCalendar v-else-if="viewMode === 'calendar'" :meetings="allMeetings" :current-month="currentMonth" @prev="prevMonth" @next="nextMonth" @today="goToday" @edit="editMeeting" @create="createMeetingOnDate" @switchView="viewMode = $event" />
+    <MeetingCalendar v-else-if="viewMode === 'calendar'" :meetings="allMeetings" :current-month="currentMonth" @prev="prevMonth" @next="nextMonth" @today="goToday" @view="viewMeeting" @edit="editMeeting" @create="createMeetingOnDate" @switchView="viewMode = $event" />
 
     <!-- 分页组件 -->
-    <div v-if="viewMode !== 'calendar' && pagination.total > 0" class="mt-6 flex justify-center items-center gap-2">
-      <button @click="loadMeetings(1)" :disabled="pagination.page === 1"
-              class="px-3 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-        <i class="fa fa-angle-double-left"></i>
-      </button>
-      <button @click="loadMeetings(pagination.page - 1)" :disabled="pagination.page <= 1"
-              class="px-3 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-        <i class="fa fa-angle-left"></i>
-      </button>
-
-      <!-- 页码显示 -->
-      <div class="flex gap-1">
-        <button v-for="p in visiblePages" :key="p"
-                @click="loadMeetings(p)"
-                :class="p === pagination.page ? 'bg-primary text-white' : 'border hover:bg-gray-50'"
-                class="px-3 py-2 rounded-lg transition-colors">
-          {{ p }}
+    <div v-if="viewMode !== 'calendar' && pagination.total > 0" class="mt-6 px-4 py-4 bg-white rounded-lg border flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-gray-600">每页显示</label>
+          <select v-model="pageSize" @change="loadMeetings(1)" class="px-3 py-1 border rounded-lg text-sm">
+            <option :value="5">5条</option>
+            <option :value="10">10条</option>
+            <option :value="20">20条</option>
+          </select>
+        </div>
+        <div class="text-sm text-gray-600">显示第 {{ startItem }}-{{ endItem }} 条，共 {{ pagination.total }} 条</div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button @click="loadMeetings(pagination.page - 1)" :disabled="pagination.page <= 1"
+                class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          <i class="fa fa-chevron-left mr-1"></i>上一页
+        </button>
+        <span class="px-3 py-1 text-sm text-gray-600">第 {{ pagination.page }} 页</span>
+        <button @click="loadMeetings(pagination.page + 1)" :disabled="pagination.page >= pagination.pages"
+                class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          下一页<i class="fa fa-chevron-right ml-1"></i>
         </button>
       </div>
-
-      <button @click="loadMeetings(pagination.page + 1)" :disabled="pagination.page >= pagination.pages"
-              class="px-3 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-        <i class="fa fa-angle-right"></i>
-      </button>
-      <button @click="loadMeetings(pagination.pages)" :disabled="pagination.page === pagination.pages"
-              class="px-3 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-        <i class="fa fa-angle-double-right"></i>
-      </button>
-
-      <!-- 总数显示和每页条数 -->
-      <span class="ml-4 text-sm text-gray-500">
-        共 {{ pagination.total }} 条
-      </span>
-      <select v-model="pageSize" @change="loadMeetings(1)" class="border rounded-lg px-2 py-1 text-sm">
-        <option :value="5">5条/页</option>
-        <option :value="10">10条/页</option>
-        <option :value="20">20条/页</option>
-      </select>
     </div>
 
     <!-- 创建/编辑弹窗 -->
@@ -185,36 +170,19 @@ const stats = ref({})
 const meetings = ref([])
 const allMeetings = ref([])
 const pagination = ref({ page: 1, pages: 1, total: 0 })
-const pageSize = ref(10)
+const pageSize = ref(5)
 const currentMonth = ref(new Date())
 
 const modalMode = computed(() => showEditModal.value ? 'edit' : 'create')
 
-// 计算显示的页码
-const visiblePages = computed(() => {
-  const pages = []
-  const total = pagination.value.pages
-  const current = pagination.value.page
-
-  // 显示当前页前后各2页
-  let start = Math.max(1, current - 2)
-  let end = Math.min(total, current + 2)
-
-  // 如果少于5页，显示全部
-  if (total <= 5) {
-    start = 1
-    end = total
-  } else if (current <= 3) {
-    end = 5
-  } else if (current >= total - 2) {
-    start = total - 4
-  }
-
-  for (let i = start; i <= end; i++) {
-    pages.push(i)
-  }
-  return pages
+// 权限判断：只有导师和管理员可以管理组会
+const canManage = computed(() => {
+  return userStore.role === 'admin' || userStore.role === 'teacher'
 })
+
+// 分页显示的计算属性
+const startItem = computed(() => (pagination.value.page - 1) * pageSize.value + 1)
+const endItem = computed(() => Math.min(pagination.value.page * pageSize.value, pagination.value.total))
 
 function viewBtnClass(mode) {
   return viewMode.value === mode
@@ -323,10 +291,75 @@ function closeModal() {
 
 async function saveMeeting(data) {
   try {
+    let meetingId
     if (modalMode.value === 'edit') {
-      await meetingApi.update(editingMeeting.value.id, data)
+      // 更新组会基本信息（不包含汇报人）
+      await meetingApi.update(editingMeeting.value.id, {
+        title: data.title,
+        meeting_type: data.meeting_type,
+        duration_total: data.duration_total,
+        scheduled_at: data.scheduled_at,
+        location: data.location,
+        is_online: data.is_online,
+        online_link: data.online_link,
+        description: data.description,
+        material_required: data.material_required,
+        status: data.status,
+        notes: data.notes
+      })
+      meetingId = editingMeeting.value.id
+
+      // 处理汇报人：先获取现有汇报人，再对比添加/删除
+      const existingPresenters = await meetingApi.getPresenters(meetingId)
+      const existingIds = (existingPresenters.data.data?.presenters || []).map(p => p.user_id)
+      const newIds = data.presenter_ids || []
+
+      // 删除不再需要的汇报人
+      for (const p of (existingPresenters.data.data?.presenters || [])) {
+        if (!newIds.includes(p.user_id)) {
+          await meetingApi.removePresenter(meetingId, p.id)
+        }
+      }
+
+      // 添加新的汇报人
+      for (const presenterId of newIds) {
+        if (!existingIds.includes(presenterId)) {
+          // 查找对应的时长
+          const duration = (data.presenter_durations || []).find(pd => pd.id === presenterId)?.duration || 15
+          await meetingApi.addPresenter(meetingId, {
+            user_id: presenterId,
+            duration_minutes: duration,
+            presenter_type: 'assigned'
+          })
+        }
+      }
     } else {
-      await meetingApi.create(data)
+      // 创建组会
+      const res = await meetingApi.create({
+        title: data.title,
+        meeting_type: data.meeting_type,
+        duration_total: data.duration_total,
+        scheduled_at: data.scheduled_at,
+        location: data.location,
+        is_online: data.is_online,
+        online_link: data.online_link,
+        description: data.description,
+        material_required: data.material_required,
+        notes: data.notes
+      })
+      meetingId = res.data.data?.id
+
+      // 添加汇报人
+      if (meetingId && data.presenter_ids?.length) {
+        for (const presenterId of data.presenter_ids) {
+          const duration = (data.presenter_durations || []).find(pd => pd.id === presenterId)?.duration || 15
+          await meetingApi.addPresenter(meetingId, {
+            user_id: presenterId,
+            duration_minutes: duration,
+            presenter_type: 'assigned'
+          })
+        }
+      }
     }
     closeModal()
     loadMeetings(pagination.value.page)

@@ -71,7 +71,7 @@
             <div class="space-y-1.5 overflow-hidden">
               <div v-for="m in getMeetingsForDate(date).slice(0, 2)" :key="m.id"
                    :class="meetingCardClass(m)"
-                   @click.stop="$emit('edit', m)">
+                   @click.stop="$emit('view', m)">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-1 min-w-0">
                     <div :class="meetingDotClass(m.meeting_type)" class="w-1.5 h-1.5 rounded-full flex-shrink-0"></div>
@@ -193,7 +193,7 @@
           <h3 class="text-base font-semibold text-gray-800">快速操作</h3>
         </div>
         <div class="space-y-2">
-          <button @click="handleCreateClick" class="w-full py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all flex items-center justify-center gap-2">
+          <button v-if="canManage" @click="handleCreateClick" class="w-full py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all flex items-center justify-center gap-2">
             <i class="fa fa-plus-circle"></i>新建组会
           </button>
           <button @click="$emit('switchView', 'grid')" class="w-full py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
@@ -231,7 +231,7 @@
             <div v-for="m in popoverMeetings" :key="m.id"
                  :class="popoverMeetingCardClass(m)"
                  class="px-4 py-3 rounded-xl cursor-pointer hover:shadow-md transition-all"
-                 @click="$emit('edit', m)">
+                 @click="$emit('view', m)">
               <div class="flex items-center gap-3">
                 <div :class="meetingIconBg(m.meeting_type)" class="w-8 h-8 rounded-lg flex items-center justify-center">
                   <i :class="meetingIcon(m.meeting_type)" class="text-sm"></i>
@@ -282,7 +282,7 @@
             <button @click="closePopover" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-medium hover:bg-gray-200 transition-colors">
               <i class="fa fa-times mr-2"></i>关闭
             </button>
-            <button @click="createMeetingOnDate" class="flex-1 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-indigo-700 transition-colors shadow-lg">
+            <button v-if="canManage" @click="createMeetingOnDate" class="flex-1 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-indigo-700 transition-colors shadow-lg">
               <i class="fa fa-plus mr-2"></i>创建组会
             </button>
           </div>
@@ -300,7 +300,7 @@ const props = defineProps({
   meetings: Array,
   currentMonth: Date
 })
-const emit = defineEmits(['prev', 'next', 'today', 'select', 'edit', 'create', 'switchView'])
+const emit = defineEmits(['prev', 'next', 'today', 'select', 'view', 'edit', 'create', 'switchView'])
 
 const userStore = useUserStore()
 
@@ -308,6 +308,10 @@ const typeFilterLocal = ref('')
 const statusFilterLocal = ref('')
 const showPopover = ref(false)
 const popoverDate = ref(null)
+
+const canManage = computed(() => {
+  return userStore.role === 'admin' || userStore.role === 'teacher'
+})
 
 const monthTitle = computed(() => {
   return `${props.currentMonth.getFullYear()}年${props.currentMonth.getMonth() + 1}月`

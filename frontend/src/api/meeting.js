@@ -31,6 +31,21 @@ export const meetingApi = {
 
   // 搜索成员（用于汇报人选择）
   searchMembers(keyword) {
-    return api.get('/members', { params: { keyword, per_page: 20 } })
+    return api.get('/members', { params: { keyword, per_page: 100 } })
+  },
+
+  // 获取组会的汇报人列表
+  getPresenters(meetingId) {
+    return api.get(`/meetings/${meetingId}/presenters`)
+  },
+
+  // 添加汇报人
+  addPresenter(meetingId, data) {
+    return api.post(`/meetings/${meetingId}/presenters`, data)
+  },
+
+  // 删除汇报人
+  removePresenter(meetingId, presenterId) {
+    return api.delete(`/meetings/${meetingId}/presenters/${presenterId}`)
   }
 }

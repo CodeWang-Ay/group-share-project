@@ -30,10 +30,10 @@
           <button @click="$emit('view', m)" class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center justify-center transition-colors" title="查看详情">
             <i class="fa fa-eye"></i>
           </button>
-          <button @click="$emit('edit', m)" class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 hover:bg-orange-200 flex items-center justify-center transition-colors" title="编辑">
+          <button v-if="canManage" @click="$emit('edit', m)" class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 hover:bg-orange-200 flex items-center justify-center transition-colors" title="编辑">
             <i class="fa fa-edit"></i>
           </button>
-          <button @click="$emit('delete', m.id)" class="w-8 h-8 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center transition-colors" title="删除">
+          <button v-if="canManage" @click="$emit('delete', m.id)" class="w-8 h-8 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center transition-colors" title="删除">
             <i class="fa fa-trash-o"></i>
           </button>
         </div>
@@ -46,8 +46,17 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useUserStore } from '../stores/user'
+
 defineProps({ meetings: Array })
 defineEmits(['view', 'edit', 'delete'])
+
+const userStore = useUserStore()
+
+const canManage = computed(() => {
+  return userStore.role === 'admin' || userStore.role === 'teacher'
+})
 
 function typeText(type) {
   const map = { regular: '常规组会', paper_reading: '论文研读', discussion: '专题讨论' }

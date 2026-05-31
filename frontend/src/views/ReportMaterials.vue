@@ -131,7 +131,7 @@ const loading = ref(true)
 const viewMode = ref('list')
 const statusFilter = ref('all')
 const searchKeyword = ref('')
-const perPage = ref(10)
+const perPage = ref(5)
 const currentPage = ref(1)
 let searchTimeout = null
 
