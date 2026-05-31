@@ -552,7 +552,14 @@ const addToPersonal = async (paperId) => {
     }
   } catch (e) {
     console.error('添加失败:', e)
-    showToast('添加失败', 'error')
+    // 显示后端返回的具体错误信息
+    const message = e.response?.data?.message || '添加失败'
+    // 如果是重复添加，使用警告色（橙色）
+    if (message.includes('已在个人库中') || message.includes('重复')) {
+      showToast(message, 'warning')
+    } else {
+      showToast(message, 'error')
+    }
   }
 }
 
@@ -567,7 +574,9 @@ const shareToTeam = async (paperId) => {
     }
   } catch (e) {
     console.error('分享失败:', e)
-    showToast('分享失败', 'error')
+    // 显示后端返回的具体错误信息
+    const message = e.response?.data?.message || '分享失败'
+    showToast(message, 'error')
   }
 }
 
@@ -659,8 +668,8 @@ const formatDate = (dateStr) => {
 
 const showToast = (message, type = 'success') => {
   const toastDiv = document.createElement('div')
-  const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-  const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : 'fa-info-circle'
+  const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : type === 'warning' ? 'bg-orange-500' : 'bg-blue-500'
+  const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : type === 'warning' ? 'fa-exclamation-circle' : 'fa-info-circle'
   toastDiv.className = `fixed top-4 left-1/2 -translate-x-1/2 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50`
   toastDiv.innerHTML = `<i class="fa ${icon}"></i><span>${message}</span>`
   document.body.appendChild(toastDiv)

@@ -310,7 +310,7 @@ class PaperService:
         duplicate = PaperRepository.check_duplicate('personal', user_id, paper.get('file_hash'),
                                                      paper.get('doi'), paper.get('title'), paper.get('authors'))
         if duplicate:
-            return False, "该文献已在个人库中"
+            return False, "该文献已在个人库中，无法重复添加"
 
         # 复制文件到个人目录
         user_dir = cls.init_personal_directory(user_id)

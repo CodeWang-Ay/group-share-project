@@ -444,11 +444,22 @@ const deleteFile = async (fileId, filename) => {
       loadStats()
       loadFiles()
     } else {
-      showToast(res.data.message || '删除失败', 'error')
+      // 权限错误使用警告色
+      if (res.data.message?.includes('权限') || res.data.message?.includes('其他人')) {
+        showToast(res.data.message, 'warning')
+      } else {
+        showToast(res.data.message || '删除失败', 'error')
+      }
     }
   } catch (e) {
     console.error('删除失败:', e)
-    showToast('删除失败，请重试', 'error')
+    // 权限错误使用警告色
+    const message = e.response?.data?.message || '删除失败，请重试'
+    if (message.includes('权限') || message.includes('其他人')) {
+      showToast(message, 'warning')
+    } else {
+      showToast(message, 'error')
+    }
   }
 }
 
@@ -506,9 +517,10 @@ const getAvatarUrl = (uploaderId) => {
 // Toast提示
 const showToast = (message, type = 'info') => {
   const toastDiv = document.createElement('div')
-  const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-primary'
+  const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : type === 'warning' ? 'bg-orange-500' : 'bg-primary'
+  const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : type === 'warning' ? 'fa-exclamation-circle' : 'fa-info-circle'
   toastDiv.className = `fixed top-4 right-4 ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300`
-  toastDiv.innerHTML = `<div class="flex items-center"><i class="fa ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : 'fa-info-circle'} mr-2"></i><span>${message}</span></div>`
+  toastDiv.innerHTML = `<div class="flex items-center"><i class="fa ${icon} mr-2"></i><span>${message}</span></div>`
   document.body.appendChild(toastDiv)
 
   setTimeout(() => toastDiv.classList.remove('translate-x-full'), 100)

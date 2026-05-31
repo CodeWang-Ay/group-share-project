@@ -185,9 +185,9 @@ class SharedResourcesService:
             return {"status_code": 404, "content": {"success": False, "message": "资料不存在", "error": "FILE_NOT_FOUND"}}
         file_obj = File.from_dict(file_data)
         if not file_obj.is_accessible_by_user(user_id, role):
-            return {"status_code": 403, "content": {"success": False, "message": "没有权限删除此资料", "error": "ACCESS_DENIED"}}
+            return {"status_code": 403, "content": {"success": False, "message": "没有权限删除其他人分享的文件", "error": "ACCESS_DENIED"}}
         if file_obj.uploader_id != user_id and role != "admin":
-            return {"status_code": 403, "content": {"success": False, "message": "只有上传者和管理员可以删除", "error": "ACCESS_DENIED"}}
+            return {"status_code": 403, "content": {"success": False, "message": "没有权限删除其他人分享的文件", "error": "ACCESS_DENIED"}}
         # 删除物理文件
         if os.path.exists(file_obj.file_path):
             os.remove(file_obj.file_path)
