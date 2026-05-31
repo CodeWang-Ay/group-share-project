@@ -12,7 +12,7 @@
     <div class="p-4 overflow-y-auto h-full">
       <!-- 用户信息 -->
       <div class="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-4 mb-6">
-        <div class="flex items-center gap-3">
+        <router-link to="/user-profile" class="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
           <img :src="avatarUrl"
                class="w-12 h-12 rounded-full border-2 border-white shadow-sm object-cover">
           <div>
@@ -21,7 +21,7 @@
               {{ userStore.roleText }}
             </span>
           </div>
-        </div>
+        </router-link>
       </div>
 
       <!-- 个人中心菜单（个人资料/修改密码/设置页面） -->

@@ -25,11 +25,11 @@
           </div>
 
           <div class="relative group">
-            <div class="flex items-center gap-2 cursor-pointer">
+            <router-link to="/user-profile" class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
               <img :src="avatarUrl" class="w-8 h-8 rounded-full border-2 border-white shadow-sm">
               <span class="hidden md:inline-block font-medium">{{ userStore.username }}</span>
               <i class="fa fa-chevron-down text-xs text-gray-500"></i>
-            </div>
+            </router-link>
             <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
               <div class="px-4 py-2 border-b border-gray-100">
                 <p class="font-medium">{{ userStore.username }}</p>
