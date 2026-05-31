@@ -62,8 +62,9 @@
               <span :class="statusBadgeClass(latestProgress.status || 'normal')">{{ statusText(latestProgress.status || 'normal') }}</span>
             </div>
             <div class="bg-gray-50 rounded-lg p-3 space-y-2">
-              <p class="text-sm text-gray-600"><strong>本周进展：</strong>{{ latestProgress.weekly_progress }}</p>
-              <p class="text-sm text-gray-600"><strong>下周计划：</strong>{{ latestProgress.next_goal || '-' }}</p>
+              <p class="text-sm text-gray-600"><strong>本周进展：</strong>{{ truncateText(latestProgress.weekly_progress, 120) }}</p>
+              <p class="text-sm text-gray-600"><strong>遇到的困难：</strong>{{ truncateText(latestProgress.difficulties, 120) }}</p>
+              <p class="text-sm text-gray-600"><strong>下周计划：</strong>{{ truncateText(latestProgress.next_goal, 120) }}</p>
               <p class="text-sm text-gray-600"><strong>完成度：</strong>{{ latestProgress.completion_rate }}%</p>
             </div>
             <div v-if="latestProgress.supervisor_feedback" class="p-3 bg-blue-50 rounded-lg">
@@ -94,9 +95,9 @@
                   </div>
                   <span :class="statusBadgeClass(item.status || 'normal')">{{ statusText(item.status || 'normal') }}</span>
                 </div>
-                <p class="text-sm text-gray-600 mb-1"><span class="font-medium text-gray-700">本周进展：</span>{{ item.weekly_progress }}</p>
-                <p v-if="item.difficulties" class="text-sm text-orange-600 mb-2"><span class="font-medium text-gray-700">遇到的困难：</span>{{ item.difficulties }}</p>
-                <p v-if="item.next_goal" class="text-sm text-gray-600 mb-2"><span class="font-medium text-gray-700">下周计划：</span>{{ item.next_goal }}</p>
+                <p class="text-sm text-gray-600 mb-1"><span class="font-medium text-gray-700">本周进展：</span>{{ truncateText(item.weekly_progress, 120) }}</p>
+                <p class="text-sm text-orange-600 mb-2"><span class="font-medium text-gray-700">遇到的困难：</span>{{ truncateText(item.difficulties, 120) }}</p>
+                <p class="text-sm text-gray-600 mb-2"><span class="font-medium text-gray-700">下周计划：</span>{{ truncateText(item.next_goal, 120) }}</p>
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2 text-sm text-gray-500">
                     <span>完成度：{{ item.completion_rate }}%</span>
@@ -125,9 +126,9 @@
                 <div class="flex items-center gap-2">
                   <label class="text-sm text-gray-600">每页显示</label>
                   <select v-model="myPerPage" class="px-3 py-1 border border-gray-300 rounded-lg text-sm">
+                    <option value="5">5条</option>
                     <option value="10">10条</option>
                     <option value="20">20条</option>
-                    <option value="50">50条</option>
                   </select>
                 </div>
                 <div class="text-sm text-gray-600">共 {{ filteredHistory.length }} 条</div>
@@ -467,7 +468,7 @@ const mySettings = ref(null)
 const myProgressList = ref([])
 const mySearchKeyword = ref('')
 const myCurrentPage = ref(1)
-const myPerPage = ref(10)
+const myPerPage = ref(5)
 const latestProgress = ref(null)
 
 // 学生端团队进展
@@ -593,6 +594,13 @@ const formatDate = (dateStr) => {
     timeZone: 'Asia/Shanghai'
   }
   return new Intl.DateTimeFormat('zh-CN', options).format(date)
+}
+
+// 截断文字，用于列表显示
+const truncateText = (text, maxLength = 100) => {
+  if (!text) return '-'
+  if (text.length <= maxLength) return text
+  return text.slice(0, maxLength) + '...'
 }
 
 const getAvatarUrl2 = (item) => getAvatarUrl(item.avatar, item.username)

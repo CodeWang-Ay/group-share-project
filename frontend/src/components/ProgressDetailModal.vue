@@ -27,7 +27,7 @@
             <i class="fa fa-file-text-o text-blue-500"></i>
             <span class="font-medium text-blue-700">本周进展</span>
           </div>
-          <p class="text-gray-600">{{ progressData?.weekly_progress || '暂无内容' }}</p>
+          <p class="text-gray-600">{{ progressData?.weekly_progress || '-' }}</p>
         </div>
 
         <!-- 下周计划（绿色） -->
@@ -36,7 +36,7 @@
             <i class="fa fa-flag text-green-500"></i>
             <span class="font-medium text-green-700">下周计划</span>
           </div>
-          <p class="text-gray-600">{{ progressData?.next_goal || '暂无内容' }}</p>
+          <p class="text-gray-600">{{ progressData?.next_goal || '-' }}</p>
         </div>
 
         <!-- 遇到的困难（橙色） -->
@@ -45,7 +45,7 @@
             <i class="fa fa-exclamation-circle text-orange-500"></i>
             <span class="font-medium text-orange-700">遇到的困难</span>
           </div>
-          <p class="text-gray-600">{{ progressData?.difficulties || '暂无内容' }}</p>
+          <p class="text-gray-600">{{ progressData?.difficulties || '-' }}</p>
         </div>
 
         <!-- 完成度 -->

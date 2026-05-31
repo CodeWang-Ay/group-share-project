@@ -10,6 +10,7 @@ export const useUserStore = defineStore('user', () => {
   const role = computed(() => userInfo.value.role || 'student')
   const avatar = computed(() => userInfo.value.avatar || '')
   const userId = computed(() => userInfo.value.id || 0)
+  const researchDirection = computed(() => userInfo.value.research_direction || '')
 
   const roleText = computed(() => {
     if (role.value === 'admin') return '管理员'
@@ -42,6 +43,7 @@ export const useUserStore = defineStore('user', () => {
     role,
     avatar,
     userId,
+    researchDirection,
     roleText,
     setToken,
     setUserInfo,
