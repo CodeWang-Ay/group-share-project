@@ -65,17 +65,31 @@
         </div>
 
         <!-- 附件 -->
-        <div v-if="progressData?.attachments && progressData?.attachments.length > 0">
-          <div class="flex items-center gap-2 mb-2">
+        <div v-if="progressData?.attachments && progressData?.attachments.length > 0" class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+          <div class="flex items-center gap-2 mb-3">
             <i class="fa fa-paperclip text-gray-500"></i>
-            <span class="font-medium text-gray-700">附件</span>
+            <span class="font-medium text-gray-700">附件（{{ progressData.attachments.length }} 个）</span>
           </div>
-          <div class="flex flex-wrap gap-2">
-            <a v-for="filename in progressData.attachments" :key="filename"
-               :href="getFileUrl(filename)" target="_blank"
-               class="inline-flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm text-primary">
-              <i class="fa fa-file-o mr-2"></i>{{ filename }}
-            </a>
+          <div class="space-y-2">
+            <div v-for="filename in progressData.attachments" :key="filename"
+                 class="flex items-center justify-between p-2 bg-white rounded">
+              <div class="flex items-center gap-2">
+                <div :class="getFileIconClass(filename)" class="w-8 h-8 rounded flex items-center justify-center">
+                  <i class="fa fa-file-o"></i>
+                </div>
+                <span class="text-sm text-gray-700 truncate max-w-[200px]">{{ filename }}</span>
+              </div>
+              <a :href="getFileUrl(filename)" target="_blank"
+                 class="px-3 py-1 bg-primary text-white text-xs rounded hover:bg-primary/90">
+                <i class="fa fa-download mr-1"></i>下载
+              </a>
+            </div>
+          </div>
+        </div>
+        <div v-else class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+          <div class="flex items-center gap-2">
+            <i class="fa fa-paperclip text-gray-400"></i>
+            <span class="text-sm text-gray-500">暂无附件</span>
           </div>
         </div>
 
@@ -103,6 +117,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useUserStore } from '../stores/user'
 import { getFileDownloadUrl } from '../api/research_progress'
 
 const props = defineProps({
@@ -113,6 +128,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'send-feedback'])
 
+const userStore = useUserStore()
 const visible = defineModel()
 const feedbackInput = ref('')
 
@@ -153,7 +169,35 @@ const statusText = computed(() => {
   return map[status] || '正常'
 })
 
-const getFileUrl = (filename) => getFileDownloadUrl(filename)
+// 获取带 token 的下载 URL
+const getFileUrl = (filename) => {
+  const baseUrl = getFileDownloadUrl(filename)
+  const token = userStore.token
+  if (token) {
+    return `${baseUrl}?session_token=${encodeURIComponent(token)}`
+  }
+  return baseUrl
+}
+
+// 根据文件类型返回图标样式
+const getFileIconClass = (filename) => {
+  const ext = filename.split('.').pop()?.toLowerCase() || ''
+  const typeMap = {
+    pdf: 'text-red-500 bg-red-50',
+    doc: 'text-blue-500 bg-blue-50',
+    docx: 'text-blue-500 bg-blue-50',
+    ppt: 'text-orange-500 bg-orange-50',
+    pptx: 'text-orange-500 bg-orange-50',
+    xls: 'text-green-500 bg-green-50',
+    xlsx: 'text-green-500 bg-green-50',
+    zip: 'text-purple-500 bg-purple-50',
+    rar: 'text-purple-500 bg-purple-50',
+    jpg: 'text-yellow-500 bg-yellow-50',
+    png: 'text-yellow-500 bg-yellow-50',
+    mp4: 'text-pink-500 bg-pink-50'
+  }
+  return typeMap[ext] || 'text-gray-500 bg-gray-50'
+}
 
 const sendFeedback = () => {
   if (!feedbackInput.value) return

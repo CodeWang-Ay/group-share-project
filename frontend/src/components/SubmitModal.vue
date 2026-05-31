@@ -113,13 +113,19 @@ watch(visible, (val) => {
 
 const handleFileChange = async (e) => {
   const files = e.target.files
+  console.log('选择文件:', files)
   if (files && files.length > 0) {
     for (const file of files) {
       try {
+        console.log('上传文件:', file.name)
         const res = await api.uploadFile(file)
+        console.log('上传响应:', res.data)
         if (res.data.success) {
           uploadedFiles.value.push(res.data.data.filename)
           form.value.attachments.push(res.data.data.filename)
+          console.log('当前 attachments:', form.value.attachments)
+        } else {
+          console.error('上传失败:', res.data.message)
         }
       } catch (err) {
         console.error('文件上传失败:', err)
@@ -129,6 +135,8 @@ const handleFileChange = async (e) => {
 }
 
 const submitForm = () => {
+  console.log('提交表单数据:', form.value)
+  console.log('提交 attachments:', form.value.attachments)
   emit('submit', {
     research_direction: form.value.research_direction,
     weekly_progress: form.value.weekly_progress,

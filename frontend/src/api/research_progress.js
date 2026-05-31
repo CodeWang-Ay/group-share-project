@@ -39,5 +39,7 @@ export const uploadFile = (file) => {
   })
 }
 
-// 获取文件下载URL
-export const getFileDownloadUrl = (filename) => `/api/files/download/${encodeURIComponent(filename)}`
+// 获取文件下载URL - 需要完整的 URL
+import { SERVER_URL } from '../config'
+
+export const getFileDownloadUrl = (filename) => `${SERVER_URL}/api/files/download/${encodeURIComponent(filename)}`

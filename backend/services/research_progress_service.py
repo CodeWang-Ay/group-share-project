@@ -388,6 +388,10 @@ class ResearchProgressService:
         if not weekly_progress or not next_goal:
             return {"status_code": 400, "content": {"success": False, "message": "本周进展和下周目标为必填项", "error": "VALIDATION_ERROR"}}
 
+        # 调试日志：检查 attachments 是否正确传递
+        attachments_data = data.get("attachments")
+        logger.info(f"提交进展 - user_id: {user_id}, attachments: {attachments_data}")
+
         progress = ResearchProgressService.create_progress(
             user_id=user_id,
             research_direction=data.get("research_direction", research_direction or ""),
@@ -395,9 +399,11 @@ class ResearchProgressService:
             next_goal=next_goal,
             difficulties=data.get("difficulties"),
             completion_rate=data.get("completion_rate", 0),
-            attachments=data.get("attachments"),
+            attachments=attachments_data,
             submission_period=data.get("submission_period", "weekly")
         )
+
+        logger.info(f"进展创建成功 - id: {progress.id}, attachments: {progress.attachments}")
 
         return {"status_code": 200, "content": {"success": True, "message": "进展提交成功", "data": progress.to_dict()}}
 
