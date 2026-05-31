@@ -41,9 +41,14 @@
             <h3 class="text-lg font-semibold text-gray-800">
               <i class="fa fa-star text-yellow-500 mr-2"></i>最新进展
             </h3>
-            <button @click="editProgress(latestProgress.id)" class="text-primary hover:bg-primary/10 px-3 py-1 rounded-lg text-sm transition-colors">
-              <i class="fa fa-edit mr-1"></i>更新进展
-            </button>
+            <div class="flex gap-2">
+              <button @click="viewDetail(latestProgress.id)" class="px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-primary hover:text-white transition-all">
+                <i class="fa fa-eye mr-1"></i>查看详情
+              </button>
+              <button @click="editProgress(latestProgress.id)" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-500 hover:text-white transition-all">
+                <i class="fa fa-edit mr-1"></i>更新进展
+              </button>
+            </div>
           </div>
           <div class="space-y-3">
             <div class="flex items-start gap-3">
@@ -207,11 +212,8 @@
               <thead class="bg-gray-50 text-left text-sm text-gray-500">
                 <tr>
                   <th class="px-6 py-4 font-medium">学生</th>
-                  <th class="px-6 py-4 font-medium">学位</th>
                   <th class="px-6 py-4 font-medium">研究方向</th>
-                  <th class="px-6 py-4 font-medium">最近进展</th>
-                  <th class="px-6 py-4 font-medium">下周目标</th>
-                  <th class="px-6 py-4 font-medium">完成度</th>
+                  <th class="px-6 py-4 font-medium">最新进展</th>
                   <th class="px-6 py-4 font-medium">状态</th>
                   <th class="px-6 py-4 font-medium">最后更新</th>
                   <th class="px-6 py-4 font-medium">操作</th>
@@ -225,18 +227,8 @@
                       <span>{{ item.username }}</span>
                     </div>
                   </td>
-                  <td class="px-6 py-4 text-gray-600">{{ item.degree_type || '-' }}</td>
                   <td class="px-6 py-4 text-gray-600">{{ item.research_direction || '-' }}</td>
                   <td class="px-6 py-4 text-gray-600 max-w-xs truncate">{{ item.weekly_progress || '-' }}</td>
-                  <td class="px-6 py-4 text-gray-600 max-w-xs truncate">{{ item.next_goal || '-' }}</td>
-                  <td class="px-6 py-4">
-                    <div class="flex items-center gap-2">
-                      <div class="w-16 bg-gray-200 rounded-full h-2">
-                        <div class="bg-primary h-2 rounded-full" :style="{ width: (item.completion_rate || 0) + '%' }"></div>
-                      </div>
-                      <span class="text-gray-600">{{ item.completion_rate || 0 }}%</span>
-                    </div>
-                  </td>
                   <td class="px-6 py-4">
                     <span :class="statusBadgeClass(item.computed_status || item.status || 'normal')">{{ statusText(item.computed_status || item.status || 'normal') }}</span>
                   </td>
@@ -249,7 +241,7 @@
                   </td>
                 </tr>
                 <tr v-if="filteredStudentTeamList.length === 0">
-                  <td colspan="9" class="px-6 py-8 text-center text-gray-500">
+                  <td colspan="6" class="px-6 py-8 text-center text-gray-500">
                     <i class="fa fa-inbox text-4xl mb-4"></i>
                     <p>暂无团队进展数据</p>
                   </td>
@@ -356,11 +348,8 @@
             <thead class="bg-gray-50 text-left text-sm text-gray-500">
               <tr>
                 <th class="px-6 py-4 font-medium">学生</th>
-                <th class="px-6 py-4 font-medium">学位</th>
                 <th class="px-6 py-4 font-medium">研究方向</th>
-                <th class="px-6 py-4 font-medium">最近进展</th>
-                <th class="px-6 py-4 font-medium">下周目标</th>
-                <th class="px-6 py-4 font-medium">完成度</th>
+                <th class="px-6 py-4 font-medium">最新进展</th>
                 <th class="px-6 py-4 font-medium">状态</th>
                 <th class="px-6 py-4 font-medium">最后更新</th>
                 <th class="px-6 py-4 font-medium">操作</th>
@@ -374,18 +363,8 @@
                     <span>{{ item.username }}</span>
                   </div>
                 </td>
-                <td class="px-6 py-4 text-gray-600">{{ item.degree_type || '-' }}</td>
                 <td class="px-6 py-4 text-gray-600">{{ item.research_direction || '-' }}</td>
                 <td class="px-6 py-4 text-gray-600 max-w-xs truncate">{{ item.weekly_progress || '-' }}</td>
-                <td class="px-6 py-4 text-gray-600 max-w-xs truncate">{{ item.next_goal || '-' }}</td>
-                <td class="px-6 py-4">
-                  <div class="flex items-center gap-2">
-                    <div class="w-16 bg-gray-200 rounded-full h-2">
-                      <div class="bg-primary h-2 rounded-full" :style="{ width: (item.completion_rate || 0) + '%' }"></div>
-                    </div>
-                    <span class="text-gray-600">{{ item.completion_rate || 0 }}%</span>
-                  </div>
-                </td>
                 <td class="px-6 py-4">
                   <span :class="statusBadgeClass(item.computed_status || item.status || 'normal')">{{ statusText(item.computed_status || item.status || 'normal') }}</span>
                 </td>
@@ -403,7 +382,7 @@
                 </td>
               </tr>
               <tr v-if="filteredTeamList.length === 0">
-                <td colspan="9" class="px-6 py-8 text-center text-gray-500">
+                <td colspan="6" class="px-6 py-8 text-center text-gray-500">
                   <i class="fa fa-inbox text-4xl mb-4"></i>
                   <p>暂无学生进展数据</p>
                 </td>
@@ -605,8 +584,15 @@ const toastClass = computed(() => toast.value.type === 'error' ? 'bg-red-500 tex
 // 方法
 const formatDate = (dateStr) => {
   if (!dateStr) return '--'
+  // 处理时间字符串，确保显示北京时间
   const date = new Date(dateStr)
-  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
+  const options = {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone: 'Asia/Shanghai'
+  }
+  return new Intl.DateTimeFormat('zh-CN', options).format(date)
 }
 
 const getAvatarUrl2 = (item) => getAvatarUrl(item.avatar, item.username)
@@ -659,7 +645,7 @@ const fetchStudentTeamProgress = async () => {
     } else if (studentFilter.value === 'normal') {
       params.status = 'normal'
     } else if (studentFilter.value === 'warning') {
-      params.status = 'delayed'
+      params.status = 'warning'
     }
     const res = await api.getTeamProgress(params)
     if (res.data.success) {
@@ -702,7 +688,7 @@ const fetchTeamProgress = async () => {
     } else if (teamFilter.value === 'normal') {
       params.status = 'normal'
     } else if (teamFilter.value === 'warning') {
-      params.status = 'delayed'
+      params.status = 'warning'
     }
     const res = await api.getTeamProgress(params)
     if (res.data.success) {

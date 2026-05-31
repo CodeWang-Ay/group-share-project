@@ -12,10 +12,11 @@
       <!-- 内容区域（可滚动） -->
       <div class="p-4 space-y-4 overflow-y-auto flex-1">
         <!-- 研究方向和状态 -->
-        <div class="flex justify-between items-start">
+        <div class="flex justify-between items-start pb-3 border-b border-gray-100">
           <div>
             <p class="font-semibold text-gray-800">{{ progressData?.research_direction }}</p>
             <p class="text-sm text-gray-500">提交时间：{{ formatDate(progressData?.created_at) }}</p>
+            <p class="text-sm text-gray-500">更新时间：{{ formatDate(progressData?.updated_at) }}</p>
           </div>
           <span :class="statusClass">{{ statusText }}</span>
         </div>
@@ -117,8 +118,23 @@ const feedbackInput = ref('')
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '-'
+  // 处理时间字符串，确保显示北京时间
   const date = new Date(dateStr)
-  return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+  // 如果时间字符串没有时区信息，假设是北京时间（UTC+8）
+  if (!dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.includes('T')) {
+    // 简单的日期格式，直接显示
+    return dateStr
+  }
+  // 使用北京时间格式化
+  const options = {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Shanghai'
+  }
+  return new Intl.DateTimeFormat('zh-CN', options).format(date)
 }
 
 const statusClass = computed(() => {
