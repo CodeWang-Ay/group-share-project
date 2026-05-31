@@ -145,6 +145,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { meetingApi } from '../api/meeting'
 import MeetingList from '../components/MeetingList.vue'
@@ -154,6 +155,8 @@ import MeetingModal from '../components/MeetingModal.vue'
 import MeetingDetail from '../components/MeetingDetail.vue'
 
 const userStore = useUserStore()
+const route = useRoute()
+const router = useRouter()
 const loading = ref(true)
 const viewMode = ref('calendar')
 const statusFilter = ref('')
@@ -405,6 +408,29 @@ watch(viewMode, (mode) => {
     loadAllMeetings()
   }
 })
+
+// 监听路由参数变化，自动打开详情弹窗
+watch(() => route.query.id, (newId) => {
+  if (newId) {
+    openDetailFromId(parseInt(newId))
+  }
+}, { immediate: true })
+
+// 根据 ID 打开详情弹窗
+async function openDetailFromId(meetingId) {
+  if (!meetingId) return
+  try {
+    const res = await meetingApi.getDetail(meetingId)
+    if (res.data.success) {
+      viewingMeeting.value = res.data.data
+      showDetailModal.value = true
+    }
+  } catch (e) {
+    console.error('加载组会详情失败:', e)
+  }
+  // 清理 URL 参数，避免刷新时重复打开
+  router.replace({ query: {} })
+}
 
 onMounted(() => {
   loadStats()

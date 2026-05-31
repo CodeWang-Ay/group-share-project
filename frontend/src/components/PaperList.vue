@@ -2,9 +2,9 @@
   <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
     <div class="p-6 border-b flex justify-between items-center">
       <h2 class="font-bold text-lg">{{ title }}</h2>
-      <a href="/rm_paper_database" class="bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary/90 text-sm flex items-center gap-1">
+      <router-link to="/paper-database" class="bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary/90 text-sm flex items-center gap-1">
         <i class="fa fa-plus"></i> 添加文献
-      </a>
+      </router-link>
     </div>
     <div class="p-4">
       <div v-if="loading" class="text-center text-gray-500 py-4">
@@ -28,7 +28,7 @@
         </div>
       </div>
       <div class="mt-4 text-center">
-        <a href="/rm_paper_database" class="text-primary text-sm hover:underline">浏览更多文献</a>
+        <router-link to="/paper-database" class="text-primary text-sm hover:underline">浏览更多文献</router-link>
       </div>
     </div>
   </div>

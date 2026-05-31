@@ -50,15 +50,15 @@
               {{ formatDate(p.submission_date) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-              <a :href="`/tm_research_progress?user_id=${p.user_id}`" class="text-primary hover:text-primary/80 mr-3">详情</a>
-              <a :href="`/tm_research_progress?user_id=${p.user_id}`" class="bg-primary/10 text-primary px-3 py-1 rounded hover:bg-primary/20 text-sm">沟通</a>
+              <router-link :to="`/research-progress?user_id=${p.user_id}`" class="text-primary hover:text-primary/80 mr-3">详情</router-link>
+              <router-link :to="`/research-progress?user_id=${p.user_id}`" class="bg-primary/10 text-primary px-3 py-1 rounded hover:bg-primary/20 text-sm">沟通</router-link>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
     <div class="p-4 border-t text-center">
-      <a href="/tm_research_progress?tab=team" class="text-primary text-sm hover:underline">查看所有学生进展</a>
+      <router-link to="/research-progress" class="text-primary text-sm hover:underline">查看所有学生进展</router-link>
     </div>
   </div>
 </template>

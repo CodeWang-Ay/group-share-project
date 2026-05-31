@@ -2,7 +2,7 @@
   <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
     <div class="p-6 border-b flex justify-between items-center">
       <h2 class="font-bold text-lg">{{ title }}</h2>
-      <a href="/gm_report_materials" class="text-primary text-sm hover:underline">查看全部</a>
+      <router-link to="/report-materials" class="text-primary text-sm hover:underline">查看全部</router-link>
     </div>
     <div class="divide-y divide-gray-100">
       <div v-if="loading" class="p-4 text-center text-gray-500">
@@ -27,7 +27,7 @@
       </template>
     </div>
     <div class="p-4 border-t text-center">
-      <a href="/rm_share_file" class="text-primary text-sm hover:underline">浏览更多资料</a>
+      <router-link to="/share-file" class="text-primary text-sm hover:underline">浏览更多资料</router-link>
     </div>
   </div>
 </template>

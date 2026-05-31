@@ -7,7 +7,7 @@
     <div v-else-if="!meeting" class="p-6 text-center text-gray-500">
       <i class="fa fa-calendar-o text-4xl mb-3"></i>
       <p>暂无即将到来的组会</p>
-      <a href="/gm_meeting_schedule" class="text-primary hover:underline mt-2 block">安排新组会</a>
+      <router-link to="/meeting-schedule" class="text-primary hover:underline mt-2 block">安排新组会</router-link>
     </div>
     <template v-else>
       <div class="p-6 border-b bg-gradient-to-r from-primary/5 to-primary/10">
@@ -64,12 +64,12 @@
           </div>
         </div>
         <div class="mt-6 flex flex-col sm:flex-row gap-3 sm:justify-end">
-          <a href="/gm_meeting_schedule" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-center">
+          <router-link to="/meeting-schedule" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-center">
             <i class="fa fa-list mr-1"></i> 查看全部组会
-          </a>
-          <a :href="`/gm_meeting_schedule?id=${meeting.id}`" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 text-center">
+          </router-link>
+          <router-link :to="`/meeting-schedule?id=${meeting.id}`" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 text-center">
             <i class="fa fa-eye mr-1"></i> 查看详情
-          </a>
+          </router-link>
         </div>
       </div>
     </template>

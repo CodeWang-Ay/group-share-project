@@ -9,10 +9,10 @@
     <div class="mb-8">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold">即将到来的组会</h2>
-        <a href="/gm_meeting_schedule" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2">
+        <router-link to="/meeting-schedule" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2">
           <i class="fa fa-plus"></i>
           <span>安排新组会</span>
-        </a>
+        </router-link>
       </div>
       <MeetingCard :meeting="upcomingMeeting" :loading="loading.upcoming" />
     </div>
@@ -29,9 +29,9 @@
       </StatCard>
       <StatCard title="待审阅材料" :value="stats.pending_materials" icon="fa-file-text-o" color="secondary">
         <template #footer>
-          <a href="/gm_report_materials" class="text-primary hover:underline text-sm">
+          <router-link to="/report-materials" class="text-primary hover:underline text-sm">
             立即审阅 <i class="fa fa-arrow-right ml-1 text-xs"></i>
-          </a>
+          </router-link>
         </template>
       </StatCard>
       <StatCard title="团队成员" :value="stats.team_members" icon="fa-users" color="accent">
