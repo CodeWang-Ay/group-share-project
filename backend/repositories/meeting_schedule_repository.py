@@ -175,6 +175,20 @@ class MeetingScheduleRepository:
     @staticmethod
     def get_stats(created_by: Optional[int] = None) -> Dict[str, Any]:
         """获取组会统计信息"""
+        from datetime import datetime
+        import calendar
+
+        # 使用北京时间计算本月第一天和最后一天
+        now_beijing = datetime.now()
+        year = now_beijing.year
+        month = now_beijing.month
+        month_start = now_beijing.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        # 本月最后一天
+        last_day = calendar.monthrange(year, month)[1]
+        month_end = now_beijing.replace(day=last_day, hour=23, minute=59, second=59, microsecond=0)
+        month_start_str = month_start.strftime('%Y-%m-%d %H:%M:%S')
+        month_end_str = month_end.strftime('%Y-%m-%d %H:%M:%S')
+
         with get_db() as conn:
             cursor = conn.cursor()
             where_clause = "WHERE created_by = ?" if created_by else ""
@@ -188,16 +202,17 @@ class MeetingScheduleRepository:
             """, params)
             status_counts = dict(cursor.fetchall())
 
+            # 本月组会：只统计本月第一天到最后一天之间的组会
             if where_clause:
                 cursor.execute(f"""
                     SELECT COUNT(*) FROM meetings
-                    {where_clause} AND scheduled_at >= date('now', 'start of month')
-                """, params)
+                    {where_clause} AND scheduled_at >= ? AND scheduled_at <= ?
+                """, params + [month_start_str, month_end_str])
             else:
                 cursor.execute("""
                     SELECT COUNT(*) FROM meetings
-                    WHERE scheduled_at >= date('now', 'start of month')
-                """)
+                    WHERE scheduled_at >= ? AND scheduled_at <= ?
+                """, [month_start_str, month_end_str])
             this_month_meetings = cursor.fetchone()[0] or 0
 
             return {

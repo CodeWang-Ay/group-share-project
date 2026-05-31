@@ -40,8 +40,17 @@
             <span :class="statusBadgeClass(m.status)">{{ statusText(m.status) }}</span>
           </td>
           <td class="px-4 py-3 text-right">
-            <button @click="$emit('edit', m)" class="text-primary hover:underline mr-2">编辑</button>
-            <button @click="$emit('delete', m.id)" class="text-red-500 hover:underline">删除</button>
+            <div class="flex gap-2 justify-end">
+              <button @click="$emit('view', m)" class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center justify-center transition-colors" title="查看详情">
+                <i class="fa fa-eye"></i>
+              </button>
+              <button @click="$emit('edit', m)" class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 hover:bg-orange-200 flex items-center justify-center transition-colors" title="编辑">
+                <i class="fa fa-edit"></i>
+              </button>
+              <button @click="$emit('delete', m.id)" class="w-8 h-8 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center transition-colors" title="删除">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            </div>
           </td>
         </tr>
         <tr v-if="!meetings.length">
@@ -54,7 +63,7 @@
 
 <script setup>
 defineProps({ meetings: Array })
-defineEmits(['edit', 'delete'])
+defineEmits(['view', 'edit', 'delete'])
 
 function typeText(type) {
   const map = { regular: '常规组会', paper_reading: '论文研读', discussion: '专题讨论' }

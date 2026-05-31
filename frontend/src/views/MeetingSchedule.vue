@@ -6,8 +6,8 @@
       <p class="text-gray-500">管理实验室组会日程和安排</p>
     </div>
 
-    <!-- 统计卡片 -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <!-- 统计卡片（日历视图时隐藏，因为侧边栏已有统计） -->
+    <div v-if="viewMode !== 'calendar'" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
       <div class="bg-white rounded-lg shadow-sm p-4 border">
         <div class="flex items-center justify-between">
           <div>
@@ -23,7 +23,7 @@
             <p class="text-gray-500 text-sm">待召开</p>
             <h3 class="text-xl font-bold">{{ stats.scheduled_count || 0 }}</h3>
           </div>
-          <i class="fa fa-clock text-orange-500 text-xl"></i>
+          <i class="fa fa-clock-o text-orange-500 text-xl"></i>
         </div>
       </div>
       <div class="bg-white rounded-lg shadow-sm p-4 border">
@@ -48,17 +48,32 @@
 
     <!-- 操作栏 -->
     <div class="bg-white rounded-lg shadow-sm p-4 mb-6 flex flex-wrap gap-4 items-center justify-between">
-      <div class="flex gap-2 items-center">
+      <div class="flex flex-wrap gap-2 items-center">
+        <!-- 状态筛选按钮 -->
+        <button @click="statusFilter = ''" :class="statusFilter === '' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="px-3 py-1.5 text-sm rounded-lg transition-colors">
+          全部状态
+        </button>
+        <button @click="statusFilter = 'scheduled'" :class="statusFilter === 'scheduled' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="px-3 py-1.5 text-sm rounded-lg transition-colors">
+          <i class="fa fa-clock-o mr-1"></i>待召开
+        </button>
+        <button @click="statusFilter = 'ongoing'" :class="statusFilter === 'ongoing' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="px-3 py-1.5 text-sm rounded-lg transition-colors">
+          <i class="fa fa-play-circle mr-1 text-green-600"></i>进行中
+        </button>
+        <button @click="statusFilter = 'completed'" :class="statusFilter === 'completed' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="px-3 py-1.5 text-sm rounded-lg transition-colors">
+          <i class="fa fa-check-circle mr-1"></i>已召开
+        </button>
         <!-- 视图切换 -->
-        <button @click="viewMode = 'list'" :class="viewBtnClass('list')">
-          <i class="fa fa-list mr-1"></i>列表
-        </button>
-        <button @click="viewMode = 'grid'" :class="viewBtnClass('grid')">
-          <i class="fa fa-th-large mr-1"></i>卡片
-        </button>
-        <button @click="viewMode = 'calendar'" :class="viewBtnClass('calendar')">
-          <i class="fa fa-calendar mr-1"></i>日历
-        </button>
+        <div class="border-l border-gray-200 pl-2 ml-2 flex gap-2">
+          <button @click="viewMode = 'calendar'" :class="viewBtnClass('calendar')">
+            <i class="fa fa-calendar mr-1"></i>日历
+          </button>
+          <button @click="viewMode = 'list'" :class="viewBtnClass('list')">
+            <i class="fa fa-list mr-1"></i>列表
+          </button>
+          <button @click="viewMode = 'grid'" :class="viewBtnClass('grid')">
+            <i class="fa fa-th-large mr-1"></i>卡片
+          </button>
+        </div>
       </div>
       <div class="flex gap-2 items-center">
         <!-- 搜索框 -->
@@ -68,12 +83,6 @@
                  placeholder="搜索组会标题...">
           <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
         </div>
-        <select v-model="statusFilter" class="border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-primary">
-          <option value="">全部状态</option>
-          <option value="scheduled">待召开</option>
-          <option value="ongoing">进行中</option>
-          <option value="completed">已召开</option>
-        </select>
         <select v-model="typeFilter" class="border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-primary">
           <option value="">全部类型</option>
           <option value="regular">常规组会</option>
@@ -92,13 +101,13 @@
     </div>
 
     <!-- 列表视图 -->
-    <MeetingList v-else-if="viewMode === 'list'" :meetings="meetings" @edit="editMeeting" @delete="deleteMeeting" />
+    <MeetingList v-else-if="viewMode === 'list'" :meetings="meetings" @view="viewMeeting" @edit="editMeeting" @delete="deleteMeeting" />
 
     <!-- 卡片视图 -->
-    <MeetingGrid v-else-if="viewMode === 'grid'" :meetings="meetings" @edit="editMeeting" @delete="deleteMeeting" />
+    <MeetingGrid v-else-if="viewMode === 'grid'" :meetings="meetings" @view="viewMeeting" @edit="editMeeting" @delete="deleteMeeting" />
 
     <!-- 日历视图 -->
-    <MeetingCalendar v-else-if="viewMode === 'calendar'" :meetings="allMeetings" :current-month="currentMonth" @prev="prevMonth" @next="nextMonth" @today="goToday" @edit="editMeeting" @create="createMeetingOnDate" />
+    <MeetingCalendar v-else-if="viewMode === 'calendar'" :meetings="allMeetings" :current-month="currentMonth" @prev="prevMonth" @next="nextMonth" @today="goToday" @edit="editMeeting" @create="createMeetingOnDate" @switchView="viewMode = $event" />
 
     <!-- 分页组件 -->
     <div v-if="viewMode !== 'calendar' && pagination.total > 0" class="mt-6 flex justify-center items-center gap-2">
@@ -143,6 +152,9 @@
 
     <!-- 创建/编辑弹窗 -->
     <MeetingModal v-if="showCreateModal || showEditModal" :meeting="editingMeeting" :mode="modalMode" :preset-date-time="presetDateTime" @close="closeModal" @save="saveMeeting" />
+
+    <!-- 详情弹窗 -->
+    <MeetingDetail v-model="showDetailModal" :meeting="viewingMeeting" @edit="editFromDetail" />
   </div>
 </template>
 
@@ -154,16 +166,19 @@ import MeetingList from '../components/MeetingList.vue'
 import MeetingGrid from '../components/MeetingGrid.vue'
 import MeetingCalendar from '../components/MeetingCalendar.vue'
 import MeetingModal from '../components/MeetingModal.vue'
+import MeetingDetail from '../components/MeetingDetail.vue'
 
 const userStore = useUserStore()
 const loading = ref(true)
-const viewMode = ref('list')
+const viewMode = ref('calendar')
 const statusFilter = ref('')
 const typeFilter = ref('')
 const searchKeyword = ref('')
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
+const showDetailModal = ref(false)
 const editingMeeting = ref(null)
+const viewingMeeting = ref(null)
 const presetDateTime = ref('')
 
 const stats = ref({})
@@ -257,7 +272,8 @@ async function loadMeetings(page = 1) {
 
 async function loadAllMeetings() {
   try {
-    const res = await meetingApi.getList({ page: 1, limit: 100 })
+    // 加载足够多的数据用于日历统计（最多1000条）
+    const res = await meetingApi.getList({ page: 1, limit: 1000 })
     if (res.data.success) {
       allMeetings.value = res.data.data.meetings || []
     }
@@ -266,7 +282,23 @@ async function loadAllMeetings() {
   }
 }
 
+function viewMeeting(meeting) {
+  viewingMeeting.value = meeting
+  showDetailModal.value = true
+}
+
 function editMeeting(meeting) {
+  editingMeeting.value = meeting
+  showEditModal.value = true
+}
+
+function closeDetailModal() {
+  showDetailModal.value = false
+  viewingMeeting.value = null
+}
+
+function editFromDetail(meeting) {
+  showDetailModal.value = false
   editingMeeting.value = meeting
   showEditModal.value = true
 }
@@ -344,5 +376,6 @@ watch(viewMode, (mode) => {
 onMounted(() => {
   loadStats()
   loadMeetings()
+  loadAllMeetings()  // 默认日历视图需要加载全部数据
 })
 </script>

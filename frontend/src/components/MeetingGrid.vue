@@ -27,8 +27,15 @@
           </div>
         </div>
         <div class="flex justify-end gap-2">
-          <button @click="$emit('edit', m)" class="px-3 py-1 text-sm border rounded hover:bg-gray-50">编辑</button>
-          <button @click="$emit('delete', m.id)" class="px-3 py-1 text-sm text-red-500 border rounded hover:bg-red-50">删除</button>
+          <button @click="$emit('view', m)" class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center justify-center transition-colors" title="查看详情">
+            <i class="fa fa-eye"></i>
+          </button>
+          <button @click="$emit('edit', m)" class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 hover:bg-orange-200 flex items-center justify-center transition-colors" title="编辑">
+            <i class="fa fa-edit"></i>
+          </button>
+          <button @click="$emit('delete', m.id)" class="w-8 h-8 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center transition-colors" title="删除">
+            <i class="fa fa-trash-o"></i>
+          </button>
         </div>
       </div>
     </div>
@@ -40,7 +47,7 @@
 
 <script setup>
 defineProps({ meetings: Array })
-defineEmits(['edit', 'delete'])
+defineEmits(['view', 'edit', 'delete'])
 
 function typeText(type) {
   const map = { regular: '常规组会', paper_reading: '论文研读', discussion: '专题讨论' }
