@@ -6,17 +6,17 @@
   </div>
 
   <!-- 需要登录的页面显示完整布局 -->
-  <div v-else class="min-h-screen flex flex-col bg-gray-50">
+  <div v-else class="h-screen flex flex-col bg-gray-50">
     <Toast />
     <Header v-model="sidebarVisible" />
-    <main class="flex-1 flex">
+    <main class="flex-1 min-h-0 flex">
       <Sidebar v-model="sidebarVisible" />
-      <div class="flex-1 overflow-y-auto w-full">
+      <div class="flex-1 overflow-y-auto w-full lg:pl-64">
         <router-view />
       </div>
     </main>
-    <footer class="bg-white border-t border-gray-200 py-4">
-      <div class="container mx-auto px-4 text-center text-sm text-gray-500">
+    <footer class="bg-white border-t border-gray-200 py-3 lg:pl-64">
+      <div class="px-4 text-center text-sm text-gray-500">
         <p>© 2026 智能计算实验室 - 研究生组会管理系统</p>
       </div>
     </footer>

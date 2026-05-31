@@ -173,7 +173,7 @@
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
 import axios from 'axios'
-import bgImage from '../../images/university.png'
+import bgImage from '../../images/Common.png'
 
 const userStore = useUserStore()
 

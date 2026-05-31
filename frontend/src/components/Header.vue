@@ -1,29 +1,27 @@
 <template>
   <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
-    <div class="container mx-auto px-4">
+    <div class="px-4">
       <div class="flex items-center justify-between h-16">
+        <!-- 左侧：菜单按钮 + Logo（紧贴左侧） -->
         <div class="flex items-center">
           <button @click="toggleSidebar" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 mr-2">
             <i class="fa fa-bars text-gray-600"></i>
           </button>
           <div class="flex items-center gap-2">
             <i class="fa fa-flask text-primary text-2xl"></i>
-            <span class="hidden sm:inline-block text-xl font-semibold">智能计算实验室</span>
+            <span class="text-xl font-semibold">智能计算实验室</span>
           </div>
         </div>
 
+        <!-- 右侧：通知 + 用户头像 -->
         <div class="flex items-center gap-2 sm:gap-4">
-          <div class="relative hidden md:block">
-            <input type="text" placeholder="搜索文献、汇报材料..."
-                   class="py-2 pl-10 pr-4 rounded-lg bg-gray-100 focus:ring-2 focus:ring-primary/30 w-48 lg:w-64">
-            <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-          </div>
-
+          <!-- 通知图标 -->
           <div class="relative p-2 rounded-full hover:bg-gray-100">
             <i class="fa fa-bell-o text-gray-600"></i>
             <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
           </div>
 
+          <!-- 用户头像和下拉菜单 -->
           <div class="relative group">
             <router-link to="/user-profile" class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
               <img :src="avatarUrl" class="w-8 h-8 rounded-full border-2 border-white shadow-sm">
@@ -47,6 +45,7 @@
             </div>
           </div>
 
+          <!-- 退出登录按钮 -->
           <button @click="logout" class="hidden sm:flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg">
             <i class="fa fa-sign-out"></i>
             <span>退出登录</span>

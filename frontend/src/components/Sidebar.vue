@@ -90,7 +90,8 @@ const isPersonalPage = computed(() => {
 const avatarUrl = computed(() => getAvatarUrl(userStore.avatar, userStore.username))
 
 const sidebarClass = computed(() => [
-  'fixed lg:sticky top-16 left-0 z-40 w-64 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 overflow-y-auto transition-transform duration-300',
+  'fixed lg:fixed top-16 left-0 z-40 w-64 bg-white border-r border-gray-200 overflow-y-auto transition-transform duration-300',
+  'lg:h-[calc(100vh-64px-40px)]', // 桌面端高度：视窗高度 - header(64px) - footer(~40px)
   visible.value ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
 ])
 

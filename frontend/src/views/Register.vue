@@ -235,7 +235,7 @@
 <script setup>
 import { ref, reactive, watch } from 'vue'
 import axios from 'axios'
-import bgImage from '../../images/university.png'
+import bgImage from '../../images/Common.png'
 
 const loading = ref(false)
 const showSuccessModal = ref(false)
