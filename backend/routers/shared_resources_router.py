@@ -94,6 +94,13 @@ async def delete_file(file_id: int, request: Request, current_user=Depends(get_c
     return JSONResponse(status_code=result["status_code"], content=result["content"])
 
 
+@router.delete("/by_filename/{filename}")
+async def delete_file_by_filename(filename: str, request: Request, current_user=Depends(get_current_user), service: SharedResourcesService = Depends()):
+    """按文件名删除资料（用于研究进展附件删除）"""
+    result = await service.delete_by_filename(filename, current_user.id)
+    return JSONResponse(status_code=result["status_code"], content=result["content"])
+
+
 @router.get("/{file_id}/download")
 async def download_file(file_id: int, request: Request, current_user=Depends(get_current_user), service: SharedResourcesService = Depends()):
     """按 ID 下载资料"""

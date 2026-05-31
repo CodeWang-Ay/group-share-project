@@ -43,3 +43,6 @@ export const uploadFile = (file) => {
 import { SERVER_URL } from '../config'
 
 export const getFileDownloadUrl = (filename) => `${SERVER_URL}/api/files/download/${encodeURIComponent(filename)}`
+
+// 删除文件（按文件名）
+export const deleteFileByName = (filename) => api.delete(`/files/by_filename/${encodeURIComponent(filename)}`)

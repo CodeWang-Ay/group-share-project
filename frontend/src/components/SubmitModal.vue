@@ -40,9 +40,26 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">附件（可选）</label>
           <input type="file" @change="handleFileChange" multiple class="w-full px-3 py-2 border rounded-lg text-sm">
-          <div v-if="form.attachments && form.attachments.length > 0" class="mt-2 flex flex-wrap gap-2">
-            <span v-for="f in form.attachments" :key="f" class="text-xs bg-gray-100 px-2 py-1 rounded">{{ f }}</span>
+          <p class="text-xs text-gray-500 mt-1">支持上传多个文件，点击文件名右侧按钮可删除</p>
+
+          <!-- 附件列表 -->
+          <div v-if="form.attachments && form.attachments.length > 0" class="mt-3 space-y-2">
+            <div v-for="(f, index) in form.attachments" :key="f"
+                 class="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+              <div class="flex items-center gap-2">
+                <div :class="getFileIconClass(f)" class="w-8 h-8 rounded flex items-center justify-center">
+                  <i class="fa fa-file-o"></i>
+                </div>
+                <span class="text-sm text-gray-700 truncate max-w-[250px]">{{ f }}</span>
+                <span v-if="!isExistingFile(f)" class="text-xs text-green-600">(新上传)</span>
+              </div>
+              <button type="button" @click="removeAttachment(index, f)"
+                      class="px-2 py-1 text-red-500 hover:bg-red-50 rounded text-xs transition-colors">
+                <i class="fa fa-trash-o mr-1"></i>删除
+              </button>
+            </div>
           </div>
+          <div v-else class="mt-2 text-sm text-gray-400 italic">暂无附件</div>
         </div>
 
         <div class="flex justify-end gap-2 pt-4 border-t">
@@ -82,10 +99,14 @@ const form = ref({
 })
 
 const uploadedFiles = ref([])
+const existingFileList = ref([]) // 已存在的附件列表（编辑模式）
 
 // 监听visible变化，初始化表单
 watch(visible, (val) => {
   if (val) {
+    // 记录已存在的附件（用于区分新增和原有的）
+    existingFileList.value = props.existingAttachments || []
+
     if (props.editingId && props.initialData) {
       // 编辑模式：使用initialData初始化
       form.value = {
@@ -110,6 +131,59 @@ watch(visible, (val) => {
     uploadedFiles.value = []
   }
 })
+
+// 判断是否是已存在的文件（编辑模式下的原有附件）
+const isExistingFile = (filename) => {
+  return existingFileList.value.includes(filename)
+}
+
+// 根据文件类型返回图标样式
+const getFileIconClass = (filename) => {
+  const ext = filename.split('.').pop()?.toLowerCase() || ''
+  const typeMap = {
+    pdf: 'text-red-500 bg-red-50',
+    doc: 'text-blue-500 bg-blue-50',
+    docx: 'text-blue-500 bg-blue-50',
+    ppt: 'text-orange-500 bg-orange-50',
+    pptx: 'text-orange-500 bg-orange-50',
+    xls: 'text-green-500 bg-green-50',
+    xlsx: 'text-green-500 bg-green-50',
+    zip: 'text-purple-500 bg-purple-50',
+    rar: 'text-purple-500 bg-purple-50',
+    jpg: 'text-yellow-500 bg-yellow-50',
+    jpeg: 'text-yellow-500 bg-yellow-50',
+    png: 'text-yellow-500 bg-yellow-50',
+    mp4: 'text-pink-500 bg-pink-50'
+  }
+  return typeMap[ext] || 'text-gray-500 bg-gray-50'
+}
+
+// 删除附件
+const removeAttachment = async (index, filename) => {
+  // 先尝试删除服务器上的文件
+  try {
+    const res = await api.deleteFileByName(filename)
+    if (res.data.success) {
+      console.log('文件删除成功:', filename)
+    } else {
+      console.error('文件删除失败:', res.data.message)
+      // 即使服务器删除失败，也从列表中移除（可能文件已经不存在）
+    }
+  } catch (err) {
+    console.error('删除文件请求失败:', err)
+  }
+
+  // 从 attachments 数组中移除
+  form.value.attachments.splice(index, 1)
+
+  // 如果是本次新上传的文件，也从 uploadedFiles 中移除
+  const uploadedIndex = uploadedFiles.value.indexOf(filename)
+  if (uploadedIndex > -1) {
+    uploadedFiles.value.splice(uploadedIndex, 1)
+  }
+
+  console.log('剩余 attachments:', form.value.attachments)
+}
 
 const handleFileChange = async (e) => {
   const files = e.target.files

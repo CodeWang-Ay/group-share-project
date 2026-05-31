@@ -74,8 +74,15 @@ class SharedResourcesService:
         with open(file_path, 'wb') as f:
             f.write(file_data)
 
-        # 创建记录
+        # 计算文件哈希并检查是否已存在
         file_hash = File.calculate_file_hash(str(file_path))
+        existing_file = SharedResourcesRepository.check_file_hash_exists_global(file_hash)
+        if existing_file:
+            # 删除刚上传的重复文件
+            os.remove(file_path)
+            return {"status_code": 409, "content": {"success": False, "message": f"文件内容已存在（文件名: {existing_file['filename']}），请勿重复上传", "error": "FILE_HASH_EXISTS"}}
+
+        # 创建记录
         create_data = {
             'filename': unique_filename, 'file_path': str(file_path), 'file_size': len(file_data),
             'file_type': File.get_mime_type(file.filename), 'file_hash': file_hash, 'uploader_id': user_id,
@@ -187,6 +194,34 @@ class SharedResourcesService:
         SharedResourcesRepository.delete(file_id)
         logger.info(f"资料删除成功: file_id={file_id}")
         return {"status_code": 200, "content": {"success": True, "message": "资料删除成功"}}
+
+    async def delete_by_filename(self, filename: str, user_id: int) -> Dict[str, Any]:
+        """按文件名删除资料（用于研究进展附件删除）"""
+        import urllib.parse
+        decoded = urllib.parse.unquote(filename)
+
+        # 获取文件信息
+        file_data = SharedResourcesRepository.get_by_filename(decoded)
+        if file_data:
+            # 检查权限：只有上传者可以删除
+            if file_data['uploader_id'] != user_id:
+                return {"status_code": 403, "content": {"success": False, "message": "只有上传者可以删除", "error": "ACCESS_DENIED"}}
+            # 删除物理文件
+            file_path = file_data['file_path']
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            # 删除数据库记录
+            SharedResourcesRepository.delete_by_filename(decoded)
+            logger.info(f"资料按文件名删除成功: {decoded}")
+        else:
+            # 文件不在数据库中（可能是刚上传还没关联），直接删除物理文件
+            # 尝试在 uploads/share_files 目录下查找
+            possible_path = self.UPLOAD_DIR / decoded
+            if possible_path.exists():
+                os.remove(str(possible_path))
+                logger.info(f"物理文件删除成功（无数据库记录）: {decoded}")
+
+        return {"status_code": 200, "content": {"success": True, "message": "文件删除成功"}}
 
     async def download(self, file_id: int, user_id: int, role: str) -> Dict[str, Any]:
         """下载资料"""

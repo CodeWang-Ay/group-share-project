@@ -150,6 +150,23 @@ class SharedResourcesRepository:
             return cursor.rowcount > 0
 
     @staticmethod
+    def delete_by_filename(filename: str) -> bool:
+        """根据文件名删除资料记录"""
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM files WHERE filename = ?", (filename,))
+            return cursor.rowcount > 0
+
+    @staticmethod
+    def get_file_path_by_filename(filename: str) -> Optional[str]:
+        """根据文件名获取文件路径"""
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT file_path FROM files WHERE filename = ?", (filename,))
+            row = cursor.fetchone()
+            return row['file_path'] if row else None
+
+    @staticmethod
     def search(keyword: str, user_id: Optional[int], limit: int, offset: int, sort: str = 'newest') -> List[Dict[str, Any]]:
         """搜索资料"""
         order_by = SharedResourcesRepository._get_order_by(sort)
@@ -225,10 +242,19 @@ class SharedResourcesRepository:
 
     @staticmethod
     def check_file_hash_exists(file_hash: str, uploader_id: int) -> Optional[Dict[str, Any]]:
-        """检查文件哈希是否已存在"""
+        """检查文件哈希是否已存在（指定用户）"""
         with get_db() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT id, filename FROM files WHERE file_hash = ? AND uploader_id = ? AND status = 'active'", (file_hash, uploader_id))
+            cursor.execute("SELECT id, filename, uploader_id FROM files WHERE file_hash = ? AND uploader_id = ? AND status = 'active'", (file_hash, uploader_id))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    @staticmethod
+    def check_file_hash_exists_global(file_hash: str) -> Optional[Dict[str, Any]]:
+        """检查文件哈希是否已存在（全局）"""
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, filename, uploader_id FROM files WHERE file_hash = ? AND status = 'active'", (file_hash,))
             row = cursor.fetchone()
             return dict(row) if row else None
 
