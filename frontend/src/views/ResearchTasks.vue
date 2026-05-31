@@ -416,7 +416,15 @@ const changePerPage = () => {
 
 // 样式类
 const statusBtnClass = (status) => {
-  return currentStatus.value === status ? 'bg-primary text-white active' : ''
+  if (currentStatus.value === status) {
+    return 'bg-primary text-white active'
+  }
+  // 非激活状态的颜色
+  if (status === 'pending') return 'status-wait'
+  if (status === 'ongoing') return 'status-doing'
+  if (status === 'completed') return 'status-finish'
+  if (status === 'overdue') return 'status-overdue'
+  return ''
 }
 
 const layoutBtnClass = (layout) => {
